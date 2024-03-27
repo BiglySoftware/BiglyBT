@@ -1221,7 +1221,7 @@ public abstract class TableViewSWT_Common
 			menuHideColumn.addListener(SWT.Selection,
 					e -> TableColumnSWTUtils.changeColumnVisiblity(tv, column, false));
 		}
-
+		
 		final MenuItem itemResetColumns = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(itemResetColumns, "table.columns.reset");
 		itemResetColumns.addListener(SWT.Selection, new Listener() {
@@ -1248,6 +1248,12 @@ public abstract class TableViewSWT_Common
 						}
 					}});
 			}
+		});
+
+		final MenuItem itemSelectAll = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemSelectAll, "Button.selectAll");
+		itemSelectAll.addListener(SWT.Selection, (ev)->{
+			tv.selectAll();
 		});
 
 		final MenuItem itemChangeTable = new MenuItem(menu, SWT.PUSH);
