@@ -848,6 +848,56 @@ SubscriptionHistoryImpl
 
 	@Override
 	public void
+	removeResults(
+		String[] result_ids )
+	{
+		ByteArrayHashMap<String> rids = new ByteArrayHashMap<>();
+
+		for (int i=0;i<result_ids.length;i++){
+
+			rids.put( Base32.decode( result_ids[i]), "" );
+		}
+
+		boolean	changed = false;
+
+		synchronized( this ){
+
+			LinkedHashMap<String,SubscriptionResultImpl> results_map = manager.loadResults( subs );
+
+			List<SubscriptionResultImpl>	new_results = new ArrayList<>( results_map.size());
+			
+			for ( SubscriptionResultImpl result: results_map.values()){
+
+				if ( !result.isDeleted() && rids.containsKey( result.getKey1())){
+
+					changed = true;
+
+					result.deleteInternal();
+					
+				}else{
+					
+					new_results.add( result );
+				}
+			}
+
+			if ( changed ){
+
+				SubscriptionResultImpl[] results = new_results.toArray( new SubscriptionResultImpl[ new_results.size()]);
+				
+				updateReadUnread( results );
+
+				manager.saveResults( subs, results, null );
+			}
+		}
+
+		if ( changed ){
+
+			saveConfig(SubscriptionListener.CR_RESULTS);
+		}
+	}
+	
+	@Override
+	public void
 	markAllResultsRead()
 	{
 		boolean	changed = false;

@@ -3,6 +3,7 @@ package com.biglybt.core.subs.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -14,8 +15,10 @@ import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionException;
+import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
 import com.biglybt.core.subs.SubscriptionUtils;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
@@ -117,8 +120,10 @@ SubscriptionResultFilterImpl
 			maxAgeSecs = MapUtils.importLong(filters, "max_age",-1l);
 
 			String rawCategory = MapUtils.getMapString(filters,"category", null);
-			if(rawCategory != null) {
-				categoryFilter = rawCategory.toLowerCase();
+			
+			if (rawCategory != null){
+				
+				categoryFilter = rawCategory.toLowerCase( Locale.US );
 			}
 
 		} catch(Exception e) {
@@ -361,10 +366,10 @@ SubscriptionResultFilterImpl
 				}
 				
 				types[i]	= type;
-				filters[i]	= filter;
+				filters[i]	= filter.toLowerCase( Locale.US );
 				
 				try{
-					patterns[i] = Pattern.compile( filter.trim());
+					patterns[i] = Pattern.compile( filter.trim(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	
 				}catch( Throwable e ){
 	
@@ -393,6 +398,28 @@ SubscriptionResultFilterImpl
 
 		throws SubscriptionException
 	{
+		try{
+			SubscriptionResult[] results = subs.getHistory().getResults( false );
+		
+			List<String>	to_remove = new ArrayList<>();
+					
+			for ( SubscriptionResult result: results ){
+				
+				if ( isFiltered( result.getFilterableResult())){
+					
+					to_remove.add( result.getID());
+				}
+			}
+			
+			if ( !to_remove.isEmpty()){
+			
+				subs.getHistory().removeResults( to_remove.toArray( new String[ to_remove.size()]));
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
 		Map map = JSONUtils.decodeJSON( subs.getJSON());
 
 		Map filters = new JSONObject();
@@ -470,13 +497,23 @@ SubscriptionResultFilterImpl
 		return( res );
 	}
 
-	private String[] importStrings(Map filters,String key,String separator) throws IOException {
+	private String[] 
+	importStrings(
+		Map filters,String key,String separator) 
+				
+		throws IOException 
+	{
 		String rawStringFilter = MapUtils.getMapString(filters,key,null);
-		if(rawStringFilter != null) {
+		
+		if ( rawStringFilter != null) {
+			
 			StringTokenizer st = new StringTokenizer(rawStringFilter,separator);
+			
 			String[] stringFilter = new String[st.countTokens()];
+			
 			for(int i = 0 ; i < stringFilter.length ; i++) {
-				stringFilter[i] = st.nextToken().toLowerCase();
+				
+				stringFilter[i] = st.nextToken();
 			}
 			return stringFilter;
 		}
@@ -504,9 +541,14 @@ SubscriptionResultFilterImpl
 		map.put( key, encoded );
 	}
 
-	public Result[] filter(Result[] results) {
+	public Result[] 
+	filter(
+		Result[] results) 
+	{
 		List<Result> filteredResults = new ArrayList<>(results.length);
+		
 		for(int i = 0 ; i < results.length ; i++) {
+			
 			Result result = results[i];
 
 			if ( !isFiltered( result )){
@@ -519,6 +561,7 @@ SubscriptionResultFilterImpl
 
 		return fResults;
 	}
+	
 	
 	public boolean 
 	isFiltered(
@@ -546,7 +589,7 @@ SubscriptionResultFilterImpl
 		return( false );
 	}
 	
-	public boolean 
+	private boolean 
 	isFilteredSupport(
 		FilterableResult result )
 	{
@@ -559,7 +602,7 @@ SubscriptionResultFilterImpl
 			return( true );
 		}
 		
-		name = name.toLowerCase();
+		name = name.toLowerCase( Locale.US );
 
 		String[] names = { name };
 		
@@ -597,7 +640,7 @@ SubscriptionResultFilterImpl
 							if ( category == null || category.isEmpty()){
 								categories = new String[0];
 							}else{
-								categories = new String[]{ category.toLowerCase() };
+								categories = new String[]{ category.toLowerCase( Locale.US ) };
 							}
 						}
 						matches = categories;
@@ -611,7 +654,7 @@ SubscriptionResultFilterImpl
 							}else{
 								tags = new String[temp.length];
 								for ( int k=0;k<temp.length;k++){
-									tags[k] = temp[k].toLowerCase();
+									tags[k] = temp[k].toLowerCase( Locale.US );
 								}
 							}
 						}

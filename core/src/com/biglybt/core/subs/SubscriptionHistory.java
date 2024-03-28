@@ -44,12 +44,26 @@ SubscriptionHistory
 		boolean		enabled,
 		boolean		auto_dl );
 
+		/**
+		 * Delete marks the result as explicitly deleted - it won't be re-discovered
+		 * @param result_ids
+		 */
+	
 	public void
 	deleteResults(
 		String[]		result_ids );
 
 	public void
 	deleteAllResults();
+
+		/**
+		 * This removes the result, it will be available for re-discovery if filters permit
+		 * @param result_ids
+		 */
+	
+	public void
+	removeResults(
+		String[]		result_ids );
 
 	public void
 	markAllResultsRead();

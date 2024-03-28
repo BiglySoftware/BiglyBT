@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
@@ -762,5 +763,80 @@ SubscriptionResultImpl
 
 			return( result );
 		}
+	}
+	
+	@Override
+	public FilterableResult 
+	getFilterableResult()
+	{
+		Map<Integer,Object> properties = toPropertyMap();
+		
+		return( 
+			new FilterableResult(){
+				public String
+				getName()
+				{
+					return( (String)properties.get( SearchResult.PR_NAME ));
+				}
+				
+				public String
+				getCategory()
+				{
+					return((String)properties.get( SearchResult.PR_CATEGORY ));
+				}
+				
+				public String[]
+				getTags()
+				{
+					return((String[])properties.get( SearchResult.PR_TAGS ));
+				}
+				
+				public long
+				getSize()
+				{
+					return((Long)properties.get( SearchResult.PR_SIZE ));
+				}
+				
+				public int
+				getNbSeeds()
+				{
+					long seeds = (Long)properties.get( SearchResult.PR_SEED_COUNT );
+
+					return((int)(seeds<0?0:seeds));
+				}
+				
+				public int
+				getNbPeers()
+				{
+					long leechers 	= (Long)properties.get( SearchResult.PR_LEECHER_COUNT );
+					
+					return((int)(leechers<0?0:leechers));
+				}
+	
+				public long
+				getTime()
+				{
+					Date pub_date = (Date)properties.get( SearchResult.PR_PUB_DATE );
+
+					if ( pub_date == null ){
+
+						return( getTimeFound());
+
+					}else{
+
+						long pt = pub_date.getTime();
+
+						if ( pt <= 0 ){
+
+							return( getTimeFound());
+
+						}else{
+
+							return( pt );
+						}
+					}
+
+				}
+			});
 	}
 }

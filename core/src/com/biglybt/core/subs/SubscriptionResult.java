@@ -22,6 +22,7 @@ package com.biglybt.core.subs;
 
 import java.util.Map;
 
+import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 
 public interface
@@ -69,4 +70,7 @@ SubscriptionResult
 
 	public boolean
 	isDeleted();
+	
+	public FilterableResult
+	getFilterableResult();
 }

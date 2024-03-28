@@ -451,7 +451,7 @@ SBC_SubscriptionResultsView
 
 						@Override
 						public void modifyText(ModifyEvent e) {
-							String text = textWithKW.getText().toLowerCase( Locale.US );
+							String text = textWithKW.getText();
 							String[] bits = text.split( "\\s+");
 
 							Set<String>	temp = new HashSet<>();
@@ -680,26 +680,35 @@ SBC_SubscriptionResultsView
 			if ( ds != null ){
 
 				if ( ds.isUpdateable() ){
+					
 					sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+					
 					sep.setLayoutData(new RowData(-1, sepHeight));
 	
-					final Runnable					f_pFilterUpdater 	= pFilterUpdater;
+					final Runnable	f_pFilterUpdater 	= pFilterUpdater;
 	
 					Button save = new Button( vFilters,SWT.PUSH );
+					
 					save.setText( MessageText.getString( "ConfigView.button.save" ));
+					
 					save.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event) {
 	
-							try{
-								ds_filter.save();
+							Utils.getOffOfSWTThread(()->{
+								
+								try{
+									ds_filter.save();
+									
+								}catch( Throwable e ){
+									
+									Debug.out( e );
 	
-								f_pFilterUpdater.run();
-	
-							}catch( Throwable e ){
-	
-								Debug.out( e );
-							}
+								}finally{
+									
+									Utils.execSWTThread(()->f_pFilterUpdater.run());
+								}
+							});
 						}
 					});
 				}
