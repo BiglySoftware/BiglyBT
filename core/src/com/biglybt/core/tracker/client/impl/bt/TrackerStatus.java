@@ -179,38 +179,58 @@ public class TrackerStatus {
       String lc_trackerUrl = trackerUrl.toLowerCase(Locale.US);
 
       int position = trackerUrl.lastIndexOf('/');
-      if(	position >= 0 &&
-      		trackerUrl.length() >= position+9 &&
-      		trackerUrl.substring(position+1,position+9).equals("announce")) {
+      
+      List<String>	replaces = new ArrayList<>(2);
+      
+      replaces.add( "announce" );
+      
+   		// https://github.com/i2p/i2p.plugins.zzzot - accepts /a as well as /announce...
+      
+  	  if ( AENetworkClassifier.categoriseAddress( tracker_url.getHost()) == AENetworkClassifier.AT_I2P ){
+  		  
+  		replaces.add( "a" );
+  	  }
+  	  
+      for ( String rep: replaces ){
+    	  int repLen = rep.length();
+	      if(	position >= 0 &&
+	      		trackerUrl.length() >= position+repLen+1 &&
+	      		trackerUrl.substring(position+1,position+repLen+1).equals( rep )) {
+	
+	        scrapeURL = trackerUrl.substring(0,position+1) + "scrape" + trackerUrl.substring(position+repLen+1);
+	        // System.out.println( "url = " + trackerUrl + ", scrape =" + scrapeURL );
+	        
+	        break;
+	      }
+      }
 
-        this.scrapeURL = trackerUrl.substring(0,position+1) + "scrape" + trackerUrl.substring(position+9);
-        // System.out.println( "url = " + trackerUrl + ", scrape =" + scrapeURL );
-
-      }else if ( lc_trackerUrl.startsWith("udp:")){
-      		// UDP scrapes aren't based on URL rewriting, just carry on
-
-      	scrapeURL = trackerUrl;
-      }else if ( lc_trackerUrl.startsWith( "ws:" ) || lc_trackerUrl.startsWith( "wss:" )){
-
-    	  // websocket trackers
-
-    	  scrapeURL = trackerUrl;
-
-    	  bSingleHashScrapes = true;
-
-       }else if ( position >= 0 && trackerUrl.lastIndexOf('.') < position ){
-
-       		// some trackers support /scrape appended but don't have an /announce
-       		// don't do this though it the URL ends with .php (or infact .<anything>)
-
-       	scrapeURL = trackerUrl + (trackerUrl.endsWith("/")?"":"/") + "scrape";
-
-      } else {
-        if (!logged_invalid_urls.contains(trackerUrl)) {
-
-          logged_invalid_urls.add(trackerUrl);
-          // Error logging is done by the caller, since it has the hash/torrent info
-        }
+      if ( scrapeURL == null ){
+	      if ( lc_trackerUrl.startsWith("udp:")){
+	      		// UDP scrapes aren't based on URL rewriting, just carry on
+	
+	      	scrapeURL = trackerUrl;
+	      }else if ( lc_trackerUrl.startsWith( "ws:" ) || lc_trackerUrl.startsWith( "wss:" )){
+	
+	    	  // websocket trackers
+	
+	    	  scrapeURL = trackerUrl;
+	
+	    	  bSingleHashScrapes = true;
+	
+	       }else if ( position >= 0 && trackerUrl.lastIndexOf('.') < position ){
+	
+	       		// some trackers support /scrape appended but don't have an /announce
+	       		// don't do this though it the URL ends with .php (or infact .<anything>)
+	
+	       	scrapeURL = trackerUrl + (trackerUrl.endsWith("/")?"":"/") + "scrape";
+	
+	      } else {
+	        if (!logged_invalid_urls.contains(trackerUrl)) {
+	
+	          logged_invalid_urls.add(trackerUrl);
+	          // Error logging is done by the caller, since it has the hash/torrent info
+	        }
+	      }
       }
     } catch (Throwable e) {
     	Debug.printStackTrace( e );
