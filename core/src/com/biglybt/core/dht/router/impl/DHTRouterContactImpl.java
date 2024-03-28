@@ -49,11 +49,15 @@ DHTRouterContactImpl
 	DHTRouterContactImpl(
 		byte[]							_node_id,
 		DHTRouterContactAttachment		_attachment,
-		boolean							_has_been_alive )
+		boolean							_known_to_be_alive )
 	{
 		node_id			= _node_id;
 		attachment		= _attachment;
-		has_been_alive	= _has_been_alive;
+		
+		if ( _known_to_be_alive ){
+			
+			setAlive();
+		}
 
 		if ( attachment != null ){
 
