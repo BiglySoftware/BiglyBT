@@ -55,6 +55,8 @@ public class ColumnSearchSubResultSize
 
 			cell.setText( DisplayFormatters.formatByteCountToKiBEtc( size ));
 			
+			cell.setToolTip( String.valueOf( size ));
+		
 			TableColumnSWTUtils.setSizeAlpha( cell, size );
 		}
 	}

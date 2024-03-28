@@ -417,6 +417,10 @@ RSSEngine
 									result.setSizeFromHTML(lengthAtt.getValue(), 1024*1024 );
 								}
 							}
+						}else if ( lc_child_name.equals( "contentlength" )){
+							
+							result.setSizeFromHTML( value, 0 );
+							
 						}else if(lc_child_name.equals( "category" )) {
 
 							result.setCategoryFromHTML( value );
