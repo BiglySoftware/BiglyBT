@@ -133,7 +133,12 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 		display = shell.getDisplay();
 		if (this.title != null) {
-			shell.setText(this.title);
+			String str = this.title;
+			
+			if ( textLimit > 0 ){
+				str += " (" + MessageText.getString( "label.limit") + " " + textLimit + ")";
+			}	
+			shell.setText(str);
 		}
 
 		Utils.setShellIcon(shell);
