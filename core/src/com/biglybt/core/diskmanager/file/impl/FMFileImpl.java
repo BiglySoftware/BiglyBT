@@ -1089,10 +1089,11 @@ FMFileImpl
 					}
 				}
 				
-
-				Debug.out( "reserveAccess fail" );
+				String str = "File '"+canonical_path+"' is in use by '" + (users_sb==null?"eh?":users_sb.toString()) +"'";
 				
-				throw( new FMFileManagerException( "File '"+canonical_path+"' is in use by '" + (users_sb==null?"eh?":users_sb.toString()) +"'"));
+				Debug.out( "reserveAccess fail: " + str );
+				
+				throw( new FMFileManagerException( str ));
 			}
 
 		}finally{

@@ -40,6 +40,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
@@ -99,6 +100,8 @@ public class NameItem extends CoreTableColumnSWT implements
 	
 	private static boolean bShowIcon;
 
+	private static AsyncDispatcher dispatcher = new AsyncDispatcher( "NameItem" );
+	
 	private ParameterListener configShowProgramIconListener;
 
 	final TableContextMenuItem menuItem;
@@ -659,7 +662,10 @@ public class NameItem extends CoreTableColumnSWT implements
 							TableRowCore rowCore = (TableRowCore) row;
 							if ( rowCore != null ){
 							
-								Utils.getOffOfSWTThread( AERunnable.create(()->{
+									// we really don't want lots of concurrently running threads
+									// switching skip state...
+								
+								dispatcher.dispatch( AERunnable.create(()->{
 									
 									if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
 										

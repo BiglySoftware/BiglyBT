@@ -2897,6 +2897,8 @@ DownloadManagerImpl
     		return;
     	}
     	
+    	int state_before = getState();
+    	
     	boolean paused = pause( true );
     	
     	try{  	  		
@@ -2925,6 +2927,49 @@ DownloadManagerImpl
     		if ( paused ){
     			
     			resume();
+ 
+    			long start = SystemTime.getMonotonousTime();
+    			
+    			long max = 2*1000;
+    			
+    				// give it some time to get back to where it was
+    			
+    			while( true ){
+    				
+    				int current_state = getState();
+    				
+    				if ( current_state == state_before ){
+    					
+    					break;
+    				}
+    				
+    				if ( SystemTime.getMonotonousTime() - start > max ){
+    					
+    					break;
+    				}
+    				
+      				if ( 	current_state == DownloadManager.STATE_STOPPED || 
+       						current_state == DownloadManager.STATE_ERROR ||
+       	       				current_state == DownloadManager.STATE_QUEUED ||
+       	            		current_state == DownloadManager.STATE_DOWNLOADING ||
+       						current_state == DownloadManager.STATE_SEEDING ){
+    					
+      					break;
+    				}
+      				
+    				if ( 	current_state == DownloadManager.STATE_ALLOCATING || 
+    						current_state == DownloadManager.STATE_CHECKING ){
+    				
+    					max = 10*1000;
+    				}
+    				
+    				try{
+    					Thread.sleep(100);
+    					
+    				}catch( Throwable e ){
+    					
+    				}
+    			}
     		}
     	}
     }

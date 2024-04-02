@@ -92,78 +92,81 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 		boolean[] toChange, 
 		boolean setSkipped) 
 	{
-		if (toChange.length != files.length ){
-			
-			throw new IllegalArgumentException("array length mismatches the number of files");
-		}
+		synchronized( DiskManagerUtil.skip_lock ){
 		
-		DownloadManagerState dmState = diskManager.getDownloadState();
-
-		try	{
-			dmState.suppressStateSave(true);
-
-			if (!setSkipped ){
-
-				String[] types = diskManager.getStorageTypes();
-
-				boolean[]	toLinear 	= new boolean[toChange.length];
-				boolean[]	toReorder 	= new boolean[toChange.length];
-
-				int	num_linear 	= 0;
-				int num_reorder	= 0;
-
-				for ( int i=0;i<toChange.length;i++){
-
-					if ( toChange[i] ){
-
-						int old_type = DiskManagerUtil.convertDMStorageTypeFromString( types[i] );
-
-						if ( old_type == DiskManagerFileInfo.ST_COMPACT ){
-
-							toLinear[i] = true;
-
-							num_linear++;
-
-						}else if ( old_type == DiskManagerFileInfo.ST_REORDER_COMPACT ){
-
-							toReorder[i] = true;
-
-							num_reorder++;
+			if (toChange.length != files.length ){
+				
+				throw new IllegalArgumentException("array length mismatches the number of files");
+			}
+			
+			DownloadManagerState dmState = diskManager.getDownloadState();
+	
+			try	{
+				dmState.suppressStateSave(true);
+	
+				if (!setSkipped ){
+	
+					String[] types = diskManager.getStorageTypes();
+	
+					boolean[]	toLinear 	= new boolean[toChange.length];
+					boolean[]	toReorder 	= new boolean[toChange.length];
+	
+					int	num_linear 	= 0;
+					int num_reorder	= 0;
+	
+					for ( int i=0;i<toChange.length;i++){
+	
+						if ( toChange[i] ){
+	
+							int old_type = DiskManagerUtil.convertDMStorageTypeFromString( types[i] );
+	
+							if ( old_type == DiskManagerFileInfo.ST_COMPACT ){
+	
+								toLinear[i] = true;
+	
+								num_linear++;
+	
+							}else if ( old_type == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+	
+								toReorder[i] = true;
+	
+								num_reorder++;
+							}
+						}
+					}
+	
+					if ( num_linear > 0 ){
+	
+						if (!Arrays.equals(toLinear, setStorageTypes(toLinear, DiskManagerFileInfo.ST_LINEAR))){
+	
+							return;
+						}
+					}
+	
+					if ( num_reorder > 0 ){
+	
+						if (!Arrays.equals(toReorder, setStorageTypes(toReorder, DiskManagerFileInfo.ST_REORDER ))){
+	
+							return;
 						}
 					}
 				}
-
-				if ( num_linear > 0 ){
-
-					if (!Arrays.equals(toLinear, setStorageTypes(toLinear, DiskManagerFileInfo.ST_LINEAR))){
-
-						return;
-					}
-				}
-
-				if ( num_reorder > 0 ){
-
-					if (!Arrays.equals(toReorder, setStorageTypes(toReorder, DiskManagerFileInfo.ST_REORDER ))){
-
-						return;
-					}
-				}
-			}
-			
-			for (int i = 0; i < files.length; i++){
-				if (toChange[i]){
 				
-					files[i].setSkippedInternal( setSkipped );
+				for (int i = 0; i < files.length; i++){
+					if (toChange[i]){
 					
-					diskManager.skippedFileSetChanged( files[i] );
+						files[i].setSkippedInternal( setSkipped );
+						
+						diskManager.skippedFileSetChanged( files[i] );
+					}
 				}
+			}finally{
+				
+				dmState.suppressStateSave(false);
 			}
-		}finally{
-			
-			dmState.suppressStateSave(false);
+				
+			DiskManagerUtil.doFileExistenceChecksAfterSkipChange(this, toChange, setSkipped,  diskManager.getDownloadState().getDownloadManager());
 		}
-			
-		DiskManagerUtil.doFileExistenceChecksAfterSkipChange(this, toChange, setSkipped,  diskManager.getDownloadState().getDownloadManager());
 	}
 
 	@Override

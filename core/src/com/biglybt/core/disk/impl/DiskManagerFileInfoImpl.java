@@ -401,36 +401,41 @@ DiskManagerFileInfoImpl
   @Override
   public void setSkipped(boolean skipped) {
 
-	  try{
-		skipping = skipped;
-		  
-		int	existing_st = getStorageType();
-	
-		  // currently a non-skipped file must be linear
-	
-		if ( !skipped && existing_st == ST_COMPACT ){
-			if ( !setStorageType( ST_LINEAR )){
-				return;
-			}
-		}
-	
-		if ( !skipped && existing_st == ST_REORDER_COMPACT ){
-			if ( !setStorageType( ST_REORDER )){
-				return;
-			}
-		}
-	
-		setSkippedInternal( skipped );
+	  synchronized( DiskManagerUtil.skip_lock ){
+	  
+		  try{
+			skipping = skipped;
+			  
+			int	existing_st = getStorageType();
 		
-		diskManager.skippedFileSetChanged( this );
+			  // currently a non-skipped file must be linear
+		
+			if ( !skipped && existing_st == ST_COMPACT ){
+				if ( !setStorageType( ST_LINEAR )){
+					return;
+				}
+			}
+		
+			if ( !skipped && existing_st == ST_REORDER_COMPACT ){
+				if ( !setStorageType( ST_REORDER )){
+					return;
+				}
+			}
+		
+			setSkippedInternal( skipped );
 			
-		boolean[] toCheck = new boolean[diskManager.getFileSet().nbFiles()];
+			diskManager.skippedFileSetChanged( this );
+				
+			boolean[] toCheck = new boolean[diskManager.getFileSet().nbFiles()];
+				
+			toCheck[file_index] = true;
+				
+			DiskManagerUtil.doFileExistenceChecksAfterSkipChange(diskManager.getFileSet(), toCheck, skipped, diskManager.getDownloadState().getDownloadManager());
 			
-		toCheck[file_index] = true;
-			
-		DiskManagerUtil.doFileExistenceChecksAfterSkipChange(diskManager.getFileSet(), toCheck, skipped, diskManager.getDownloadState().getDownloadManager());
-	  }finally{
-		  skipping = null;
+		  }finally{
+			  
+			  skipping = null;
+		  }
 	  }
   }
 
@@ -442,168 +447,171 @@ DiskManagerFileInfoImpl
 	setSkippedInternal(
 		boolean	_skipped )
 	{
-		skipped_internal = _skipped;
-
-		DownloadManager dm = getDownloadManager();
-
-		if ( dm != null && !dm.isDestroyed()){
-
-			DownloadManagerState dm_state =  diskManager.getDownloadState();
-
-    		String dnd_sf = dm_state.getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
-
-     		if ( dnd_sf != null ){
-
-    			File	link = getLink();
-
-				File 	file = getFile( false );
-
-        		if ( _skipped ){
-
-        			if ( link == null || link.equals( file )){
-
-    					File parent = file.getParentFile();
-
-    					if ( parent != null ){
-
-    						File new_parent = FileUtil.newFile( parent, dnd_sf );
-
-    							// add prefix if not already present
-
-							String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
-
-							String file_name = file.getName();
-
-							if ( prefix != null && !file_name.startsWith( prefix )){
-
-								file_name = prefix + file_name;
-							}
-
-    						File new_file = FileUtil.newFile( new_parent, file_name );
-
-    						if ( !new_file.exists()){
-
-        						if ( !new_parent.exists()){
-
-        							new_parent.mkdirs();
-        						}
-
-        						if ( new_parent.canWrite()){
-
-	        						boolean ok;
-
-	    							try{
-	    								dm_state.setFileLink( file_index, file, new_file );
-
-										cache_file.moveFile( new_file, null );
-
+		synchronized( DiskManagerUtil.skip_lock ){
+			
+			skipped_internal = _skipped;
+	
+			DownloadManager dm = getDownloadManager();
+	
+			if ( dm != null && !dm.isDestroyed()){
+	
+				DownloadManagerState dm_state =  diskManager.getDownloadState();
+	
+	    		String dnd_sf = dm_state.getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
+	
+	     		if ( dnd_sf != null ){
+	
+	    			File	link = getLink();
+	
+					File 	file = getFile( false );
+	
+	        		if ( _skipped ){
+	
+	        			if ( link == null || link.equals( file )){
+	
+	    					File parent = file.getParentFile();
+	
+	    					if ( parent != null ){
+	
+	    						File new_parent = FileUtil.newFile( parent, dnd_sf );
+	
+	    							// add prefix if not already present
+	
+								String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
+	
+								String file_name = file.getName();
+	
+								if ( prefix != null && !file_name.startsWith( prefix )){
+	
+									file_name = prefix + file_name;
+								}
+	
+	    						File new_file = FileUtil.newFile( new_parent, file_name );
+	
+	    						if ( !new_file.exists()){
+	
+	        						if ( !new_parent.exists()){
+	
+	        							new_parent.mkdirs();
+	        						}
+	
+	        						if ( new_parent.canWrite()){
+	
+		        						boolean ok;
+	
+		    							try{
+		    								dm_state.setFileLink( file_index, file, new_file );
+	
+											cache_file.moveFile( new_file, null );
+	
+											ok = true;
+	
+										}catch( Throwable e ){
+	
+											ok = false;
+	
+											Debug.out( e );
+										}
+	
+		        						if ( !ok ){
+	
+		        							dm_state.setFileLink( file_index, file, link );
+		        						}
+	        						}
+	    						}
+	    					}
+	        			}
+	        		}else{
+	
+	        			if ( link != null && !file.exists()){
+	
+	    					File parent = file.getParentFile();
+	
+	    					if ( parent != null && parent.canWrite()){
+	
+	    						File new_parent = parent.getName().equals( dnd_sf )?parent:FileUtil.newFile( parent, dnd_sf );
+	
+	    							// use link name to handle incomplete file suffix if set
+	
+	    						File new_file = FileUtil.newFile( new_parent, link.getName());
+	
+	    						if ( new_file.equals( link )){
+	
+	    							boolean	ok;
+	
+									try{
+										String file_name = file.getName();
+	
+										String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
+	
+										boolean prefix_removed = false;
+	
+										if ( prefix != null && file_name.startsWith(prefix)){
+	
+											file_name = file_name.substring( prefix.length());
+	
+											prefix_removed = true;
+										}
+	
+										String incomp_ext = dm_state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+	
+										if  ( 	incomp_ext != null && incomp_ext.length() > 0 &&
+												getDownloaded() != getLength()){
+	
+												// retain the prefix if enabled and we have a suffix
+	
+											if ( prefix == null ){
+	
+												prefix = "";
+											}
+	
+											File new_link = FileUtil.newFile( file.getParentFile(), prefix + file_name + incomp_ext );
+	
+											dm_state.setFileLink( file_index, file, new_link );
+	
+											cache_file.moveFile( new_link, null );
+	
+										}else if ( prefix_removed ){
+	
+											File new_link = FileUtil.newFile( file.getParentFile(), file_name );
+	
+											dm_state.setFileLink( file_index, file, new_link );
+	
+											cache_file.moveFile( new_link, null );
+	
+										}else{
+	
+											dm_state.setFileLink( file_index, file, null );
+	
+											cache_file.moveFile( file, null );
+										}
+	
+										File[] files = new_parent.listFiles();
+	
+	    								if ( files != null && files.length == 0 ){
+	
+	    									new_parent.delete();
+	    								}
+	
 										ok = true;
-
+	
 									}catch( Throwable e ){
-
+	
 										ok = false;
-
+	
 										Debug.out( e );
 									}
-
-	        						if ( !ok ){
-
-	        							dm_state.setFileLink( file_index, file, link );
+	
+	    							if ( !ok ){
+	
+	    								dm_state.setFileLink( file_index, file, link );
 	        						}
-        						}
-    						}
-    					}
-        			}
-        		}else{
-
-        			if ( link != null && !file.exists()){
-
-    					File parent = file.getParentFile();
-
-    					if ( parent != null && parent.canWrite()){
-
-    						File new_parent = parent.getName().equals( dnd_sf )?parent:FileUtil.newFile( parent, dnd_sf );
-
-    							// use link name to handle incomplete file suffix if set
-
-    						File new_file = FileUtil.newFile( new_parent, link.getName());
-
-    						if ( new_file.equals( link )){
-
-    							boolean	ok;
-
-								try{
-									String file_name = file.getName();
-
-									String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
-
-									boolean prefix_removed = false;
-
-									if ( prefix != null && file_name.startsWith(prefix)){
-
-										file_name = file_name.substring( prefix.length());
-
-										prefix_removed = true;
-									}
-
-									String incomp_ext = dm_state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
-
-									if  ( 	incomp_ext != null && incomp_ext.length() > 0 &&
-											getDownloaded() != getLength()){
-
-											// retain the prefix if enabled and we have a suffix
-
-										if ( prefix == null ){
-
-											prefix = "";
-										}
-
-										File new_link = FileUtil.newFile( file.getParentFile(), prefix + file_name + incomp_ext );
-
-										dm_state.setFileLink( file_index, file, new_link );
-
-										cache_file.moveFile( new_link, null );
-
-									}else if ( prefix_removed ){
-
-										File new_link = FileUtil.newFile( file.getParentFile(), file_name );
-
-										dm_state.setFileLink( file_index, file, new_link );
-
-										cache_file.moveFile( new_link, null );
-
-									}else{
-
-										dm_state.setFileLink( file_index, file, null );
-
-										cache_file.moveFile( file, null );
-									}
-
-									File[] files = new_parent.listFiles();
-
-    								if ( files != null && files.length == 0 ){
-
-    									new_parent.delete();
-    								}
-
-									ok = true;
-
-								}catch( Throwable e ){
-
-									ok = false;
-
-									Debug.out( e );
-								}
-
-    							if ( !ok ){
-
-    								dm_state.setFileLink( file_index, file, link );
-        						}
-    						}
-    					}
-        			}
-        		}
-    		}
+	    						}
+	    					}
+	        			}
+	        		}
+	    		}
+			}
 		}
 	}
 
