@@ -2926,50 +2926,7 @@ DownloadManagerImpl
     		
     		if ( paused ){
     			
-    			resume();
- 
-    			long start = SystemTime.getMonotonousTime();
-    			
-    			long max = 2*1000;
-    			
-    				// give it some time to get back to where it was
-    			
-    			while( true ){
-    				
-    				int current_state = getState();
-    				
-    				if ( current_state == state_before ){
-    					
-    					break;
-    				}
-    				
-    				if ( SystemTime.getMonotonousTime() - start > max ){
-    					
-    					break;
-    				}
-    				
-      				if ( 	current_state == DownloadManager.STATE_STOPPED || 
-       						current_state == DownloadManager.STATE_ERROR ||
-       	       				current_state == DownloadManager.STATE_QUEUED ||
-       	            		current_state == DownloadManager.STATE_DOWNLOADING ||
-       						current_state == DownloadManager.STATE_SEEDING ){
-    					
-      					break;
-    				}
-      				
-    				if ( 	current_state == DownloadManager.STATE_ALLOCATING || 
-    						current_state == DownloadManager.STATE_CHECKING ){
-    				
-    					max = 10*1000;
-    				}
-    				
-    				try{
-    					Thread.sleep(100);
-    					
-    				}catch( Throwable e ){
-    					
-    				}
-    			}
+    			resume( state_before );
     		}
     	}
     }
@@ -3164,6 +3121,87 @@ DownloadManagerImpl
 		globalManager.resumeDownload( this );
 	}
 
+	@Override
+	public boolean 
+	resume(
+		int target_state)
+	{
+		resume();
+		
+		if (	target_state != DownloadManager.STATE_DOWNLOADING && 
+				target_state != DownloadManager.STATE_SEEDING ){
+			
+				// sanitize target state 
+			
+			target_state = DownloadManager.STATE_QUEUED;
+		}
+		
+		long quit_at = SystemTime.getMonotonousTime() + 2500;
+			
+		boolean	is_queued = false;
+		
+			// give it some time to get back to where it was
+		
+		while( true ){
+			
+			int current_state = getState();
+			
+			if ( current_state == target_state ){
+				
+				return( true );
+			}
+			
+			long now = SystemTime.getMonotonousTime();
+
+			if ( current_state == DownloadManager.STATE_QUEUED ){
+				
+					// queued can be transitionary so give it a chance to transit
+				
+				if ( !is_queued ){
+					
+					is_queued = true;
+					
+					quit_at = now + 5*1000;
+				}
+			}else{
+				
+				is_queued = false;
+			}
+
+			if ( 	current_state == DownloadManager.STATE_STOPPED || 
+					current_state == DownloadManager.STATE_ERROR ||
+					current_state == DownloadManager.STATE_DOWNLOADING ||
+					current_state == DownloadManager.STATE_SEEDING ){
+
+				// not making any allocation progress or completed
+
+				return( false );
+			}
+								
+			if ( 	current_state == DownloadManager.STATE_ALLOCATING || 
+					current_state == DownloadManager.STATE_CHECKING ){
+			
+					// making progress, hang around
+				
+				quit_at = now + 10*1000;
+			}
+			
+			if ( now > quit_at ){
+				
+				Debug.out( "Gave up waiting for resume target state to be achieved (current=" + current_state + ",target=" + target_state + ")" );
+				
+				return( false );
+			}
+	
+			try{
+				Thread.sleep(100);
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+	}
+	
 	@Override
 	public boolean getAssumedComplete() {
 		return assumedComplete;

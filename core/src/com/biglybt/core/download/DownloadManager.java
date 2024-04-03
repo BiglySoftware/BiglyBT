@@ -245,6 +245,18 @@ DownloadManager
     
     public void
     resume();
+    
+    	/**
+    	 * resume the download and wait until it reaches the target state. It may fail to reach this
+    	 * state (e.g. goes into an error state). It will however block if it looks like progress towards
+    	 * the state is being made (allocating/checking)
+    	 * @param target_state
+    	 * @return whether or not the state was reached
+    	 */
+    
+    public boolean
+    resume(
+    	int		target_state );
 
     public int
     getTCPListeningPortNumber();

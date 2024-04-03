@@ -1652,12 +1652,8 @@ public class FilesViewMenuUtil
 				dm.setFilePriorities(fileInfos, -1);
 			}
 
-			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action?1:0, prompt );
+			setSkipped(dm, fileInfos, skipped, delete_action?1:0, prompt );
 
-			if (paused) {
-
-				dm.resume();
-			}
 		}
 	}
 
@@ -1684,12 +1680,7 @@ public class FilesViewMenuUtil
 			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
 
-			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action, prompt );
-
-			if (paused) {
-
-				dm.resume();
-			}
+			setSkipped(dm, fileInfos, skipped, delete_action, prompt );
 		}
 	}
 	
@@ -1740,12 +1731,7 @@ public class FilesViewMenuUtil
 				for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 					ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 					DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-					boolean paused = setSkipped(dm, fileInfos, false, 0, true);
-
-					if (paused) {
-
-						dm.resume();
-					}
+					setSkipped(dm, fileInfos, false, 0, true);
 				}
 			}
 		});
@@ -1809,12 +1795,7 @@ public class FilesViewMenuUtil
 		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-			boolean paused = setSkipped(dm, fileInfos, false, 0, true);
-
-			if (paused) {
-
-				dm.resume();
-			}
+			setSkipped(dm, fileInfos, false, 0, true);
 		}
 	}
 	
@@ -2366,7 +2347,7 @@ public class FilesViewMenuUtil
 	 * @param prompt
 	 * @return
 	 */
-	private static boolean 
+	private static void 
 	setSkipped(
 		DownloadManager			manager,
 		DiskManagerFileInfo[]	infos, 
@@ -2381,7 +2362,7 @@ public class FilesViewMenuUtil
 			for (int i = 0; i < infos.length; i++) {
 				infos[i].setSkipped(skipped);
 			}
-			return false;
+			return;
 		}
 		int[] existing_storage_types = manager.getStorageType(infos);
 		int nbFiles = manager.getDiskManagerFileInfoSet().nbFiles();
@@ -2506,50 +2487,61 @@ public class FilesViewMenuUtil
 		}
 
 		boolean ok = true;
-		boolean paused = false;
-		if (type_has_been_changed) {
-			if (requires_pausing)
-				paused = manager.pause( true );
-			if (linearCount > 0)
-				ok &= Arrays.equals(
-						setLinear,
-						manager.getDiskManagerFileInfoSet().setStorageTypes(setLinear,
-								DiskManagerFileInfo.ST_LINEAR));
-			if (compactCount > 0)
-				ok &= Arrays.equals(
-						setCompact,
-						manager.getDiskManagerFileInfoSet().setStorageTypes(setCompact,
-								DiskManagerFileInfo.ST_COMPACT));
-			if (reorderCount > 0)
-				ok &= Arrays.equals(
-						setReorder,
-						manager.getDiskManagerFileInfoSet().setStorageTypes(setReorder,
-								DiskManagerFileInfo.ST_REORDER));
-			if (reorderCompactCount > 0)
-				ok &= Arrays.equals(
-						setReorderCompact,
-						manager.getDiskManagerFileInfoSet().setStorageTypes(setReorderCompact,
-								DiskManagerFileInfo.ST_REORDER_COMPACT));
-		}
-
-		if (ok) {
-			boolean[] toChange = new boolean[nbFiles];
-			
-			for (int i = 0; i < infos.length; i++) {
-				if ( infos[i].isSkipped() != skipped ){
-					toChange[infos[i].getIndex()] = true;
+		
+		boolean paused		= false;
+		int		target_state = 0;
+		
+		try{
+			if (type_has_been_changed) {
+				if (requires_pausing){
+					target_state = manager.getState();
+					paused = manager.pause( true );
 				}
+				if (linearCount > 0)
+					ok &= Arrays.equals(
+							setLinear,
+							manager.getDiskManagerFileInfoSet().setStorageTypes(setLinear,
+									DiskManagerFileInfo.ST_LINEAR));
+				if (compactCount > 0)
+					ok &= Arrays.equals(
+							setCompact,
+							manager.getDiskManagerFileInfoSet().setStorageTypes(setCompact,
+									DiskManagerFileInfo.ST_COMPACT));
+				if (reorderCount > 0)
+					ok &= Arrays.equals(
+							setReorder,
+							manager.getDiskManagerFileInfoSet().setStorageTypes(setReorder,
+									DiskManagerFileInfo.ST_REORDER));
+				if (reorderCompactCount > 0)
+					ok &= Arrays.equals(
+							setReorderCompact,
+							manager.getDiskManagerFileInfoSet().setStorageTypes(setReorderCompact,
+									DiskManagerFileInfo.ST_REORDER_COMPACT));
 			}
+	
+			if (ok) {
+				boolean[] toChange = new boolean[nbFiles];
+				
+				for (int i = 0; i < infos.length; i++) {
+					if ( infos[i].isSkipped() != skipped ){
+						toChange[infos[i].getIndex()] = true;
+					}
+				}
+				
+				manager.getDiskManagerFileInfoSet().setSkipped(toChange, skipped );
+				/*
+				for (int i = 0; i < infos.length; i++) {
+					infos[i].setSkipped(skipped);
+				}
+				*/
+			}
+		}finally{
 			
-			manager.getDiskManagerFileInfoSet().setSkipped(toChange, skipped );
-			/*
-			for (int i = 0; i < infos.length; i++) {
-				infos[i].setSkipped(skipped);
+			if ( paused ){
+			
+				manager.resume( target_state );
 			}
-			*/
 		}
-
-		return paused;
 	}
 
 	public static void

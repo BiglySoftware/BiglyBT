@@ -143,7 +143,7 @@ public class PathItem
 		          path = file.getParentFile().getAbsolutePath();
 		      }
 	
-		      if ( !path.endsWith( File.separator )){
+		      if ( path != null && !path.endsWith( File.separator )){
 	
 		    	  path += File.separator;
 		      }
