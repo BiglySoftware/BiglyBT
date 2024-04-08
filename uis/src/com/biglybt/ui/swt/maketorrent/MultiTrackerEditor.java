@@ -915,7 +915,7 @@ public class MultiTrackerEditor {
       public void handleEvent (Event e) {
       	String url = text.getText();
       	if ( validURL(url)){
-      		text.setForeground( null );
+      		Utils.setSkinnedForeground( text, null );
       		item.setForeground( null );
       	}else{
       		text.setForeground( Colors.colorError );
@@ -932,7 +932,7 @@ public class MultiTrackerEditor {
 	    public void handleEvent (Event e) {
     		String url = text.getText();
     		if ( validURL(url)){
-    			text.setForeground( null );
+    			Utils.setSkinnedForeground( text, null );
     			item.setForeground( null );
     		}else{
     			text.setForeground( Colors.colorError );
