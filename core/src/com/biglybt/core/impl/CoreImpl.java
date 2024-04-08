@@ -226,7 +226,7 @@ CoreImpl
 	
 	private boolean					ll_started;
 	
-	private final List<CoreOperationListener>				operation_listeners		= new ArrayList<>();
+	private final CopyOnWriteList<CoreOperationListener>	operation_listeners		= new CopyOnWriteList<>();
 	private final CopyOnWriteList<CoreOperation>			operations				= new CopyOnWriteList<>();
 	
 	private final CopyOnWriteList<PowerManagementListener>	power_listeners = new CopyOnWriteList<>();
