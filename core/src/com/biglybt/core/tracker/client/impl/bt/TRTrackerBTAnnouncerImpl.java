@@ -2088,8 +2088,19 @@ TRTrackerBTAnnouncerImpl
  			
  			Throwable last_error = null;
  			
+ 			boolean all_skipped = true;
+ 			
+ 			boolean ipv6_enabled =  NetworkAdmin.getSingleton().isIPV6Enabled();
+ 			
  			for ( InetSocketAddress destination: url_addresses ){
  			
+ 				if ( destination.getAddress() instanceof Inet6Address && !ipv6_enabled ){
+ 					
+ 					continue;
+ 				}
+ 				
+ 				all_skipped = false;
+ 				
  				try{
 	 	 			PRUDPPacketHandler handler = PRUDPPacketHandlerFactory.getHandler( handler_port );
 	
@@ -2342,6 +2353,11 @@ TRTrackerBTAnnouncerImpl
  					
  					last_error = e;
  				}
+ 			}
+ 			
+ 			if ( all_skipped ){
+ 				
+ 				throw( new Exception( "IPv6 disabled" ));
  			}
  			
  			if ( last_error != null ){
