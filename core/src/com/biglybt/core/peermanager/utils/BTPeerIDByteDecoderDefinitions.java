@@ -376,6 +376,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		addSimpleClient("XanTorrent", "DansClient");
 		addSimpleClient("MediaGet",     "-MG1");
 		addSimpleClient("MediaGet2 2.1", "-MG21");
+		addSimpleClient("MediaGet2 3", "MG-3");
 		addSimpleClient("FDM", "FD");			// whatever, can't be bothered
 
 		/**
