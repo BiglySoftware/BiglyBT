@@ -7226,41 +7226,48 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				String key =  getPropsKey();
 				
-				Map<String,Object> props 	= COConfigurationManager.getMapParameter( key, null );
+				Map<String,Object> old_props 	= COConfigurationManager.getMapParameter( key, null );
 				
-				if ( props == null ){
+				Map<String,Object> new_props;
+				
+				if ( old_props == null ){
 					
 					if ( value == null ){
 						
 						return;
 					}
 					
-					props = new HashMap<>();
+					new_props = new HashMap<>();
 					
 				}else{
 					
-					props = BEncoder.cloneMap( props );
+					new_props = BEncoder.cloneMap( old_props );
 				}
 	
 				if ( value != null ){
 					
-					props.put( name, value );
+					new_props.put( name, value );
 					
 				}else{
 					
-					props.remove( name );
+					new_props.remove( name );
 				}
 				
-				if ( props.isEmpty() ){
+				if ( new_props.isEmpty() ){
 	
 					COConfigurationManager.removeParameter( key );
 					
+					COConfigurationManager.setDirty();
+					
 				}else{
 					
-					COConfigurationManager.setParameter( key, props );
+					if ( !BEncoder.mapsAreIdentical(old_props, new_props)){
+					
+						COConfigurationManager.setParameter( key, new_props );
+						
+						COConfigurationManager.setDirty();
+					}
 				}
-	
-				COConfigurationManager.setDirty();
 			}
 		}
 		
