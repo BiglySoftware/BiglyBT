@@ -119,6 +119,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private static final int SMOOTHING_PERIOD_SECS 	= 15;
 	private static final int SMOOTHING_PERIOD 		= SMOOTHING_PERIOD_SECS*1000;
 
+	private static final Object DEBUG_LINE_KEY = new Object();
+	
 	private TagManager tag_manager;
 		
 	private volatile boolean tagsHaveDLorCDLimits;
@@ -3464,6 +3466,15 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						"nSeeds=" + dlData.getLastModifiedScrapeResultSeeds(),
 						"nPeers=" + dlData.getLastModifiedScrapeResultPeers()
 					};
+					
+					String lastDebug = (String)dlData.getUserData( DEBUG_LINE_KEY );
+					
+					if ( lastDebug == null || !sDebugLine.equals( lastDebug )){
+						
+						dlData.setUserData( DEBUG_LINE_KEY, sDebugLine );
+						
+						debugNoChange = true;
+					}
 					printDebugChanges("", debugEntries, debugEntries2, sDebugLine, "  ", debugNoChange, dlData);
 				}
 			}
