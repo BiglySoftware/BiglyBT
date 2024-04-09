@@ -1624,7 +1624,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private long processMaxMS = 0;
 
-	private long processLastComplete = 0;
+	private long processLastCompleteMono = -1;
 
 	private long processTotalGap = 0;
 
@@ -1632,13 +1632,22 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private long processTotalZeroRecalcs = 0;
 
+	private long lastDebugNoChangesMono = -1;
+	
 	protected void process() {
-		long now = 0;
+		long nowMono = -1;
 		try {
 			this_mon.enter();
 
-			now = SystemTime.getCurrentTime();
+			nowMono = SystemTime.getMonotonousTime();
 
+			boolean debugNoChange = lastDebugNoChangesMono == -1 || nowMono - lastDebugNoChangesMono >= 60000;
+				
+			if ( debugNoChange ){
+				
+				lastDebugNoChangesMono = nowMono;
+			}
+						
 			somethingChanged = false;
 			Object[] recalcArray;
 			try {
@@ -1653,10 +1662,15 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				DefaultRankCalculator rankObj = (DefaultRankCalculator) recalcArray[i];
 				if (bDebugLog) {
 					long oldSR = rankObj.getSeedingRank();
+					
 					rankObj.recalcSeedingRank();
-					String s = "recalc seeding rank.  old/new=" + oldSR + "/"
-							+ rankObj.getSeedingRank();
-					log.log(rankObj.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+					
+					int newSR=rankObj.getSeedingRank();
+					
+					if ( oldSR != newSR ){
+						String s = "recalc seeding rank.  old/new=" + oldSR + "/" + newSR;
+						log.log(rankObj.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+					}
 				} else {
 					rankObj.recalcSeedingRank();
 				}
@@ -1939,7 +1953,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						tvars = temp.toArray(new ProcessTagVarsComplete[temp.size()]);
 					}
 						
-					handleCompletedDownload( dlData, vars, tvars, totals);
+					handleCompletedDownload( dlData, vars, tvars, totals, debugNoChange );
 				}
 			} // Loop 2/2 (Start/Stopping)
 			
@@ -2024,9 +2038,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						"freeS=" + lightSeedingSlots, "", true, null);
 			}
 		} finally {
-			if (now > 0) {
+			if (nowMono >= 0) {
 				processCount++;
-				long timeTaken = (SystemTime.getCurrentTime() - now);
+				long timeTaken = (SystemTime.getMonotonousTime() - nowMono);
 				if (bDebugLog) {
 					log.log(LoggerChannel.LT_INFORMATION, "process() took " + timeTaken);
 				}
@@ -2034,10 +2048,10 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				if (timeTaken > processMaxMS) {
 					processMaxMS = timeTaken;
 				}
-				if (processLastComplete > 0) {
-					processTotalGap += (now - processLastComplete);
+				if (processLastCompleteMono >= 0) {
+					processTotalGap += (nowMono - processLastCompleteMono);
 				}
-				processLastComplete = now;
+				processLastCompleteMono = nowMono;
 			}
 
 			immediateProcessingScheduled = false;
@@ -2805,7 +2819,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		DefaultRankCalculator 		dlData, 
 		ProcessVars 				vars,
 		ProcessTagVarsComplete[]	tagVars,
-		TotalsStats 				totals ) 
+		TotalsStats 				totals,
+		boolean						debugNoChange )
 	{
 		if (!totals.bOkToStartSeeding)
 			return;
@@ -3449,7 +3464,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						"nSeeds=" + dlData.getLastModifiedScrapeResultSeeds(),
 						"nPeers=" + dlData.getLastModifiedScrapeResultPeers()
 					};
-					printDebugChanges("", debugEntries, debugEntries2, sDebugLine, "  ", true, dlData);
+					printDebugChanges("", debugEntries, debugEntries2, sDebugLine, "  ", debugNoChange, dlData);
 				}
 			}
 		}
