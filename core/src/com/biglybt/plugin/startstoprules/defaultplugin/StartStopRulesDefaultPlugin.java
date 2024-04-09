@@ -724,11 +724,13 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			// Skip if error (which happens when listener is first added and the
 			// torrent isn't scraped yet)
 			if (result.getResponseType() == DownloadScrapeResult.RT_ERROR) {
-				if (bDebugLog)
-					log.log(dl.getTorrent(), LoggerChannel.LT_INFORMATION,
-							"Ignored somethingChanged: new scrapeResult (RT_ERROR)");
-				if (dlData != null)
+				if (bDebugLog){
+					// removed, not useful
+					// log.log(dl.getTorrent(), LoggerChannel.LT_INFORMATION, "Ignored somethingChanged: new scrapeResult (RT_ERROR)");
+				}
+				if (dlData != null){
 					dlData.scrapeReceived( result );
+				}
 				return;
 			}
 
