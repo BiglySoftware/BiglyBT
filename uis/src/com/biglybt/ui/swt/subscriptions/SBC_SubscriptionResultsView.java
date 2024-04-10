@@ -1518,7 +1518,7 @@ SBC_SubscriptionResultsView
 							
 						if ( Arrays.equals(((SubscriptionResultFilterable)row.getDataSource()).getHash(), hash )){
 			
-							target = Colors.blues[ Colors.BLUES_MIDLIGHT ];
+							target = Utils.isDarkAppearanceNative()?Colors.faded[Colors.FADED_DARKEST-2]:Colors.blues[ Colors.BLUES_MIDLIGHT ];
 						}
 					}
 					
