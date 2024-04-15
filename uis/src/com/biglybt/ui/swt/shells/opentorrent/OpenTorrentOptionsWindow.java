@@ -1491,25 +1491,23 @@ public class OpenTorrentOptionsWindow
 						{
 							MenuItem item = new MenuItem(menu, SWT.CHECK );
 
-							 item.setData( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" ));
+							item.setSelection( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" ));
 
-							 Messages.setLanguageText(item, "OpenTorrentWindow.tlf.rename");
+							Messages.setLanguageText(item, "OpenTorrentWindow.tlf.rename");
 
-							 item.addSelectionListener(
-								 new SelectionAdapter()
-								 {
-									 @Override
-									 public void
-									 widgetSelected(
-											 SelectionEvent e )
-									 {
-										 COConfigurationManager.setParameter(
-												"open.torrent.window.rename.on.tlf.change",
-												((MenuItem)e.widget).getSelection());
-									 }
-								 });
-
-							item.setEnabled( non_simple_instances.size() > 0 );
+							item.addSelectionListener(
+									new SelectionAdapter()
+									{
+										@Override
+										public void
+										widgetSelected(
+												SelectionEvent e )
+										{
+											COConfigurationManager.setParameter(
+													"open.torrent.window.rename.on.tlf.change",
+													((MenuItem)e.widget).getSelection());
+										}
+									});
 						}
 
 						new MenuItem(menu, SWT.SEPARATOR);
@@ -5320,7 +5318,36 @@ public class OpenTorrentOptionsWindow
 			rename_dn_item.setEnabled( isSingleOptions );
 			
 			new MenuItem( more_menu, SWT.SEPARATOR );
-			 
+
+			if ( isSingleOptions && !torrentOptions.isSimpleTorrent()){
+				
+				MenuItem item = new MenuItem(more_menu, SWT.PUSH);
+	
+				Messages.setLanguageText(item, "OpenTorrentWindow.set.savepath");
+	
+				item.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						setSavePath();
+					}
+				});
+	
+				MenuItem tlfr = new MenuItem(more_menu, SWT.PUSH);
+	
+				Messages.setLanguageText(tlfr, "OpenTorrentWindow.tlf.remove");
+	
+				tlfr.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						removeTopLevelFolder();
+					}
+				});
+	
+				more_menu.addListener(SWT.Show,(ev)->{
+					tlfr.setEnabled( canRemoveTopLevelFolder());
+				});
+			}
+			
 			MenuItem opt = new MenuItem( more_menu, SWT.CHECK );
 			
 			opt.setSelection( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" ));

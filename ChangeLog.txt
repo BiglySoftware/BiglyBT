@@ -78,6 +78,7 @@ BUGFIX: Core   | Don't force-start completed update torrents [Parg]
 BUGFIX: Core   | Need one more loop on errors [Parg]
 BUGFIX: Core   | Handle already completed and queued download [Parg]
 BUGFIX: Core   | Ensure DHT contact liveness set correctly on create [Parg]
+BUGFIX: Core   | Skip IPv6 UDP tracker addresses when IPv6 disabled [Parg]
 BUGFIX: UI     | Fix selected tag not being shown in tag selection menu [Parg]
 BUGFIX: UI     | Fix wrapping of comment line [TuxPaper]
 BUGFIX: UI     | Auto restart prompt is SWT Only [TuxPaper]
@@ -95,6 +96,7 @@ BUGFIX: UI     | Some minor Windows dark mode fixes [Parg]
 BUGFIX: UI     | Fix search box background in subs view + windows dark [Parg]
 BUGFIX: UI     | Fix google search command line [Parg]
 BUGFIX: UI     | Fix some default column setup issues; "reset" -> use explicit default [Parg]
+BUGFIX: UI     | Fix valid URL foreground in Windows dark mode [Parg]
 
 2023.11.10 | BiglyBT 3.5.0.0
 
