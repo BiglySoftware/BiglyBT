@@ -19,6 +19,7 @@ FEATURE: Core  | Option to set files to high priority when <n> pieces remaining 
 FEATURE: Core  | Added global setting for file priority pieces remaining [Parg]
 FEATURE: Core  | Add "completed" to generated feed [Parg]
 FEATURE: Core  | Make banning of HTTP seeds download specific [Parg]
+FEATURE: Core  | Added "test mode" to "search for existing data files" [Parg]
 FEATURE: UI    | Added an "Archive" toolbar item [Parg]
 FEATURE: UI    | Support tag/category filter matching in subscription results [Parg]
 FEATURE: UI    | Added country chat sub-tab in Peer views [Parg]

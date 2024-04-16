@@ -5044,7 +5044,7 @@ public class ManagerUtils {
 					
 					if ( test_only ){
 						
-						logLine( viewer, indent, new SimpleDateFormat().format( new Date()) +  ": Complete, " + downloads_modified + " downloads would havbe been updated" );
+						logLine( viewer, indent, new SimpleDateFormat().format( new Date()) +  ": Complete, " + downloads_modified + " downloads would have been updated" );
 						
 					}else{
 						
