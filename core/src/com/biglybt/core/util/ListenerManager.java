@@ -73,14 +73,14 @@ ListenerManager<T>
 	private ListenerManagerDispatcherWithException<T>		target_with_exception;
 
 	private final boolean		async;
-	private AEThread2	async_thread;
+	private AEThread2			async_thread;
 
 	private CopyOnWriteList<T>			listeners		= new CopyOnWriteList<>();
 
 	private List<Object[]>	dispatch_queue;
 	private AESemaphore		dispatch_sem;
 
-	private int		logged_too_many_count;
+	private int		logged_too_many_count_next	= 50;
 	
 	protected
 	ListenerManager(
@@ -134,9 +134,9 @@ ListenerManager<T>
 
 			int num_listeners = listeners.size();
 			
-			if ( num_listeners % 50 == 0 && num_listeners > logged_too_many_count ){
+			if ( num_listeners == logged_too_many_count_next ){
 				
-				logged_too_many_count = num_listeners;
+				logged_too_many_count_next *= 5;
 				
 				Logger.log(
 					new LogEvent(
@@ -145,7 +145,7 @@ ListenerManager<T>
 
 				if ( Constants.IS_CVS_VERSION ){
 															
-					List<String> strings = listeners.getList().stream().map( Object::toString ).collect( Collectors.toList());
+					List<String> strings = listeners.getList().stream().map((o)->String.valueOf( o.getClass())).collect( Collectors.toList());
 					
 					Map<String,Integer> counts = new HashMap<>();
 					
