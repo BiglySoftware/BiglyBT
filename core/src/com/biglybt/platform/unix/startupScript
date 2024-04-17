@@ -10,7 +10,7 @@ JAVA_PROPS=""
 
 ######## YOU PROBABLY DO NOT WANT TO TOUCH ANYTHING BELOW! ########
 
-SCRIPT_VERSION=11
+SCRIPT_VERSION=12
 START_CLASS="com.biglybt.ui.Main"
 
 MSG_LOADING="Loading BiglyBT:"
@@ -78,12 +78,16 @@ check_version()
 		return 1
 	fi
 
-	JAVA_HEADER=$($JAVABIN -version 2>&1 | head -n 1)
+	JAVA_HEADER=$("$JAVABIN" -version 2>&1 | grep -i version | head -n 1)
+	if [ "$JAVA_HEADER" = "" ] ; then
+ 		echo "ERROR: Failed to detect JAVA version" >&2
+	fi
+	
 	JAVA_IMPL=$(echo "${JAVA_HEADER}" | cut -f1 -d' ')
-  if [ "$JAVA_IMPL" = "#" ] ; then
-    echo "$MSG_JAVABORK"
-    $JAVABIN -version 2>&1
-    exit 1
+	if [ "$JAVA_IMPL" = "#" ] ; then
+		echo "$MSG_JAVABORK"
+    	$JAVABIN -version 2>&1
+    	exit 1
 	else
 		JAVA_VERSION=$(echo "${JAVA_HEADER}" | sed "s/^.* version \"\(.*\)\".*$/\1/")
 		if echo "$JAVA_VERSION" | grep "^1.[0-7]" ; then
