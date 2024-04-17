@@ -34,8 +34,11 @@ package com.biglybt.core.util;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -141,7 +144,21 @@ ListenerManager<T>
 						num_listeners + " listeners added for " + name + "\n\t" + Debug.getStackTrace(true, false)));
 
 				if ( Constants.IS_CVS_VERSION ){
-					Debug.outNoStack( num_listeners + " listeners added for " + name + "\n\t" + Debug.getStackTrace(true, false) + "\n\t" + listeners.getList());
+															
+					List<String> strings = listeners.getList().stream().map( Object::toString ).collect( Collectors.toList());
+					
+					Map<String,Integer> counts = new HashMap<>();
+					
+					for( String str: strings ){
+						counts.put(str, counts.getOrDefault(str, 0) + 1);
+					}
+					
+					List<String> sorted = 
+						counts.entrySet().stream().
+							sorted(( a, b )->b.getValue().compareTo(a.getValue())).
+								map((e)->{return(e.getValue() + " * " + e.getKey());}).collect( Collectors.toList());
+					
+					Debug.outNoStack( num_listeners + " listeners added for " + name + "\n\t" + Debug.getStackTrace(true, false) + "\n\t" + sorted );
 				}
 			}
 
