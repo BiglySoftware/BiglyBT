@@ -179,7 +179,7 @@ public class AboutWindow {
     				+ Constants.OSVersion + ", "
     				+ Constants.OSArch + " (" + (Constants.isOS64Bit?64:32) + " bit)\n"
     				+ Constants.APP_NAME.charAt(0) + Constants.getCurrentVersion() + (Constants.SUBVERSION.length()==0?"":("-"+Constants.SUBVERSION)) + "/" + CorePatchLevel.getCurrentPatchLevel() + " "
-    				+ COConfigurationManager.getStringParameter("ui");
+    				+ COConfigurationManager.getStringParameter("ui") + " " + MessageText.getCurrentLocale();
 
     txtSysInfo.setText( about_text );
 		gridData = new GridData(GridData.FILL_BOTH);
