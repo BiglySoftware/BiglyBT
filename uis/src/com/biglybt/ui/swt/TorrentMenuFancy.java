@@ -68,7 +68,6 @@ import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.components.shell.ShellFactory.AEShell;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.minibar.DownloadBar;
@@ -2591,7 +2590,6 @@ public class TorrentMenuFancy
 				});
 
 		boolean fileMove 		= true;
-		boolean locateFiles 	= false;
 		boolean	exportFiles		= true;
 		boolean	canSetMOC		= dms.length > 0;
 		boolean canClearMOC		= false;
@@ -2603,14 +2601,6 @@ public class TorrentMenuFancy
 			}
 			if ( !dm.canExportDownload()){
 				exportFiles = false;
-			}
-			int state = dm.getState();
-			
-			if ( 	!dm.isDownloadComplete( false ) ||  
-					state == DownloadManager.STATE_ERROR || 
-					state == DownloadManager.STATE_STOPPED ){
-				
-				locateFiles = true;
 			}
 			
 			boolean incomplete = !dm.isDownloadComplete(true);
@@ -2738,15 +2728,13 @@ public class TorrentMenuFancy
 					}
 				});
 
-		if ( locateFiles ){
-			createRow(detailArea, "MyTorrentsView.menu.locatefiles", null,
-					new ListenerDMTask(dms) {
-						@Override
-						public void run(DownloadManager[] dms) {
-							ManagerUtils.locateFiles(dms,parentShell);
-						}
-					});
-		}
+		createRow(detailArea, "MyTorrentsView.menu.locatefiles", null,
+				new ListenerDMTask(dms) {
+					@Override
+					public void run(DownloadManager[] dms) {
+						ManagerUtils.locateFiles(dms,parentShell);
+					}
+				});
 
 		if ( dms.length == 1 && ManagerUtils.canFindMoreLikeThis()){
 			createRow(detailArea, "MyTorrentsView.menu.findmorelikethis", null,
