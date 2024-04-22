@@ -999,7 +999,7 @@ public class TorrentUtil
 					moveDataFiles(shell, dms,true);
 				}
 			});
-			itemFileMoveData.setEnabled(fileMove);
+			itemFileMoveDataBatch.setEnabled(fileMove);
 		}
 		final MenuItem itemFileMoveTorrent = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemFileMoveTorrent,
