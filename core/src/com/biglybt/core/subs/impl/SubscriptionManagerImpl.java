@@ -5250,7 +5250,7 @@ SubscriptionManagerImpl
 									
 									String alt_url = UrlUtils.parseTextForURL( url.substring( 10 ), true );
 
-									if ( key.startsWith( alt_url )){
+									if ( alt_url != null && key.startsWith( alt_url )){
 
 										result_hash = hash;	// force match below
 									}
