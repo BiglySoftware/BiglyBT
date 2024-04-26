@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2024.xx.yy | BiglyBT 3.6.0.1
+
 2024.04.23 | BiglyBT 3.6.0.0
 
 FEATURE: Tag   | Added tag constraint variable "file_count_selected" and "count" function [Parg]
