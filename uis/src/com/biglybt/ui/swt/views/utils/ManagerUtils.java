@@ -3868,6 +3868,11 @@ public class ManagerUtils {
 											pos = 1-pos;
 										}
 
+										if ( pos >= files.length ){
+											
+											pos = files.length-1;
+										}
+										
 										long 	file_tolerance = tolerance*file_length/100;
 
 										long	lower_limit = file_length - file_tolerance;
@@ -3880,6 +3885,7 @@ public class ManagerUtils {
 
 											long	l = file_lengths[index--];
 
+										
 											if ( l < lower_limit ){
 
 												break;
@@ -5053,6 +5059,8 @@ public class ManagerUtils {
 
 				}catch( Throwable e ){
 
+					Debug.out( e );
+					
 					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
 					
 				}finally{
@@ -5457,6 +5465,8 @@ public class ManagerUtils {
 					}
 				}catch( Throwable e ){
 
+					Debug.out( e );
+					
 					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
 					
 				}finally{
