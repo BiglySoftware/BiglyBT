@@ -3865,7 +3865,7 @@ public class ManagerUtils {
 
 										if ( pos < 0 ){
 
-											pos = 1-pos;
+											pos = (-pos) -1;
 										}
 
 										if ( pos >= files.length ){
@@ -3876,6 +3876,7 @@ public class ManagerUtils {
 										long 	file_tolerance = tolerance*file_length/100;
 
 										long	lower_limit = file_length - file_tolerance;
+										long	upper_limit = file_length + file_tolerance;
 
 										int	index = pos;
 
@@ -3884,7 +3885,6 @@ public class ManagerUtils {
 										while( index >= 0 ){
 
 											long	l = file_lengths[index--];
-
 										
 											if ( l < lower_limit ){
 
@@ -3892,7 +3892,7 @@ public class ManagerUtils {
 
 											}else{
 
-												if ( l != file_length ){
+												if ( l != file_length && l < upper_limit ){
 
 													Set<File> x = file_map.get( l );
 
@@ -3915,8 +3915,6 @@ public class ManagerUtils {
 											}
 										}
 
-										long	upper_limit = file_length + file_tolerance;
-
 										index = pos+1;
 
 										while( index < file_lengths.length ){
@@ -3929,7 +3927,7 @@ public class ManagerUtils {
 
 											}else{
 
-												if ( l != file_length ){
+												if ( l != file_length && l > lower_limit ){
 
 													Set<File> x = file_map.get( l );
 
