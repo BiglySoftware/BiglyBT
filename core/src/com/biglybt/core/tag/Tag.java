@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.vuzefile.VuzeFile;
 
 
@@ -34,8 +35,9 @@ Tag
 	public static final String	TP_SETTINGS_REQUESTED	= "Settings Requested";	// Boolean
 	public static final String	TP_CONSTRAINT_ERROR		= "Constraint Error";	// String
 
-	public static final long	FL_NONE				= 0x00000000;
-	public static final long	FL_IS_FILTER		= 0x00000001;
+	public static final long	FL_NONE					= 0x00000000;
+	public static final long	FL_IS_FILTER			= 0x00000001;
+	public static final long	FL_IS_HIDDEN_WHEN_EMPTY	= 0x00000002;
 	
 		/**
 		 * Unique type denoting this species of tag
@@ -106,12 +108,25 @@ Tag
 	setVisible(
 		boolean		visible );
 
+	public default boolean
+	isHiddenWhenEmpty()
+	{
+		return( getFlag( FL_IS_HIDDEN_WHEN_EMPTY ));
+	}	
+	
+	public default void
+	setHiddenWhenEmpty(
+		boolean b )
+	{
+		setFlag( FL_IS_HIDDEN_WHEN_EMPTY, b );
+	}
+	
 	public default void
 	setFlag(
 		long		flag,
 		boolean		value )
-	{
-		
+	{	
+		Debug.out( "Not supported" );
 	}
 	
 	public default boolean

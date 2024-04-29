@@ -91,6 +91,7 @@ public class TagSettingsView
 		private IconSwtParameter tagIcon;
 
 		private BooleanSwtParameter viewInSideBar;
+		private BooleanSwtParameter hideWhenEmpty;
 
 		private BooleanSwtParameter isPublic;
 		
@@ -499,9 +500,10 @@ public class TagSettingsView
 
 			boolean 	hasVisibility 	= !hasCat;
 			
+			int cSection2Line1 = 0;
+			
 			if ( hasVisibility && !hasSwarm ){
-
-				
+			
 				// Field: Visible
 	
 				params.viewInSideBar = new BooleanSwtParameter(cSection2, "viewInSidebar",
@@ -529,8 +531,41 @@ public class TagSettingsView
 							}
 						});
 				gd = new GridData();
-				gd.horizontalSpan = allManual?1:4;
+				gd.horizontalSpan = 1;
+				cSection2Line1 +=gd.horizontalSpan;
+				
 				params.viewInSideBar.setLayoutData(gd);	
+				
+				// Field: Hide When Empty
+				
+				params.hideWhenEmpty = new BooleanSwtParameter(cSection2, "hideWhenEmpty",
+						"TagSettings.hideWhenEmpty", null,
+						new BooleanSwtParameter.ValueProcessor() {
+							@Override
+							public Boolean getValue(BooleanSwtParameter p) {
+								int isHideWhenEMpty = -1;
+								for (Tag tag : tags) {
+									isHideWhenEMpty = updateIntBoolean(tag.isHiddenWhenEmpty(), isHideWhenEMpty);
+								}
+								return isHideWhenEMpty == 2 ? null : (isHideWhenEMpty == 1);
+							}
+	
+							@Override
+							public boolean setValue(BooleanSwtParameter p, Boolean value) {
+								boolean changed = tags.length == 0;
+								for (Tag tag : tags) {
+									if (!tag.isHiddenWhenEmpty() == value) {
+										tag.setHiddenWhenEmpty(value);
+										changed = true;
+									}
+								}
+								return changed;
+							}
+						});
+				gd = new GridData();
+				gd.horizontalSpan = allManual?1:3;
+				cSection2Line1 += gd.horizontalSpan;
+				params.hideWhenEmpty.setLayoutData(gd);	
 			}
 			
 			if ( allManual ){
@@ -580,7 +615,7 @@ public class TagSettingsView
 							}
 						});
 				gd = new GridData();
-				gd.horizontalSpan = 3;
+				gd.horizontalSpan = 4-cSection2Line1;;
 				params.isFilter.setLayoutData(gd);
 			}
 			
@@ -2185,6 +2220,9 @@ public class TagSettingsView
 
 		if (params.viewInSideBar != null) {
 			params.viewInSideBar.refreshControl();
+		}
+		if (params.hideWhenEmpty != null) {
+			params.hideWhenEmpty.refreshControl();
 		}
 
 		if (params.isPublic != null) {

@@ -1446,6 +1446,23 @@ public class SB_Transfers
 
 		// tag stuff
 
+	private boolean
+	isTagVisible(
+		Tag		tag )
+	{
+		boolean visible = tag.isVisible();
+		
+		if ( visible ){
+			
+			if ( tag.isHiddenWhenEmpty() && tag.getTaggedCount() == 0 ){
+				
+				visible = false;
+			}
+		}
+		
+		return( visible );
+	}
+	
 	private void refreshTagSideBar(Tag tag) {
 		UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 		MultipleDocumentInterface mdi = uiFunctions != null ? uiFunctions.getMDI() : null;
@@ -1459,7 +1476,7 @@ public class SB_Transfers
 
 		if ( entry == null ){
 
-			if ( tag.isVisible()){
+			if ( isTagVisible(tag)){
 
 				setupTag( tag );
 			}
@@ -1467,7 +1484,7 @@ public class SB_Transfers
 			return;
 		}
 
-		if ( !tag.isVisible()){
+		if ( !isTagVisible(tag)){
 
 			closeTagView( tag);
 
@@ -1563,6 +1580,11 @@ public class SB_Transfers
 		}
 		
 		if ( !show_tag_tab_views ){
+			
+			return( null );
+		}
+		
+		if ( !isTagVisible(tag)){
 			
 			return( null );
 		}
@@ -2399,7 +2421,10 @@ public class SB_Transfers
 		
 			closeTagView( tag);
 		
-			setupTag( tag );
+			if ( isTagVisible(tag)){
+			
+				setupTag( tag );
+			}
 		}
 	}
 	
@@ -2862,7 +2887,7 @@ public class SB_Transfers
 				public void tagTypeChanged(TagType tag_type) {
 					for (Tag tag : tag_type.getTags()) {
 
-						if (tag.isVisible()) {
+						if (isTagVisible(tag)) {
 
 							setupTag(tag);
 
@@ -2900,7 +2925,7 @@ public class SB_Transfers
 
 				public void tagAdded(Tag tag) {
 					synchronized (tag_listener_lock) {
-						if (tag.isVisible() && tagListener != null) {
+						if (isTagVisible(tag) && tagListener != null) {
 
 							setupTag(tag);
 
