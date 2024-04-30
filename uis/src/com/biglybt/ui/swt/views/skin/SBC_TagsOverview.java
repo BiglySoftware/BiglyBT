@@ -585,6 +585,14 @@ public class SBC_TagsOverview
 						new ColumnTagsSortAutoApply(column);
 					}
 				});
+		
+		tableManager.registerColumn(Tag.class, ColumnTagHideWhenEmpty.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagHideWhenEmpty(column);
+					}
+				});
 
 		tableManager.setDefaultColumnNames(TABLE_TAGS,
 				new String[] {
