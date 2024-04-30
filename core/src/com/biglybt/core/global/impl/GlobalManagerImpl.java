@@ -5617,6 +5617,8 @@ public class GlobalManagerImpl
 			{
 				super( DownloadStateTagger.this, tag_id, name, do_rates, do_up, do_down, do_bytes, run_states );
 
+				setGroup( MessageText.getString( "tag.type.ds" ));
+				
 				addTag();
 			}
 
