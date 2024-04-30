@@ -1,7 +1,5 @@
-/*
- * Created on Feb 26, 2009
- *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+/* 
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

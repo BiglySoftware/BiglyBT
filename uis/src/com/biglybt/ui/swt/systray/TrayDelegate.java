@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) Bigly Software.  All Rights Reserved.
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -16,8 +18,6 @@
 
 package com.biglybt.ui.swt.systray;
 
-/**
- * Created by TuxPaper on 6/29/2017.
- */
+
 public interface TrayDelegate {
 }
