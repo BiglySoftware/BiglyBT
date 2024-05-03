@@ -23,6 +23,10 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.core.Core;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -173,14 +177,23 @@ public class RankItem
 			int pos = 1;
 			
 			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+						
+			List<DownloadManager>	managers	= new ArrayList<>( rows.length );
+			List<Integer>			positions	= new ArrayList<>( rows.length );
 			
 			for ( TableRowCore row: rows ){
 				
 				DownloadManager o = (DownloadManager)row.getDataSource(true);
 				
-				gm.moveTo(o, pos++);
+				managers.add( o );
+				
+				positions.add( pos++ );
+				
+				// gm.moveTo(o, pos++);
 			}
 			
+			gm.moveTo( managers, positions );
+
 			RankItem.this.invalidateCells();
 		}
 	});
