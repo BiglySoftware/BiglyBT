@@ -88,8 +88,10 @@ SubscriptionResultFilterable
 			}
 		}
 
-		size = (Long)properties.get( SearchResult.PR_SIZE );
+		Long l_size = (Long)properties.get( SearchResult.PR_SIZE );
 
+		size = l_size==null?0:l_size;
+		
 		String tl = (String)properties.get( SearchResult.PR_TORRENT_LINK );
 
 		if ( tl == null ){

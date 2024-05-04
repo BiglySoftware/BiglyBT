@@ -7847,7 +7847,7 @@ SubscriptionManagerImpl
 	{
 		if ( has_new_results ){
 			
-			checkGloballyMarkedRead( results );
+			checkGloballyMarkedRead( subs, results );
 			
 			String script = subs.getExecuteOnNewResult();
 			
@@ -7924,6 +7924,7 @@ SubscriptionManagerImpl
 	
 	private void
 	checkGloballyMarkedRead(
+		SubscriptionImpl					subs,
 		Collection<SubscriptionResultImpl>	results )
 	{
 		synchronized( this ){
@@ -7931,6 +7932,8 @@ SubscriptionManagerImpl
 			getGMAR( false );
 			
 			if ( last_gmar != null && !gmar_cache.isEmpty()){
+				
+				List<String> mark_rids = new ArrayList<>();
 				
 				for ( SubscriptionResultImpl result: results ){
 					
@@ -7967,10 +7970,22 @@ SubscriptionManagerImpl
 						SubscriptionResult sr = last_gmar.getHistory().getResult( rid );
 						
 						if ( sr != null && !sr.isDeleted()){
-					
-							result.setRead( true );
+							
+							if ( !result.getRead()){
+								
+								mark_rids.add( result.getID());
+							}
 						}
 					}
+				}
+				
+				if ( !mark_rids.isEmpty()){
+					
+					boolean[] temp = new boolean[mark_rids.size()];
+					
+					Arrays.fill( temp, true );
+					
+					subs.getHistory().markResults( mark_rids.toArray(new String[temp.length]), temp);
 				}
 			}
 		}
