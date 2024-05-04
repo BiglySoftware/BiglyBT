@@ -214,23 +214,25 @@ SearchSubsUtils
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				if ( subs_maybe_null == null || results.length == 1 ){
-					for ( SearchSubsResultBase result: results ){
-	
-						result.setRead( true );
+				Utils.getOffOfSWTThread(()->{
+					if ( subs_maybe_null == null || results.length == 1 ){
+						for ( SearchSubsResultBase result: results ){
+		
+							result.setRead( true );
+						}
+					}else{
+						String[]	ids 	= new String[results.length];
+						boolean[]	read	= new boolean[ids.length];
+						
+						Arrays.fill( read, true );
+						
+						for ( int i=0;i<ids.length;i++){
+							ids[i] = results[i].getID();
+						}
+						
+						subs_maybe_null.getHistory().markResults( ids, read );
 					}
-				}else{
-					String[]	ids 	= new String[results.length];
-					boolean[]	read	= new boolean[ids.length];
-					
-					Arrays.fill( read, true );
-					
-					for ( int i=0;i<ids.length;i++){
-						ids[i] = results[i].getID();
-					}
-					
-					subs_maybe_null.getHistory().markResults( ids, read );
-				}
+				});
 			}
 		});
 		
@@ -241,25 +243,25 @@ SearchSubsUtils
 		item.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-
-				if ( subs_maybe_null == null || results.length == 1 ){
-					for ( SearchSubsResultBase result: results ){
-	
-						result.setRead( true );
-					}
-				}else{
-					String[]	ids 	= new String[results.length];
-					boolean[]	read	= new boolean[ids.length];
-					
-					Arrays.fill( read, true );
-					
-					for ( int i=0;i<ids.length;i++){
-						ids[i] = results[i].getID();
-					}
-					
-					subs_maybe_null.getHistory().markResults( ids, read );
-				}
 				Utils.getOffOfSWTThread(()->{
+					if ( subs_maybe_null == null || results.length == 1 ){
+						for ( SearchSubsResultBase result: results ){
+		
+							result.setRead( true );
+						}
+					}else{
+						String[]	ids 	= new String[results.length];
+						boolean[]	read	= new boolean[ids.length];
+						
+						Arrays.fill( read, true );
+						
+						for ( int i=0;i<ids.length;i++){
+							ids[i] = results[i].getID();
+						}
+						
+						subs_maybe_null.getHistory().markResults( ids, read );
+					}
+					
 					SubscriptionManagerFactory.getSingleton().markReadInAllSubscriptions( results );
 				});
 			}
@@ -275,23 +277,25 @@ SearchSubsUtils
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				if ( subs_maybe_null == null || results.length == 1 ){
-					for ( SearchSubsResultBase result: results ){
-	
-						result.setRead( false );
+				Utils.getOffOfSWTThread(()->{
+					if ( subs_maybe_null == null || results.length == 1 ){
+						for ( SearchSubsResultBase result: results ){
+		
+							result.setRead( false );
+						}
+					}else{
+						String[]	ids 	= new String[results.length];
+						boolean[]	read	= new boolean[ids.length];
+						
+						Arrays.fill( read, false );
+						
+						for ( int i=0;i<ids.length;i++){
+							ids[i] = results[i].getID();
+						}
+						
+						subs_maybe_null.getHistory().markResults( ids, read );
 					}
-				}else{
-					String[]	ids 	= new String[results.length];
-					boolean[]	read	= new boolean[ids.length];
-					
-					Arrays.fill( read, false );
-					
-					for ( int i=0;i<ids.length;i++){
-						ids[i] = results[i].getID();
-					}
-					
-					subs_maybe_null.getHistory().markResults( ids, read );
-				}
+				});
 			}
 		});
 		
