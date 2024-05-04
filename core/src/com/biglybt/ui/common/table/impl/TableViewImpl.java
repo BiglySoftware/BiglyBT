@@ -237,9 +237,6 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	private boolean headerVisible = true;
 
 	private boolean menuEnabled = true;
-
-	private boolean provideIndexesOnRemove = false;
-
 	
 	private LinkedList<HistoryEntry>	historyBefore 	= new LinkedList<>();
 	private LinkedList<HistoryEntry>	historyAfter	= new LinkedList<>();	
@@ -1555,41 +1552,36 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		ArrayList<TableRowCore> removedWithSelection = new ArrayList<>();
 		synchronized (rows_sync) {
-  		for (int i = 0; i < dataSources.length; i++) {
-  			if (dataSources[i] == null) {
-  				continue;
-  			}
+			Set<TableRowCore> toRemove = new IdentityHashSet<>();
+					
+			for (int i = 0; i < dataSources.length; i++) {
+				if (dataSources[i] == null) {
+					continue;
+				}
 
-  			TableRowCore item = mapDataSourceToRow.get(dataSources[i]);
-  			if (item != null) {
-  				if (isProvideIndexesOnRemove()) {
-    				// use sortedRows position instead of item.getIndex(), because
-    				// getIndex may have a wrong value (unless we fillRowGaps() which
-    				// is more time consuming and we do afterwards anyway)
-    				int index = sortedRows.indexOf(item);
-    				indexesToRemove.add(index);
-    				if (DEBUGADDREMOVE) {
-    					if (i != 0) {
-    						sbWillRemove.append(", ");
-    					}
-    					sbWillRemove.append(index);
-    				}
-  				}
+				TableRowCore item = mapDataSourceToRow.get(dataSources[i]);
+				if (item != null) {
+					itemsToRemove.add(item);
+					mapDataSourceToRow.remove(dataSources[i]);
+					triggerListenerRowRemoved(item);
+					toRemove.add(item);
+					if ( selectedRows.remove(item)){
+						removedWithSelection.add( item );
+					}
 
-  				itemsToRemove.add(item);
-  				mapDataSourceToRow.remove(dataSources[i]);
-  				triggerListenerRowRemoved(item);
-  				sortedRows.remove(item);
-  				if ( selectedRows.remove(item)){
-  					removedWithSelection.add( item );
-  				}
-
-  				rows_removed++;
-  			}
-  		}
-  		if (rows_removed > 0) {
-  			listSelectedCoreDataSources = null;
-  		}
+					rows_removed++;
+				}
+			}
+			if (rows_removed > 0) {
+				listSelectedCoreDataSources = null;
+				List<TableRowCore> newSortedRows = new ArrayList<>( sortedRows.size());
+				for (TableRowCore row: sortedRows ){
+					if ( !toRemove.contains( row )){
+						newSortedRows.add( row );
+					}
+				}
+				sortedRows = newSortedRows;
+			}
 		}
 
 		if (DEBUGADDREMOVE) {
@@ -2709,14 +2701,6 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	public abstract void triggerTabViewsDataSourceChanged();
 
 	protected abstract void uiChangeColumnIndicator();
-
-	public boolean isProvideIndexesOnRemove() {
-		return provideIndexesOnRemove;
-	}
-
-	public void setProvideIndexesOnRemove(boolean provideIndexesOnRemove) {
-		this.provideIndexesOnRemove = provideIndexesOnRemove;
-	}
 
 	@Override
 	public boolean isTableSelected() {
