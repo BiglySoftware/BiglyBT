@@ -107,9 +107,9 @@ NetworkAdminProtocolImpl
 
 		throws NetworkAdminException
 	{
-		InetAddress ia = address.getAddress();
+		boolean ipv6 = address != null && address.getAddress() instanceof Inet6Address;
 		
-		return( test( address, ia instanceof Inet6Address, upnp_map, listener ));
+		return( test( address, ipv6, upnp_map, listener ));
 	}
 	
 	@Override
