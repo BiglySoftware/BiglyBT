@@ -879,7 +879,39 @@ public class TagUIUtils
 
 									all_tags.addAll( tt.getTags());
 									
-									all_tags.remove( tag );
+										// trim options back to vaguely sensible selection
+									
+									if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+										
+											// already been assigned to the tag
+										
+										all_tags.remove( tag );
+									}
+																		
+									for ( Iterator<Tag> it=all_tags.iterator();it.hasNext();){
+											
+										Tag t = it.next();
+										
+										boolean[] auto = t.isTagAuto();
+									
+										if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+
+											if ( auto[0] ){
+											
+													// can't add to an auto-add
+												
+												it.remove();
+											}
+										}else{
+											
+											if ( auto[1] ){
+												
+													// can't remove from an auto-remove
+												
+												it.remove();
+											}
+										}
+									}
 									
 									TagUIUtilsV3.showTagSelectionDialog( 
 										all_tags, 
