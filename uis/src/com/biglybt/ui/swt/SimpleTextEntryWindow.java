@@ -62,7 +62,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private boolean resizeable;
 	private String loc_size_config_key;
 	private Combo text_entry_combo;
-	private Text text_entry_text;
+	private StyledText text_entry_text;
 	private Label link_label;
 	private boolean detect_urls;
 	private boolean special_escape_handling;
@@ -146,18 +146,18 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    GridLayout layout = new GridLayout();
 	    layout.verticalSpacing = 10;
 	    shell.setLayout(layout);
-
-	    // Default width hint is 330.
 	    
 	    int width_hint;
+	    int height_hint;
 	    
 	    if ( loc_size_config_key != null && Utils.hasShellMetricsConfig( loc_size_config_key )){
 	    	
-	    	width_hint = -1;
-	    	
+	    	width_hint	= -1;
+	    	height_hint	= -1;
 	    }else{
 	    
-	    	width_hint = (this.width_hint == -1) ? 330 : this.width_hint;
+	    	width_hint	= (this.width_hint == -1) ? 330 : this.width_hint;
+	    	height_hint = (this.height_hint == -1) ? 250 : this.height_hint;
 	    }
 	    
 	    // Process any messages.
@@ -211,7 +211,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		    	text_entry_flags |= SWT.SINGLE;
 		    }
 
-	    	text_entry_text = new Text(shell, text_entry_flags);
+	    	text_entry_text = new StyledText(shell, text_entry_flags);
 
 	    	if (textLimit > 0) {
 	    		text_entry_text.setTextLimit(textLimit);
@@ -294,11 +294,14 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	    gridData = resizeable?new GridData(GridData.FILL_BOTH):new GridData();
 	    gridData.widthHint = width_hint;
-	    if (text_entry_text != null){
-	    	gridData.minimumHeight = text_entry_text.getLineHeight() * line_height;
-	    	gridData.heightHint = gridData.minimumHeight;
+	    if ( height_hint == -1 ){
+		    if (text_entry_text != null){
+		    	gridData.minimumHeight = text_entry_text.getLineHeight() * line_height;
+		    	gridData.heightHint = gridData.minimumHeight;
+		    }
+	    }else{
+	    	gridData.heightHint = height_hint; 
 	    }
-
 		text_entry.setLayoutData(gridData);
 
 		Composite bottom_panel = new Composite(shell, SWT.NULL);

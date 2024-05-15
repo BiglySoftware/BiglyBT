@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.utils;
 
 import java.util.*;
 
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -184,10 +185,16 @@ public class DragDropUtils
 		createDropTarget(composite, new URLDropTarget(url, bAllowShareAdd));
 	}
 
+	public static void createDropTarget(Composite composite,
+			boolean bAllowShareAdd, StyledText url) {
+		createDropTarget(composite, new URLDropTarget(url, bAllowShareAdd));
+	}
+
+	
 	public static void createTorrentDropTarget(Composite composite,
 			boolean bAllowShareAdd) {
 		try {
-			createDropTarget(composite, bAllowShareAdd, null);
+			createDropTarget(composite, bAllowShareAdd, (Text)null);
 		} catch (Exception e) {
 			Debug.out(e);
 		}
@@ -207,6 +214,14 @@ public class DragDropUtils
 		}
 	}
 
+	public static void createURLDropTarget(Composite composite, StyledText url) {
+		try {
+			createDropTarget(composite, false, url);
+		} catch (Exception e) {
+			Debug.out(e);
+		}
+	}
+	
 	private static class DragSourceListenerDelegate
 		implements DragSourceListener
 	{
@@ -277,11 +292,16 @@ public class DragDropUtils
 	private static class URLDropTarget
 		extends DropTargetAdapter
 	{
-		private final Text url;
+		private final Control url;
 
 		private final boolean bAllowShareAdd;
 
 		public URLDropTarget(Text url, boolean bAllowShareAdd) {
+			this.url = url;
+			this.bAllowShareAdd = bAllowShareAdd;
+		}
+		
+		public URLDropTarget(StyledText url, boolean bAllowShareAdd) {
 			this.url = url;
 			this.bAllowShareAdd = bAllowShareAdd;
 		}
@@ -335,13 +355,19 @@ public class DragDropUtils
 			if (url == null || url.isDisposed()) {
 				TorrentOpener.openDroppedTorrents(event, bAllowShareAdd);
 			} else {
+				String sURL = null;
+				
 				if (event.data instanceof FixedURLTransfer.URLType) {
-					if (((FixedURLTransfer.URLType) event.data).linkURL != null)
-						url.setText(((FixedURLTransfer.URLType) event.data).linkURL);
+					sURL = ((FixedURLTransfer.URLType) event.data).linkURL;
 				} else if (event.data instanceof String) {
-					String sURL = UrlUtils.parseTextForURL((String) event.data, true);
-					if (sURL != null) {
-						url.setText(sURL);
+					sURL = UrlUtils.parseTextForURL((String) event.data, true);
+				}
+				
+				if (sURL != null) {
+					if ( url instanceof Text ){
+						((Text)url).setText(sURL);
+					}else{
+						((StyledText)url).setText(sURL);
 					}
 				}
 			}

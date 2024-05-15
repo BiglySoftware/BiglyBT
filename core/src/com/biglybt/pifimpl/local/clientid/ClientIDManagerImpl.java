@@ -523,6 +523,11 @@ ClientIDManagerImpl
 				}
 
 
+				if ( lines.isEmpty()){
+					
+					throw( new Exception( "Invalid header: " + header ));
+				}
+				
 				String[]	lines_in = new String[ lines.size()];
 
 				lines.toArray( lines_in );
@@ -547,7 +552,7 @@ ClientIDManagerImpl
 
 				if ( p3 == -1 ){
 					
-					Debug.out( "eh?" );
+					throw( new Exception( "Invalid header: " + header ));
 				}
 				
 				String	target_host	= cid.substring( 0, p3 );

@@ -30,6 +30,7 @@ public interface UISWTInputReceiver extends UIInputReceiver {
 	 * @param width
 	 */
 	public void setWidthHint(int width);
+	public void setHeightHint(int height);
 
 	/**
 	 * Indicates how many lines by default to show the user to enter input.

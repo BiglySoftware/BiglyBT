@@ -48,13 +48,18 @@ public abstract class AbstractUISWTInputReceiver extends AbstractUIInputReceiver
 		this.line_height = line_height;
 	}
 
-	protected int width_hint = -1;
+	protected int width_hint	= -1;
+	protected int height_hint	= -1;
 	@Override
 	public void setWidthHint(int width) {
 		this.assertPrePrompt();
 		this.width_hint = width;
 	}
-
+	@Override
+	public void setHeightHint(int height) {
+		this.assertPrePrompt();
+		this.height_hint = height;
+	}
 	protected String[] choices = null;
 	protected boolean choices_allow_edit = true;
 	protected int choices_default = -1;
