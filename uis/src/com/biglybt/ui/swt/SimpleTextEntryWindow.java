@@ -157,7 +157,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    }else{
 	    
 	    	width_hint	= (this.width_hint == -1) ? 330 : this.width_hint;
-	    	height_hint = (this.height_hint == -1) ? 250 : this.height_hint;
+	    	height_hint = (this.height_hint == -1) ? -1 : this.height_hint;
 	    }
 	    
 	    // Process any messages.
