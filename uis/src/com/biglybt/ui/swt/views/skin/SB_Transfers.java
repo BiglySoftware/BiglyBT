@@ -2758,7 +2758,9 @@ public class SB_Transfers
 			
 			Tag tag = (Tag)ds;
 			
-			if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			int tt = tag.getTagType().getTagType();
+					
+			if ( tt == TagType.TT_DOWNLOAD_MANUAL || tt == TagType.TT_DOWNLOAD_STATE ){
 			
 				return( "Tag_" + ((Tag)ds).getTagUID());
 			}
