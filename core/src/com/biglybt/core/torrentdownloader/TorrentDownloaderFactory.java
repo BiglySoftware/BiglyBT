@@ -267,7 +267,10 @@ public class TorrentDownloaderFactory {
 		  	  								original_url = new URL( url );
 		  	  							}
 
-  	  									plugin_proxy = AEProxyFactory.getPluginProxy( "torrent download", original_url );
+  	  									if ( plugin_proxy == null ){
+  	  									
+  	  										plugin_proxy = AEProxyFactory.getPluginProxy( "torrent download", original_url );
+  	  									}
 
   	  									if ( plugin_proxy != null ){
 
