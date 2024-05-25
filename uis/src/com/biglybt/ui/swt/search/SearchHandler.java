@@ -96,7 +96,14 @@ SearchHandler
 							pi.getPluginState().isOperational() &&
 							pi.getIPC().canInvoke("lookupByExpression", new Object[]{ "" })){
 
-						pi.getIPC().invoke("lookupByExpression", new Object[]{ sSearchText });
+						Utils.getOffOfSWTThread(()->{
+								try{pi.getIPC().invoke("lookupByExpression", new Object[]{ sSearchText });
+								
+								}catch( Throwable e ){
+							
+									Debug.out( e );
+								}
+						});
 					}
 				}
 			}catch (Throwable e ){
