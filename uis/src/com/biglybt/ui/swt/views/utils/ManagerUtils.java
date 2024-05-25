@@ -3259,6 +3259,15 @@ public class ManagerUtils {
 			public void
 			run()
 			{
+				SimpleDateFormat date_format = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
+				
+				String action_str = mode==LOCATE_MODE_LINK?"Linked":(mode==LOCATE_MODE_COPY||mode==LOCATE_MODE_PIECE?"Copied":"Moved" );
+				
+				if ( test_only ){
+					
+					action_str = "Would have " + action_str.toLowerCase( Locale.US );
+				}
+
 				final int 		MAX_LINKS 		= DownloadManagerStateFactory.MAX_FILES_FOR_INCOMPLETE_AND_DND_LINKAGE;
 				final String 	LINK_LIMIT_MSG 	= "Link limit of " + MAX_LINKS + " exceeded. See Tools->Options->Files to increase this";
 
@@ -3559,7 +3568,7 @@ public class ManagerUtils {
 	
 							File dir = new File( root );
 	
-							logLine( viewer, indent, (bfm_start==log_details[0]?"":"\r\n") + new SimpleDateFormat().format( new Date()) +  ": Enumerating files in " + dir );
+							logLine( viewer, indent, (bfm_start==log_details[0]?"":"\r\n") + date_format.format( new Date()) +  ": Enumerating files in " + dir );
 	
 							file_count += buildFileMap( viewer, dir, file_map, log_details, quit );
 						}
@@ -4645,7 +4654,7 @@ public class ManagerUtils {
 									}
 								}
 	
-								logLine( viewer, dm_indent, "Matched=" + actions_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
+								logLine( viewer, dm_indent, "Phase 1: " + action_str + " " + actions_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
 			
 								if ( mode != LOCATE_MODE_PIECE && actions_established.size() > 0 && unmatched_files.size() > 0 ){
 		
@@ -4712,10 +4721,10 @@ public class ManagerUtils {
 		
 										int actions_ok = 0;
 		
+										int file_indent = dm_indent+1;
+
 										for ( Map.Entry<DiskManagerFileInfo,Set<String>> entry: unmatched_files.entrySet()){
-		
-											int file_indent = dm_indent+1;
-		
+				
 											synchronized( quit ){
 												if ( quit[0] ){
 													break;
@@ -5005,15 +5014,8 @@ public class ManagerUtils {
 												}
 											}
 										}
-		
-										String action_str = mode==LOCATE_MODE_LINK?"Linked":(mode==LOCATE_MODE_COPY||mode==LOCATE_MODE_PIECE?"Copied":"Moved" );
-		
-										if ( test_only ){
-											
-											action_str = "Would have " + action_str.toLowerCase( Locale.US );
-										}
-										
-										logLine( viewer, dm_indent, action_str + " " + actions_ok + " of " + unmatched_files.size());
+												
+										logLine( viewer, file_indent, "Phase 2: " + action_str + " " + actions_ok + " of " + unmatched_files.size());
 									}
 								}
 		
@@ -5048,18 +5050,18 @@ public class ManagerUtils {
 					
 					if ( test_only ){
 						
-						logLine( viewer, indent, new SimpleDateFormat().format( new Date()) +  ": Complete, " + downloads_modified + " downloads would have been updated" );
+						logLine( viewer, indent, date_format.format( new Date()) +  ": Complete, " + downloads_modified + " downloads would have been updated" );
 						
 					}else{
 						
-						logLine( viewer, indent, new SimpleDateFormat().format( new Date()) +  ": Complete, downloads updated=" + downloads_modified );
+						logLine( viewer, indent, date_format.format( new Date()) +  ": Complete, downloads updated=" + downloads_modified );
 					}
 
 				}catch( Throwable e ){
 
 					Debug.out( e );
 					
-					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
+					log( viewer, 0, "\r\n" + date_format.format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
 					
 				}finally{
 
@@ -5137,6 +5139,8 @@ public class ManagerUtils {
 			public void
 			run()
 			{
+				SimpleDateFormat date_format = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
+
 				File[] results = new File[torrents.size()];
 
 				int[] result_count = {0};				
@@ -5465,7 +5469,7 @@ public class ManagerUtils {
 
 					Debug.out( e );
 					
-					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
+					log( viewer, 0, "\r\n" + date_format.format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
 					
 				}finally{
 
