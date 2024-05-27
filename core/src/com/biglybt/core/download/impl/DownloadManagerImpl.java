@@ -6042,6 +6042,11 @@ DownloadManagerImpl
 
 					  File file_from = file.getFile( true );
 
+					  if ( !file_from.exists() && file.getTorrentFile().isPadFile()){
+						  
+						  continue;
+					  }
+					  
 					  try{
 						  String relativePath = FileUtil.getRelativePath(sl_file, file_from);
 
