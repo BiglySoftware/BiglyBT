@@ -4036,9 +4036,23 @@ public class TagUIUtils
 	{
 		TagManager tm = TagManagerFactory.getTagManager();
 		
+		Tag firstNew = null;
+		
 		for ( Tag tag: tags ){
 			
-			tm.duplicate( tag );
+			Tag t = tm.duplicate( tag );
+			
+			if ( firstNew == null ){
+				
+				firstNew = t;
+			}
+		}
+		
+		if ( firstNew != null ){
+			
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			firstNew.setTransientProperty( Tag.TP_SETTINGS_REQUESTED, true );
+			uiFunctions.getMDI().showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_TAGS, firstNew);
 		}
 	}
 	
