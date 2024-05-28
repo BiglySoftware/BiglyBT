@@ -1698,11 +1698,32 @@ public class TagSettingsView
 
 								params.constraints.selectAll();
 							}
+						}
+					});
+					
+					params.constraints.addModifyListener((e)->{
+						
+						String[] stringList = propConstraint.getStringList();
+						
+						if ( stringList.length > 0 ){
 							
-							params.constraints.setData("skipset", 1);
-							if (btnSaveConstraint != null && !btnSaveConstraint.isDisposed()) {
-								btnSaveConstraint.setEnabled(true);
-								btnResetConstraint.setEnabled(true);
+							String existing_text = stringList[0];
+								
+							if ( !existing_text.equals( params.constraints.getText())){
+								
+								params.constraints.setData("skipset", 1);
+								
+								if (btnSaveConstraint != null && !btnSaveConstraint.isDisposed()) {
+									btnSaveConstraint.setEnabled(true);
+									btnResetConstraint.setEnabled(true);
+								}
+							}else{
+								params.constraints.setData("skipset", null);
+								
+								if (btnSaveConstraint != null && !btnSaveConstraint.isDisposed()) {
+									btnSaveConstraint.setEnabled(false);
+									btnResetConstraint.setEnabled(false);
+								}
 							}
 						}
 					});
