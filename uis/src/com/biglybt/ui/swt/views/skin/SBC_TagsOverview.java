@@ -755,6 +755,11 @@ public class SBC_TagsOverview
 			layout.marginHeight = layout.marginWidth = layout.verticalSpacing = layout.horizontalSpacing = 0;
 			table_parent.setLayout(layout);
 
+			/*
+			 * 05/2024. Removed this because re-activation is causing selected content to be lost. In this case select a tag, select the Torrents sub-view
+			 * and select a torrent. Hit F2 for example (to get a change-name dialog) and then hit escape to close the dialog. With this code enabled it causes
+			 * selection to return to the Tag above rather than the torrent
+			 * 
 			table_parent.addListener(SWT.Activate, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
@@ -762,6 +767,7 @@ public class SBC_TagsOverview
 					updateSelectedContent();
 				}
 			});
+			*/
 			/*
 			table_parent.addListener(SWT.Deactivate, new Listener() {
 				public void handleEvent(Event event) {
