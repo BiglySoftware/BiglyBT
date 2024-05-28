@@ -2237,16 +2237,21 @@ public class FileUtil {
 
     		boolean	same_drive = false;
     		
-				try{
-					FileStore fs1 = Files.getFileStore( from_file.toPath());
-					FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
+    		FileStore fs1 = null;
+    		FileStore fs2 = null;
 
-	   				if ( fs1.equals( fs2 )){
-	
-	   					same_drive = true;
-	   				}
-				}catch( Throwable e ){
-				}
+    		try{
+    			fs1 = Files.getFileStore( from_file.toPath());
+    			fs2 = Files.getFileStore( to_file_parent.toPath());
+
+    			if ( fs1.equals( fs2 )){
+
+    				same_drive = true;
+    			}
+    		}catch( Throwable e ){
+
+    			log("Failed to determine if files on same drive: " + from_file + " (" + fs1 + "), " + to_file_parent + " (" + fs2 + ")", e );
+    		}
 			
 	    	boolean	use_copy = COConfigurationManager.getBooleanParameter("Copy And Delete Data Rather Than Move");
 
@@ -2265,6 +2270,8 @@ public class FileUtil {
     			if ( pl != null && !same_drive ){
     				
     				use_copy = true;	// so we get incremental progress reports
+    				
+    				log( "Copying file to get progress reports (" + fs1 + "/" + fs2 + ")" );
     			}
     		}
     		
