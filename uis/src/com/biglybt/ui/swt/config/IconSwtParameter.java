@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
@@ -67,6 +68,9 @@ public class IconSwtParameter
 					SWT.APPLICATION_MODAL);
 			dialog.setFilterExtensions(new String[] { "*.jpg;*.jpeg;*.png;*.gif;*.tiff;*.ico;*.bmp", "*.*"});
 			dialog.setFilterNames(new String[] { "Images (gif, jpg, png, tiff, ico, bmp", "All" });
+						
+			boolean filterSet = false;
+			
 			String file = getValue();
 			if (file != null) {
 				File f = new File(file);
@@ -74,13 +78,28 @@ public class IconSwtParameter
 				if ( f.exists()){
 					dialog.setFilterPath(f.getParent());
 					dialog.setFileName( f.getName());
+					
+					filterSet = true;
 				}
 			}
 
+			if ( !filterSet ){
+				String dir = COConfigurationManager.getStringParameter("previous.filter.dir.icon");
+				if ( dir != null && new File(dir).isDirectory()){
+					dialog.setFilterPath( dir );
+				}
+			}
+			
 			String newFile = dialog.open();
 
 			if (newFile == null) {
 				return;
+			}
+			
+			File newFilter = new File(newFile).getParentFile();
+			
+			if ( newFilter != null && newFilter.isDirectory()){
+				COConfigurationManager.setParameter("previous.filter.dir.icon", newFilter.getAbsolutePath());
 			}
 
 			setValue(newFile);
