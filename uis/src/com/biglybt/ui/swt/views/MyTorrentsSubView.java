@@ -33,6 +33,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagDownload;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.swt.Messages;
@@ -68,9 +69,14 @@ public class MyTorrentsSubView
 		neverShowCatButtons = true;
 		neverShowTagButtons = true;
 		isEmptyListOnNullDS = true;
+		
+			// If we don't save any existing column sort order data here then it get's lost :(
+		
+		TableColumnManager tcm = TableColumnManager.getInstance();
+		tcm.saveTableColumns( Download.class, MSGID_PREFIX);
+		  
 		Core _core = CoreFactory.getSingleton();
-		init(_core, MSGID_PREFIX, Download.class,
-				TableColumnCreator.createCompleteDM(MSGID_PREFIX));
+		init(_core, MSGID_PREFIX, Download.class, TableColumnCreator.createCompleteDM(MSGID_PREFIX));
 	}
 
 	/* (non-Javadoc)
@@ -162,6 +168,8 @@ public class MyTorrentsSubView
   @Override
   public boolean eventOccurred(UISWTViewEvent event) {
 	  if ( event.getType() == UISWTViewEvent.TYPE_DESTROY ){
+		  TableColumnManager tcm = TableColumnManager.getInstance();
+		  tcm.saveTableColumns( Download.class, MSGID_PREFIX);
 		  destroyed = true;
 	  }
 	  return( super.eventOccurred(event));
