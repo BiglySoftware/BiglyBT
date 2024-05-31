@@ -655,15 +655,20 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 				try {
 					ArrayList<TreeItem> foundItems = new ArrayList<>();
 					TreeItem[] items = tree.getItems();
-					try {
-						tree.setRedraw(false);
-						for (TreeItem item : items) {
-							item.setExpanded(false);
+					try{
+						cConfig.setLayoutDeferred( true );
+						try {
+							tree.setRedraw(false);
+							for (TreeItem item : items) {
+								item.setExpanded(false);
+							}
+	
+							filterTree(items, filterText, foundItems);
+						} finally {
+							tree.setRedraw(true);
 						}
-
-						filterTree(items, filterText, foundItems);
-					} finally {
-						tree.setRedraw(true);
+					}finally{
+						cConfig.setLayoutDeferred(false);
 					}
 				} finally {
 					if (shell != null) {
