@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.views.skin;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -106,7 +107,7 @@ public class SBC_TagsOverview
 	private boolean tm_listener_added;
 	private boolean gm_listener_added;
 	
-	private Object datasource;
+	private List<Tag> datasources_for_selection = new ArrayList<>();
 
 	private boolean show_swarm_tags;
 	
@@ -615,6 +616,15 @@ public class SBC_TagsOverview
 	@Override
 	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
 
+		datasources_for_selection.clear();
+		
+		List<Object> dataSources = tv.getSelectedDataSources();
+		for (Object dataSource : dataSources) {
+			if ((dataSource instanceof Tag)){
+				datasources_for_selection.add((Tag)dataSource);
+			}
+		}
+
 		if (tv != null) {
 
 			tv.delete();
@@ -793,8 +803,13 @@ public class SBC_TagsOverview
 
 				@Override
 				public void rowAdded(TableRowCore row) {
-					if (datasource == row.getDataSource()) {
-						tv.setSelectedRows(new TableRowCore[] { row });
+					if ( datasources_for_selection.remove( row.getDataSource())) {
+						List<TableRowCore> rows = Arrays.asList(tv.getSelectedRows());
+						if ( !rows.contains( row )){
+							rows = new ArrayList<>( rows );
+							rows.add( row );
+							tv.setSelectedRows( rows.toArray( new TableRowCore[rows.size()]));
+						}
 					}
 				}
 			});
@@ -1462,15 +1477,17 @@ public class SBC_TagsOverview
 	// @see SWTSkinObjectAdapter#dataSourceChanged(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object dataSourceChanged(SWTSkinObject skinObject, Object params) {
+		datasources_for_selection.clear();
 		if (params instanceof Tag) {
+			Tag tag = (Tag)params;
+			datasources_for_selection.add(tag);
 			if (tv != null) {
-				TableRowCore row = tv.getRow((Tag) params);
+				TableRowCore row = tv.getRow( tag );
 				if (row != null) {
 					tv.setSelectedRows(new TableRowCore[] { row });
 				}
 			}
 		}
-		datasource = params;
 		return null;
 	}
 
