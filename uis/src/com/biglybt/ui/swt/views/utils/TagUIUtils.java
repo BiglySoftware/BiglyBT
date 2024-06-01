@@ -1941,6 +1941,458 @@ public class TagUIUtils
 	}
 
 	private static void 
+	createTF_FileLocationMenuItems(
+		Menu 				menu, 
+		List<Tag>			tags,
+		Predicate<Taggable>	filter )
+	{
+		List<TagFeatureFileLocation>	isf = new ArrayList<>();
+		List<TagFeatureFileLocation>	moc = new ArrayList<>();
+		List<TagFeatureFileLocation>	coc = new ArrayList<>();
+		List<TagFeatureFileLocation>	mor = new ArrayList<>();
+		List<TagFeatureFileLocation>	moa = new ArrayList<>();
+		
+		boolean doit = false;
+		
+		for ( Tag tag: tags ){
+		
+			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+
+			if ( fl.supportsTagInitialSaveFolder()){
+				
+				isf.add( fl );
+				
+				doit = true;
+			}
+			
+			if ( fl.supportsTagMoveOnComplete()){
+				
+				moc.add( fl );
+				
+				doit = true;
+			}
+			
+			if ( fl.supportsTagCopyOnComplete()){
+				
+				coc.add( fl );
+				
+				doit = true;
+			}
+			
+			if ( fl.supportsTagMoveOnRemove()){
+				
+				mor.add( fl );
+				
+				doit = true;
+			}
+			
+			if ( fl.supportsTagMoveOnAssign()){
+				
+				moa.add( fl );
+				
+				doit = true;
+			}
+		}
+		
+		if ( doit ){
+		
+			Menu files_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+			MenuItem files_item = new MenuItem( menu, SWT.CASCADE);
+
+			Messages.setLanguageText( files_item, "ConfigView.section.files" );
+
+			files_item.setMenu( files_menu );
+
+				// initial save folder
+			
+			if ( !isf.isEmpty()){
+
+				final Menu isf_menu = new Menu( files_menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem isf_item = new MenuItem( files_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( isf_item, "label.init.save.loc" );
+
+				isf_item.setMenu( isf_menu );
+
+				MenuItem clear_item = new MenuItem( isf_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( clear_item, "Button.clear" );
+
+				clear_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: isf ){
+							fl.setTagInitialSaveFolder( null );
+						}
+					}});
+
+					// apply
+				
+				MenuItem apply_item = new MenuItem( isf_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( apply_item, "apply.to.current" );
+				
+				boolean has_existing = false;
+				
+				for ( TagFeatureFileLocation fl: isf ){
+					if ( fl.getTagInitialSaveFolder() != null ){
+						has_existing = true;
+					}
+				}
+				
+				apply_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: isf ){
+							File existing = fl.getTagInitialSaveFolder();
+
+							applyLocationToCurrent( (Tag)fl, existing, fl.getTagInitialSaveOptions(), 1, filter );
+						}
+					}});
+
+				new MenuItem( isf_menu, SWT.SEPARATOR);
+
+				if ( !has_existing ){
+
+					apply_item.setEnabled( false );
+					clear_item.setEnabled( false );
+				}
+
+				MenuItem set_item = new MenuItem( isf_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( set_item, "label.set" );
+
+				set_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						DirectoryDialog dd = new DirectoryDialog(isf_menu.getShell());
+
+						dd.setFilterPath( TorrentOpener.getFilterPathData());
+
+						dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+						String path = dd.open();
+
+						if ( path != null ){
+
+							TorrentOpener.setFilterPathData( path );
+
+							for ( TagFeatureFileLocation fl: isf ){
+								fl.setTagInitialSaveFolder( new File( path ));
+							}
+						}
+					}});
+			}
+		
+				// move on complete
+		
+			if ( !moc.isEmpty()){
+
+				final Menu moc_menu = new Menu( files_menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem moc_item = new MenuItem( files_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( moc_item, "label.move.on.comp" );
+
+				moc_item.setMenu( moc_menu );
+
+				boolean has_existing = false;
+				
+				for ( TagFeatureFileLocation fl: moc ){
+					if ( fl.getTagMoveOnCompleteFolder() != null ){
+						has_existing = true;
+					}
+				}
+				
+				MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH );
+
+				Messages.setLanguageText( clear_item, "Button.clear" );
+
+				clear_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: moc ){
+							fl.setTagMoveOnCompleteFolder( null );
+						}
+					}});
+
+
+					// apply
+
+				MenuItem apply_item = new MenuItem( moc_menu, SWT.PUSH);
+
+				Messages.setLanguageText( apply_item, "apply.to.current" );
+
+				apply_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: moc ){
+							File existing = fl.getTagMoveOnCompleteFolder();
+							applyLocationToCurrent( (Tag)fl, existing, fl.getTagMoveOnCompleteOptions(), 2, filter );
+						}
+					}});
+
+				new MenuItem( moc_menu, SWT.SEPARATOR);
+
+				if ( !has_existing ){
+
+					apply_item.setEnabled( false );
+					clear_item.setEnabled( false );
+				}
+
+					// set
+				
+				Consumer<String> moc_setter = (path)->{
+					
+					MenuBuildUtils.addToMOCHistory( path );
+
+					TorrentOpener.setFilterPathData( path );
+
+					for ( TagFeatureFileLocation fl: moc ){
+						fl.setTagMoveOnCompleteFolder( new File( path ));
+					}
+				};
+				
+				MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+				Messages.setLanguageText( set_item, "label.set" );
+
+				set_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						DirectoryDialog dd = new DirectoryDialog(moc_menu.getShell());
+
+						dd.setFilterPath( TorrentOpener.getFilterPathData());
+
+						dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+						String path = dd.open();
+
+						if ( path != null ){
+
+							moc_setter.accept( path );
+						}
+					}});
+				
+				MenuBuildUtils.addMOCHistory( moc_menu, moc_setter );
+			}
+
+				// copy on complete
+			
+			if ( !coc.isEmpty()){
+
+				final Menu coc_menu = new Menu( files_menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem coc_item = new MenuItem( files_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( coc_item, "label.copy.on.comp" );
+
+				coc_item.setMenu( coc_menu );
+
+				MenuItem clear_item = new MenuItem( coc_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( clear_item, "Button.clear" );
+
+				clear_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: coc ){
+							fl.setTagCopyOnCompleteFolder( null );
+						}
+					}});
+
+				new MenuItem( coc_menu, SWT.SEPARATOR);
+
+				boolean has_existing = false;
+				
+				for ( TagFeatureFileLocation fl: coc ){
+					if ( fl.getTagCopyOnCompleteFolder() != null ){
+						has_existing = true;
+					}
+				}
+				
+				if ( !has_existing ){
+
+					clear_item.setEnabled( false );
+				}
+
+				MenuItem set_item = new MenuItem( coc_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( set_item, "label.set" );
+
+				set_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						DirectoryDialog dd = new DirectoryDialog(coc_menu.getShell());
+
+						dd.setFilterPath( TorrentOpener.getFilterPathData());
+
+						dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+						String path = dd.open();
+
+						if ( path != null ){
+
+							TorrentOpener.setFilterPathData( path );
+
+							for ( TagFeatureFileLocation fl: coc ){
+								fl.setTagCopyOnCompleteFolder( new File( path ));
+							}
+						}
+					}});
+			}
+			
+				// move on remove
+			
+			if ( !mor.isEmpty()){
+
+				final Menu mor_menu = new Menu( files_menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem mor_item = new MenuItem( files_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( mor_item, "label.move.on.rem" );
+
+				mor_item.setMenu( mor_menu );
+
+				MenuItem clear_item = new MenuItem( mor_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( clear_item, "Button.clear" );
+
+				clear_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: mor ){
+							fl.setTagMoveOnRemoveFolder( null );
+						}
+					}});
+
+				new MenuItem( mor_menu, SWT.SEPARATOR);
+
+				boolean has_existing = false;
+				
+				for ( TagFeatureFileLocation fl: mor ){
+					if ( fl.getTagMoveOnRemoveFolder() != null ){
+						has_existing = true;
+					}
+				}
+
+				if ( !has_existing ){
+					
+					clear_item.setEnabled( false );
+				}
+
+				MenuItem set_item = new MenuItem( mor_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( set_item, "label.set" );
+
+				set_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						DirectoryDialog dd = new DirectoryDialog(mor_menu.getShell());
+
+						dd.setFilterPath( TorrentOpener.getFilterPathData());
+
+						dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+						String path = dd.open();
+
+						if ( path != null ){
+
+							TorrentOpener.setFilterPathData( path );
+
+							for ( TagFeatureFileLocation fl: mor ){
+								fl.setTagMoveOnRemoveFolder( new File( path ));
+							}
+						}
+					}});
+			}
+			
+				// move on assign 
+			
+			if ( !moa.isEmpty()){
+
+				final Menu moa_menu = new Menu( files_menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem moa_item = new MenuItem( files_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( moa_item, "label.move.on.assign" );
+
+				moa_item.setMenu( moa_menu );
+
+				MenuItem clear_item = new MenuItem( moa_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( clear_item, "Button.clear" );
+
+				clear_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						for ( TagFeatureFileLocation fl: moa ){
+							fl.setTagMoveOnAssignFolder( null );
+						}
+					}});
+
+					// apply
+		
+				MenuItem apply_item = new MenuItem( moa_menu, SWT.CASCADE);
+	
+				Messages.setLanguageText( apply_item, "apply.to.current" );
+	
+				apply_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureFileLocation fl: moa ){
+							File existing = fl.getTagMoveOnAssignFolder();
+							applyLocationToCurrent( (Tag)fl, existing, fl.getTagMoveOnAssignOptions(), 3, filter );
+						}
+					}});
+
+				new MenuItem( moa_menu, SWT.SEPARATOR);
+
+				boolean has_existing = false;
+				
+				for ( TagFeatureFileLocation fl: moa ){
+					if ( fl.getTagMoveOnAssignFolder() != null ){
+						has_existing = true;
+					}
+				}
+				
+				if ( !has_existing ){
+					
+					clear_item.setEnabled( false );
+					apply_item.setEnabled( false );
+				}
+
+				MenuItem set_item = new MenuItem( moa_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( set_item, "label.set" );
+
+				set_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						DirectoryDialog dd = new DirectoryDialog(moa_menu.getShell());
+
+						dd.setFilterPath( TorrentOpener.getFilterPathData());
+
+						dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+						String path = dd.open();
+
+						if ( path != null ){
+
+							TorrentOpener.setFilterPathData( path );
+
+							for ( TagFeatureFileLocation fl: moa ){
+								fl.setTagMoveOnAssignFolder( new File( path ));
+							}
+						}
+					}});
+			}
+		}
+	}
+	
+	private static void 
 	createTFProperitesMenuItems(
 		Menu menu, Tag tag) 
 	{
@@ -3171,6 +3623,11 @@ public class TagUIUtils
 
 		TagType tag_type = tags.get(0).getTagType();
 		
+		if ( tag_type.hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+			
+			createTF_FileLocationMenuItems(menu, tags, (d)->true );
+		}
+
 		MenuItem itemShow = new MenuItem(menu, SWT.PUSH);
 
 		Messages.setLanguageText(itemShow, "Button.bar.show");
@@ -3200,7 +3657,7 @@ public class TagUIUtils
 		itemHide.setEnabled( can_hide );
 
 		createTagGroupMenu( menu, tag_type, tags );
-
+		
 		MenuItem itemDuplicate = new MenuItem(menu, SWT.PUSH);
 		
 		Messages.setLanguageText(itemDuplicate,"Subscription.menu.duplicate");
