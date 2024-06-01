@@ -63,7 +63,6 @@ import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
-import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.skin.*;
@@ -595,6 +594,22 @@ public class SBC_TagsOverview
 					}
 				});
 
+		tableManager.registerColumn(Tag.class, ColumnTagMaxActiveDownloads.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagMaxActiveDownloads(column);
+					}
+				});
+		
+		tableManager.registerColumn(Tag.class, ColumnTagMaxActiveSeeds.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagMaxActiveSeeds(column);
+					}
+				});
+		
 		tableManager.setDefaultColumnNames(TABLE_TAGS,
 				new String[] {
 					ColumnTagColor.COLUMN_ID,
