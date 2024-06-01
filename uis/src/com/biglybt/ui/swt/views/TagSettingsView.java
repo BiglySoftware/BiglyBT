@@ -29,6 +29,8 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -2127,7 +2129,7 @@ public class TagSettingsView
 	{
 		private Button btnClear;
 
-		private Label lblValue;
+		private Text lblValue;
 
 		public folderOption(final Composite parent, String labelTextID) {
 			ImageLoader imageLoader = ImageLoader.getInstance();
@@ -2168,11 +2170,30 @@ public class TagSettingsView
 				}
 			});
 
-			lblValue = new Label(parent, SWT.WRAP);
+			lblValue = new Text(parent, SWT.WRAP | SWT.BORDER );
 			gd = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
 			gd.verticalAlignment = SWT.CENTER;
 			lblValue.setLayoutData(gd);
 
+			lblValue.addTraverseListener((e)->{
+				if (e.detail == SWT.TRAVERSE_TAB_NEXT) {
+					e.doit = true;
+				}
+			});
+						
+			lblValue.addListener(SWT.FocusOut,(ev)->{
+				String str = lblValue.getText().trim();
+				Utils.getOffOfSWTThread(()->{
+					if ( str.isEmpty()){
+						setFolder(null);
+					}else{
+						File f = new File( str );
+						//f.mkdirs();
+						setFolder( f );
+					}
+				});
+			});
+			
 			btnClear = new Button(parent, SWT.PUSH);
 			Messages.setLanguageText(btnClear, "Button.clear");
 			btnClear.addListener(SWT.Selection, new Listener() {
@@ -2185,10 +2206,15 @@ public class TagSettingsView
 
 		public void update() {
 			File folder = getFolder();
-			if (folder == null) {
-				Messages.setLanguageText(lblValue, "label.none.assigned");
-			} else {
-				lblValue.setText(folder.toString());
+			if (folder == null){
+				if ( !lblValue.getText().isEmpty()){
+					lblValue.setText("");
+				}
+			}else{
+				String str = folder.toString();
+				if ( !lblValue.getText().equals(str)){
+					lblValue.setText( str );
+				}
 			}
 			btnClear.setVisible(folder != null);
 		}
