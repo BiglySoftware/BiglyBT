@@ -1364,21 +1364,24 @@ DownloadHistoryManagerImpl
 			result.put( SearchResult.PR_SIZE, size );
 			result.put( SearchResult.PR_HASH, hash );
 			result.put( SearchResult.PR_PUB_DATE, new Date( add_time ));
-			
-			String magnet = UrlUtils.getMagnetURI( getTorrentHash(), getTorrentV2Hash(), getName(), null );
-			
-			if ( tags != null && tags.length > 0 ){
-			
-				result.put( SearchResult.PR_TAGS, tags );
+						
+			if ( hash != null ){
 				
-				for ( String tag: tags ){
+				String magnet = UrlUtils.getMagnetURI( hash, getTorrentV2Hash(), getName(), null );
+				
+				if ( tags != null && tags.length > 0 ){
+				
+					result.put( SearchResult.PR_TAGS, tags );
 					
-					magnet += "&tag=" + UrlUtils.encode( tag );
+					for ( String tag: tags ){
+						
+						magnet += "&tag=" + UrlUtils.encode( tag );
+					}
 				}
+	
+				result.put( SearchResult.PR_TORRENT_LINK, magnet );
+				//result.put( SearchResult.PR_DOWNLOAD_LINK, magnet );
 			}
-
-			result.put( SearchResult.PR_TORRENT_LINK, magnet );
-			//result.put( SearchResult.PR_DOWNLOAD_LINK, magnet );
 
 			return( result );
 		}
