@@ -174,7 +174,8 @@ DHTTrackerPlugin
 	private Random				random = new Random();
 	private boolean				is_running;
 
-	private AtomicInteger		active_dht_scrapes = new AtomicInteger();
+	private AtomicInteger		dht_scrapes_active		= new AtomicInteger();
+	private AtomicInteger		dht_scrapes_complete	= new AtomicInteger();
 	
 	private AEMonitor			this_mon	= new AEMonitor( "DHTTrackerPlugin" );
 
@@ -500,10 +501,7 @@ DHTTrackerPlugin
 
 					processRegistrations( ticks%8==0 );
 
-					if ( ticks == 2 || ticks%4==0 ){
-
-						processNonRegistrations();
-					}
+					processNonRegistrations( ticks == 2 || ticks%4==0, true, ticks%4 == 0 );
 
 					if ( alt_lookup_handler != null ){
 
@@ -2809,7 +2807,10 @@ DHTTrackerPlugin
 	}
 
 	protected void
-	processNonRegistrations()
+	processNonRegistrations(
+		boolean	do_presence_checks,
+		boolean	do_scrape_checks,
+		boolean	do_logging )
 	{
 		long	now			= SystemTime.getCurrentTime();
 		long	mono_now	= SystemTime.getMonotonousTime();
@@ -2855,7 +2856,7 @@ DHTTrackerPlugin
 
 		List<Download> dht_only_scrapes = new ArrayList<>( to_scrape.size());
 		
-		boolean do_dht_scrapes = active_dht_scrapes.get() < MAX_ACTIVE_DHT_SCRAPES;
+		boolean do_dht_scrapes = dht_scrapes_active.get() < MAX_ACTIVE_DHT_SCRAPES;
 		
 		for (int i=0;i<to_scrape.size();i++){
 
@@ -2881,81 +2882,140 @@ DHTTrackerPlugin
 			}
 		}
 
-		Download	presence_download 				= null;
+		Download	presence_download				= null;
 		long		presence_download_next_check	= -1;
 
-		try{
-			this_mon.enter();
-
-			Iterator<Download>	it = interesting_downloads.keySet().iterator();
-
-			while( it.hasNext() && presence_download == null ){
-
-				Download	download = it.next();
-
-				if ( interesting_published.contains(download)){
+		if ( do_presence_checks ){
+			
+			try{
+				this_mon.enter();
+	
+				Iterator<Download>	it = interesting_downloads.keySet().iterator();
+	
+				while( it.hasNext() && presence_download == null ){
+	
+					Download	download = it.next();
+	
+					if ( interesting_published.contains(download)){
+						
+						continue;
+					}
 					
-					continue;
-				}
-				
-				Torrent	torrent = download.getTorrent();
-
-				if ( torrent == null ){
-
-					continue;
-				}
-
-				int[] run_data = running_downloads.get( download );
-
-				if ( run_data == null || run_data[0] == REG_TYPE_DERIVED ){
-
-					boolean	force =  torrent.wasCreatedByUs();
-
-					if ( !force ){
-
-						if ( interesting_pub_max > 0 && interesting_published.size() > interesting_pub_max ){
-
-							continue;
+					Torrent	torrent = download.getTorrent();
+	
+					if ( torrent == null ){
+	
+						continue;
+					}
+	
+					int[] run_data = running_downloads.get( download );
+	
+					if ( run_data == null || run_data[0] == REG_TYPE_DERIVED ){
+	
+						boolean	force =  torrent.wasCreatedByUs();
+	
+						if ( !force ){
+	
+							if ( interesting_pub_max > 0 && interesting_published.size() > interesting_pub_max ){
+	
+								continue;
+							}
+	
+							DownloadScrapeResult	scrape = (DownloadScrapeResult)scrapes.get( download );
+	
+							if ( scrape == null ){
+	
+									// catch it next time round
+	
+								continue;
+							}
+	
+							if ( scrape.getSeedCount() + scrape.getNonSeedCount() > NUM_WANT ){
+	
+								continue;
+							}
 						}
-
-						DownloadScrapeResult	scrape = (DownloadScrapeResult)scrapes.get( download );
-
-						if ( scrape == null ){
-
-								// catch it next time round
-
-							continue;
-						}
-
-						if ( scrape.getSeedCount() + scrape.getNonSeedCount() > NUM_WANT ){
-
-							continue;
+	
+						long	target = ((Long)interesting_downloads.get( download )).longValue();
+	
+						long check_period = TorrentUtils.isDecentralised( torrent.getAnnounceURL())?INTERESTING_DHT_CHECK_PERIOD:INTERESTING_CHECK_PERIOD;
+	
+						if ( target <= now ){
+	
+							presence_download				= download;
+							presence_download_next_check 	= now + check_period;
+	
+							interesting_downloads.put( download, new Long( presence_download_next_check ));
+	
+						}else if ( target - now > check_period ){
+	
+							interesting_downloads.put( download, new Long( now + (target%check_period)));
 						}
 					}
+				}
+	
+			}finally{
+	
+				this_mon.exit();
+			}
+		}
+		
+		Download	ready_scrape	= null;
 
-					long	target = ((Long)interesting_downloads.get( download )).longValue();
-
-					long check_period = TorrentUtils.isDecentralised( torrent.getAnnounceURL())?INTERESTING_DHT_CHECK_PERIOD:INTERESTING_CHECK_PERIOD;
-
-					if ( target <= now ){
-
-						presence_download				= download;
-						presence_download_next_check 	= now + check_period;
-
-						interesting_downloads.put( download, new Long( presence_download_next_check ));
-
-					}else if ( target - now > check_period ){
-
-						interesting_downloads.put( download, new Long( now + (target%check_period)));
+		if ( do_scrape_checks ){
+			
+			if ( !dht_only_scrapes.isEmpty()){
+	
+				long		earliest		= -1;
+				
+				for ( Download download: dht_only_scrapes ){
+					
+					if ( download != presence_download ){
+										
+						long[] data = (long[])download.getUserData( SCRAPE_DATA_KEY );
+						
+						if ( data == null ){
+							
+							ready_scrape = download;
+													
+							break;
+							
+						}else{
+							
+							long mt = data[0];
+							
+							if ( mt <= mono_now ){
+							
+								if ( earliest == -1 || mt < earliest ){
+								
+									earliest		= mt;
+									ready_scrape	= download;
+								}
+							}
+						}
 					}
 				}
 			}
-
-		}finally{
-
-			this_mon.exit();
 		}
+		
+		if ( do_logging ){
+			
+			try{
+				this_mon.enter();
+				
+				String p_str = presence_download==null?"null":presence_download.getName();
+				String s_str = ready_scrape==null?"null":ready_scrape.getName();
+				
+				log.log( 	"Stats: registered=" + registered_downloads.size() + ", query=" + query_map.size() + ", running=" + running_downloads.size() + 
+							", active=" + in_progress.size() + ", interesting=" + interesting_downloads.size() + 
+							", dhtscrape=" + dht_only_scrapes.size() + "/" + dht_scrapes_active.get() + "/" + dht_scrapes_complete.get() + ", dl=" + p_str + "/" + s_str );
+				
+			}finally{
 
+				this_mon.exit();
+			}
+		}
+		
 		if ( presence_download != null ){
 
 			Torrent torrent = presence_download.getTorrent();
@@ -3288,270 +3348,241 @@ DHTTrackerPlugin
 			}
 		}
 		
-		if ( !dht_only_scrapes.isEmpty()){
-			
-			Download	ready_scrape	= null;
-			long		earliest		= -1;
-			
-			for ( Download download: dht_only_scrapes ){
-				
-				if ( download != presence_download ){
-									
-					long[] data = (long[])download.getUserData( SCRAPE_DATA_KEY );
-					
-					if ( data == null ){
-						
-						ready_scrape = download;
-												
-						break;
-						
-					}else{
-						
-						long mt = data[0];
-						
-						if ( mt <= mono_now ){
-						
-							if ( earliest == -1 || mt < earliest ){
+
+		
+		if ( ready_scrape != null ){
 							
-								earliest		= mt;
-								ready_scrape	= download;
-							}
-						}
-					}
-				}
+			Download f_ready_scrape = ready_scrape;
+			
+			Torrent torrent = ready_scrape.getTorrent();
+
+			long start 		= now;
+
+				// we scrape around 4 a minute so...
+			
+			long offset = dht_only_scrapes.size()*60*1000/4;
+			
+			if ( offset < SCRAPE_MIN_DEFAULT ){
+				
+				offset = SCRAPE_MIN_DEFAULT;
 			}
 			
-			if ( ready_scrape != null ){
-								
-				Download f_ready_scrape = ready_scrape;
-				
-				Torrent torrent = ready_scrape.getTorrent();
+			offset += RandomUtils.nextLong( 2*60*1000 );	// spread things out a bit
+			
+			long f_next_check = now +  offset;
+			
+			long[] scrape_data = new long[]{ mono_now + offset, f_next_check, -1, -1 };
+			
+			ready_scrape.setUserData( SCRAPE_DATA_KEY, scrape_data );
 
-				long start 		= now;
+			dht.get(torrent.getHash(),
+					"Scrape for '" + ready_scrape.getName() + "'",
+					DHTPlugin.FLAG_DOWNLOADING,
+					INTERESTING_AVAIL_MAX,
+					SCRAPE_TIMEOUT,
+					false, false,
+					new DHTPluginOperationListener()
+					{
+						private boolean diversified;
+						private int 	leechers = 0;
+						private int 	seeds	 = 0;
 
-					// we scrape around 1 a minute so...
-				
-				long offset = dht_only_scrapes.size()*60*1000;
-				
-				if ( offset < SCRAPE_MIN_DEFAULT ){
-					
-					offset = SCRAPE_MIN_DEFAULT;
-				}
-				
-				long f_next_check = now +  offset;
-				
-				long[] scrape_data = new long[]{ mono_now + offset, f_next_check, -1, -1 };
-				
-				ready_scrape.setUserData( SCRAPE_DATA_KEY, scrape_data );
+						private int 	i2p_leechers = 0;
+						private int 	i2p_seeds	 = 0;
 
-				dht.get(torrent.getHash(),
-						"Scrape for '" + ready_scrape.getName() + "'",
-						DHTPlugin.FLAG_DOWNLOADING,
-						INTERESTING_AVAIL_MAX,
-						SCRAPE_TIMEOUT,
-						false, false,
-						new DHTPluginOperationListener()
+						@Override
+						public boolean
+						diversified()
 						{
-							private boolean diversified;
-							private int 	leechers = 0;
-							private int 	seeds	 = 0;
+							diversified	= true;
 
-							private int 	i2p_leechers = 0;
-							private int 	i2p_seeds	 = 0;
+							return( false );
+						}
 
-							@Override
-							public boolean
-							diversified()
-							{
-								diversified	= true;
+						@Override
+						public void
+						starts(
+							byte[] 				key )
+						{
+						}
 
-								return( false );
+						@Override
+						public void
+						valueRead(
+							DHTPluginContact	originator,
+							DHTPluginValue		value )
+						{
+							boolean is_leecher = ( value.getFlags() & DHTPlugin.FLAG_DOWNLOADING ) == 1;
+
+							if ( is_leecher ){
+
+								leechers++;
+
+							}else{
+
+								seeds++;
 							}
 
-							@Override
-							public void
-							starts(
-								byte[] 				key )
-							{
-							}
+							try{
+								String[]	tokens = new String(value.getValue()).split(";");
 
-							@Override
-							public void
-							valueRead(
-								DHTPluginContact	originator,
-								DHTPluginValue		value )
-							{
-								boolean is_leecher = ( value.getFlags() & DHTPlugin.FLAG_DOWNLOADING ) == 1;
+								for (int i=1;i<tokens.length;i++){
 
-								if ( is_leecher ){
+									String	token = tokens[i].trim();
 
-									leechers++;
+									if ( token.length() > 0 ){
 
-								}else{
+										if ( !Character.isDigit( token.charAt( 0 ))){
 
-									seeds++;
-								}
+											String flag_str = token;
 
-								try{
-									String[]	tokens = new String(value.getValue()).split(";");
+											if ( flag_str.contains("I")){
 
-									for (int i=1;i<tokens.length;i++){
+												if ( is_leecher ){
 
-										String	token = tokens[i].trim();
+													i2p_leechers++;
 
-										if ( token.length() > 0 ){
+												}else{
 
-											if ( !Character.isDigit( token.charAt( 0 ))){
-
-												String flag_str = token;
-
-												if ( flag_str.contains("I")){
-
-													if ( is_leecher ){
-
-														i2p_leechers++;
-
-													}else{
-
-														i2p_seeds++;
-													}
+													i2p_seeds++;
 												}
 											}
 										}
-
 									}
-								}catch( Throwable e ){
 
+								}
+							}catch( Throwable e ){
+
+							}
+						}
+
+						@Override
+						public void
+						valueWritten(
+							DHTPluginContact	target,
+							DHTPluginValue		value )
+						{
+						}
+
+						@Override
+						public void
+						complete(
+							byte[]	key,
+							boolean	timeout_occurred )
+						{
+							dht_scrapes_active.decrementAndGet();
+							dht_scrapes_complete.incrementAndGet();
+							
+							log( 	f_ready_scrape,
+									"Scrape completed (elapsed=" + TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start)
+											+ "), seeds=" + seeds + ", leechers=" + leechers);
+
+							scrape_data[2] = seeds;
+							scrape_data[3] = leechers;
+							
+							if ( diversified ){
+
+								try{
+									this_mon.enter();
+
+									interesting_downloads.remove( f_ready_scrape );
+
+								}finally{
+
+									this_mon.exit();
 								}
 							}
 
-							@Override
-							public void
-							valueWritten(
-								DHTPluginContact	target,
-								DHTPluginValue		value )
-							{
+							if ( i2p_seeds + i2p_leechers > 0 ){
+
+								int[] details = (int[])f_ready_scrape.getUserData( DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY );
+
+								if ( details == null ){
+
+									details = new int[]{ i2p_seeds, i2p_leechers };
+
+									f_ready_scrape.setUserData( DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY,details );
+
+								}else{
+
+									details[0] = Math.max( details[0], i2p_seeds );
+									details[1] = Math.max( details[1], i2p_leechers );
+								}
 							}
 
-							@Override
-							public void
-							complete(
-								byte[]	key,
-								boolean	timeout_occurred )
-							{
-								active_dht_scrapes.decrementAndGet();
-								
-								log( 	f_ready_scrape,
-										"Scrape completed (elapsed=" + TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start)
-												+ "), seeds=" + seeds + ", leechers=" + leechers);
 
-								scrape_data[2] = seeds;
-								scrape_data[3] = leechers;
-								
-								if ( diversified ){
-
-									try{
-										this_mon.enter();
-
-										interesting_downloads.remove( f_ready_scrape );
-
-									}finally{
-
-										this_mon.exit();
-									}
-								}
-
-								if ( i2p_seeds + i2p_leechers > 0 ){
-
-									int[] details = (int[])f_ready_scrape.getUserData( DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY );
-
-									if ( details == null ){
-
-										details = new int[]{ i2p_seeds, i2p_leechers };
-
-										f_ready_scrape.setUserData( DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY,details );
-
-									}else{
-
-										details[0] = Math.max( details[0], i2p_seeds );
-										details[1] = Math.max( details[1], i2p_leechers );
-									}
-								}
-
-
-								f_ready_scrape.setScrapeResult(
-									new DownloadScrapeResult()
+							f_ready_scrape.setScrapeResult(
+								new DownloadScrapeResult()
+								{
+									@Override
+									public Download
+									getDownload()
 									{
-										@Override
-										public Download
-										getDownload()
-										{
-											return( null );
-										}
+										return( null );
+									}
 
-										@Override
-										public int
-										getResponseType()
-										{
-											return( DownloadScrapeResult.RT_SUCCESS );
-										}
+									@Override
+									public int
+									getResponseType()
+									{
+										return( DownloadScrapeResult.RT_SUCCESS );
+									}
 
-										@Override
-										public int
-										getSeedCount()
-										{
-											return( seeds );
-										}
+									@Override
+									public int
+									getSeedCount()
+									{
+										return( seeds );
+									}
 
-										@Override
-										public int
-										getNonSeedCount()
-										{
-											return( leechers );
-										}
+									@Override
+									public int
+									getNonSeedCount()
+									{
+										return( leechers );
+									}
 
-										@Override
-										public long
-										getScrapeStartTime()
-										{
-											return( SystemTime.getCurrentTime());
-										}
+									@Override
+									public long
+									getScrapeStartTime()
+									{
+										return( SystemTime.getCurrentTime());
+									}
 
-										@Override
-										public void
-										setNextScrapeStartTime(
-											long nextScrapeStartTime)
-										{
-										}
+									@Override
+									public void
+									setNextScrapeStartTime(
+										long nextScrapeStartTime)
+									{
+									}
 
-										@Override
-										public long
-										getNextScrapeStartTime()
-										{
-											return( f_next_check );
-										}
+									@Override
+									public long
+									getNextScrapeStartTime()
+									{
+										return( f_next_check );
+									}
 
-										@Override
-										public String
-										getStatus()
-										{
-											return( "OK" );
-										}
+									@Override
+									public String
+									getStatus()
+									{
+										return( "OK" );
+									}
 
-										@Override
-										public URL
-										getURL()
-										{
-											URL	url_to_report = torrent.isDecentralised()?torrent.getAnnounceURL():DEFAULT_URL;
+									@Override
+									public URL
+									getURL()
+									{
+										URL	url_to_report = torrent.isDecentralised()?torrent.getAnnounceURL():DEFAULT_URL;
 
-											return( url_to_report );
-										}
-									});
-							}
-						});
-				
-				active_dht_scrapes.incrementAndGet();
-			}
+										return( url_to_report );
+									}
+								});
+						}
+					});
+			
+			dht_scrapes_active.incrementAndGet();
 		}
 	}
 
