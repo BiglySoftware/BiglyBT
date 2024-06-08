@@ -225,7 +225,7 @@ ExternalSeedReaderImpl
 	log(
 		String	str )
 	{
-		plugin.log( str );
+		plugin.log( torrent.getName() + ": " + getName() + ": " + str );
 	}
 
 	protected String
@@ -435,7 +435,7 @@ ExternalSeedReaderImpl
 
 					if ( peer_manager.getPendingPeers( getIP()).length == 0 ){
 
-						log( getName() + ": activating as transient seed and nothing blocking it" );
+						log( "activating as transient seed and nothing blocking it" );
 
 						return( true );
 					}
@@ -446,7 +446,7 @@ ExternalSeedReaderImpl
 
 			if ( !use_avail_to_activate ){
 
-				log( getName() + ": activating as availability-based activation disabled" );
+				log( "activating as availability-based activation disabled" );
 
 				return( true );
 			}
@@ -459,7 +459,7 @@ ExternalSeedReaderImpl
 
 					if ( availability < ws_min_availability){
 
-						log( getName() + ": activating as availability is poor (<" + ws_min_availability + ")" );
+						log( "activating as availability is poor (<" + ws_min_availability + ")" );
 
 						return( true );
 					}
@@ -471,7 +471,7 @@ ExternalSeedReaderImpl
 
 					if ( peer_manager.getStats().getDownloadAverage() < min_speed ){
 
-						log( getName() + ": activating as speed is slow (<" + DisplayFormatters.formatByteCountToKiBEtcPerSec( min_speed ) + ")" );
+						log( "activating as speed is slow (<" + DisplayFormatters.formatByteCountToKiBEtcPerSec( min_speed ) + ")" );
 
 						return( true );
 					}
@@ -486,14 +486,14 @@ ExternalSeedReaderImpl
 
 				if ( ar.getResponseType() == DownloadAnnounceResult.RT_ERROR ){
 
-					log( getName() + ": activating as tracker unavailable" );
+					log( "activating as tracker unavailable" );
 
 					return( true );
 				}
 
 				if ( ar.getSeedCount() == 0 ){
 
-					log( getName() + ": activating as no seeds" );
+					log( "activating as no seeds" );
 
 					return( true );
 				}
@@ -571,7 +571,7 @@ ExternalSeedReaderImpl
 
 			if ( deactivate ){
 
-				log( getName() + ": deactivating as " + reason );
+				log( "deactivating as " + reason );
 
 				return( true );
 			}
@@ -674,7 +674,7 @@ ExternalSeedReaderImpl
 	deactivate(
 		String	reason )
 	{
-		plugin.log( getName() + ": deactivating (" + reason  + ")" );
+		log( "deactivating (" + reason  + ")" );
 
 		checkActivation( null, null );
 	}
