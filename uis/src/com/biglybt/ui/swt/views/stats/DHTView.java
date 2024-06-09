@@ -40,6 +40,7 @@ import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.components.graphics.PingGraphic;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -651,6 +652,33 @@ public class DHTView
       }
     });
 
+	Menu menu = new Menu(activityTable);
+
+	ClipboardCopy.addCopyToClipMenu(
+			menu,
+			new ClipboardCopy.copyToClipProvider(){
+				
+				@Override
+				public String getText(){
+					StringBuffer b = new StringBuffer( activities.length * 256 );
+					
+					for ( DHTControlActivity act: activities ){
+						b.append( "\"");
+						b.append( MessageText.getString("DHTView.activity.status." + act.isQueued()));
+						b.append( "\", \"" );
+						b.append( MessageText.getString("DHTView.activity.type." + act.getType()));
+						b.append( "\", \"" );;
+						b.append( ByteFormatter.nicePrint(act.getTarget()));
+						b.append( "\", \"" );
+						b.append( act.getDescription());
+						b.append( "\"\n" );
+					}
+						
+					return( b.toString());
+				}
+			});	
+	
+    activityTable.setMenu( menu );
   }
 
 
