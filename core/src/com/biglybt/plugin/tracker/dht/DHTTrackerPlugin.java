@@ -100,6 +100,9 @@ DHTTrackerPlugin
 	private static final int	INTERESTING_AVAIL_MAX		= 8;	// won't pub if more
 	private static final int	INTERESTING_PUB_MAX_DEFAULT	= 30;	// limit on pubs
 
+	private static final int	MAX_ACTIVE_DHT_GETS		= 8;
+	private static final int	MAX_ACTIVE_DHT_REMOVES	= 5;
+	private static final int	MAX_ACTIVE_DHT_PUTS		= 5;
 	private static final int	MAX_ACTIVE_DHT_SCRAPES	= 3;
 	
 	private static final int	REG_TYPE_NONE			= 1;
@@ -174,6 +177,10 @@ DHTTrackerPlugin
 	private Random				random = new Random();
 	private boolean				is_running;
 
+	private AtomicInteger		dht_gets_active			= new AtomicInteger();
+	private AtomicInteger		dht_puts_active			= new AtomicInteger();
+	private AtomicInteger		dht_removes_active		= new AtomicInteger();
+	
 	private AtomicInteger		dht_scrapes_active		= new AtomicInteger();
 	private AtomicInteger		dht_scrapes_complete	= new AtomicInteger();
 	
@@ -1387,6 +1394,11 @@ DHTTrackerPlugin
 
 		while( rds_it.hasNext()){
 
+			if ( dht_puts_active.get() > MAX_ACTIVE_DHT_PUTS ){
+				
+				break;
+			}
+			
 			Download	dl = rds_it.next();
 
 			int	reg_type = REG_TYPE_NONE;
@@ -1520,6 +1532,11 @@ DHTTrackerPlugin
 
 		while( rd_it.hasNext()){
 
+			if ( dht_removes_active.get() > MAX_ACTIVE_DHT_REMOVES ){
+				
+				break;
+			}
+			
 			Map.Entry<Download,RegistrationDetails>	entry = rd_it.next();
 
 			final Download	dl = entry.getKey();
@@ -1557,11 +1574,16 @@ DHTTrackerPlugin
 		}
 
 			// lastly gets
-
+				
 		rds_it = rds.iterator();
 
 		while( rds_it.hasNext()){
 
+			if ( dht_gets_active.get() > MAX_ACTIVE_DHT_GETS ){
+				
+				break;
+			}
+			
 			final Download	dl = (Download)rds_it.next();
 
 			Long	next_time;
@@ -1810,6 +1832,8 @@ DHTTrackerPlugin
 							byte[]	key,
 							boolean	timeout_occurred )
 						{
+							dht_puts_active.decrementAndGet();
+							
 							if ( target.getType() == REG_TYPE_FULL ){
 
 								log( 	download,
@@ -1819,6 +1843,8 @@ DHTTrackerPlugin
 								// decreaseActive( dl );
 						}
 					});
+				
+				dht_puts_active.incrementAndGet();
 			}
 		}
 	}
@@ -2143,6 +2169,8 @@ DHTTrackerPlugin
 								complete = true;
 							}
 
+							dht_gets_active.decrementAndGet();
+							
 							if ( 	target.getType() == REG_TYPE_FULL ||
 									(	target.getType() == REG_TYPE_DERIVED &&
 										seed_count + leecher_count > 1 )){
@@ -2615,6 +2643,8 @@ DHTTrackerPlugin
 								}
 						}
 					});
+			
+			dht_gets_active.incrementAndGet();
 		}
 
 		return( num_done );
@@ -2717,6 +2747,8 @@ DHTTrackerPlugin
 								byte[]	key,
 								boolean	timeout_occurred )
 							{
+								dht_removes_active.decrementAndGet();
+								
 								if ( target.getType() == REG_TYPE_FULL ){
 
 									log( 	download,
@@ -2727,6 +2759,8 @@ DHTTrackerPlugin
 								decreaseActive( download );
 							}
 						});
+				
+				dht_removes_active.incrementAndGet();
 			}
 		}
 	}
