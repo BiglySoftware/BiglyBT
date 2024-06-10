@@ -335,7 +335,7 @@ ExternalSeedPeer
 
 				if ( peer_added ){
 
-					plugin.log( reader.getName() + " failed - " + reader.getStatus() + ", permanent = " + reader.isPermanentlyUnavailable());
+					plugin.log( download.getName() + ": " + reader.getName() + " failed - " + reader.getStatus() + ", permanent = " + reader.isPermanentlyUnavailable());
 
 					peer_added	= false;
 
