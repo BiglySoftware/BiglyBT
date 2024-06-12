@@ -1,2 +1,0 @@
-svn: E170013: Unable to connect to a repository at URL 'https://github.com/TuxPaper/BiglyBT-web/trunk/web/default/Locale'
-svn: E160013: '/TuxPaper/BiglyBT-web/trunk/web/default/Locale' path not found
