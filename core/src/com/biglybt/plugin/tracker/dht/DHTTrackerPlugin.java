@@ -175,7 +175,8 @@ DHTTrackerPlugin
 	private Map<Download,int[]>					scrape_injection_map = new WeakHashMap<>();
 
 	private Random				random = new Random();
-	private boolean				is_running;
+	private volatile boolean	is_running;
+	private volatile boolean	closing	= false;
 
 	private AtomicInteger		dht_gets_active			= new AtomicInteger();
 	private AtomicInteger		dht_puts_active			= new AtomicInteger();
@@ -430,7 +431,7 @@ DHTTrackerPlugin
 				public void
 				closedownInitiated()
 				{
-
+					closing = true;
 				}
 
 				@Override
@@ -508,7 +509,10 @@ DHTTrackerPlugin
 
 					processRegistrations( ticks%8==0 );
 
-					processNonRegistrations( ticks == 2 || ticks%4==0, true, ticks%4 == 0 );
+					if ( !closing ){
+						
+						processNonRegistrations( ticks == 2 || ticks%4==0, true, ticks%4 == 0 );
+					}
 
 					if ( alt_lookup_handler != null ){
 
@@ -1394,7 +1398,7 @@ DHTTrackerPlugin
 
 		while( rds_it.hasNext()){
 
-			if ( dht_puts_active.get() > MAX_ACTIVE_DHT_PUTS ){
+			if ( dht_puts_active.get() > MAX_ACTIVE_DHT_PUTS || closing ){
 				
 				break;
 			}
@@ -1579,7 +1583,7 @@ DHTTrackerPlugin
 
 		while( rds_it.hasNext()){
 
-			if ( dht_gets_active.get() > MAX_ACTIVE_DHT_GETS ){
+			if ( dht_gets_active.get() > MAX_ACTIVE_DHT_GETS || closing ){
 				
 				break;
 			}
