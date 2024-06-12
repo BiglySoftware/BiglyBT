@@ -1485,6 +1485,50 @@ DHTPlugin
 		}
 	}
 	
+	private DHTPluginImpl[]
+	getDHTsToUse()
+	{		
+			// if we have both active and one is acting up then ditch it as it'll probably impact the other's completion
+		
+		if ( main_dht != null && main_v6_dht != null ){
+			
+			DHTPluginImpl to_remove = null;
+			
+			if ( !main_v6_dht.isHealthy()){
+				
+				to_remove = main_v6_dht;
+				
+			}else if ( !main_dht.isHealthy()){
+				
+				to_remove = main_dht;
+			}	
+			
+			if ( to_remove == null ){
+				
+				return( dhts );
+				
+			}else{
+				
+				DHTPluginImpl[] result = new DHTPluginImpl[dhts.length-1];
+				
+				int pos = 0;
+				
+				for ( DHTPluginImpl dht: dhts ){
+					
+					if ( dht != to_remove ){
+						
+						result[pos++] = dht;
+					}
+				}
+				
+				return( result );
+			}
+		}else{
+			
+			return( dhts );
+		}
+	}
+	
 	public void
 	put(
 		final byte[]						key,
@@ -1505,7 +1549,9 @@ DHTPlugin
 
 		}else{
 
-			final int[]	completes_to_go = { dhts.length };
+			DHTPluginImpl[] dhts_to_use = getDHTsToUse();
+			
+			final int[]	completes_to_go = { dhts_to_use.length };
 
 			DHTPluginOperationListener main_listener =
 				new DHTPluginOperationListener()
@@ -1561,11 +1607,11 @@ DHTPlugin
 					}
 				};
 
-			dhts[0].putEx( key, description, value, flags, high_priority, main_listener );
+			dhts_to_use[0].putEx( key, description, value, flags, high_priority, main_listener );
 
-			for (int i=1;i<dhts.length;i++){
+			for (int i=1;i<dhts_to_use.length;i++){
 
-				dhts[i].putEx(
+				dhts_to_use[i].putEx(
 						key, description, value, flags, high_priority,
 						new DHTPluginOperationListener()
 						{
@@ -1865,13 +1911,30 @@ DHTPlugin
 					});
 		}
 
-		if ( main_dht != null && main_v6_dht == null ){
+		DHTPluginImpl main_dht_to_use		= main_dht;
+		DHTPluginImpl main_v6_dht_to_use	= main_v6_dht;
+		
+			// if we have both active and one is acting up then ditch it as it'll probably impact the other's completion
+		
+		if ( main_dht_to_use != null && main_v6_dht_to_use != null ){
+			
+			if ( !main_v6_dht_to_use.isHealthy()){
+				
+				main_v6_dht_to_use = null;
+				
+			}else if ( !main_dht_to_use.isHealthy()){
+				
+				main_dht_to_use = null;
+			}	
+		}
+		
+		if ( main_dht_to_use != null && main_v6_dht_to_use == null ){
 
-			main_dht.get( original_key, description, flags, max_values, timeout, exhaustive, high_priority, main_listener );
+			main_dht_to_use.get( original_key, description, flags, max_values, timeout, exhaustive, high_priority, main_listener );
 
-		}else if ( main_dht == null && main_v6_dht != null ){
+		}else if ( main_dht_to_use == null && main_v6_dht_to_use != null ){
 
-			main_v6_dht.get( original_key, description, flags, max_values, timeout, exhaustive, high_priority, main_listener );
+			main_v6_dht_to_use.get( original_key, description, flags, max_values, timeout, exhaustive, high_priority, main_listener );
 
 		}else{
 
@@ -2020,9 +2083,9 @@ DHTPlugin
 				// hack - use different keys so we can distinguish which completion event we
 				// have received above
 
-			main_dht.get( v4_key, description, flags, max_values, timeout, exhaustive, high_priority, dual_listener );
+			main_dht_to_use.get( v4_key, description, flags, max_values, timeout, exhaustive, high_priority, dual_listener );
 
-			main_v6_dht.get( v6_key, description, flags, max_values, timeout, exhaustive, high_priority, dual_listener );
+			main_v6_dht_to_use.get( v6_key, description, flags, max_values, timeout, exhaustive, high_priority, dual_listener );
 		}
 	}
 

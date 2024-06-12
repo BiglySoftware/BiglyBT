@@ -93,6 +93,8 @@ DHTPluginImpl
 
 	private long				last_root_seed_import_time;
 
+	private volatile boolean	healthy = true;
+	
 	private LoggerChannel		log;
 	private DHTLogger			dht_log;
 
@@ -322,6 +324,12 @@ DHTPluginImpl
 		return( dht_plugin.isSleeping());
 	}
 	
+	public boolean
+	isHealthy()
+	{
+		return( healthy );
+	}
+	
 	public void
 	updateStats(
 		int		sample_stats_ticks )
@@ -540,6 +548,13 @@ DHTPluginImpl
 
 				}else{
 
+					if ( healthy ){
+					
+						log.log( "Healthy -> BAD" );
+						
+						healthy = false;
+					}
+					
 					log.log( "Less than 32 live contacts, reseeding" );
 				}
 
@@ -684,6 +699,14 @@ outer:
 				}else{
 
 					log.log( "No valid peers found to reseed from" );
+				}
+			}else{
+				
+				if ( !healthy ){
+				
+					log.log( "Healthy -> OK" );
+					
+					healthy = true;
 				}
 			}
 

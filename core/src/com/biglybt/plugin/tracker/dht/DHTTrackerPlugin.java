@@ -1586,6 +1586,17 @@ DHTTrackerPlugin
 			
 			final Download	dl = (Download)rds_it.next();
 
+			RegistrationDetails	registration = (RegistrationDetails)registered_downloads.get( dl );
+
+			if ( registration == null ){
+
+					// this can happen since we rate-limited the put operations
+				
+				// Debug.out( "Inconsistent, registration should be non-null: dl=" + dl.getName());
+
+				continue;
+			}
+			
 			Long	next_time;
 
 			try{
@@ -1631,15 +1642,6 @@ DHTTrackerPlugin
 				if ( skip ){
 
 					log( dl, "Deferring announce as activity outstanding" );
-				}
-
-				RegistrationDetails	registration = (RegistrationDetails)registered_downloads.get( dl );
-
-				if ( registration == null ){
-
-					Debug.out( "Inconsistent, registration should be non-null" );
-
-					continue;
 				}
 
 				boolean	derived_only = false;
