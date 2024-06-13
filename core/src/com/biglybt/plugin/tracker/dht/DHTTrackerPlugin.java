@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
@@ -67,7 +68,7 @@ import com.biglybt.util.StringCompareUtils;
 
 public class
 DHTTrackerPlugin
-	implements Plugin, DownloadListener, DownloadAttributeListener, DownloadTrackerListener
+	implements Plugin, DownloadListener, DownloadAttributeListener, DownloadTrackerListener, AEDiagnosticsEvidenceGenerator
 {
 	public static Object	DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY	= new Object();
 
@@ -182,8 +183,9 @@ DHTTrackerPlugin
 	private AtomicInteger		dht_puts_active			= new AtomicInteger();
 	private AtomicInteger		dht_removes_active		= new AtomicInteger();
 	
-	private AtomicInteger		dht_scrapes_active		= new AtomicInteger();
-	private AtomicInteger		dht_scrapes_complete	= new AtomicInteger();
+	private AtomicInteger		dht_scrapes_active			= new AtomicInteger();
+	private AtomicInteger		dht_scrapes_complete		= new AtomicInteger();
+	private AtomicLong			dht_scrape_complete_mono	= new AtomicLong(-1);
 	
 	private AEMonitor			this_mon	= new AEMonitor( "DHTTrackerPlugin" );
 
@@ -230,6 +232,8 @@ DHTTrackerPlugin
 	initialize(
 		PluginInterface 	_plugin_interface )
 	{
+		AEDiagnostics.addEvidenceGenerator( this );
+		
 		plugin_interface	= _plugin_interface;
 
 		log = plugin_interface.getLogger().getTimeStampedChannel(PLUGIN_NAME);
@@ -3046,10 +3050,15 @@ DHTTrackerPlugin
 				String p_str = presence_download==null?"null":presence_download.getName();
 				String s_str = ready_scrape==null?"null":ready_scrape.getName();
 				
+				long last_scrape = dht_scrape_complete_mono.get();
+				
+				String last_scrape_str = last_scrape<0?"-":(((mono_now-last_scrape)/1000) + "s");
+				
 				log.log( 	"Stats: registered=" + registered_downloads.size() + ", query=" + query_map.size() + ", running=" + running_downloads.size() + 
 							", active=" + in_progress.size() + ", interesting=" + interesting_downloads.size() + 
 							", dhtget=" + dht_gets_active.get() + ", dhtput=" + dht_puts_active.get() + ", dhtrem=" + dht_removes_active.get() + 
-							", dhtscrape=" + dht_only_scrapes.size() + "/" + dht_scrapes_active.get() + "/" + dht_scrapes_complete.get() + ", dl=" + p_str + "/" + s_str );
+							", dhtscrape=" + dht_only_scrapes.size() + "/" + dht_scrapes_active.get() + "/" + dht_scrapes_complete.get() + "/" + last_scrape_str + 
+							", dl=" + p_str + "/" + s_str );
 				
 			}finally{
 
@@ -3514,6 +3523,8 @@ DHTTrackerPlugin
 							dht_scrapes_active.decrementAndGet();
 							dht_scrapes_complete.incrementAndGet();
 							
+							dht_scrape_complete_mono.set( SystemTime.getMonotonousTime());
+							
 							log( 	f_ready_scrape,
 									"Scrape completed (elapsed=" + TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start)
 											+ "), seeds=" + seeds + ", leechers=" + leechers);
@@ -3705,6 +3716,142 @@ DHTTrackerPlugin
 		}
 	}
 
+	public void
+	generate(
+		IndentWriter		writer )
+	{
+		writer.println( "DHT Tracker" );
+
+		long now		= SystemTime.getCurrentTime();
+		long mono_now	= SystemTime.getMonotonousTime();
+		
+		try{
+			writer.indent();
+			
+			try{
+				this_mon.enter();
+				
+				writer.println( "Registered" );
+				
+				try{
+					writer.indent();
+				
+					for ( Map.Entry<Download,RegistrationDetails> e: registered_downloads.entrySet()){
+					
+						writer.println( e.getKey().getName());
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+				
+				writer.println( "Running" );
+				
+				try{
+					writer.indent();
+				
+					for ( Map.Entry<Download,int[]> e: running_downloads.entrySet()){
+					
+						int[] vals = e.getValue();
+						
+						writer.println( e.getKey().getName() + " -> " + vals[0] + "/" + vals[1] + "/" + vals[2] + "/" + vals[3] + "/" + vals[4] );
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+				
+				writer.println( "Interesting" );
+				
+				try{
+					writer.indent();
+				
+					for ( Map.Entry<Download,Long> e: interesting_downloads.entrySet()){
+					
+						Download download = e.getKey();
+						
+						int[] run_data = running_downloads.get( download );
+
+						String scrape;
+						
+						if ( run_data == null || run_data[0] == REG_TYPE_DERIVED ){
+						
+							scrape = "yes";
+							
+							Torrent torrent = download.getTorrent();
+
+							if ( torrent != null && TorrentUtils.isDecentralised( torrent.getAnnounceURL())){
+
+								int state = download.getState();
+								
+									// ignore stopped ones for the moment
+								
+								if ( state == Download.ST_QUEUED || download.isPaused()){
+									
+									scrape += ", dht only";
+									
+									long[] data = (long[])download.getUserData( SCRAPE_DATA_KEY );
+								
+									if ( data == null ){
+										
+										scrape += ": pending";
+										
+									}else{
+										
+										scrape += ": next in " + ((data[0] - mono_now )/1000) + "s";
+									}
+								}
+							}
+						}else{
+							
+							scrape = "no";
+						}
+						
+						writer.println( e.getKey().getName() + " -> " + ( e.getValue() - now ) + ", scrape=" + scrape );
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+				
+				writer.println( "Interesting Published" );
+				
+				try{
+					writer.indent();
+				
+					for ( Download d: interesting_published ){
+					
+						writer.println( d.getName());
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+				
+				writer.println( "Query Map" );
+				
+				try{
+					writer.indent();
+				
+					for ( Map.Entry<Download,Long> q: query_map.entrySet()){
+					
+						writer.println( q.getKey().getName() + " -> " + ( q.getValue() - now ));
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+			}finally{
+
+				this_mon.exit();
+			}
+			
+		}finally{
+			
+			writer.exdent();
+		}
+	}
+	
 	@Override
 	public void
 	positionChanged(
