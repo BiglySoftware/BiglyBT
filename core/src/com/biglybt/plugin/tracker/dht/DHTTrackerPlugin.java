@@ -2904,7 +2904,7 @@ DHTTrackerPlugin
 
 			scrapes.put( download, download.getLastScrapeResult());
 			
-			if ( do_dht_scrapes ){
+			//if ( do_dht_scrapes ){
 				
 				Torrent torrent = download.getTorrent();
 
@@ -2919,7 +2919,7 @@ DHTTrackerPlugin
 						dht_only_scrapes.add( download );
 					}
 				}
-			}
+			//}
 		}
 
 		Download	presence_download				= null;
@@ -3004,7 +3004,7 @@ DHTTrackerPlugin
 
 		if ( do_scrape_checks ){
 			
-			if ( !dht_only_scrapes.isEmpty()){
+			if ( do_dht_scrapes && !dht_only_scrapes.isEmpty()){
 	
 				long		earliest		= -1;
 				
@@ -3048,6 +3048,7 @@ DHTTrackerPlugin
 				
 				log.log( 	"Stats: registered=" + registered_downloads.size() + ", query=" + query_map.size() + ", running=" + running_downloads.size() + 
 							", active=" + in_progress.size() + ", interesting=" + interesting_downloads.size() + 
+							", dhtget=" + dht_gets_active.get() + ", dhtput=" + dht_puts_active.get() + ", dhtrem=" + dht_removes_active.get() + 
 							", dhtscrape=" + dht_only_scrapes.size() + "/" + dht_scrapes_active.get() + "/" + dht_scrapes_complete.get() + ", dl=" + p_str + "/" + s_str );
 				
 			}finally{
