@@ -2992,9 +2992,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				options.put( "network", network );
 				options.put( "key", key.getBytes( "UTF-8" ));
 
-				options.put( "timeout", 60*1000 );
+				if ( network == AENetworkClassifier.AT_PUBLIC ){
 
-				if ( network != AENetworkClassifier.AT_PUBLIC ){
+					options.put( "timeout", 30*1000 );
+
+				}else{
+					
+					options.put( "timeout", 60*1000 );
 
 					options.put( "server_id", getSharedAnonEndpoint()?"dchat_shared":"dchat" );
 				}
