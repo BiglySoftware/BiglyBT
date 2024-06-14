@@ -97,7 +97,7 @@ DHTNATPuncherImpl
 
 	private static final int	REPUBLISH_TIME_MIN 			= 5*60*1000;
 	private static final int	TRANSFER_TIMEOUT			= 30*1000;
-	private static final int	RENDEZVOUS_LOOKUP_TIMEOUT	= 30*1000;
+	private static final int	RENDEZVOUS_LOOKUP_TIMEOUT	= 20*1000;
 	private static final int	TUNNEL_TIMEOUT				= 3*1000;
 
 	private static final int	RENDEZVOUS_SERVER_MAX			= 8;
