@@ -3024,8 +3024,10 @@ DHTControlImpl
 				}
 
 				@Override
-				public String getDescription() {
-					return (description);
+				public String 
+				getDescription() 
+				{
+					return( description + ": p=" + high_priority + ",t=" + timeout );
 				}
 
 				@Override
