@@ -223,7 +223,7 @@ FMFileAccessController
 				return;
 			}
 
-			throw( new FMFileManagerException( "Conversion to/from piece-reorder not supported" ));
+			throw( new FMFileManagerException( "Conversion to/from piece-reorder not supported (current=" + type + ", target=" + target_type + ")" ));
 		}
 
 		File	file = owner.getLinkedFile();
