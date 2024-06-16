@@ -480,6 +480,8 @@ SimpleAPIPlugin
 				
 				List<DownloadHistory> history = dh_manager.getHistory();			
 				
+				Collections.sort( history, (h1,h2)->Long.compare(h2.getAddTime(),h1.getAddTime()));
+				
 				for ( DownloadHistory dh: history ){
 					
 					try{
