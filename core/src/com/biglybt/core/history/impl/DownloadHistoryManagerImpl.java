@@ -1219,8 +1219,8 @@ DownloadHistoryManagerImpl
 		private String			name;
 		private String			save_location;
 		private String[]		tags			= NO_TAGS;
-		private long			complete_time	= -1;
-		private long			remove_time		= -1;
+		private long			complete_time	= 0;
+		private long			remove_time		= 0;
 
 		private Map<Long,DownloadHistoryImpl>	history_ref;	// need this for GC purposes
 
@@ -1292,8 +1292,20 @@ DownloadHistoryManagerImpl
 				size = l_size==null?0:l_size;
 
 				add_time 		= (Long)map.get( "a" );
+				
 				complete_time 	= (Long)map.get( "c" );
+				
+				if ( complete_time < 0 ){
+					
+					complete_time = 0;	// switch to using 0 as "none" to keep Droo happy
+				}
+				
 				remove_time 	= (Long)map.get( "r" );
+
+				if ( remove_time < 0 ){
+					
+					remove_time = 0;	// switch to using 0 as "none" to keep Droo happy
+				}
 
 				List<byte[]> l_tags = (List<byte[]>)map.get( "t" );
 				
@@ -1396,14 +1408,25 @@ DownloadHistoryManagerImpl
 
 			if ( comp == 0 ){
 
-				complete_time = dms.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );	// nothing recorded either way
+				comp = dms.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );	// nothing recorded either way
 
-			}else{
-
-				complete_time = comp;
+			}
+			
+			if ( comp < 0 ){
+				
+				comp = 0;
 			}
 
-			return( complete_time != old_time );
+			if ( comp != old_time ){
+				
+				complete_time = comp;
+
+				return( true );
+				
+			}else{
+				
+				return( false );
+			}
 		}
 
 		boolean
