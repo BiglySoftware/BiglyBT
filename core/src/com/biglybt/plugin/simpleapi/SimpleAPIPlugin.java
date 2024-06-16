@@ -35,6 +35,8 @@ import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.history.DownloadHistory;
+import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -454,6 +456,68 @@ SimpleAPIPlugin
 							
 							Debug.out( e );
 						}
+						json.add( obj );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				if ( response != null ){
+					
+					response.setContentType( "application/json; charset=UTF-8" );
+				}
+				
+				return( JSONUtils.encodeToJSON( json ));
+			
+			}else if ( method.equals( "listdownloadhistory" )){
+				
+				JSONArray json = new JSONArray();
+				
+				DownloadHistoryManager dh_manager =
+						(DownloadHistoryManager) CoreFactory.getSingleton().getGlobalManager().getDownloadHistoryManager();
+				
+				List<DownloadHistory> history = dh_manager.getHistory();			
+				
+				for ( DownloadHistory dh: history ){
+					
+					try{
+						JSONObject	obj = new JSONObject();
+						
+						obj.put( "DisplayName", dh.getName());
+						
+						byte[] hash = dh.getTorrentHash();
+						
+						obj.put( "InfoHash", hash==null?"":ByteFormatter.encodeString( hash ));
+						
+						String save_path = dh.getSaveLocation();
+						
+						obj.put( "SavePath", save_path );
+						
+						obj.put( "AddTime", dh.getAddTime());
+						obj.put( "CompleteTime", dh.getCompleteTime());
+						obj.put( "RemoveTime", dh.getRemoveTime());
+						
+						obj.put( "Size", dh.getSize());
+						
+						try{
+							String[] tags = dh.getTags();
+							
+							JSONArray tags_a = new JSONArray();
+							
+							for ( String t: tags ){
+								
+								tags_a.add( t );
+							}
+							
+							obj.put( "Tags", tags_a );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+						
 						json.add( obj );
 						
 					}catch( Throwable e ){

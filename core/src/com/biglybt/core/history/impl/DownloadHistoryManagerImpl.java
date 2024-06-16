@@ -589,7 +589,7 @@ DownloadHistoryManagerImpl
 		}
 	}
 
-	private List<DownloadHistory>
+	public List<DownloadHistory>
 	getHistory()
 	{
 		synchronized( lock ){

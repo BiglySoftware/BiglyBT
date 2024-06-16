@@ -37,6 +37,9 @@ DownloadHistoryManager
 	public int
 	getHistoryCount();
 
+	public List<DownloadHistory>
+	getHistory();
+	
 	public void
 	removeHistory(
 		List<DownloadHistory>	history );
