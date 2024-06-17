@@ -397,6 +397,7 @@ TRTrackerBTAnnouncerImpl
 	private long				current_time_to_wait_secs;
 	private final boolean		manual_control;
 
+	private final int	dispersal_random = RandomUtils.nextInt( 10 );
 	private long		tracker_interval;
 	private long		tracker_min_interval;
 
@@ -734,6 +735,8 @@ TRTrackerBTAnnouncerImpl
 
 		}
 
+		secs_to_wait += dispersal_random;
+		
 		return( secs_to_wait );
 	}
 
@@ -2124,6 +2127,8 @@ TRTrackerBTAnnouncerImpl
 
  			int handler_port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
  			
+ 			int retries = PRUDPPacketTracker.DEFAULT_RETRY_COUNT;
+ 			
  			List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
  			
  			Throwable last_error = null;
@@ -2148,7 +2153,7 @@ TRTrackerBTAnnouncerImpl
 	
 		 			try{
 		
-			 			for (int retry_loop=0;retry_loop<PRUDPPacketTracker.DEFAULT_RETRY_COUNT;retry_loop++){
+			 			for (int retry_loop=0;retry_loop<retries;retry_loop++){
 		
 			 				try{
 		
@@ -2392,6 +2397,9 @@ TRTrackerBTAnnouncerImpl
  				}catch( Throwable e){
  					
  					last_error = e;
+ 					
+ 					retries	= 1;
+ 					timeout = 10*1000;	// if we have lots of addresses we don't want to be wasting loads of time
  				}
  			}
  			
