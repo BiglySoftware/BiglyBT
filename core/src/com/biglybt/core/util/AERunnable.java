@@ -28,6 +28,12 @@ public abstract class
 AERunnable
 	implements Runnable
 {
+	public String
+	getName()
+	{
+		return( null );
+	}
+	
 	@Override
 	public void
 	run()
@@ -72,6 +78,7 @@ AERunnable
 			name = _name;
 		}
 		
+		@Override
 		public String
 		getName()
 		{

@@ -34,14 +34,14 @@ import com.biglybt.core.config.ParameterListener;
 
 
 public class
-ThreadPool
+ThreadPool<T extends AERunnable>
 {
 	private static final boolean	NAME_THREADS = Constants.IS_CVS_VERSION && System.getProperty( "az.thread.pool.naming.enable", "true" ).equals( "true" );
 
 	private static final boolean	LOG_WARNINGS	= false;
 	private static final int		WARN_TIME		= 10000;
 
-	static final List		busy_pools			= new ArrayList();
+	private static final List<ThreadPool<?>>		busy_pools			= new ArrayList<>();
 	private static boolean	busy_pool_timer_set	= false;
 
 	private static boolean	debug_thread_pool;
@@ -63,16 +63,16 @@ ThreadPool
 						try{
 							writer.indent();
 
-							List	pools;
+							List<ThreadPool<?>>	pools;
 
 							synchronized( busy_pools ){
 
-								pools	= new ArrayList( busy_pools );
+								pools	= new ArrayList<>( busy_pools );
 							}
 
 							for (int i=0;i<pools.size();i++){
 
-								((ThreadPool)pools.get(i)).generateEvidence( writer );
+								pools.get(i).generateEvidence( writer );
 							}
 						}finally{
 
@@ -97,31 +97,30 @@ ThreadPool
 	protected static void
 	checkAllTimeouts()
 	{
-		List	pools;
+		List<ThreadPool<?>>	pools;
 
 			// copy the busy pools to avoid potential deadlock due to synchronization
 			// nestings
 
 		synchronized( busy_pools ){
 
-			pools	= new ArrayList( busy_pools );
+			pools	= new ArrayList<>( busy_pools );
 		}
 
 		for (int i=0;i<pools.size();i++){
 
-			((ThreadPool)pools.get(i)).checkTimeouts();
+			pools.get(i).checkTimeouts();
 		}
 	}
-
 
 	private final String	name;
 	private int				thread_name_index	= 1;
 
 	private long	execution_limit;
 
-	private final List	busy;
+	private final List<threadPoolWorker>	busy;
 	private final boolean	queue_when_full;
-	private final List<AERunnable>	task_queue	= new ArrayList<>();
+	private final List<T>	task_queue	= new ArrayList<>();
 
 	private final AESemaphore	thread_sem;
 	private int					target_permits;
@@ -209,7 +208,9 @@ ThreadPool
 		}
 	}
 
-	public threadPoolWorker run(AERunnable runnable) {
+	public threadPoolWorker 
+	run(T runnable) 
+	{
 		return( run(runnable, false, false));
 	}
 
@@ -220,7 +221,7 @@ ThreadPool
 	 * @param high_priority
 	 *            inserts at front if tasks queueing
 	 */
-	public threadPoolWorker run(AERunnable runnable, boolean high_priority, boolean manualRelease) {
+	public threadPoolWorker run(T runnable, boolean high_priority, boolean manualRelease) {
 
 		if(manualRelease && !(runnable instanceof ThreadPoolTask))
 			throw new IllegalArgumentException("manual release only allowed for ThreadPoolTasks");
@@ -407,33 +408,31 @@ ThreadPool
 		}
 	}
 
-	public AERunnable[]
+	public List<T>
 	getRunningTasks()
 	{
-		List	runnables	= new ArrayList();
+		List<T>	tasks;
 
 		synchronized( this ){
 
-			Iterator	it = busy.iterator();
+			tasks	= new ArrayList<>( busy.size());
+
+			Iterator<threadPoolWorker>	it = busy.iterator();
 
 			while( it.hasNext()){
 
 				threadPoolWorker	worker = (threadPoolWorker)it.next();
 
-				AERunnable	runnable = worker.getRunnable();
+				T	runnable = worker.getRunnable();
 
 				if ( runnable != null ){
 
-					runnables.add( runnable );
+					tasks.add( runnable );
 				}
 			}
 		}
 
-		AERunnable[]	res = new AERunnable[runnables.size()];
-
-		runnables.toArray(res);
-
-		return( res );
+		return( tasks );
 	}
 
 	public int
@@ -638,7 +637,7 @@ ThreadPool
 
 	class threadPoolWorker extends AEThread2 {
 		private final String		worker_name;
-		private volatile AERunnable	runnable;
+		private volatile T			runnable;
 		private long				run_start_time;
 		private int					warn_count;
 		private String				state	= "<none>";
@@ -667,7 +666,7 @@ ThreadPool
 						synchronized (ThreadPool.this)
 						{
 							if (task_queue.size() > 0)
-								runnable = (AERunnable) task_queue.remove(0);
+								runnable = task_queue.remove(0);
 							else
 								break;
 						}
@@ -804,11 +803,11 @@ ThreadPool
 			return (worker_name);
 		}
 
-		protected ThreadPool getOwner() {
+		protected ThreadPool<T> getOwner() {
 			return (ThreadPool.this);
 		}
 
-		protected AERunnable getRunnable() {
+		protected T getRunnable() {
 			return (runnable);
 		}
 	}

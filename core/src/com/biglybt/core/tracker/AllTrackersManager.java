@@ -279,6 +279,12 @@ AllTrackersManager
 		public long
 		getPrivateLagMillis();
 		
+		public List<String>
+		getPublicActive();
+		
+		public List<String>
+		getPrivateActive();
+		
 		public int
 		getPublicScheduledCount();
 		

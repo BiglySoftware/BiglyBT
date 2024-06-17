@@ -241,6 +241,30 @@ TRTrackerBTAnnouncerImpl
 								final private int	public_pending	= tracker_timer_public.getEventCount( SystemTime.getCurrentTime());
 								final private int	private_pending	= tracker_timer_private.getEventCount( SystemTime.getCurrentTime() );
 								
+								final List<String>	public_active;
+								final List<String>	private_active;
+								
+								{
+									List<TimerEvent> events = tracker_timer_public.getActiveEvents();
+									
+									long mono_now = SystemTime.getMonotonousTime();
+									
+									public_active = new ArrayList<String>( events.size());
+									
+									for ( TimerEvent e: events ){
+																				
+										public_active.add( e.getName() + " (" + (mono_now - e.getExecutionStartMonoTime()) + " " + MessageText.getString( "ConfigView.section.stats.millis.short" ) + ")");									}
+									
+									events = tracker_timer_private.getActiveEvents();
+									
+									private_active = new ArrayList<String>( events.size());
+									
+									for ( TimerEvent e: events ){
+										
+										private_active.add( e.getName() + " (" + (mono_now - e.getExecutionStartMonoTime()) + " " + MessageText.getString( "ConfigView.section.stats.millis.short" ) + ")");						
+									}
+								}
+								
 								public long
 								getPublicLagMillis()
 								{
@@ -251,6 +275,20 @@ TRTrackerBTAnnouncerImpl
 								getPrivateLagMillis()
 								{
 									return( private_lag );
+								}
+								
+								@Override
+								public List<String> 
+								getPublicActive()
+								{
+									return( public_active );
+								}
+								
+								@Override
+								public List<String> 
+								getPrivateActive()
+								{	
+									return( private_active );
 								}
 								
 								public int
@@ -504,7 +542,7 @@ TRTrackerBTAnnouncerImpl
 			{
 				if ( manual_control ){
 
-					requestUpdateSupport();
+					requestUpdateSupport( this_event );
 
 					return;
 				}
@@ -513,7 +551,7 @@ TRTrackerBTAnnouncerImpl
 
 				try{
 
-					secs_to_wait = requestUpdateSupport();
+					secs_to_wait = requestUpdateSupport( this_event );
 
 					if ( tracker_state != TRTrackerAnnouncer.TS_STOPPED ){
 						
@@ -931,7 +969,8 @@ TRTrackerBTAnnouncerImpl
 	}
 
 	protected long
-	requestUpdateSupport()
+	requestUpdateSupport(
+		TimerEvent		timer_event )
 	{
 
 		boolean	clear_progress = true;
@@ -975,7 +1014,7 @@ TRTrackerBTAnnouncerImpl
 
 				}else if ( tracker_state != TRTrackerAnnouncer.TS_STOPPED ){
 
-					response = stopSupport();
+					response = stopSupport( timer_event );
 
 					if ( response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
 
@@ -994,7 +1033,7 @@ TRTrackerBTAnnouncerImpl
 					// always go through the "start" phase, even if we're already complete
 					// as some trackers insist on the initial "start"
 
-				response = startSupport();
+				response = startSupport( timer_event );
 
 				if ( response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
 
@@ -1004,7 +1043,7 @@ TRTrackerBTAnnouncerImpl
 
 				if ( !complete_reported ){
 
-					response = completeSupport();
+					response = completeSupport( timer_event );
 
 						// treat the "complete" as processed if the tracker replies either OK or an explicit
 						// error. In particular, if the tracker has returned an error to control seed limits
@@ -1020,12 +1059,12 @@ TRTrackerBTAnnouncerImpl
 				}else{
 					tracker_state = TRTrackerAnnouncer.TS_COMPLETED;
 
-					response = updateSupport();
+					response = updateSupport( timer_event );
 				}
 
 			}else{
 
-				response = updateSupport();
+				response = updateSupport( timer_event );
 			}
 
 			if ( response != null ){
@@ -1111,45 +1150,46 @@ TRTrackerBTAnnouncerImpl
 		}
 	}
 
-	protected TRTrackerAnnouncerResponseImpl startSupport() {
+	protected TRTrackerAnnouncerResponseImpl startSupport( TimerEvent timer_event ) {
 		if (Logger.isEnabled())
 			Logger.log(new LogEvent(torrent, LOGID, "Tracker Announcer is sending "
 					+ "a start Request"));
 
-    return (update("started"));
+    return (update("started", timer_event ));
   }
 
-  protected TRTrackerAnnouncerResponseImpl completeSupport() {
+  protected TRTrackerAnnouncerResponseImpl completeSupport( TimerEvent timer_event ) {
   	if (Logger.isEnabled())
 			Logger.log(new LogEvent(torrent, LOGID, "Tracker Announcer is sending "
 					+ "a completed Request"));
 
-		return (update("completed"));
+		return (update("completed", timer_event));
   }
 
-  protected TRTrackerAnnouncerResponseImpl stopSupport() {
+  protected TRTrackerAnnouncerResponseImpl stopSupport( TimerEvent timer_event ) {
   	if (Logger.isEnabled())
 			Logger.log(new LogEvent(torrent, LOGID, "Tracker Announcer is sending "
 					+ "a stopped Request"));
 
-    return (update("stopped"));
+    return (update("stopped", timer_event));
   }
 
-  protected TRTrackerAnnouncerResponseImpl updateSupport() {
+  protected TRTrackerAnnouncerResponseImpl updateSupport( TimerEvent timer_event ) {
   	if (Logger.isEnabled())
 			Logger.log(new LogEvent(torrent, LOGID, "Tracker Announcer is sending "
 					+ "an update Request"));
 
-    return update("");
+    return update("", timer_event);
   }
 
   	private TRTrackerAnnouncerResponseImpl
 	update(
-		String evt )
+		String 		evt,
+		TimerEvent	timer_event )
   	{
   		// this method filters out any responses incompatible with the network selection
 
-  		TRTrackerAnnouncerResponseImpl	resp = update2( evt );
+  		TRTrackerAnnouncerResponseImpl	resp = update2( evt, timer_event );
 
   		TRTrackerAnnouncerResponsePeer[]	peers = resp.getPeers();
 
@@ -1202,9 +1242,9 @@ TRTrackerBTAnnouncerImpl
   	}
 
     private TRTrackerAnnouncerResponseImpl
-    update2(String evt)
+    update2(String evt, TimerEvent timer_event )
     {
-    	TRTrackerAnnouncerResponseImpl resp = update2Support( evt );
+    	TRTrackerAnnouncerResponseImpl resp = update2Support( evt, timer_event );
     
     	URL url = resp.getURL();
     	
@@ -1217,7 +1257,7 @@ TRTrackerBTAnnouncerImpl
     }
     
   private TRTrackerAnnouncerResponseImpl
-  update2Support(String evt)
+  update2Support(String evt, TimerEvent event )
   {
   	TRTrackerAnnouncerResponseImpl	last_failure_resp = null;
 
@@ -1266,7 +1306,7 @@ TRTrackerBTAnnouncerImpl
 		  
 		  try{
 
-			request_obj =  constructRequest( evt,original_url );
+			request_obj =  constructRequest( evt, original_url, event );
 			
 			all_trackers.addActiveRequest( request_obj );
 			
@@ -2475,8 +2515,9 @@ TRTrackerBTAnnouncerImpl
 
   private TRTrackerAnnouncerRequestImpl
   constructRequest(
-  	String 	evt,
-	URL		_url)
+  	String 		evt,
+	URL			_url,
+	TimerEvent	timer_event )
 
   	throws Exception
   {
@@ -2505,6 +2546,11 @@ TRTrackerBTAnnouncerImpl
   	
   	if ( att != null ){
   
+  		if ( timer_event != null ){
+  		
+  			timer_event.setName( att.getTrackerName());
+  		}
+  		
   		Map<String,Object>	options = att.getOptions();
   		
   		if ( options != null ){

@@ -19,6 +19,8 @@
 package com.biglybt.ui.swt.views.stats;
 
 
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
@@ -205,6 +207,10 @@ public class TrackerActivityView
 			gLag.setLayoutData(gridData);
 			gLag.setLayout(new GridLayout());
 	
+			Canvas lagsCanvas = new Canvas(gLag,SWT.NO_BACKGROUND);
+			gridData = new GridData(GridData.FILL_BOTH);
+			lagsCanvas.setLayoutData(gridData);
+
 			ValueFormater formatter =
 					new ValueFormater()
 			{
@@ -236,7 +242,71 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							int result = (int)all_trackers.getAnnounceStats().getPublicLagMillis();
+							AnnounceStats stats = all_trackers.getAnnounceStats();
+							
+							int result = (int)stats.getPublicLagMillis();
+							
+							Utils.execSWTThread(()->{
+								
+								if ( lagsCanvas.isDisposed()){
+									
+									return;
+								}
+							
+								List<String> active = stats.getPublicActive();
+								
+								String tt = "";
+								
+								if ( !active.isEmpty()){
+									
+									tt += MessageText.getString( "subs.prop.is_public" ) + " (" + active.size() + ")\n";
+								
+									int lines = 0;
+									
+									for ( String s: active ){
+									
+										if ( lines == 5 ){
+											
+											tt += "    ...\n";
+											
+											break;
+										}
+										
+										tt += "    " + s + "\n";
+										
+										lines++;
+									}
+								}
+								active = stats.getPrivateActive();
+								
+								if ( !active.isEmpty()){
+									
+									if ( !tt.isEmpty()){
+										
+										tt += "\n";
+									}
+									
+									tt += MessageText.getString( "label.private" ) + " (" + active.size() + ")\n";
+								
+									int lines = 0;
+									
+									for ( String s: active ){
+									
+										if ( lines == 5 ){
+											
+											tt += "    ...\n";
+											
+											break;
+										}
+										
+										tt += "    " + s + "\n";
+										
+										lines++;
+									}
+								}
+								
+								Utils.setTT( lagsCanvas, tt );
+							});
 							
 							if ( result < 500 ){
 				
@@ -328,11 +398,7 @@ public class TrackerActivityView
 					mpg_lags.refresh( true );
 				}
 			};	
-	
-			Canvas lagsCanvas = new Canvas(gLag,SWT.NO_BACKGROUND);
-			gridData = new GridData(GridData.FILL_BOTH);
-			lagsCanvas.setLayoutData(gridData);
-	
+		
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 	
 			Legend.createLegendComposite(gLag, mpg_lags_colors, color_configs, null, gridData, true, legend_listener );

@@ -49,12 +49,6 @@ ThreadPoolTask
 		return( worker == null ? "" : worker.getState());
 	}
 
-	public String
-	getName()
-	{
-		return( null );
-	}
-
 	public abstract void
 	interruptTask();
 

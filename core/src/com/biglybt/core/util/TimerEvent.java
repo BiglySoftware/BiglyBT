@@ -30,18 +30,20 @@ TimerEvent
 	extends		ThreadPoolTask
 	implements 	Comparable<TimerEvent>
 {
-	private String					name;
+	private String						name;
 
 	private final Timer					timer;
 	private final long					created;
-	private long					when;
+	private long						when;
 	private final TimerEventPerformer	performer;
 
 	private final boolean		absolute;
-	private boolean		cancelled;
-	private boolean		has_run;
+	private boolean				cancelled;
+	private boolean				has_run;
 
-	private long			unique_id	= 1;
+	private final long			unique_id;
+
+	private volatile long exec_start = -1;
 
 	protected
 	TimerEvent(
@@ -191,6 +193,26 @@ TimerEvent
 	{
 	}
 
+	protected void
+	execute()
+	{
+		exec_start = SystemTime.getMonotonousTime();
+
+		timer.execute( this );
+	}
+	
+	public long
+	getExecutionStartMonoTime()
+	{
+		return( exec_start );
+	}
+	
+	protected long
+	getSlowEventLimit()
+	{
+		return( timer.getSlowEventLimit());
+	}
+	
 	public String
 	getString()
 	{
@@ -203,6 +225,41 @@ TimerEvent
 		}else{
 
 			return( "when=" + getWhen() + ",run=" + hasRun() + ", can=" + isCancelled() + ",target=" + getPerformer() + (name==null?"":",name=" + name ));
+		}
+	}
+	
+	protected static class
+	TimerEventLogged
+		extends TimerEvent
+	{		
+		protected
+		TimerEventLogged(
+			Timer					timer,
+			long					unique_id,
+			long					created,
+			long					when,
+			boolean					absolute,
+			TimerEventPerformer		performer )
+		{
+			super( timer, unique_id, created, when, absolute, performer );
+		}
+		
+		@Override
+		public void
+		runSupport()
+		{
+			try{
+				super.runSupport();
+			
+			}finally{
+				
+				long elapsed = SystemTime.getMonotonousTime() - getExecutionStartMonoTime();
+				
+				if ( elapsed > getSlowEventLimit()){
+				
+					System.out.println( "Timer event '" + getName() + "' took " + elapsed );
+				}
+			}
 		}
 	}
 }

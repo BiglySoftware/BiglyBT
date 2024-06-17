@@ -620,6 +620,8 @@ AllTrackersManagerImpl
 		}
 	}
 	
+	private final static List<String> active = Collections.emptyList();
+	
 	private final Average announce_rate = Average.getInstance( 1000, 20 );  //update every 3s, average over 60s
 	private final Average scrape_rate 	= Average.getInstance( 1000, 20 );  //update every 3s, average over 60s
 
@@ -633,6 +635,20 @@ AllTrackersManagerImpl
 		@Override
 		public long getPublicLagMillis(){
 			return 0;
+		}
+		
+		@Override
+		public List<String> 
+		getPublicActive()
+		{
+			return( active );
+		}
+		
+		@Override
+		public List<String> 
+		getPrivateActive()
+		{	
+			return( active );
 		}
 		
 		@Override

@@ -28,6 +28,8 @@ package com.biglybt.core.util;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
+import com.biglybt.core.util.TimerEvent.TimerEventLogged;
+
 public class Timer
 	extends 	AERunnable
 	implements	SystemTime.ChangeListener
@@ -36,7 +38,7 @@ public class Timer
 	private static ArrayList<WeakReference<Timer>> timers = null;
 	static final AEMonitor timers_mon = new AEMonitor("timers list");
 
-	private ThreadPool	thread_pool;
+	private ThreadPool<TimerEvent>	thread_pool;
 
 	private Set<TimerEvent>	events = new TreeSet<>();
 
@@ -85,7 +87,7 @@ public class Timer
 			}
 		}
 
-		thread_pool = new ThreadPool(name,thread_pool_size);
+		thread_pool = new ThreadPool<TimerEvent>(name,thread_pool_size);
 
 		SystemTime.registerClockChangeListener( this );
 
@@ -98,7 +100,7 @@ public class Timer
 		t.start();
 	}
 
-	public ThreadPool
+	public ThreadPool<TimerEvent>
 	getThreadPool()
 	{
 		return( thread_pool );
@@ -132,6 +134,12 @@ public class Timer
 				return( lag );
 			}
 		}
+	}
+	
+	public List<TimerEvent>
+	getActiveEvents()
+	{
+		return( thread_pool.getRunningTasks());
 	}
 	
 	public synchronized List<TimerEvent>
@@ -209,6 +217,12 @@ public class Timer
 		int		millis )
 	{
 		slow_event_limit = millis;
+	}
+	
+	public long
+	getSlowEventLimit()
+	{
+		return( slow_event_limit );
 	}
 	
 	public void
@@ -311,36 +325,12 @@ public class Timer
 
 					event_to_run.setHasRun();
 
-					if (log) {
+					if ( log ){
+						
 						System.out.println( "running: " + event_to_run.getString() );
 					}
 					
-					if ( Constants.IS_CVS_VERSION && slow_event_limit > 0 ){
-						
-						final TimerEvent event = event_to_run;
-						
-						thread_pool.run(
-							new AERunnable.AERunnableNamed( event.getName()){
-									
-								long queued = SystemTime.getMonotonousTime();
-
-								@Override
-								public void runSupport(){
-									
-									event.getRunnable().runSupport();
-									
-									long elapsed = SystemTime.getMonotonousTime() - queued;
-									
-									if ( elapsed > slow_event_limit ){
-									
-										System.out.println( "Timer event '" + event.getName() + "' took " + elapsed );
-									}
-								}
-							});
-					}else{
-
-						thread_pool.run(event_to_run.getRunnable());
-					}
+					event_to_run.execute();
 				}
 
 			}catch( Throwable e ){
@@ -350,6 +340,13 @@ public class Timer
 		}
 	}
 
+	protected void
+	execute(
+		TimerEvent		event )
+	{
+		thread_pool.run( event );
+	}
+	
 	@Override
 	public void
 	clockChangeDetected(
@@ -620,8 +617,17 @@ public class Timer
 		boolean				absolute,
 		TimerEventPerformer	performer )
 	{
-		TimerEvent	event = new TimerEvent( this, unique_id_next++, creation_time, when, absolute, performer );
-
+		TimerEvent	event;
+		
+		if ( Constants.IS_CVS_VERSION && slow_event_limit > 0 ){
+			
+			event = new TimerEventLogged( this, unique_id_next++, creation_time, when, absolute, performer );
+			
+		}else{
+		
+			event = new TimerEvent( this, unique_id_next++, creation_time, when, absolute, performer );
+		}
+		
 		if ( name != null ){
 
 			event.setName( name );
@@ -722,8 +728,8 @@ public class Timer
 			try {
 				timers_mon.enter();
 				// crappy
-				for (Iterator iter = timers.iterator(); iter.hasNext();) {
-					WeakReference timerRef = (WeakReference) iter.next();
+				for (Iterator<WeakReference<Timer>> iter = timers.iterator(); iter.hasNext();) {
+					WeakReference<Timer> timerRef = iter.next();
 					Object timer = timerRef.get();
 					if (timer == null || timer == this) {
 						iter.remove();
@@ -746,11 +752,11 @@ public class Timer
 	{
 		System.out.println( "Timer '" + thread_pool.getName() + "': dump" );
 
-		Iterator	it = events.iterator();
+		Iterator<TimerEvent>	it = events.iterator();
 
 		while(it.hasNext()){
 
-			TimerEvent	ev = (TimerEvent)it.next();
+			TimerEvent	ev = it.next();
 
 			System.out.println( "\t" + ev.getString());
 		}
@@ -765,28 +771,31 @@ public class Timer
 				return;
 			}
 
-			ArrayList lines = new ArrayList();
+			ArrayList<String> lines = new ArrayList<>();
 			int count = 0;
 			try {
 				try {
 					timers_mon.enter();
 					// crappy
-					for (Iterator iter = timers.iterator(); iter.hasNext();) {
-						WeakReference timerRef = (WeakReference) iter.next();
-						Timer timer = (Timer) timerRef.get();
+					for (Iterator<WeakReference<Timer>> iter = timers.iterator(); iter.hasNext();) {
+						
+						WeakReference<Timer> timerRef = iter.next();
+						Timer timer = timerRef.get();
 						if (timer == null) {
 							iter.remove();
 						} else {
 							count++;
 
-							List	events = timer.getEvents();
+							List<TimerEvent>	events = timer.getEvents();
 
 							lines.add(timer.thread_pool.getName() + ", "
 									+ events.size() + " events:");
 
-							Iterator it = events.iterator();
-							while (it.hasNext()) {
-								TimerEvent ev = (TimerEvent) it.next();
+							Iterator<TimerEvent> it = events.iterator();
+							
+							while (it.hasNext()){
+								
+								TimerEvent ev = it.next();
 
 								lines.add("  " + ev.getString());
 							}
@@ -798,8 +807,8 @@ public class Timer
 
 				writer.println("Timers: " + count + " (time=" + SystemTime.getCurrentTime() + "/" + SystemTime.getMonotonousTime() + ")" );
 				writer.indent();
-				for (Iterator iter = lines.iterator(); iter.hasNext();) {
-					String line = (String) iter.next();
+				for (Iterator<String> iter = lines.iterator(); iter.hasNext();) {
+					String line = iter.next();
 					writer.println(line);
 				}
 				writer.exdent();
