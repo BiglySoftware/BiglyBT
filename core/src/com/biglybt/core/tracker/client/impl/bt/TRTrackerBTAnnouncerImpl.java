@@ -442,6 +442,7 @@ TRTrackerBTAnnouncerImpl
 	private byte autoUDPprobeEvery = 1;
 	private int autoUDPProbeSuccessCount;
 
+	private InetSocketAddress working_udp_ia;
 
 	private String tracker_id = "";
 
@@ -2131,6 +2132,19 @@ TRTrackerBTAnnouncerImpl
  			
  			List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
  			
+ 			if ( url_addresses.size() > 1 ){
+ 				
+ 				Collections.shuffle(url_addresses);
+ 				
+ 				if ( working_udp_ia != null ){
+ 					
+ 					if ( url_addresses.remove( working_udp_ia )){
+ 						
+ 						url_addresses.add( 0, working_udp_ia );
+ 					}
+ 				}
+ 			}
+ 			
  			Throwable last_error = null;
  			
  			boolean all_skipped = true;
@@ -2315,6 +2329,8 @@ TRTrackerBTAnnouncerImpl
 		
 						 					message.write( data );
 		
+						 					working_udp_ia = destination;
+						 					
 						 					return( null );
 		
 					 					}
@@ -2371,6 +2387,8 @@ TRTrackerBTAnnouncerImpl
 		
 					 					message.write( data );
 		
+					 					working_udp_ia = destination;
+
 					 					return( null );
 		
 					 				}
