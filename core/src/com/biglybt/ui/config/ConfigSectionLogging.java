@@ -30,12 +30,9 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.logging.impl.FileLogging;
-import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.util.AEDiagnostics;
-import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.IndentWriter;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -335,6 +332,8 @@ public class ConfigSectionLogging
 
 			Map<String, Object> reply = CoreStats.getStats(types);
 
+			reply = new TreeMap<>( reply );
+			
 			Iterator<Entry<String, Object>> it = reply.entrySet().iterator();
 
 			StringBuilder buffer = new StringBuilder(16000);
