@@ -20,9 +20,13 @@ package com.biglybt.core.peer.util;
 
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.stats.CoreStats;
+import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
@@ -40,8 +44,62 @@ public class PeerIdentityManager {
 
   private static final Map<PeerIdentityDataID,DataEntry> dataMap = new LightHashMap<>();
 
-  private static int totalIDs = 0;
+  private static volatile int totalIDs = 0;
 
+  static{
+	  
+		Set<String>	types = new HashSet<>();
+
+		types.add( CoreStats.ST_PEER_DB_CONNECTION_COUNT );
+		types.add( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_COUNT );
+		types.add( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_ENTRY_TOTAL );
+
+		CoreStats.registerProvider(
+			types, 
+			new CoreStatsProvider(){
+				
+				@Override
+				public void 
+				updateStats(
+					Set<String>			types, 
+					Map<String,Object>	values)
+				{
+					if ( types.contains( CoreStats.ST_PEER_DB_CONNECTION_COUNT )){
+
+						values.put( CoreStats.ST_PEER_DB_CONNECTION_COUNT, new Long( totalIDs ));
+					}
+					
+					if ( 	types.contains( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_COUNT ) ||
+							types.contains( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_ENTRY_TOTAL )){
+						
+						try{
+							class_mon.enter();
+							
+							if ( types.contains( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_COUNT )){
+								
+								values.put( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_COUNT, new Long( dataMap.size()));
+							}
+							
+							if ( types.contains( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_ENTRY_TOTAL )){
+								
+								int total = 0;
+								
+								for ( DataEntry id: dataMap.values()){
+									
+									total += id.getPeerCount();
+								}
+								
+								values.put( CoreStats.ST_PEER_DB_CONNECTION_DATA_ID_ENTRY_TOTAL, new Long( total ));
+							}
+						}finally{
+							
+							class_mon.exit();
+						}
+					}
+				}
+			});
+  }
+  
   /*
   static{
 	  new AEThread("mon",true)
