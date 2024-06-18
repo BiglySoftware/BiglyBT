@@ -30,6 +30,8 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.stats.CoreStats;
+import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
@@ -50,13 +52,12 @@ LightWeightSeedManager
 		return( singleton );
 	}
 
+	private final Map<HashWrapper,LightWeightSeed> lws_map = new HashMap<>();
 
-	private final Map lws_map = new HashMap();
-
-	private boolean					started;
+	private boolean				started;
 	final Set<LWSDownload>		dht_add_queue = new HashSet<>();
 
-	private boolean				borked;
+	private boolean		borked;
 	DHTTrackerPlugin	public_dht_tracker_plugin;
 	IPCInterface		anon_dht_tracker_plugin;
 
@@ -70,6 +71,43 @@ LightWeightSeedManager
 	protected
 	LightWeightSeedManager()
 	{
+		Set<String>	types = new HashSet<>();
+	
+		types.add( CoreStats.ST_LWS_COUNT );
+		types.add( CoreStats.ST_LWS_PEER_COUNT );
+	
+		CoreStats.registerProvider(
+			types, 
+			new CoreStatsProvider(){
+				
+				@Override
+				public void 
+				updateStats(
+					Set<String>			types, 
+					Map<String,Object>	values)
+				{
+					if ( types.contains( CoreStats.ST_LWS_COUNT )){
+	
+						values.put( CoreStats.ST_LWS_COUNT, new Long( lws_map.size() ));
+					}
+					
+					if ( types.contains( CoreStats.ST_LWS_PEER_COUNT )){
+						
+						synchronized( LightWeightSeedManager.this ){
+							
+							int total = 0;
+								
+							for ( LightWeightSeed lws: lws_map.values()){
+									
+								total += lws.getPeerCount();
+							}
+								
+							values.put( CoreStats.ST_LWS_PEER_COUNT, new Long( total ));
+						}
+					}
+				}
+			});
+	
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
 			public void coreRunning(Core core) {

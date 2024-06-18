@@ -58,6 +58,7 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.lws.LightWeightSeedManager;
 import com.biglybt.core.nat.NATTraverser;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
@@ -350,6 +351,8 @@ CoreImpl
 	
 			PeerManager.getSingleton();
 	
+			LightWeightSeedManager.getSingleton();
+			
 			if (DEBUG_STARTUPTIME) {
 				logTime("Init PeerManager");
 			}

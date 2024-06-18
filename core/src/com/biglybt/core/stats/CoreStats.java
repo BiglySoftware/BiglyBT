@@ -125,6 +125,11 @@ CoreStats
 	public static final String ST_PEER_DB_CONNECTION_DATA_ID_COUNT			= "peer.db.data.id.count";
 	public static final String ST_PEER_DB_CONNECTION_DATA_ID_ENTRY_TOTAL	= "peer.db.data.id.peer.total";
 	
+		// LWS
+	
+	public static final String ST_LWS_COUNT					= "lws.count";
+	public static final String ST_LWS_PEER_COUNT			= "lws.peer.count";
+	
 		// Tracker
 
 	public static final String ST_TRACKER_READ_BYTES		= "tracker.read.bytes.total";
@@ -224,6 +229,9 @@ CoreStats
 		{ ST_PEER_DB_CONNECTION_DATA_ID_COUNT,			POINT },
 		{ ST_PEER_DB_CONNECTION_DATA_ID_ENTRY_TOTAL,	POINT },
 		
+		{ ST_LWS_COUNT,				POINT },
+		{ ST_LWS_PEER_COUNT,		POINT },
+			
 		{ ST_TRACKER_READ_BYTES,					CUMULATIVE },
 		{ ST_TRACKER_WRITE_BYTES,					CUMULATIVE },
 		{ ST_TRACKER_ANNOUNCE_COUNT,				CUMULATIVE },

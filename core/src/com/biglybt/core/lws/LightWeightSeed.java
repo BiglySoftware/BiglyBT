@@ -346,6 +346,21 @@ LightWeightSeed
 		}
 	}
 
+	protected int
+	getPeerCount()
+	{
+		PEPeerManager pm = peer_manager;
+		
+		if ( pm != null ){
+			
+			return( pm.getNbPeers());
+			
+		}else{
+			
+			return( 0 );
+		}
+	}
+	
 	protected synchronized void
 	stop()
 	{
