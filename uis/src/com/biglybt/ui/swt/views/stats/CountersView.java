@@ -40,13 +40,9 @@ import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 
-/**
- *
- */
 public class CountersView
-	implements UISWTViewCoreEventListener, IViewRequiresPeriodicUpdates
+	implements UISWTViewCoreEventListener
 {
 	public static final String MSGID_PREFIX = "CountersView";
 
@@ -55,6 +51,8 @@ public class CountersView
 	private Composite counters_panel;
 	
 	private Map<String,BufferedLabel>	label_map = new HashMap<>();
+	
+	private boolean	visible = false;
 	
 	public 
 	CountersView() 
@@ -143,11 +141,6 @@ public class CountersView
 		panel.layout( true, true );
 	}
 
-	public void 
-	periodicUpdate() 
-	{
-	}
-
 	private void 
 	delete() 
 	{
@@ -214,14 +207,16 @@ public class CountersView
 				break;
 	
 			case UISWTViewEvent.TYPE_SHOWN:
+				visible = true;
+				break;
+			case UISWTViewEvent.TYPE_HIDDEN:
+				visible = false;
 				break;
 	
 			case UISWTViewEvent.TYPE_REFRESH:
-				refresh();
-				break;
-	
-			case StatsView.EVENT_PERIODIC_UPDATE:
-				periodicUpdate();
+				if ( visible ){
+					refresh();
+				}
 				break;
 		}
 
