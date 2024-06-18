@@ -188,7 +188,7 @@ public class PeerIdentityManager {
     private PeerIdentity( byte[] _id, int local_port ) {
       this.id = _id;
       port = (short)local_port;
-      this.hashcode = new String( id ).hashCode();
+      this.hashcode = Arrays.hashCode( id );
     }
 
     public boolean equals( Object obj ) {
