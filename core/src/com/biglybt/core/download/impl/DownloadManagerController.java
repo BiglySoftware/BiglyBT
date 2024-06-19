@@ -512,7 +512,17 @@ DownloadManagerController
 					public int
 					getMaxNewConnectionsAllowed( String network )
 					{
-						return( temp.getMaxNewConnectionsAllowed( network ));
+						int num = temp.getMaxNewConnectionsAllowed( network );
+						
+							// if we have a download with 0 peers and we're at the connection limit then ask for a few to try and get it started
+							// if by the time we connect to a peer we are still at the limit the then connection will be declined anyway
+						
+						if ( num < 5 && getConnectedConnectionCount() == 0 && getPendingConnectionCount() < 5 ){
+							
+							num = 5;
+						}
+						
+						return( num );
 					}
 
 					@Override
