@@ -253,7 +253,7 @@ public class PeerManager implements CoreStatsProvider {
 
 						if ( control != null ){
 
-							total_peers 				+= control.getNbPeers();
+							total_peers 				+= control.getNbPeers() + control.getNbSeeds();
 							total_snubbed_peers			+= control.getNbPeersSnubbed();
 							total_stalled_pending_load	+= control.getNbPeersStalledPendingLoad();
 						}
