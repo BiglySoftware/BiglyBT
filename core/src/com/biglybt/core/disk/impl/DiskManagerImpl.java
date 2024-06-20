@@ -146,13 +146,15 @@ DiskManagerImpl
 	
 	static boolean	skip_incomp_dl_file_checks;
 	static boolean	skip_comp_dl_file_checks;
-
+	static boolean	switch_to_upload_only_enable;
+	
 	static{
 		 COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART,
 				ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS,
 				ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS,
+				ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE,
 			},
 			new ParameterListener(){
 				@Override
@@ -161,6 +163,7 @@ DiskManagerImpl
 					missing_file_dl_restart_enabled = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART );
 	    	    	skip_comp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS );
 	    	    	skip_incomp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS );
+	    	    	switch_to_upload_only_enable	= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE );
 				}
 			});
 	}
@@ -306,6 +309,8 @@ DiskManagerImpl
     private final Object   file_piece_lock  = new Object();
 
     private final BitFlags	availability;
+    
+    private volatile boolean switched_to_upload_only;
     
     public
     DiskManagerImpl(
@@ -2207,6 +2212,13 @@ DiskManagerImpl
 		return( errorType );
 	}
 
+	private boolean
+	canFailureBeIgnored(
+		Throwable	cause )
+	{
+		return( switch_to_upload_only_enable &&  DiskManagerUtil.isFileWriteException(cause));
+	}
+	
     @Override
     public void
     setFailed(
@@ -2215,6 +2227,23 @@ DiskManagerImpl
         Throwable			cause,
         boolean				can_continue )
     {
+    	if ( can_continue && canFailureBeIgnored( cause )){
+    		    			
+    		download_manager.getStats().setDownloadRateLimitBytesPerSecond( -1 );
+    		
+    		if ( !switched_to_upload_only ){
+    			
+    			switched_to_upload_only = true;
+    			
+	    		String msg = 	MessageText.getString( "download.error.upload.only", new String[]{ getDisplayName() }) +  
+	    							" (" + reason + ": " + Debug.getNestedExceptionMessage( cause ) + ")";
+	    		
+	    		Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.REPEATABLE, LogAlert.AT_WARNING, msg ));
+    		}
+    		
+    		return;
+    	}
+    	
             /**
              * need to run this on a separate thread to avoid deadlock with the stopping
              * process - setFailed tends to be called from within the read/write activities
@@ -2614,7 +2643,18 @@ DiskManagerImpl
 
         throws Exception
     {
-        resume_handler.saveResumeData( interim_save );
+    	try{
+    		resume_handler.saveResumeData( interim_save );
+    		
+    	}catch( Exception e ){
+    		
+    		if ( interim_save && canFailureBeIgnored( e )){
+    			
+    			return;
+    		}
+    		
+    		throw( e );
+    	}
     }
 
     @Override

@@ -961,7 +961,7 @@ DMReaderImpl
 			
 			if ( dm_request.getErrorIsFatal()){
 			
-				disk_manager.setFailed( error, "Disk read error", cause, false );
+				disk_manager.setFailed( error, "Disk read error", cause, true );
 			}
 			
 			Debug.printStackTrace( cause );

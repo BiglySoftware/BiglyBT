@@ -325,6 +325,13 @@ public class ConfigSectionFile
 
 		MFDRE.addEnabledOnSelection(MFDRInterval);
 	
+		// upload only on disk write error
+		
+		BooleanParameterImpl uploadOnlyOnError = new BooleanParameterImpl(
+				BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE,
+				"ConfigView.label.upload.only.on.write.error");
+		add(uploadOnlyOnError, Parameter.MODE_INTERMEDIATE);
+				
 		// resume
 
 		List<Parameter> listResume = new ArrayList<>();

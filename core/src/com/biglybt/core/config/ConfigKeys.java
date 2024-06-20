@@ -135,6 +135,7 @@ public final class ConfigKeys {
 		public static final String BCFG_CHECK_PIECES_ON_COMPLETION = "Check Pieces on Completion";
 		public static final String BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE = "Check Pieces on Completion Before Move";
 		public static final String BCFG_SEEDING_PIECE_CHECK_RECHECK_ENABLE = "Seeding Piece Check Recheck Enable";
+		public static final String BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE = "Switch To Upload Only On Write Error Enable";
 		public static final String BCFG_FILE_STRICT_LOCKING = "File.strict.locking";
 		public static final String ICFG_MAX_FILE_LINKS_SUPPORTED = "Max File Links Supported";
 		public static final String BCFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART = "Insufficient Space Download Restart Enable";
