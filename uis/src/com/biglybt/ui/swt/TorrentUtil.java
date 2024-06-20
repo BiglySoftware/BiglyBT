@@ -918,10 +918,14 @@ public class TorrentUtil
 		long maxUpload = COConfigurationManager.getIntParameter(
 				"Max Upload Speed KBs", 0) * kInB;
 
+		Map<String,Object> menu_properties = new HashMap<>();
+		menu_properties.put( ViewUtils.SM_PROP_PERMIT_UPLOAD_DISABLE, true );
+		menu_properties.put( ViewUtils.SM_PROP_PERMIT_DOWNLOAD_DISABLE, true );
+		
 		ViewUtils.addSpeedMenu(menu_shell, menuAdvanced, true, true, true,
 				hasSelection, downSpeedDisabled, downSpeedUnlimited, totalDownSpeed,
 				downSpeedSetMax, maxDownload, upSpeedDisabled, upSpeedUnlimited,
-				totalUpSpeed, upSpeedSetMax, maxUpload, dms.length, null,
+				totalUpSpeed, upSpeedSetMax, maxUpload, dms.length, menu_properties,
 				new ViewUtils.SpeedAdapter() {
 					@Override
 					public void setDownSpeed(final int speed) {
