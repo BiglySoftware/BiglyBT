@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Utils;
@@ -185,6 +186,8 @@ public class DownSpeedItem
 
 				boolean bChangeColor = (++loop % 10) == 0;
 				
+				String tt= null;
+				
 				if ( cell instanceof TableCellSWT && dm != null ) {
 
 					TableCellSWT swtCell = (TableCellSWT)cell;
@@ -194,7 +197,9 @@ public class DownSpeedItem
 					if ( dm.getDownloadRateLimitBytesPerSecond() == -1 ){
 					
 						value = -1;	// sort below everything else
-											
+							
+						tt = MessageText.getString( "label.disabled");
+						
 						if ( showIcon ){
 						
 							icon = disabled_img;
@@ -204,6 +209,8 @@ public class DownSpeedItem
 					swtCell.setIcon(icon);
 				}
 
+				cell.setToolTip(tt);
+				
 				if (cell.setSortValue(value) || !cell.isValid() || (iState != iLastState)) {
 					cell.setText(value <= 0 ? (showIcon?" ":"") : DisplayFormatters.formatByteCountToKiBEtcPerSec(value));
 					bChangeColor = true;
