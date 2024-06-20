@@ -1047,7 +1047,8 @@ SESecurityManagerImpl
 				
 			}catch( Throwable f ){
 			
-				Debug.out( "Certificate install failed for '" + https_url + "'", e );
+				// whatever, this is spamming the logs
+				// Debug.out( "Certificate install failed for '" + https_url + "'", e );
 				
 				return( null );
 			}
