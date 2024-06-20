@@ -173,7 +173,7 @@ LWSDiskManager
 			}
 		}catch( Throwable e ){
 
-			setFailed( DiskManager.ET_OTHER, "Start failed", e );
+			setFailed( DiskManager.ET_OTHER, "Start failed", e, false );
 		}
 	}
 
@@ -235,7 +235,7 @@ LWSDiskManager
 
 		}catch( Throwable e ){
 
-			setFailed( DiskManager.ET_READ_ERROR, "getFiles failed", e );
+			setFailed( DiskManager.ET_READ_ERROR, "getFiles failed", e, false );
 
 			return( null );
 
@@ -770,7 +770,8 @@ LWSDiskManager
 	setFailed(
 		int				type,
 		String			reason,
-		Throwable		cause )
+		Throwable		cause,
+		boolean			can_continue )
 	{
 		started = false;
 

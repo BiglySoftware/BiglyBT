@@ -568,7 +568,7 @@ DMWriterImpl
 									}
 								}
 								
-								disk_manager.setFailed( error, "Disk write error", cause );
+								disk_manager.setFailed( error, "Disk write error", cause, true );
 
 								Debug.printStackTrace( cause );
 
@@ -636,7 +636,7 @@ DMWriterImpl
 
 			request.getBuffer().returnToPool();
 
-			disk_manager.setFailed( DiskManager.ET_WRITE_ERROR, "Disk write error", e );
+			disk_manager.setFailed( DiskManager.ET_WRITE_ERROR, "Disk write error", e, true );
 
 			Debug.printStackTrace( e );
 

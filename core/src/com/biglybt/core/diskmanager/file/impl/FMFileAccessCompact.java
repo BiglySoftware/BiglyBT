@@ -117,7 +117,7 @@ FMFileAccessCompact
 			if ( !FileUtil.newFile(controlFileDir,controlFileName).exists()){
 
 				if (!controlFileDir.isDirectory() && !FileUtil.mkdirs(controlFileDir)) {
-					throw new FMFileManagerException("Directory creation failed: "	+ controlFileDir);
+					throw new FMFileManagerException( FMFileManagerException.OP_OPEN, "Directory creation failed: "	+ controlFileDir);
 				}
 
 			}else{
@@ -126,7 +126,7 @@ FMFileAccessCompact
 			}
 		}catch( Throwable e ){
 
-			throw( new FMFileManagerException( "Compact file init fail", e ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "Compact file init fail", e ));
 		}
 	}
 
@@ -496,7 +496,7 @@ FMFileAccessCompact
 			}
 		}catch( Throwable e ){
 
-			throw( new FMFileManagerException( "Failed to read control file state", e ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_READ, "Failed to read control file state", e ));
 		}
 	}
 
@@ -523,7 +523,7 @@ FMFileAccessCompact
 
 			}catch( Throwable e ){
 
-				throw( new FMFileManagerException( "Failed to write control file state", e ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "Failed to write control file state", e ));
 			}
 		}
 	}

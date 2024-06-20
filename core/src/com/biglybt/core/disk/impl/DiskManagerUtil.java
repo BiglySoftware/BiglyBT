@@ -32,6 +32,7 @@ import com.biglybt.core.diskmanager.access.DiskAccessController;
 import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
+import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.download.*;
 import com.biglybt.core.download.impl.DownloadManagerStatsImpl;
 import com.biglybt.core.internat.LocaleTorrentUtil;
@@ -1763,6 +1764,26 @@ DiskManagerUtil
 		return( false );
 	}
 	
+	public static boolean
+	isFileWriteException(
+		Throwable e )
+	{
+		while( e != null ){
+			
+			if ( e instanceof FMFileManagerException ){
+				
+				if (((FMFileManagerException)e).getOperation() == FMFileManagerException.OP_WRITE ){
+					
+					return( true );
+				}
+			}
+			
+			e = e.getCause();
+		}
+		
+		return( false );
+	}
+	
 	public static DiskManagerPiece[]
 	getDiskManagerPiecesSnapshot(
 		DownloadManager		dm )
@@ -2140,7 +2161,7 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public void setFailed(int type, String reason, Throwable cause){
+					public void setFailed(int type, String reason, Throwable cause, boolean can_continue ){
 					}
 										
 					@Override

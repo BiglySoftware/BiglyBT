@@ -734,7 +734,7 @@ DiskManagerImpl
                     }
                 }catch ( Throwable e ){
 
-                    setFailed( DiskManager.ET_OTHER, "File close fails", e );
+                    setFailed( DiskManager.ET_OTHER, "File close fails", e, false );
                 }
             }
         }
@@ -747,7 +747,7 @@ DiskManagerImpl
 
             }catch( Exception e ){
 
-                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e );
+                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e, false );
             }
         }
 
@@ -1964,7 +1964,7 @@ DiskManagerImpl
 	                    		}
 	                        }catch ( Throwable e ){
 	
-	                            setFailed( this_file.getCacheFile().exists()?DiskManager.ET_WRITE_ERROR:DiskManager.ET_FILE_MISSING, "Disk access error", e );
+	                            setFailed( this_file.getCacheFile().exists()?DiskManager.ET_WRITE_ERROR:DiskManager.ET_FILE_MISSING, "Disk access error", e, false );
 	
 	                            Debug.printStackTrace(e);
 	                        }
@@ -2212,7 +2212,8 @@ DiskManagerImpl
     setFailed(
     	int					type,
         String        		reason,
-        Throwable			cause )
+        Throwable			cause,
+        boolean				can_continue )
     {
             /**
              * need to run this on a separate thread to avoid deadlock with the stopping
@@ -2731,7 +2732,7 @@ DiskManagerImpl
             	  }
               }catch( Throwable e ){
             	  
-                  setFailed( DiskManager.ET_OTHER, "Resume data save fails", e );
+                  setFailed( DiskManager.ET_OTHER, "Resume data save fails", e, false );
               }
           }
       }

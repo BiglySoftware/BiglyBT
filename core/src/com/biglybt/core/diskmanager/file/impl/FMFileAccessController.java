@@ -104,7 +104,7 @@ FMFileAccessController
 
 			}else{
 
-				throw( new FMFileManagerException( "Compact storage not supported: no control file available" ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OPEN,"Compact storage not supported: no control file available" ));
 			}
 
 		}else{
@@ -223,7 +223,7 @@ FMFileAccessController
 				return;
 			}
 
-			throw( new FMFileManagerException( "Conversion to/from piece-reorder not supported (current=" + type + ", target=" + target_type + ")" ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "Conversion to/from piece-reorder not supported (current=" + type + ", target=" + target_type + ")" ));
 		}
 
 		File	file = owner.getLinkedFile();
@@ -343,7 +343,7 @@ FMFileAccessController
 
 			Debug.printStackTrace( e );
 
-			throw( new FMFileManagerException( "convert fails", e ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "convert fails", e ));
 
 		}finally{
 
@@ -361,7 +361,7 @@ FMFileAccessController
 
 							ok	= false;
 
-							throw( new FMFileManagerException( "convert fails", e ));
+							throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "convert fails", e ));
 						}
 					}
 				}

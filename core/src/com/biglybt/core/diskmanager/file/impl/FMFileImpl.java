@@ -161,7 +161,7 @@ FMFileImpl
 				throw((FMFileManagerException)e);
 			}
 
-			throw( new FMFileManagerException( "initialisation failed", e ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "initialisation failed", e ));
 
 		}finally{
 
@@ -195,7 +195,7 @@ FMFileImpl
 				throw((FMFileManagerException)e);
 			}
 
-			throw( new FMFileManagerException( "initialisation failed", e ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "initialisation failed", e ));
 		}
 	}
 
@@ -340,12 +340,12 @@ FMFileImpl
 
 			}catch( Throwable e ){
 
-				throw( new FMFileManagerException( "getCanonicalPath fails", e ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "getCanonicalPath fails", e ));
 			}
 
 			if ( new_linked_file.exists()){
 
-				throw( new FMFileManagerException( "moveFile fails - file '" + new_canonical_path + "' already exists"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "moveFile fails - file '" + new_canonical_path + "' already exists"));
 			}
 
 			boolean	was_open	= isOpen();
@@ -387,7 +387,7 @@ FMFileImpl
 					}
 				}
 
-				throw( new FMFileManagerException( "moveFile fails"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "moveFile fails"));
 			}
 		}finally{
 
@@ -436,12 +436,12 @@ FMFileImpl
 
 			}catch( Throwable e ){
 
-				throw( new FMFileManagerException( "getCanonicalPath fails", e ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "getCanonicalPath fails", e ));
 			}
 
 			if ( new_linked_file.exists()){
 
-				throw( new FMFileManagerException( "renameFile fails - file '" + new_canonical_path + "' already exists"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "renameFile fails - file '" + new_canonical_path + "' already exists"));
 			}
 
 			boolean	was_open	= isOpen();
@@ -481,7 +481,7 @@ FMFileImpl
 					}
 				}
 
-				throw( new FMFileManagerException( "renameFile fails"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "renameFile fails"));
 			}
 		}finally{
 
@@ -612,7 +612,7 @@ FMFileImpl
 	{
 		if ( fa != null ){
 
-			throw( new FMFileManagerException( "file already open" ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "file already open" ));
 		}
 
 		reserveAccess( reason );
@@ -653,13 +653,13 @@ FMFileImpl
 
 				Debug.printStackTrace( e );
 
-				throw( new FMFileManagerException( "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
 			}
 		}catch( Throwable e ){
 
 			Debug.printStackTrace( e );
 
-			throw( new FMFileManagerException( "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
+			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
 		}
 	}
 
@@ -696,7 +696,7 @@ FMFileImpl
 
 			}catch( Throwable e ){
 
-				throw( new FMFileManagerException("close fails", e ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_CLOSE, "close fails", e ));
 
 			}finally{
 
@@ -755,7 +755,7 @@ FMFileImpl
 
 			if ( !linked_file.delete()){
 
-				throw( new FMFileManagerException( "Failed to delete '" + linked_file + "'" ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "Failed to delete '" + linked_file + "'" ));
 			}
 		}
 	}
@@ -909,7 +909,7 @@ FMFileImpl
 							
 							if ( this_torrent == my_torrent && this_tf != my_torrent_file ){
 								
-								throw( new FMFileManagerException(  "File '"+canonical_path + "' occurs more than once in download.\nRename one of the files in Files view via the right-click menu." ));
+								throw( new FMFileManagerException(  FMFileManagerException.OP_OTHER, "File '"+canonical_path + "' occurs more than once in download.\nRename one of the files in Files view via the right-click menu." ));
 							}
 						}
 					}
@@ -963,7 +963,7 @@ FMFileImpl
 
 				Debug.out( "reserveAccess fail" );
 
-				throw( new FMFileManagerException( "File '"+canonical_path+"' has not been reserved (no entries), '" + owner.getName()+"'"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "File '"+canonical_path+"' has not been reserved (no entries), '" + owner.getName()+"'"));
 			}
 
 			for ( Object[] entry: owners ){
@@ -982,7 +982,7 @@ FMFileImpl
 
 				Debug.out( "reserveAccess fail" );
 
-				throw( new FMFileManagerException( "File '"+canonical_path+"' has not been reserved (not found), '" + owner.getName()+"'"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "File '"+canonical_path+"' has not been reserved (not found), '" + owner.getName()+"'"));
 			}
 
 			my_entry[1] = Boolean.valueOf(access_mode == FM_WRITE);
@@ -1093,7 +1093,7 @@ FMFileImpl
 				
 				Debug.out( "reserveAccess fail: " + str );
 				
-				throw( new FMFileManagerException( str ));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, str ));
 			}
 
 		}finally{
@@ -1201,7 +1201,7 @@ FMFileImpl
 
 				}else{
 
-					FMFileManagerException error = new FMFileManagerException( MessageText.getString( "DownloadManager.error.datamissing" ) + ": " + target.getAbsolutePath());
+					FMFileManagerException error = new FMFileManagerException( FMFileManagerException.OP_OTHER, MessageText.getString( "DownloadManager.error.datamissing" ) + ": " + target.getAbsolutePath());
 					
 					error.setType(FMFileManagerException.ET_FILE_OR_DIR_MISSING );
 					

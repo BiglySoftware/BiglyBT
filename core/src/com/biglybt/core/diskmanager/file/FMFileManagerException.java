@@ -29,27 +29,47 @@ public class
 FMFileManagerException
 	extends Exception
 {
+	public static final int	OP_OPEN					= 1;
+	public static final int	OP_CLOSE				= 2;
+	public static final int	OP_READ					= 3;
+	public static final int	OP_WRITE				= 4;
+	public static final int	OP_OTHER				= 5;
+	
 	public static final int ET_OTHER				= 0;
 	public static final int ET_FILE_OR_DIR_MISSING	= 1;
 	
+	private final int		operation;
+		
 	private int		type		= ET_OTHER;
 	private boolean recoverable = true;
 
 	public
 	FMFileManagerException(
+		int			op,
 		String		str )
 	{
 		super(str);
+		
+		operation = op;
 	}
 
 	public
 	FMFileManagerException(
+		int			op,
 		String		str,
 		Throwable	cause )
 	{
 		super( str, cause );
+		
+		operation = op;
 	}
 
+	public int
+	getOperation()
+	{
+		return( operation );
+	}
+	
 	public void
 	setType(
 		int		_type )
