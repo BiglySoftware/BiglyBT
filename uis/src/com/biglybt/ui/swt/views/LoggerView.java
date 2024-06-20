@@ -510,19 +510,17 @@ public class LoggerView
 			@Override
 			public void modifyText(ModifyEvent e) {
 				String newExpression = inclText.getText();
-				if (newExpression.length() == 0)
+				Color bg = null;
+				if (newExpression.length() == 0){
 					inclusionFilter = null;
-				else
-				{
-					try
-					{
+				}else{
+					try{
 						inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-						inclText.setBackground(null);
-					} catch (PatternSyntaxException e1)
-					{
-						inclText.setBackground(Colors.colorErrorBG);
+					}catch (PatternSyntaxException e1){
+						bg = Colors.colorErrorBG;
 					}
 				}
+				Utils.setSkinnedBackground(inclText,bg);
 			}
 		});
 
@@ -542,19 +540,17 @@ public class LoggerView
 			@Override
 			public void modifyText(ModifyEvent e) {
 				String newExpression = exclText.getText();
-				if (newExpression.length() == 0)
+				Color bg = null;
+				if (newExpression.length() == 0){
 					exclusionFilter = null;
-				else
-				{
-					try
-					{
+				}else{
+					try{
 						exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-						exclText.setBackground(null);
-					} catch (PatternSyntaxException e1)
-					{
-						exclText.setBackground(Colors.colorErrorBG);
+					}catch (PatternSyntaxException e1){
+						bg = Colors.colorErrorBG;
 					}
 				}
+				Utils.setSkinnedBackground(exclText,bg);
 			}
 		});
 
