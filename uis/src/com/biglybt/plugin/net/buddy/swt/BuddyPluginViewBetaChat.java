@@ -456,7 +456,7 @@ BuddyPluginViewBetaChat
 				handleEvent(
 					Event e )
 				{
-					if ( e.character == SWT.ESC){
+					if ( e.character == SWT.ESC && e.doit ){
 
 						close();
 				}
