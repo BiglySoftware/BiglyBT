@@ -57,6 +57,8 @@ import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadStub;
+import com.biglybt.pif.download.DownloadStub.DownloadStubEx;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.torrent.Torrent;
@@ -475,6 +477,8 @@ SimpleAPIPlugin
 				
 				JSONArray json = new JSONArray();
 				
+				com.biglybt.pif.download.DownloadManager download_manager = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getDownloadManager();
+				
 				DownloadHistoryManager dh_manager =
 						(DownloadHistoryManager) CoreFactory.getSingleton().getGlobalManager().getDownloadHistoryManager();
 				
@@ -500,6 +504,20 @@ SimpleAPIPlugin
 						obj.put( "AddTime", dh.getAddTime());
 						obj.put( "CompleteTime", dh.getCompleteTime());
 						obj.put( "RemoveTime", dh.getRemoveTime());
+						
+						long archive_time = 0;
+						
+						if ( hash != null ){
+						
+							DownloadStub stub = download_manager.lookupDownloadStub( hash );
+							
+							if ( stub instanceof DownloadStubEx ){
+								
+								archive_time = ((DownloadStubEx)stub).getCreationDate();
+							}
+						}
+						
+						obj.put( "ArchiveTime", archive_time );
 						
 						obj.put( "Size", dh.getSize());
 						
