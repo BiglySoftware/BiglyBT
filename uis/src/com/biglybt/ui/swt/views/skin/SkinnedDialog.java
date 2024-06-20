@@ -31,6 +31,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.util.AERunnable;
@@ -111,9 +112,21 @@ public class SkinnedDialog
 
 		shell.addTraverseListener(new TraverseListener() {
 			@Override
-			public void keyTraversed(TraverseEvent e) {
-				if (e.detail == SWT.TRAVERSE_ESCAPE) {
-					shell.close();
+			public void 
+			keyTraversed(TraverseEvent e) 
+			{
+				if ( e.detail == SWT.TRAVERSE_ESCAPE ){
+					
+					Control c = shell.getDisplay().getFocusControl();
+					
+					if ( c != null && c.getData("BubbleTextBox::hasContent") != null ){
+						
+						e.doit = false;
+						
+					}else {
+					
+						shell.close();
+					}
 				}
 			}
 		});

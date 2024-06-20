@@ -278,6 +278,8 @@ public class BubbleTextBox
 				setupTextWidgetLayoutData();
 				cBubble.redraw();
 			}
+				// indicate that an escape key should clear the content not close the shell
+			textWidget.setData( "BubbleTextBox::hasContent", textIsBlank?null:"1" );
 			refilter();
 		});
 
