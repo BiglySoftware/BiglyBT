@@ -2609,38 +2609,73 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	// Method that checks if we are connected to another seed, and if so, disconnect
 	// from him.
-	private void checkSeeds(){
-		// proceed on mainloop 1 second intervals if we're a seed and we want to force
-		// disconnects
-		if((mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL) != 0){
+	private void 
+	checkSeeds()
+	{
+			// proceed on mainloop 1 second intervals if we're a seed and we want to force
+			// disconnects
+		
+		if ((mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL) != 0){
+			
 			return;
 		}
 
-		if(!disconnectSeedsWhenSeeding()){
+		if (!disconnectSeedsWhenSeeding()){
+			
 			return;
 		}
 
-		List<PEPeerTransport> to_close = null;
-
-		final List<PEPeerTransport> peer_transports = peer_transports_cow;
-		for(int i = 0; i < peer_transports.size(); i++){
-			final PEPeerTransport pc = peer_transports.get(i);
-
-			if(pc != null && pc.getPeerState() == PEPeer.TRANSFERING
-					&& ((isSeeding() && pc.isSeed()) || pc.isRelativeSeed())){
-				if(to_close == null)
-					to_close = new ArrayList();
-				to_close.add(pc);
+		List<PEPeerTransport> to_close1 = new ArrayList<>();
+		List<PEPeerTransport> to_close2 = new ArrayList<>();
+		
+		boolean upload_only = isUploadOnly();
+		boolean	seeding		= isSeeding();
+		
+		for ( PEPeerTransport pt: peer_transports_cow ){
+			
+			if ( pt != null && pt.getPeerState() == PEPeer.TRANSFERING ){
+				
+				if ( pt.isRelativeSeed()){
+					
+					to_close1.add( pt );
+					
+				}else if ( pt.isSeed()){
+					
+					if ( seeding ){
+						
+						to_close1.add( pt );
+						
+					}else if ( upload_only ){
+						
+						to_close2.add( pt );
+					}
+				}
 			}
 		}
 
-		if(to_close != null){
-			for(int i = 0; i < to_close.size(); i++){
-				closeAndRemovePeer(to_close.get(i), "disconnect other seed when seeding", Transport.CR_UPLOAD_TO_UPLOAD, false);
+		if ( !to_close1.isEmpty()){
+			
+			for( PEPeerTransport pt: to_close1 ){
+				
+				closeAndRemovePeer( pt, "disconnect other seed when seeding", Transport.CR_UPLOAD_TO_UPLOAD, false );
+			}
+		}
+		
+		if ( !to_close2.isEmpty()){
+			
+			for( PEPeerTransport pt: to_close2 ){
+				
+				closeAndRemovePeer( pt, "disconnect other seed as upload only", Transport.CR_UPLOAD_TO_UPLOAD, false );
 			}
 		}
 	}
 
+	private boolean
+	isUploadOnly()
+	{
+		return( getDownloadRateLimitBytesPerSecond() == -1 );
+	}
+	
 	private void updateStats(){
 
 		if((mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL) != 0){
