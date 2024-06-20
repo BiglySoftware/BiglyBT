@@ -553,6 +553,78 @@ SimpleAPIPlugin
 				
 				return( JSONUtils.encodeToJSON( json ));
 				
+			}else if ( method.equals( "listarchiveddownloads" )){
+				
+				JSONArray json = new JSONArray();
+				
+				com.biglybt.pif.download.DownloadManager download_manager = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getDownloadManager();
+				
+				DownloadStub[] temp = download_manager.getDownloadStubs();
+				
+				List<DownloadStubEx> stubs = new ArrayList<>( temp.length );
+				
+				for ( DownloadStub ds: temp ){
+					
+					if( ds instanceof DownloadStubEx ){
+						
+						stubs.add((DownloadStubEx)ds);
+					}
+				}
+				
+				Collections.sort( stubs, (h1,h2)->Long.compare(h2.getCreationDate(),h1.getCreationDate()));
+				
+				for ( DownloadStubEx ds: stubs ){
+					
+					try{
+						JSONObject	obj = new JSONObject();
+						
+						obj.put( "DisplayName", ds.getName());
+						
+						byte[] hash = ds.getTorrentHash();
+						
+						obj.put( "InfoHash", hash==null?"":ByteFormatter.encodeString( hash ));
+						
+						String save_path = ds.getSavePath();
+						
+						obj.put( "SavePath", save_path );
+						
+						obj.put( "AddTime", ds.getCreationDate());
+						obj.put( "CompleteTime", ds.getCompletionDate());
+						
+						obj.put( "Size", ds.getTorrentSize());
+						
+						try{
+							String[] tags = ds.getManualTags();
+							
+							JSONArray tags_a = new JSONArray();
+							
+							for ( String t: tags ){
+								
+								tags_a.add( t );
+							}
+							
+							obj.put( "Tags", tags_a );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+						
+						json.add( obj );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				if ( response != null ){
+					
+					response.setContentType( "application/json; charset=UTF-8" );
+				}
+				
+				return( JSONUtils.encodeToJSON( json ));
+				
 			}else if ( method.equals( "listfiles" )){
 				
 				DownloadManager dm = getDownloadFromHash( args );
