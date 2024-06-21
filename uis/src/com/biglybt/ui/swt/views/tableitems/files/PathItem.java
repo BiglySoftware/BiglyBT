@@ -157,9 +157,8 @@ public class PathItem
 	    	path = apath.substring(dl_save_path.length());
 	    	if (path.length() == 0) {
 	    		path = File.separator;
-	    	}
-	    	else {
-	    		if (path.charAt(0) == File.separatorChar) {
+	    	}else{
+	    		if (path.charAt(0) == File.separatorChar){
 	    			path = path.substring(1);
 	    		}
 	    		int	pos = path.lastIndexOf(File.separator);
@@ -171,6 +170,9 @@ public class PathItem
 	    			path = File.separator;
 	    		}
 	    	}
+	    		// relative to save root
+	    	
+	    	path = "." + path;
       }
     }
 
