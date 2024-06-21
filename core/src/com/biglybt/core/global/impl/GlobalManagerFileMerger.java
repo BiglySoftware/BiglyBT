@@ -76,6 +76,22 @@ GlobalManagerFileMerger
 	
 	static final Object merged_data_lock = new Object();
 
+	static volatile boolean	switch_to_upload_only_enable;
+	
+	static{
+		 COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE,
+			},
+			new ParameterListener(){
+				@Override
+				public void parameterChanged(String parameterName) {
+										
+	    	    	switch_to_upload_only_enable	= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE );
+				}
+			});
+	}
+	
 	private final GlobalManagerImpl		gm;
 
 	private LoggerChannel 	log;
@@ -1691,6 +1707,13 @@ GlobalManagerFileMerger
 						continue;
 					}
 
+					if ( switch_to_upload_only_enable &&  target_disk_manager.getDownload().getStats().getDownloadRateLimitBytesPerSecond() == -1 ){
+						
+							// don't merge into a download that's switched to "upload only" 
+						
+						continue;
+					}
+					
 					read_write_dispatcher.dispatch(
 						new AERunnable()
 						{
