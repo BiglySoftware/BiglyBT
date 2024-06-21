@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
@@ -68,6 +70,22 @@ FMFileImpl
 			});
 	}
 
+	static volatile boolean	switch_to_upload_only_enable;
+	
+	static{
+		 COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE,
+			},
+			new ParameterListener(){
+				@Override
+				public void parameterChanged(String parameterName) {
+										
+	    	    	switch_to_upload_only_enable	= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE );
+				}
+			});
+	}
+	
 	private final FMFileManagerImpl	manager;
 	private final FMFileOwner		owner;
 	
@@ -569,6 +587,28 @@ FMFileImpl
 		}
 	}
 
+	private void
+	getFileAccessor()
+		throws FileNotFoundException
+	{
+		try{
+		
+			fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+			
+		}catch( FileNotFoundException e ){
+			
+				// relax to read-only if we are trying to handle switching to upload only on write errors
+			
+			if ( 	switch_to_upload_only_enable && 
+					access_mode == FM_WRITE && 
+					linked_file.exists()  && 
+					linked_file.canRead()){
+				
+				fa = FileUtil.newFileAccessor( linked_file, READ_ACCESS_MODE );
+			}
+		}
+	}
+	
 	protected void
 	reopen(
 		FMFileManagerException		cause )
@@ -597,7 +637,7 @@ FMFileImpl
 
 		file_access.aboutToOpen();
 
-		fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+		getFileAccessor();
 
 		last_modified = 0;
 		
@@ -620,7 +660,7 @@ FMFileImpl
 		try{
 			file_access.aboutToOpen();
 
-			fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+			getFileAccessor();
 
 			last_modified = 0;
 			
@@ -638,7 +678,7 @@ FMFileImpl
 
 				linked_file.createNewFile();
 
-				fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+				getFileAccessor();
 
 				last_modified = 0;
 				
@@ -653,13 +693,13 @@ FMFileImpl
 
 				Debug.printStackTrace( e );
 
-				throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
+				throw( new FMFileManagerException( access_mode==FM_READ?FMFileManagerException.OP_READ:FMFileManagerException.OP_WRITE, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
 			}
 		}catch( Throwable e ){
 
 			Debug.printStackTrace( e );
 
-			throw( new FMFileManagerException( FMFileManagerException.OP_OPEN, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
+			throw( new FMFileManagerException( access_mode==FM_READ?FMFileManagerException.OP_READ:FMFileManagerException.OP_WRITE, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
 		}
 	}
 
