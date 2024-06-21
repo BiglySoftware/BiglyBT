@@ -221,18 +221,18 @@ TorrentOptionsView
 		Label label;
 
 		IntSwtParameter max_upload = new IntSwtParameter(gTorrentOptions,
-				MAX_UPLOAD, "", null, adhoc_param_adapter);
+				MAX_UPLOAD, "", null, -1, Integer.MAX_VALUE, adhoc_param_adapter);
 		max_upload.setLabelText(k_unit + " "
 				+ MessageText.getString("GeneralView.label.maxuploadspeed.tooltip"));
 		adhoc_parameters.put( MAX_UPLOAD, max_upload );
 
 		if ( userMode > 0) {
 
-				// max upload when busy
+				// max upload when busy (don't currently support "disabled")
 
 			IntSwtParameter max_upload_when_busy = new IntSwtParameter(
 					gTorrentOptions, DownloadManagerState.PARAM_MAX_UPLOAD_WHEN_BUSY,
-					"TorrentOptionsView.param.max.uploads.when.busy", null,
+					"TorrentOptionsView.param.max.uploads.when.busy", null, 0, Integer.MAX_VALUE,
 					ds_intparam_adapter);
 			ds_parameters.put( DownloadManagerState.PARAM_MAX_UPLOAD_WHEN_BUSY, max_upload_when_busy );
 		}
@@ -240,7 +240,7 @@ TorrentOptionsView
 			// max download speed
 
 		IntSwtParameter max_download = new IntSwtParameter(gTorrentOptions,
-				MAX_DOWNLOAD, "", null, adhoc_param_adapter);
+				MAX_DOWNLOAD, "", null, -1, Integer.MAX_VALUE, adhoc_param_adapter);
 		max_download.setLabelText(k_unit + " "
 				+ MessageText.getString("GeneralView.label.maxdownloadspeed.tooltip"));
 		adhoc_parameters.put( MAX_DOWNLOAD, max_download );
@@ -702,7 +702,13 @@ TorrentOptionsView
 				int	result = 0;
 
 				for (int i=0;i<managers.length;i++){
-					int	val = managers[i].getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
+					int	val = managers[i].getUploadRateLimitBytesPerSecond();
+					
+					if ( val < 0 ){
+						val = -1;
+					}else{
+						val = val/DisplayFormatters.getKinB();
+					}
 
 					if ( i==0 ){
 						result = val;
@@ -717,8 +723,14 @@ TorrentOptionsView
 				int	result = 0;
 
 				for (int i=0;i<managers.length;i++){
-					int	val = managers[i].getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
 
+					int	val = managers[i].getDownloadRateLimitBytesPerSecond();
+					
+					if ( val < 0 ){
+						val = -1;
+					}else{
+						val = val/DisplayFormatters.getKinB();
+					}
 					if ( i==0 ){
 						result = val;
 					}else if ( result != val ){
@@ -738,24 +750,50 @@ TorrentOptionsView
 			boolean changed = false;
 			String key = p.getParamID();
 			if (key.equals(MAX_UPLOAD)){
+				if ( value < 0 ){
+					value = -1;
+				}else{
+					value *= DisplayFormatters.getKinB();
+				}
+				
 				for (int i=0;i<managers.length;i++){
 
 					DownloadManagerOptionsHandler	manager = managers[i];
 
-					if ( value != manager.getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB()){
-
-						manager.setUploadRateLimitBytesPerSecond(value*DisplayFormatters.getKinB());
+					int existing = manager.getUploadRateLimitBytesPerSecond();
+					
+					if ( existing < 0 ){
+						existing = -1;
+					}else{
+						existing = existing / DisplayFormatters.getKinB();
+					}
+	
+					if ( value != existing ){
+						manager.setUploadRateLimitBytesPerSecond( value );
 						changed = true;
 					}
 				}
 			}else if (key.equals(MAX_DOWNLOAD)){
+				if ( value < 0 ){
+					value = -1;
+				}else{
+					value *= DisplayFormatters.getKinB();
+				}
+				
 				for (int i=0;i<managers.length;i++){
 
 					DownloadManagerOptionsHandler	manager = managers[i];
 
-					if ( value != manager.getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB()){
-
-						manager.setDownloadRateLimitBytesPerSecond(value*DisplayFormatters.getKinB());
+					int existing = manager.getDownloadRateLimitBytesPerSecond();
+					
+					if ( existing < 0 ){
+						existing = -1;
+					}else{
+						existing = existing / DisplayFormatters.getKinB();
+					}
+	
+					if ( value != existing ){
+						manager.setDownloadRateLimitBytesPerSecond( value );
 						changed = true;
 					}
 				}
