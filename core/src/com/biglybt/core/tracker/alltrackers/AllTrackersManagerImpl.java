@@ -32,6 +32,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -377,16 +378,28 @@ AllTrackersManagerImpl
 							}
 						}else if ( obj instanceof TRTrackerScraperResponse ){
 							
+							TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
+
+							boolean online = s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE;
+							
+							if ( online ){
+								
+								DownloadManager dm = core.getGlobalManager().getDownloadManager( s_resp.getHash());
+								
+								if ( dm != null ){
+								
+									dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_LAST_SCRAPE_TIME, SystemTime.getCurrentTime());
+								}
+							}
+							
 								// announce status trumps scrape 
 							
 							if ( tracker.hasStatus()){
 								
 								continue;
 							}
-							
-							TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
-																						
-							if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
+																													
+							if ( online ){
 								
 								updated = true;
 							}
