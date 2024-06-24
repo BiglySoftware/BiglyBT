@@ -1239,9 +1239,15 @@ AllTrackersManagerImpl
 				// ignore
 		}else{
 			
-			AllTrackersTrackerImpl tracker = register( null, url );
+			if ( response.getPeers() < 0 || response.getSeeds() < 0 ){
+			
+					// invalid, not the result of an actual successful scrape
+			}else{
+			
+				AllTrackersTrackerImpl tracker = register( null, url );
 								
-			update_queue.add( new Object[]{ tracker, response } );
+				update_queue.add( new Object[]{ tracker, response } );
+			}
 		}
 	}
 	
