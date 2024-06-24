@@ -34,6 +34,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.proxy.AEProxyFactory;
@@ -1614,8 +1615,19 @@ public class TrackerStatus {
 
 		Throwable last_error = null;
 
+		boolean ipv6_enabled =  NetworkAdmin.getSingleton().isIPV6Enabled();
+
+		boolean all_skipped = true;
+
 		for ( InetSocketAddress destination: url_addresses ){
 
+			if ( destination.getAddress() instanceof Inet6Address && !ipv6_enabled ){
+
+				continue;
+			}
+			
+			all_skipped = false;
+			
 			try{
 				PRUDPPacketHandler handler = PRUDPPacketHandlerFactory.getHandler( handler_port );
 
@@ -1770,6 +1782,11 @@ public class TrackerStatus {
 			}
 		}
 
+		if ( all_skipped ){
+
+			throw( new Exception( "IPv6 disabled" ));
+		}
+ 			
 		if ( last_error != null ){
 			
 			throw( last_error );
