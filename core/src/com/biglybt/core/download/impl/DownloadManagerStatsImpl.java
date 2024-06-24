@@ -1546,11 +1546,15 @@ DownloadManagerStatsImpl
 		saved_peak_receive_rate		= state.getLongAttribute( DownloadManagerState.AT_PEAK_RECEIVE_RATE );
 		saved_peak_send_rate		= state.getLongAttribute( DownloadManagerState.AT_PEAK_SEND_RATE );
 
+		/*
+		 * 24/06/2024. going to assume that this bug has long since been fixed and any potential recovery 
+		 * performed. It is causing cache-fixups on restart for downloads that legitimately have 0 completed data
 		if (saved_data_bytes_downloaded > 0 && saved_completed_download_bytes == 0) {
 			// Bug where 0 is stored in config for torrent's saved_completed_download_bytes
 			// when there's actually completed data.  Force a recalc on next request
 			saved_completed_download_bytes = -1;
 		}
+		*/
 		
 		loadTrackerStats();
 	}
