@@ -329,7 +329,34 @@ AllTrackersManagerImpl
 							
 					AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
 					
-					if ( host_map.containsKey( tracker.getTrackerName())){
+					if ( tracker == null ){
+						
+						Object	obj 	= entry[1];
+
+						if ( obj instanceof TRTrackerScraperResponse ){
+						
+								// DHT scrapes come through this route
+							
+							TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
+	
+							boolean online = s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE;
+							
+							if ( online ){
+								
+								DownloadManager dm = core.getGlobalManager().getDownloadManager( s_resp.getHash());
+								
+								if ( dm != null ){
+								
+									int dm_state = dm.getState();
+									
+									if ( dm_state != DownloadManager.STATE_SEEDING && dm_state != DownloadManager.STATE_DOWNLOADING ){
+									
+										dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_LAST_SCRAPE_TIME, SystemTime.getCurrentTime());
+									}
+								}
+							}
+						}
+					}else if ( host_map.containsKey( tracker.getTrackerName())){
 		
 						Object	obj 	= entry[1];
 												
@@ -388,7 +415,12 @@ AllTrackersManagerImpl
 								
 								if ( dm != null ){
 								
-									dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_LAST_SCRAPE_TIME, SystemTime.getCurrentTime());
+									int dm_state = dm.getState();
+									
+									if ( dm_state != DownloadManager.STATE_SEEDING && dm_state != DownloadManager.STATE_DOWNLOADING ){
+									
+										dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_LAST_SCRAPE_TIME, SystemTime.getCurrentTime());
+									}
 								}
 							}
 							
@@ -1199,20 +1231,17 @@ AllTrackersManagerImpl
 		URL 							url, 
 		TRTrackerScraperResponse	 	response )
 	{
-		AllTrackersTrackerImpl tracker = register( null, url );
+		int scrape_state = response.getStatus();
 		
-		if ( tracker != null ){
+		if ( 	scrape_state == TRTrackerScraperResponse.ST_INITIALIZING ||
+				scrape_state == TRTrackerScraperResponse.ST_SCRAPING ){
 			
-			int scrape_state = response.getStatus();
+				// ignore
+		}else{
 			
-			if ( 	scrape_state == TRTrackerScraperResponse.ST_INITIALIZING ||
-					scrape_state == TRTrackerScraperResponse.ST_SCRAPING ){
-				
-					// ignore
-			}else{
-				
-				update_queue.add( new Object[]{ tracker, response } );
-			}
+			AllTrackersTrackerImpl tracker = register( null, url );
+								
+			update_queue.add( new Object[]{ tracker, response } );
 		}
 	}
 	
