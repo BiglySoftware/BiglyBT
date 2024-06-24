@@ -176,6 +176,7 @@ public class PathItem
       }
     }
 
+    /*
     if ( fileInfo.isSkipped()){
 
     	String dnd_sf = dm.getDownloadState().getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
@@ -209,6 +210,7 @@ public class PathItem
     		}
     	}
     }
+    */
 
     return path;
   }

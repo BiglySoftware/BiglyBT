@@ -624,6 +624,8 @@ public class ColumnThumbAndName
 		if (s.startsWith(prefix)) {
 			s = s.substring(prefix.length());
 		}
+		
+		/*
 		if ( fileInfo.isSkipped()){
 
 	    	String dnd_sf = fileInfo.getDownloadManager().getDownloadState().getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
@@ -645,6 +647,7 @@ public class ColumnThumbAndName
 	    		}
 	    	}
 		}
+		*/
 		
 		return( s );
 	}
