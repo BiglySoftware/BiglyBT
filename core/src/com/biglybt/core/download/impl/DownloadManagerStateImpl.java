@@ -2825,7 +2825,7 @@ DownloadManagerStateImpl
 					
 				boolean	set_dirty = true;
 				
-				boolean is_scrape_cache = attribute_name == DownloadManagerState.AT_SCRAPE_CACHE ;
+				boolean is_scrape_cache = attribute_name == DownloadManagerState.AT_SCRAPE_CACHE;
 				
 				if ( is_scrape_cache && download_manager.getGlobalManager().isStopping()){
 					
@@ -2837,7 +2837,8 @@ DownloadManagerStateImpl
 				
 				if ( set_dirty ){
 				
-					setDirty( is_scrape_cache );
+					setDirty(	is_scrape_cache || 
+								attribute_name == DownloadManagerState.AT_LAST_SCRAPE_TIME );	// no rush to save this
 				}
 			}
 		}finally{
