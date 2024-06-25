@@ -76,6 +76,9 @@ DiskManagerHelper
 		DiskManagerPieceImpl	piece,
 		boolean					done );
 
+	public boolean
+	isUploadOnly();
+	
 	@Override
 	public TOTorrent
 	getTorrent();

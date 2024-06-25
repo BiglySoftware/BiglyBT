@@ -739,7 +739,7 @@ DiskManagerImpl
                     }
                 }catch ( Throwable e ){
 
-                    setFailed( DiskManager.ET_OTHER, "File close fails", e, false );
+                    setFailed( DiskManager.ET_OTHER, "File close fails", e, switched_to_upload_only );
                 }
             }
         }
@@ -752,7 +752,7 @@ DiskManagerImpl
 
             }catch( Exception e ){
 
-                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e, false );
+                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e, switched_to_upload_only );
             }
         }
 
@@ -2217,6 +2217,13 @@ DiskManagerImpl
 		Throwable	cause )
 	{
 		return( switch_to_upload_only_enable &&  DiskManagerUtil.isFileWriteException(cause));
+	}
+	
+	@Override
+	public boolean
+	isUploadOnly()
+	{
+		return( switched_to_upload_only );
 	}
 	
     @Override

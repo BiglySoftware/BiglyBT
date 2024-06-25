@@ -796,6 +796,13 @@ LWSDiskManager
 	}
 
 	@Override
+	public boolean
+	isUploadOnly()
+	{
+		return( false );
+	}
+	
+	@Override
 	public TOTorrent
 	getTorrent()
 	{

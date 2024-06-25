@@ -2161,6 +2161,11 @@ DiskManagerUtil
 					}
 					
 					@Override
+					public boolean isUploadOnly(){
+						return( false );
+					}
+					
+					@Override
 					public void setFailed(int type, String reason, Throwable cause, boolean can_continue ){
 					}
 										
