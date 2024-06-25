@@ -3222,7 +3222,15 @@ DHTTrackerPlugin
 
 									}else if ( total < INTERESTING_AVAIL_MAX ){
 
-										interesting_published.add( f_presence_download );
+										try{
+											this_mon.enter();
+
+											interesting_published.add( f_presence_download );
+											
+										}finally{
+
+											this_mon.exit();
+										}
 
 										if ( !disable_put ){
 
