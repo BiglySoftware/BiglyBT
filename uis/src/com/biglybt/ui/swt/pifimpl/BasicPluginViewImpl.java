@@ -28,6 +28,7 @@ import java.util.regex.PatternSyntaxException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -332,20 +333,18 @@ BasicPluginViewImpl
     	{
     		@Override
 		    public void modifyText(ModifyEvent e) {
-    			String newExpression = inclText.getText();
-    			if (newExpression.length() == 0)
-    				inclusionFilter = null;
-    			else
-    			{
-    				try
-    				{
-    					inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-    					inclText.setBackground(null);
-    				} catch (PatternSyntaxException e1)
-    				{
-    					inclText.setBackground(Colors.colorErrorBG);
-    				}
-    			}
+				String newExpression = inclText.getText();
+				Color bg = null;
+				if (newExpression.length() == 0){
+					inclusionFilter = null;
+				}else{
+					try{
+						inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+					}catch (PatternSyntaxException e1){
+						bg = Colors.colorErrorBG;
+					}
+				}
+				Utils.setSkinnedBackground(inclText,bg);
     		}
     	});
 
@@ -365,20 +364,18 @@ BasicPluginViewImpl
     	{
     		@Override
 		    public void modifyText(ModifyEvent e) {
-    			String newExpression = exclText.getText();
-    			if (newExpression.length() == 0)
-    				exclusionFilter = null;
-    			else
-    			{
-    				try
-    				{
-    					exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-    					exclText.setBackground(null);
-    				} catch (PatternSyntaxException e1)
-    				{
-    					exclText.setBackground(Colors.colorErrorBG);
-    				}
-    			}
+				String newExpression = exclText.getText();
+				Color bg = null;
+				if (newExpression.length() == 0){
+					exclusionFilter = null;
+				}else{
+					try{
+						exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+					}catch (PatternSyntaxException e1){
+						bg = Colors.colorErrorBG;
+					}
+				}
+				Utils.setSkinnedBackground(exclText,bg);
     		}
     	});
 
