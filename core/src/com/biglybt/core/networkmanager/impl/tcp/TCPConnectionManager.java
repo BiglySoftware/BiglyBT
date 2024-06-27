@@ -585,47 +585,58 @@ public class TCPConnectionManager {
 		  }
 	  }catch( Throwable t ){
 
-		  String full = request.address.toString();
-		  String hostname = request.address.getHostName();
-		  int port = request.address.getPort();
-		  boolean unresolved = request.address.isUnresolved();
-		  InetAddress	inet_address = request.address.getAddress();
-		  String full_sub = inet_address==null?request.address.toString():inet_address.toString();
-		  String host_address = inet_address==null?request.address.toString():inet_address.getHostAddress();
+		  InetSocketAddress address = request.address;
+		  InetAddress	inet_address = address.getAddress();
 
-		  String msg = "ConnectDisconnectManager::address exception: full="+full+ ", hostname="+hostname+ ", port="+port+ ", unresolved="+unresolved+ ", full_sub="+full_sub+ ", host_address="+host_address;
+		  SocketChannel channel = request.channel;
 
-		  if( request.channel != null ) {
-			  String channel = request.channel.toString();
-			  Socket socket = request.channel.socket();
-			  String socket_string = socket.toString();
-			  InetAddress local_address = socket.getLocalAddress();
-			  String local_address_string = local_address == null ? "<null>" : local_address.toString();
-			  int local_port = socket.getLocalPort();
-			  SocketAddress ra = socket.getRemoteSocketAddress();
-			  String remote_address;
-			  if( ra != null )  remote_address = ra.toString();
-			  else remote_address = "<null>";
-			  int remote_port = socket.getPort();
-
-			  msg += "\n channel="+channel+ ", socket="+socket_string+ ", local_address="+local_address_string+ ", local_port="+local_port+ ", remote_address="+remote_address+ ", remote_port="+remote_port;
-		  }
-		  else {
-			  msg += "\n channel=<null>";
-		  }
-
-		  if (ipv6problem || t instanceof UnresolvedAddressException || t instanceof NoRouteToHostException ){
-
-			  Logger.log(new LogEvent(LOGID,LogEvent.LT_WARNING,msg));
-
+		  if ( inet_address instanceof Inet6Address && !NetworkAdmin.getSingleton().isIPV6Enabled()){
+			  
+			  	// don't log anything
+			  
 		  }else{
 
-			  Logger.log(new LogEvent(LOGID,LogEvent.LT_ERROR,msg,t));
+			  String full = address.toString();
+			  String hostname = address.getHostName();
+			  int port = address.getPort();
+			  boolean unresolved = address.isUnresolved();
+			  String full_sub = inet_address==null?address.toString():inet_address.toString();
+			  String host_address = inet_address==null?request.address.toString():inet_address.getHostAddress();
+	
+			  String msg = "ConnectDisconnectManager::address exception: full="+full+ ", hostname="+hostname+ ", port="+port+ ", unresolved="+unresolved+ ", full_sub="+full_sub+ ", host_address="+host_address;
+				  
+			  if( channel != null ) {
+				  String channel_str = channel.toString();
+				  Socket socket = channel.socket();
+				  String socket_string = socket.toString();
+				  InetAddress local_address = socket.getLocalAddress();
+				  String local_address_string = local_address == null ? "<null>" : local_address.toString();
+				  int local_port = socket.getLocalPort();
+				  SocketAddress ra = socket.getRemoteSocketAddress();
+				  String remote_address;
+				  if( ra != null )  remote_address = ra.toString();
+				  else remote_address = "<null>";
+				  int remote_port = socket.getPort();
+	
+				  msg += "\n channel="+channel_str+ ", socket="+socket_string+ ", local_address="+local_address_string+ ", local_port="+local_port+ ", remote_address="+remote_address+ ", remote_port="+remote_port;
+			  }
+			  else {
+				  msg += "\n channel=<null>";
+			  }
+	
+			  if (ipv6problem || t instanceof UnresolvedAddressException || t instanceof NoRouteToHostException ){
+	
+				  Logger.log(new LogEvent(LOGID,LogEvent.LT_WARNING,msg));
+	
+			  }else{
+	
+				  Logger.log(new LogEvent(LOGID,LogEvent.LT_ERROR,msg,t));
+			  }
 		  }
 
-		  if( request.channel != null ){
+		  if( channel != null ){
 
-			  closeConnection( request.channel );
+			  closeConnection( channel );
 		  }
 
 		  request.listener.connectFailure( t );
