@@ -847,7 +847,7 @@ public class TorrentMenuFancy
 				bChangeDir = dm.isDataAlreadyAllocated();
 				if (bChangeDir && state == DownloadManager.STATE_ERROR) {
 					// filesExist is way too slow!
-					bChangeDir = !dm.filesExist(true);
+					bChangeDir = !dm.filesExist(true,true);
 				} else {
 					DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
 					bChangeDir = false;
@@ -2724,7 +2724,7 @@ public class TorrentMenuFancy
 				new ListenerDMTask(dms) {
 					@Override
 					public void run(DownloadManager dm) {
-						dm.filesExist(true);
+						dm.filesExist(true,false);
 					}
 				});
 

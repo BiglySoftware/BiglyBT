@@ -432,9 +432,17 @@ DownloadManager
      * @return Whether all the non-skipped (non-DND) files exist
      */
 
+    public default boolean
+    filesExist(
+    	boolean		expected_to_be_allocated )
+    {
+    	return( filesExist( expected_to_be_allocated, false ));
+    }
+    
     public boolean
     filesExist(
-    	boolean	expected_to_be_allocated );
+    	boolean		expected_to_be_allocated,
+    	boolean		test_only );
 
     /**
      * Download must be stopped - used at start-of-day to recover error state

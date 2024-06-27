@@ -1441,7 +1441,7 @@ DownloadManagerController
 
   		if ( call_filesExist ){
 
-  			filesExist( true );
+  			filesExist( true, false );
   		}
 
   		if ( _inform_changed ){
@@ -2178,7 +2178,8 @@ DownloadManagerController
 
 	public boolean
 	filesExist(
-		boolean	expected_to_be_allocated )
+		boolean	expected_to_be_allocated, 
+		boolean	test_only )
 	{
 		if ( !expected_to_be_allocated ){
 
@@ -2191,7 +2192,7 @@ DownloadManagerController
 		DiskManager dm = getDiskManager();
 
 		if (dm != null) {
-			return dm.filesExist();
+			return( dm.filesExist());
 		}
 
 		fileFacadeSet.makeSureFilesFacadeFilled(false);
@@ -2233,7 +2234,10 @@ DownloadManagerController
 							}
 						}
 
-						setFailed( DownloadManager.ET_FILE_MISSING, MessageText.getString("DownloadManager.error.datamissing") + ": " + file.getAbsolutePath());
+						if ( !test_only ){
+						
+							setFailed( DownloadManager.ET_FILE_MISSING, MessageText.getString("DownloadManager.error.datamissing") + ": " + file.getAbsolutePath());
+						}
 						
 						return false;
 
@@ -2245,16 +2249,21 @@ DownloadManagerController
 
 						if ( !COConfigurationManager.getBooleanParameter("File.truncate.if.too.large")){
 
-							setFailed(MessageText.getString("DownloadManager.error.badsize")
+							if ( !test_only ){
+							
+								setFailed(MessageText.getString("DownloadManager.error.badsize")
 									+ " " + file + "(" + fileInfo.getLength() + "/" + file.length() + ")");
-
+							}
 
 							return false;
 						}
 					}
 				}catch( Throwable e ){
 					
-					setFailed( "Existance check failed", e );
+					if ( !test_only ){
+					
+						setFailed( "Existance check failed", e );
+					}
 					
 					return false;
 				}
@@ -3601,7 +3610,7 @@ DownloadManagerController
 				writer.println("Force Start");
 			}
 
-			writer.println("FilesExist? " + filesExist(download_manager.isDataAlreadyAllocated()));
+			writer.println("FilesExist? " + filesExist(download_manager.isDataAlreadyAllocated(), true));
 			
 			if ( full ){
 				

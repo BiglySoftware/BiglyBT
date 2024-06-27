@@ -306,7 +306,7 @@ public class TorrentUtil
 										
 										for ( DownloadManager dm: dms ){
 											
-											dm.filesExist( true );
+											dm.filesExist( true, false );
 										}
 										
 										return( true );
@@ -663,7 +663,7 @@ public class TorrentUtil
 					bChangeDir = dm.isDataAlreadyAllocated();
 					if (bChangeDir && state == DownloadManager.STATE_ERROR) {
 						// filesExist is way too slow!
-						bChangeDir = !dm.filesExist(true);
+						bChangeDir = !dm.filesExist(true,true);
 					} else {
 						bChangeDir = false;
 					}
@@ -1104,7 +1104,7 @@ public class TorrentUtil
 		itemCheckFilesExist.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager dm) {
-				dm.filesExist(true);
+				dm.filesExist(true,false);
 			}
 		});
 
@@ -4157,7 +4157,8 @@ public class TorrentUtil
 				DownloadManager dm = dms[i];
 
 				int state = dm.getState();
-				if (state != DownloadManager.STATE_ERROR) {
+				
+				if ( state != DownloadManager.STATE_ERROR ){
 					
 						// if download is stopped and not allocated then use the 'move' operation to avoid the subsequent recheck
 						
@@ -4192,33 +4193,33 @@ public class TorrentUtil
 						}
 					}
 					
-					if ( !dm.filesExist(true)){
+					if ( !dm.filesExist(true, true )){
 						
 						state = DownloadManager.STATE_ERROR;
 					}
 				}
 
-				if (state == DownloadManager.STATE_ERROR) {
+				if ( state == DownloadManager.STATE_ERROR ){
 
 					dm.setTorrentSaveDir(FileUtil.newFile(sSavePath), false);
 
-					boolean found = dm.filesExist(true);
+					boolean found = dm.filesExist(true, true);
 					if (!found && dm.getTorrent() != null
 							&& !dm.getTorrent().isSimpleTorrent()) {
 						String parentPath = fSavePath.getParent();
 						if (parentPath != null) {
 							dm.setTorrentSaveDir(FileUtil.newFile(parentPath), false);
-							found = dm.filesExist(true);
+							found = dm.filesExist(true, true);
 							if (!found) {
 								dm.setTorrentSaveDir(FileUtil.newFile(parentPath,
 									fSavePath.getName()), true);
 
-								found = dm.filesExist(true);
+								found = dm.filesExist(true, true);
 								if (!found) {
 									dm.setTorrentSaveDir(FileUtil.newFile(sSavePath,
 										dm.getDisplayName()), true);
 
-									found = dm.filesExist(true);
+									found = dm.filesExist(true, true);
 									if (!found) {
 										dm.setTorrentSaveDir(FileUtil.newFile(sSavePath), false);
 									}
@@ -4227,10 +4228,20 @@ public class TorrentUtil
 						}
 					}
 
-					if (found) {
+					if ( found ){
+						
+							// unfortunately we need to do this to kick it into a reasonable state (otherwise an "error" download
+							// will stay marked as such)
+						
 						dm.stopIt(DownloadManager.STATE_STOPPED, false, false);
-
+						
 						ManagerUtils.queue(dm);
+	
+					}else{
+						
+							// kick into error state to make things clear
+						
+						dm.filesExist( true, false );
 					}
 				}
 			}
