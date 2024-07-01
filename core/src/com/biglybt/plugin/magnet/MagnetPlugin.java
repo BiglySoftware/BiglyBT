@@ -68,6 +68,8 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.pif.ui.config.DirectoryParameter;
+import com.biglybt.pif.ui.config.FileParameter;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.StringListParameter;
@@ -140,6 +142,7 @@ MagnetPlugin
 	private BooleanParameter	magnet_recovery;
 	private IntParameter	 	magnet_recovery_concurrency;
 	private BooleanParameter	magnet_rename;
+	private DirectoryParameter	storage_folder;
 
 	private Map<String,BooleanParameter> net_params = new HashMap<>();
 
@@ -222,6 +225,8 @@ MagnetPlugin
 		magnet_rename.addEnabledOnSelection( rename_ext );
 		
 		config.addBooleanParameter2( "MagnetPlugin.dl.position.from.mag.time", "MagnetPlugin.dl.position.from.mag.time", true );
+		
+		storage_folder = config.addDirectoryParameter2( "MagnetPlugin.storage.folder", "MagnetPlugin.storage.folder", getDefaultStorageDir().getAbsolutePath());
 		
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
 
@@ -1208,11 +1213,9 @@ MagnetPlugin
 		AEThread2.createAndStartDaemon( "MagnetPlugin:mdtidy", ()->{
 			
 			try{
-				File torrents_dir = FileUtil.getUserFile( "torrents" );
-
-				File md_dir = FileUtil.newFile( torrents_dir, "md" );
+				File storage_dir = getStorageDir();
 				
-				File[] files = md_dir.listFiles();
+				File[] files = storage_dir.listFiles();
 				
 				if ( files != null ){
 					
@@ -1239,6 +1242,39 @@ MagnetPlugin
 				Debug.out( e );
 			}
 		});
+	}
+	
+	protected File
+	getDefaultStorageDir()
+	{
+		File torrents_dir = FileUtil.getUserFile( "torrents" );
+
+		File md_dir = FileUtil.newFile( torrents_dir, "md" );
+		
+		if ( !md_dir.exists()){
+			
+			FileUtil.mkdirs( md_dir );
+		}
+		
+		return( md_dir );
+	}
+	
+	protected File
+	getStorageDir()
+	{
+		File dir = new File( storage_folder.getValue());
+		
+		if ( !dir.exists()){
+			
+			dir.mkdirs();
+			
+			if ( !dir.exists()){
+				
+				dir = getDefaultStorageDir();
+			}
+		}
+		
+		return( dir );
 	}
 	
 	private void

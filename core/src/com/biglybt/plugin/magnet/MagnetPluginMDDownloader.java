@@ -258,9 +258,9 @@ MagnetPluginMDDownloader
 		
 					setup_started = true;
 	
-					File torrents_dir = FileUtil.getUserFile( "torrents" );
-		
-					md_dir = FileUtil.newFile( torrents_dir, "md", hash_str );
+					File storage_dir = plugin.getStorageDir();
+							
+					md_dir = FileUtil.newFile( storage_dir, hash_str );
 					
 					if ( !md_dir.exists()){
 						
