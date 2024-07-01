@@ -2541,40 +2541,49 @@ public class TableViewPainted
 				if (visibleRows.size() > 0) {
 					if (canvasImage != null && !canvasImage.isDisposed() && !changedH) {
 
+							// if the vbar isn't visible then we can't say anything about how things might have moved
+						
+						boolean vBarVisible = vBar.isVisible();
+						
 						int yDiff = oldClientArea.y - newClientArea.y;
-						if (Math.abs(yDiff) < clientArea.height) {
+						if (Math.abs(yDiff) < clientArea.height || !vBarVisible ){
 							boolean wasIn = in_swt_updateCanvasImage;
 							in_swt_updateCanvasImage = true;
 							try{
 								GC gc = new GC(canvasImage);
 								try{
-									Rectangle bounds = canvasImage.getBounds();
-									//System.out.println("moving y " + yDiff + ";cah=" + clientArea.height);
-									if (yDiff > 0) {
-										// User Scrolled up, Move Image Down
-										if (Utils.isGTK3) {
-											// Can't copyArea(x, y, w, h, dx, dy, paint) or drawImage(Image, x, y) downward without cheese
-											gc.copyArea(canvasImage, 0, -yDiff);
+									if ( vBarVisible ){
+										Rectangle bounds = canvasImage.getBounds();
+										//System.out.println("moving y " + yDiff + ";cah=" + clientArea.height);
+										if (yDiff > 0) {
+											// User Scrolled up, Move Image Down
+											if (Utils.isGTK3) {
+												// Can't copyArea(x, y, w, h, dx, dy, paint) or drawImage(Image, x, y) downward without cheese
+												gc.copyArea(canvasImage, 0, -yDiff);
+											} else {
+												gc.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
+											}
+											swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, yDiff));
+											Utils.setClipping(gc, (Rectangle) null);
 										} else {
-											gc.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
+											// User scrolled down, move image up
+											if (Utils.isGTK3) {
+												//copyArea cheese on GTK3 SWT 4528/4608
+												gc.drawImage(canvasImage, 0, yDiff);
+											} else {
+												gc.copyArea(0, -yDiff, bounds.width, bounds.height , 0, 0, false);
+											}
+											int h = -yDiff;
+											TableRowPainted row = getLastVisibleRow();
+											if (row != null) {
+												//row.invalidate();
+												h += row.getHeight();
+											}
+											swt_paintCanvasImage(gc, new Rectangle(0, bounds.height - h, 9999, h));
+											Utils.setClipping(gc, (Rectangle) null);
 										}
-										swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, yDiff));
-										Utils.setClipping(gc, (Rectangle) null);
-									} else {
-										// User scrolled down, move image up
-										if (Utils.isGTK3) {
-											//copyArea cheese on GTK3 SWT 4528/4608
-											gc.drawImage(canvasImage, 0, yDiff);
-										} else {
-											gc.copyArea(0, -yDiff, bounds.width, bounds.height , 0, 0, false);
-										}
-										int h = -yDiff;
-										TableRowPainted row = getLastVisibleRow();
-										if (row != null) {
-											//row.invalidate();
-											h += row.getHeight();
-										}
-										swt_paintCanvasImage(gc, new Rectangle(0, bounds.height - h, 9999, h));
+									}else{
+										swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, 9999));
 										Utils.setClipping(gc, (Rectangle) null);
 									}
 								}finally{
