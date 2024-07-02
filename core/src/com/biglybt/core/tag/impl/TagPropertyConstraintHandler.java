@@ -2997,6 +2997,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_MOC_PATH				= 53;
 		private static final int	KW_FILE_COUNT_SELECTED	= 54;
 		private static final int	KW_TRACKERS				= 55;
+		private static final int	KW_POSITION				= 56;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -3122,6 +3123,7 @@ TagPropertyConstraintHandler
 			keyword_map.put( "file_count_selected",		new int[]{KW_FILE_COUNT_SELECTED,	DEP_STATIC });
 
 			keyword_map.put( "trackers", 				new int[]{KW_TRACKERS,				DEP_STATIC });
+			keyword_map.put( "position", 				new int[]{KW_POSITION,				DEP_STATIC });
 
 		}
 
@@ -5931,6 +5933,10 @@ TagPropertyConstraintHandler
 						dm.setUserData( DM_TRACKERS, cache );
 						
 						return((String[])cache[1] );
+					}
+					case KW_POSITION:{
+						
+						return( dm.getPosition());
 					}
 					default:{
 						
