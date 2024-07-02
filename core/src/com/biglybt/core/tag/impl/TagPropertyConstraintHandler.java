@@ -1763,31 +1763,32 @@ TagPropertyConstraintHandler
 				return( new ConstraintExprXor( compile( bits, context )));
 
 			}else{
-							
-				Matcher m = comp_op_pattern.matcher( str );
+						
+				Matcher m = comp_ift_pattern.matcher( str );
 
 				if ( m.find()){
 							
-					String lhs 	= m.group(1).trim();
-					String op 	= m.group(2).trim();
-					String rhs	= m.group(3).trim();
+					String op1 	= m.group(1).trim();
+					String op2 	= m.group(2).trim();
+					String op3	= m.group(3).trim();
 					
-					ConstraintExprParams params = new ConstraintExprParams( lhs + "," + rhs, context );
+					ConstraintExprParams params = new ConstraintExprParams( op1 + "," + op2 + "," + op3, context );
 					
-					return( new ConstraintExprFunction( comp_op_map.get( op ), params ));
+					return( new ConstraintExprFunction( "ifThenElse", params ));
 					
 				}else{
-					m = comp_ift_pattern.matcher( str );
-
+					
+					m = comp_op_pattern.matcher( str );
+	
 					if ( m.find()){
 								
-						String op1 	= m.group(1).trim();
-						String op2 	= m.group(2).trim();
-						String op3	= m.group(3).trim();
+						String lhs 	= m.group(1).trim();
+						String op 	= m.group(2).trim();
+						String rhs	= m.group(3).trim();
 						
-						ConstraintExprParams params = new ConstraintExprParams( op1 + "," + op2 + "," + op3, context );
+						ConstraintExprParams params = new ConstraintExprParams( lhs + "," + rhs, context );
 						
-						return( new ConstraintExprFunction( "ifThenElse", params ));
+						return( new ConstraintExprFunction( comp_op_map.get( op ), params ));
 						
 					}else if ( str.startsWith( "!" )){
 		
