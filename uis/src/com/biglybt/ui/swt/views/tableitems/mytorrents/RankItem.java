@@ -174,7 +174,8 @@ public class RankItem
 				rows = tv.getRows();
 			}
 			
-			int pos = 1;
+			int incomp_pos	= 1;
+			int comp_pos	= 1;
 			
 			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
 						
@@ -183,11 +184,11 @@ public class RankItem
 			
 			for ( TableRowCore row: rows ){
 				
-				DownloadManager o = (DownloadManager)row.getDataSource(true);
+				DownloadManager dm = (DownloadManager)row.getDataSource(true);
 				
-				managers.add( o );
+				managers.add( dm );
 				
-				positions.add( pos++ );
+				positions.add( dm.isDownloadComplete(false)?comp_pos++:incomp_pos++ );
 				
 				// gm.moveTo(o, pos++);
 			}
