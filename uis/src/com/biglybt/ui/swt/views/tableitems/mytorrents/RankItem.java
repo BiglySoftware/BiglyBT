@@ -35,14 +35,16 @@ import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerListener;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
-
+import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
@@ -198,8 +200,182 @@ public class RankItem
 			RankItem.this.invalidateCells();
 		}
 	});
+	
+	
+	TableContextMenuItem menuSortToClipboard = addContextMenuItem(
+			"menu.copy.order.to.clip", MENU_STYLE_HEADER);
+	
+	menuSortToClipboard.setStyle(TableContextMenuItem.STYLE_PUSH);
+
+	menuSortToClipboard.addListener((menu, target)->{
+		
+		TableView<?> tv = menuSortToClipboard.getTable();
+		
+		if ( tv != null ){
+			
+			TableRowCore[] rows = tv.getRows();
+													
+			StringBuffer str = new StringBuffer( 2048 );
+			
+			for ( TableRowCore row: rows ){
+				
+				DownloadManager dm = (DownloadManager)row.getDataSource(true);
+				
+				TOTorrent torrent = dm.getTorrent();
+				
+				if ( torrent != null ){
+
+					try{
+						byte[] hash = torrent.getHash();
+					
+						str.append( dm.getPosition());
+						str.append( "," );
+						str.append( ByteFormatter.encodeString( hash ));
+						str.append( ",\"" );
+						str.append( dm.getDisplayName());
+						str.append( "\"\n");
+						
+					}catch( Throwable e ){
+						
+					}
+				}
+			}
+			
+			ClipboardCopy.copyToClipBoard( str.toString());
+		}
+	});
+	
+	TableContextMenuItem menuClipboardToSort = addContextMenuItem(
+			"menu.set.sort.from.clip", MENU_STYLE_HEADER);
+	menuClipboardToSort.setStyle(TableContextMenuItem.STYLE_PUSH);
+	
+	menuClipboardToSort.addFillListener(new MenuItemFillListener() {
+		@Override
+		public void menuWillBeShown(MenuItem menu, Object data) {
+			TableView<?> tv = menuClipboardToSort.getTable();
+			
+			boolean ok = false;
+			
+			if ( tv != null ){
+			
+				ok = clipboardToSort( tv, true );
+			}
+			
+			menuClipboardToSort.setEnabled( ok );
+		}
+	});
+	
+	menuClipboardToSort.addListener((menu, target)->{
+		
+		TableView<?> tv = menuClipboardToSort.getTable();
+		
+		if ( tv != null ){
+			clipboardToSort( tv, false );
+		}
+	});
   }
 
+  
+  private boolean
+  clipboardToSort(
+	TableView<?> 	tv,
+	boolean			test )
+  {
+	  String lines[] = ClipboardCopy.copyFromClipboard().split( "\n" );
+	  
+	  if ( lines.length == 0 ){
+		  
+		  return( false );
+	  }
+	  
+	  GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+	  
+	  int max_incomp	= 0;
+	  int max_comp		= 0;
+	  
+	  for ( DownloadManager dm: gm.getDownloadManagers()){
+		  
+		  if ( dm.isDownloadComplete( false )){
+			  
+			  max_comp = Math.max( dm.getPosition(), max_comp );
+			  
+		  }else{
+			 
+			  max_incomp = Math.max( dm.getPosition(), max_incomp );
+		  }
+	  }
+	  
+	  List<DownloadManager>	managers	= new ArrayList<>( lines.length );
+	  List<Integer>			positions	= new ArrayList<>( lines.length );
+		
+	  for ( String line: lines ){
+		  
+		  line = line.trim();
+		  
+		  if ( line.isEmpty()){
+			  
+			  continue;
+		  }
+		  
+		  String[] bits = line.split(",");
+		  
+		  if ( bits.length < 2 ){
+			  
+			  return( false );
+		  }
+		  
+		  try{
+			  
+			int pos = Integer.parseInt(bits[0].trim());
+			
+			if ( pos <= 0 ){
+				
+				return( false );
+			}
+			
+			byte[] hash = ByteFormatter.decodeString( bits[1] );
+			
+			DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash ));
+			
+			if ( dm == null ){
+				
+				return( false );
+			}
+			
+			if ( dm.isDownloadComplete( false )){
+				
+				if ( pos > max_comp ){
+					
+					return( false );
+				}
+			}else{
+				
+				if ( pos > max_incomp ){
+					
+					return( false );
+				}
+			}
+			
+			managers.add( dm );
+			
+			positions.add( pos );
+			
+		  }catch( Throwable e ){
+			  
+			  return( false );
+		  }
+	  }
+		
+	  if ( !test ){
+		 		
+		gm.moveTo( managers, positions );
+
+		RankItem.this.invalidateCells();
+	  }
+	  
+	  return( true );
+  }
+  
   @Override
   public void reset() {
 	  super.reset();
