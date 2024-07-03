@@ -24,8 +24,7 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.core.Core;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.config.COConfigurationManager;
@@ -68,7 +67,7 @@ public class RankItem
        extends CoreTableColumnSWT
        implements TableCellRefreshListener
 {
-	public static final Class DATASOURCE_TYPE = Download.class;
+	public static final Class<Download> DATASOURCE_TYPE = Download.class;
 
 	public static final String COLUMN_ID = "#";
 	private final ParameterListener paramShowIconKeyListener;
@@ -131,6 +130,9 @@ public class RankItem
     ImageLoader imageLoader = ImageLoader.getInstance();
     imgUp = imageLoader.getImage("image.torrentspeed.up");
     imgDown = imageLoader.getImage("image.torrentspeed.down");
+    
+    TableContextMenuItem sep = addContextMenuItem( "menu.set.order.sep", MENU_STYLE_HEADER);
+    sep.setStyle(TableContextMenuItem.STYLE_SEPARATOR);
     
 	TableContextMenuItem menuSetFromSort = addContextMenuItem(
 			"menu.set.order.from.sort", MENU_STYLE_HEADER);
@@ -231,6 +233,8 @@ public class RankItem
 						str.append( dm.getPosition());
 						str.append( "," );
 						str.append( ByteFormatter.encodeString( hash ));
+						str.append( "," );
+						str.append( dm.isDownloadComplete(false)?1:0);
 						str.append( ",\"" );
 						str.append( dm.getDisplayName());
 						str.append( "\"\n");
@@ -308,6 +312,8 @@ public class RankItem
 	  List<DownloadManager>	managers	= new ArrayList<>( lines.length );
 	  List<Integer>			positions	= new ArrayList<>( lines.length );
 		
+	  Set<Integer>			dup_pos_check = new HashSet<>();
+			  
 	  for ( String line: lines ){
 		  
 		  line = line.trim();
@@ -319,7 +325,7 @@ public class RankItem
 		  
 		  String[] bits = line.split(",");
 		  
-		  if ( bits.length < 2 ){
+		  if ( bits.length < 3 ){
 			  
 			  return( false );
 		  }
@@ -333,7 +339,7 @@ public class RankItem
 				return( false );
 			}
 			
-			byte[] hash = ByteFormatter.decodeString( bits[1] );
+			byte[] hash = ByteFormatter.decodeString( bits[1].trim());
 			
 			DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash ));
 			
@@ -342,18 +348,31 @@ public class RankItem
 				return( false );
 			}
 			
-			if ( dm.isDownloadComplete( false )){
+			boolean comp_expected	= bits[2].trim().equals("1");
+			boolean comp			= dm.isDownloadComplete( false );
+			
+			if ( comp_expected != comp ){
 				
-				if ( pos > max_comp ){
+				return( false );
+			}
+			
+			if ( comp ){
+				
+				if ( pos > max_comp || dup_pos_check.contains( pos )){
 					
 					return( false );
 				}
+				
+				dup_pos_check.add( pos );
+				
 			}else{
 				
-				if ( pos > max_incomp ){
+				if ( pos > max_incomp || dup_pos_check.contains( -pos )){
 					
 					return( false );
 				}
+				
+				dup_pos_check.add( -pos );
 			}
 			
 			managers.add( dm );
