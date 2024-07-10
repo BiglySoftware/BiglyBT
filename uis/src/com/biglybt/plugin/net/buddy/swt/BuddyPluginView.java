@@ -3225,6 +3225,8 @@ BuddyPluginView
 								activateNetwork( AENetworkClassifier.AT_PUBLIC, true );
 							}else if ( anon ){
 								activateNetwork( AENetworkClassifier.AT_I2P, true );
+							}else{
+								activateNetwork( null, true );
 							}
 						}
 					}
@@ -3263,13 +3265,18 @@ BuddyPluginView
 						}
 					}
 
-					if ( anon && !pub && network == AENetworkClassifier.AT_PUBLIC ){
+					if ( 	( anon && !pub && network == AENetworkClassifier.AT_PUBLIC ) ||
+							( pub && !anon && network == AENetworkClassifier.AT_I2P )){
 						
 						key = null;
 						
-					}else{
+					}else if ( anon || pub ){
 					
 						key = download.getChatKey();
+						
+					}else{
+						
+						key = null;
 					}
 				}
 			}else if ( chat_mode == CHAT_TRACKERS ){
