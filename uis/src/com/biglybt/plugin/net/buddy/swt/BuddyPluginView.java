@@ -3248,8 +3248,29 @@ BuddyPluginView
 					key = null;
 
 				}else{
+					boolean	pub 	= false;
+					boolean	anon	= false;
 
-					key = download.getChatKey();
+					for ( String net: download.getNetworks()){
+
+						if ( net == AENetworkClassifier.AT_PUBLIC ){
+
+							pub = true;
+
+						}else if ( net == AENetworkClassifier.AT_I2P ){
+
+							anon = true;
+						}
+					}
+
+					if ( anon && !pub && network == AENetworkClassifier.AT_PUBLIC ){
+						
+						key = null;
+						
+					}else{
+					
+						key = download.getChatKey();
+					}
 				}
 			}else if ( chat_mode == CHAT_TRACKERS ){
 
