@@ -2989,6 +2989,69 @@ public class ManagerUtils {
 						});
 					
 					mi.setEnabled( selected.length > 0 );
+					
+					new MenuItem( menu, SWT.SEPARATOR );
+					
+					mi = new MenuItem( menu, SWT.PUSH );
+					
+					Messages.setLanguageText(mi, "wizard.multitracker.edit.text" );
+					
+					mi.addListener( SWT.Selection, (ev)->{
+						
+						String[] old_items = def_locs.getItems();
+						
+						String old_text = "";
+						
+						for ( String o: old_items ){
+							
+							old_text += o + "\n";
+						}
+
+						String f_old_text = old_text;
+						
+					   	TextViewerWindow viewer =
+					    		  new TextViewerWindow(
+					    				  shell,
+					    				  "dlg.finddatafiles.deflab",
+					    				  null,
+					    				  old_text, false, false );
+
+				    	  viewer.setEditable( true );
+
+				    	  viewer.addListener(
+								new TextViewerWindow.TextViewerWindowListener()
+								{
+									@Override
+									public void
+									closed()
+									{
+										if ( viewer.getOKPressed()){
+											
+									    	  String new_text = viewer.getText().trim();
+				
+									    	  if ( !f_old_text.trim().equals( new_text )){
+				
+									    		  String[] lines = new_text.split( "\n" );
+						
+									    		  List<String> temp = new ArrayList<>();
+									    		  
+									    		  for ( String line: lines ){
+				
+									    			  line = line.trim();
+				
+									    			  if ( line.length() > 0 ){
+				
+									    				  temp.add( line );
+									    			  }
+									    		  }
+				
+									    		  def_locs.setItems( temp.toArray( new String[ temp.size()]));
+									    	  }
+										}
+									}
+								});
+					});
+							
 				}
 				public void menuHidden(MenuEvent arg0) {};
 			});
