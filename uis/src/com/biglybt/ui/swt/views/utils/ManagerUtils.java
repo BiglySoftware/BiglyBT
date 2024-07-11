@@ -3046,6 +3046,10 @@ public class ManagerUtils {
 									    		  }
 				
 									    		  def_locs.setItems( temp.toArray( new String[ temp.size()]));
+									    		  
+									    		  COConfigurationManager.setParameter( "find.files.search.roots", temp );
+													
+									    		  state_changed.run();
 									    	  }
 										}
 									}
