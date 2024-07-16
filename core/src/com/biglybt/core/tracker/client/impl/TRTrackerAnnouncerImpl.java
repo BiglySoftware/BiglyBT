@@ -19,6 +19,7 @@
 
 package com.biglybt.core.tracker.client.impl;
 
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,6 +29,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
@@ -417,6 +419,11 @@ TRTrackerAnnouncerImpl
 
 		// System.out.println( "max peers= " + max );
 
+		NetworkAdmin admin = NetworkAdmin.getSingleton();
+		
+		InetAddress public_ip		= admin.getDefaultPublicAddress( true );
+		InetAddress public_ip_v6 	= admin.getDefaultPublicAddressV6();
+		
 		try{
 			tracker_peer_cache_mon.enter();
 
@@ -424,6 +431,28 @@ TRTrackerAnnouncerImpl
 
 				TRTrackerAnnouncerResponsePeerImpl	peer = peers[i];
 
+				String address = peer.getAddress();
+				
+				String network = AENetworkClassifier.categoriseAddress( address );
+			   
+				if ( network == AENetworkClassifier.AT_PUBLIC ){
+				
+						// don't add ourselves to the cache, likely not useful
+						// ignore port in case our port has changed and this is stale
+						// info
+					
+					try{
+						InetAddress ip = InetAddress.getByName( address );
+						
+						if ( ip.equals( public_ip ) || ip.equals( public_ip_v6 )){
+							
+							continue;
+						}
+					}catch( Throwable e ){
+						
+					}
+				}
+				
 				peer = peer.getClone();
 				
 				peer.setCached( true );
