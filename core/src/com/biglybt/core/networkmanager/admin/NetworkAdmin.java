@@ -265,6 +265,10 @@ NetworkAdmin
 
 		throws NetworkAdminException;
 
+	public abstract boolean
+	isRecentPublicIPAddress(
+		InetAddress	address );
+	
 	public abstract InetAddress
 	getDefaultPublicAddress();
 

@@ -126,34 +126,6 @@ NetworkAdminImpl
 	private InetAddress[]				additionalServiceBindIPs;
 	
 	private volatile boolean			testedIPv6Routing;
-	
-	{
-		COConfigurationManager.addAndFireParameterListeners(
-				new String[]{ "IPV6 Enable Support", "IPV6 Prefer Addresses" },
-				new ParameterListener()
-				{
-					@Override
-					public void
-					parameterChanged(
-						String parameterName )
-					{
-						setIPv6Enabled( COConfigurationManager.getBooleanParameter("IPV6 Enable Support"));
-						
-						preferIPv6 = COConfigurationManager.getBooleanParameter( "IPV6 Prefer Addresses" );
-					}
-				});
-
-		COConfigurationManager.addResetToDefaultsListener(
-				new COConfigurationManager.ResetToDefaultsListener()
-				{
-					@Override
-					public void
-					reset()
-					{
-						clearMaybeVPNs();
-					}
-				});
-	}
 
 	private int roundRobinCounterV4 = 0;
 	private int roundRobinCounterV6 = 0;
@@ -216,7 +188,64 @@ NetworkAdminImpl
 				return size() > 256;
 			}
 		};
+	
+	private final InetAddress[]			gdpa_lock = { null };
+	private AESemaphore					gdpa_sem;
+	private long						gdpa_last_fail;
+	private long						gdpa_last_lookup;
+	private final AESemaphore			gdpa_initial_sem = new AESemaphore( "gdpa:init" );
 
+	private InetAddress			gdpa6			= null;
+	private int					gdpa6_count;
+	private InetAddress			gdpa6_last_good	= null;
+	private long				gdpa6_last_check;
+	private boolean				gdpa6_checking;
+
+	private long				rpa_last_refresh	= -1;
+
+	private Map<InetAddress,String>		rpa	=
+		new LinkedHashMap<InetAddress,String>(64,0.75f,true)
+		{
+			@Override
+			protected boolean
+			removeEldestEntry(
+				Map.Entry<InetAddress,String> eldest)
+			{
+				return( size() > 64 );
+			}
+		};
+	
+		
+	{
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{ "IPV6 Enable Support", "IPV6 Prefer Addresses" },
+				new ParameterListener()
+				{
+					@Override
+					public void
+					parameterChanged(
+						String parameterName )
+					{
+						setIPv6Enabled( COConfigurationManager.getBooleanParameter("IPV6 Enable Support"));
+						
+						preferIPv6 = COConfigurationManager.getBooleanParameter( "IPV6 Prefer Addresses" );
+					}
+				});
+
+		COConfigurationManager.addResetToDefaultsListener(
+				new COConfigurationManager.ResetToDefaultsListener()
+				{
+					@Override
+					public void
+					reset()
+					{
+						clearMaybeVPNs();
+					}
+				});
+		
+		loadRecentPublicIPs();
+	}
+		
 	private final boolean 	initialised;
 	
 	public
@@ -2064,18 +2093,6 @@ addressLoop:
 		return( null );
 	}
 
-	private static final InetAddress[]			gdpa_lock = { null };
-	private static AESemaphore					gdpa_sem;
-	private static long							gdpa_last_fail;
-	private static long							gdpa_last_lookup;
-	private static final AESemaphore			gdpa_initial_sem = new AESemaphore( "gdpa:init" );
-
-	private static InetAddress			gdpa6			= null;
-	private static int					gdpa6_count;
-	private static InetAddress			gdpa6_last_good	= null;
-	private static long					gdpa6_last_check;
-	private static boolean				gdpa6_checking;
-	
 	private void
 	interfacesChanged(
 		boolean		first_time )
@@ -2088,6 +2105,96 @@ addressLoop:
 		firePropertyChange( NetworkAdmin.PR_NETWORK_INTERFACES );
 
 		checkDefaultBindAddress( first_time );
+	}
+	
+	private void
+	updateRecentPublicAddresses(
+		InetAddress	address )
+	{
+			// gdpa_lock lock held on entry
+		
+		try{
+		
+			if ( !rpa.containsKey(address)){
+				
+				rpa.put(address, "" );
+				
+				String key = "netadmin.rpa.ipv" + ( address instanceof Inet4Address?"4":"6" );
+				
+				List<byte[]> ips = (List<byte[]>)COConfigurationManager.getListParameter( key, new ArrayList<>());
+	
+				byte[] a = address.getAddress();
+				
+				for ( byte[] ip: ips ){
+					
+					if ( Arrays.equals( ip, a )){
+						
+						return;
+					}
+				}
+				
+				ips = new ArrayList<>( ips.size() + 1 );
+				
+				if ( ips.size() >= 16 ){
+					
+					ips.addAll( ips.subList( 1, 16));
+					
+				}else{
+					
+					ips.addAll(ips);
+				}
+				
+				ips.add( a );
+				
+				COConfigurationManager.setParameter( key, ips );
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	private void
+	loadRecentPublicIPs()
+	{
+		try{
+			for ( String suffix: new String[]{ "4", "6" }){
+				
+				List<byte[]> ips = (List<byte[]>)COConfigurationManager.getListParameter( "netadmin.rpa.ipv" + suffix, new ArrayList<>());
+				
+				for ( byte[] ip: ips ){
+					
+					rpa.put( InetAddress.getByAddress(ip), "" );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	@Override
+	public boolean
+	isRecentPublicIPAddress(
+		InetAddress	address )
+	{
+		synchronized( gdpa_lock ){
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( rpa_last_refresh == -1 || now - rpa_last_refresh > 60*1000 ){
+							
+				getDefaultPublicAddress( true );
+				
+				getDefaultPublicAddressV6();
+				
+				rpa_last_refresh = now;
+			}
+		
+			boolean result = rpa.containsKey( address );
+						
+			return( result );
+		}
 	}
 	
 	@Override
@@ -2149,6 +2256,13 @@ addressLoop:
 
 								synchronized( gdpa_lock ){
 
+									InetAddress old_address = gdpa_lock[0];
+									
+									if ( old_address == null || !old_address.equals( address )){
+										
+										updateRecentPublicAddresses( address );
+									}
+									
 									gdpa_lock[0]	= address;
 
 									sem.releaseForever();
@@ -2225,7 +2339,17 @@ addressLoop:
 			
 			if ( AddressUtils.isGlobalAddressV6(addr)){
 				
-				return( addr );
+				synchronized( gdpa_lock ){
+				
+					if ( gdpa6 == null || !gdpa6.equals( addr )){
+						
+						gdpa6 = addr;
+					
+						updateRecentPublicAddresses( addr );
+					}
+					
+					return( addr );
+				}
 			}
 		}
 
@@ -2264,15 +2388,17 @@ addressLoop:
 						
 						gdpa6_count = best.size();
 						
+						InetAddress new_gdpa6;
+						
 						if ( gdpa6_count == 0 ){
 							
-							gdpa6 = null;
+							new_gdpa6 = null;
 							
 							run_check = false;
 							
 						}else if ( gdpa6_count == 1 ){
 							
-							gdpa6 = best.get(0);
+							new_gdpa6 = best.get(0);
 							
 							run_check = false;
 							
@@ -2282,13 +2408,20 @@ addressLoop:
 							
 							if ( gdpa6_last_good != null && best.contains( gdpa6_last_good )){
 								
-								gdpa6 = gdpa6_last_good;
+								new_gdpa6 = gdpa6_last_good;
 								
 							}else{
 								
-								gdpa6 = best.get(0);
+								new_gdpa6 = best.get(0);
 							}
 						}
+						
+						if ( new_gdpa6 != null && !new_gdpa6.equals( gdpa6 )){
+							
+							updateRecentPublicAddresses( new_gdpa6 );
+						}
+						
+						gdpa6 = new_gdpa6;
 						
 						return( gdpa6 );
 					}
@@ -2341,6 +2474,11 @@ addressLoop:
 												if ( canConnectWithBind( ia, 10*1000 )){
 													
 													synchronized( gdpa_lock ){
+														
+														if ( gdpa6 == null || !gdpa6.equals( ia )){
+															
+															updateRecentPublicAddresses( ia );
+														}
 														
 														gdpa6_last_good = gdpa6 = ia;
 														

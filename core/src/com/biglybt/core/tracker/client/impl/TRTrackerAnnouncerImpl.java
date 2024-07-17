@@ -420,10 +420,7 @@ TRTrackerAnnouncerImpl
 		// System.out.println( "max peers= " + max );
 
 		NetworkAdmin admin = NetworkAdmin.getSingleton();
-		
-		InetAddress public_ip		= admin.getDefaultPublicAddress( true );
-		InetAddress public_ip_v6 	= admin.getDefaultPublicAddressV6();
-		
+				
 		try{
 			tracker_peer_cache_mon.enter();
 
@@ -444,7 +441,7 @@ TRTrackerAnnouncerImpl
 					try{
 						InetAddress ip = InetAddress.getByName( address );
 						
-						if ( ip.equals( public_ip ) || ip.equals( public_ip_v6 )){
+						if ( admin.isRecentPublicIPAddress( ip )){
 							
 							continue;
 						}
