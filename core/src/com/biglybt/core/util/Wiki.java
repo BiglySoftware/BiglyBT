@@ -26,7 +26,7 @@ public interface Wiki
 
 	String BACKUP_AND_RESTORE = URL_WIKI + "w/Backup_And_Restore";
 
-	String COMMANDLINE_OPTIONS__CHANGING_CONTROL_PORT = URL_WIKI + "w/Commandline_options#Changing_the_Control_Port";
+	String COMMANDLINE_OPTIONS__CHANGING_CONTROL_PORT = URL_WIKI + "w/Commandline_options#Changing-the-Control-Port";
 
 	String DEFINITIONS = URL_WIKI + "w/This_funny_word";
 
