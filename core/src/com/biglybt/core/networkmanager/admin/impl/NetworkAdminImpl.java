@@ -201,8 +201,9 @@ NetworkAdminImpl
 	private long				gdpa6_last_check;
 	private boolean				gdpa6_checking;
 
-	private long				rpa_last_refresh	= -1;
+	private volatile long				rpa_last_refresh	= -1;
 
+	private final Object				rpa_lock = new Object();
 	private Map<InetAddress,String>		rpa	=
 		new LinkedHashMap<InetAddress,String>(64,0.75f,true)
 		{
@@ -2111,42 +2112,43 @@ addressLoop:
 	updateRecentPublicAddresses(
 		InetAddress	address )
 	{
-			// gdpa_lock lock held on entry
-		
 		try{
 		
-			if ( !rpa.containsKey(address)){
+			synchronized( rpa_lock ){
 				
-				rpa.put(address, "" );
-				
-				String key = "netadmin.rpa.ipv" + ( address instanceof Inet4Address?"4":"6" );
-				
-				List<byte[]> ips = (List<byte[]>)COConfigurationManager.getListParameter( key, new ArrayList<>());
-	
-				byte[] a = address.getAddress();
-				
-				for ( byte[] ip: ips ){
+				if ( !rpa.containsKey(address)){
 					
-					if ( Arrays.equals( ip, a )){
+					rpa.put(address, "" );
+					
+					String key = "netadmin.rpa.ipv" + ( address instanceof Inet4Address?"4":"6" );
+					
+					List<byte[]> ips = (List<byte[]>)COConfigurationManager.getListParameter( key, new ArrayList<>());
+		
+					byte[] a = address.getAddress();
+					
+					for ( byte[] ip: ips ){
 						
-						return;
+						if ( Arrays.equals( ip, a )){
+							
+							return;
+						}
 					}
+					
+					ips = new ArrayList<>( ips.size() + 1 );
+					
+					if ( ips.size() >= 16 ){
+						
+						ips.addAll( ips.subList( 1, 16));
+						
+					}else{
+						
+						ips.addAll(ips);
+					}
+					
+					ips.add( a );
+					
+					COConfigurationManager.setParameter( key, ips );
 				}
-				
-				ips = new ArrayList<>( ips.size() + 1 );
-				
-				if ( ips.size() >= 16 ){
-					
-					ips.addAll( ips.subList( 1, 16));
-					
-				}else{
-					
-					ips.addAll(ips);
-				}
-				
-				ips.add( a );
-				
-				COConfigurationManager.setParameter( key, ips );
 			}
 		}catch( Throwable e ){
 			
@@ -2158,13 +2160,16 @@ addressLoop:
 	loadRecentPublicIPs()
 	{
 		try{
-			for ( String suffix: new String[]{ "4", "6" }){
+			synchronized( rpa_lock ){
 				
-				List<byte[]> ips = (List<byte[]>)COConfigurationManager.getListParameter( "netadmin.rpa.ipv" + suffix, new ArrayList<>());
-				
-				for ( byte[] ip: ips ){
+				for ( String suffix: new String[]{ "4", "6" }){
 					
-					rpa.put( InetAddress.getByAddress(ip), "" );
+					List<byte[]> ips = (List<byte[]>)COConfigurationManager.getListParameter( "netadmin.rpa.ipv" + suffix, new ArrayList<>());
+					
+					for ( byte[] ip: ips ){
+						
+						rpa.put( InetAddress.getByAddress(ip), "" );
+					}
 				}
 			}
 		}catch( Throwable e ){
@@ -2178,19 +2183,19 @@ addressLoop:
 	isRecentPublicIPAddress(
 		InetAddress	address )
 	{
-		synchronized( gdpa_lock ){
+		long now = SystemTime.getMonotonousTime();
 			
-			long now = SystemTime.getMonotonousTime();
-			
-			if ( rpa_last_refresh == -1 || now - rpa_last_refresh > 60*1000 ){
+		if ( rpa_last_refresh == -1 || now - rpa_last_refresh > 60*1000 ){
 							
-				getDefaultPublicAddress( true );
+			getDefaultPublicAddress( true );
 				
-				getDefaultPublicAddressV6();
+			getDefaultPublicAddressV6();
 				
-				rpa_last_refresh = now;
-			}
+			rpa_last_refresh = now;
+		}
 		
+		synchronized( rpa_lock ){
+			
 			boolean result = rpa.containsKey( address );
 						
 			return( result );
