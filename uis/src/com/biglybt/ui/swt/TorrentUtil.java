@@ -824,8 +824,8 @@ public class TorrentUtil
 		});
 		itemOpen.setEnabled(hasSelection);
 
-		MenuItem itemOpenWith = MenuBuildUtils.addOpenWithMenu( menu, false, dms );
-		itemOpenWith.setEnabled(hasSelection&& MenuBuildUtils.hasOpenWithMenu( dms ));
+		MenuItem itemOpenWith = MenuBuildUtils.addOpenWithMenu( menu, false, dms, false );
+		itemOpenWith.setEnabled(hasSelection&& MenuBuildUtils.hasOpenWithMenu( dms, false ));
 
 		// Explore (or open containing folder)
 		final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
@@ -3461,6 +3461,11 @@ public class TorrentUtil
 
 		itemTorrentThumb.setEnabled(hasSelection);
 
+			// open with
+		
+		MenuItem itemOpenWith = MenuBuildUtils.addOpenWithMenu( menuTracker, false, dms, true );
+		itemOpenWith.setEnabled(hasSelection&& MenuBuildUtils.hasOpenWithMenu( dms, true ));
+		
 		// explore torrent file
 
 		final MenuItem itemTorrentExplore = new MenuItem(menuTracker, SWT.PUSH);

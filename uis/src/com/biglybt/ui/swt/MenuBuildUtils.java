@@ -1555,7 +1555,8 @@ public class MenuBuildUtils {
 	
 	public static boolean
 	hasOpenWithMenu(
-		Object		target )
+		Object		target,
+		boolean 	torrent )
 	{
 		boolean ok = false;
 		
@@ -1580,17 +1581,28 @@ public class MenuBuildUtils {
 			
 			for ( DownloadManager dm: (DownloadManager[])target ){
 			
-				DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-				
-				if ( files.length == 1 ){
+				if ( torrent ){
 					
-						// allow incomplete files to be opened
+					File tf = new File( dm.getTorrentFileName());
 					
-					//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
-					
-					if ( Utils.fileExistsWithTimeout( files[0].getFile(true))){
+					if ( Utils.fileExistsWithTimeout( tf )){
 						
 						return( true );
+					}
+				}else{
+					
+					DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+					
+					if ( files.length == 1 ){
+						
+							// allow incomplete files to be opened
+						
+						//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+						
+						if ( Utils.fileExistsWithTimeout( files[0].getFile(true))){
+							
+							return( true );
+						}
 					}
 				}
 			}
@@ -1617,7 +1629,8 @@ public class MenuBuildUtils {
 	addOpenWithMenu(
 		org.eclipse.swt.widgets.Menu	menu,
 		boolean							has_menu,
-		Object							target )
+		Object							target,
+		boolean							torrent )
 	{
 		org.eclipse.swt.widgets.Menu 		openWithMenu;
 		org.eclipse.swt.widgets.MenuItem 	openWithItem;
@@ -1654,15 +1667,25 @@ public class MenuBuildUtils {
 						
 						for ( DownloadManager dm: (DownloadManager[])target ){
 						
-							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-							
-							if ( files.length == 1 ){
+							if ( torrent ){
 								
-								//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+								File tf = new File( dm.getTorrentFileName());
 								
-								if ( Utils.fileExistsWithTimeout( files[0].getFile(true))){
+								if ( Utils.fileExistsWithTimeout( tf )){
 									
-									Utils.launchFileExplicit( files[0], exe );
+									Utils.launchFileExplicit( tf.getAbsolutePath(), exe );
+								}
+							}else{
+								DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+								
+								if ( files.length == 1 ){
+									
+									//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+									
+									if ( Utils.fileExistsWithTimeout( files[0].getFile(true))){
+										
+										Utils.launchFileExplicit( files[0], exe );
+									}
 								}
 							}
 						}

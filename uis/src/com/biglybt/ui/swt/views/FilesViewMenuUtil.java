@@ -123,7 +123,7 @@ public class FilesViewMenuUtil
 			// Invoke open on enter, double click
 			menu.setDefaultItem(itemOpen);
 				
-			itemOpenWith = MenuBuildUtils.addOpenWithMenu( menu, false, all_files );
+			itemOpenWith = MenuBuildUtils.addOpenWithMenu( menu, false, all_files, false );
 			
 			// Explore  (Copied from MyTorrentsView)
 			final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
@@ -600,7 +600,7 @@ public class FilesViewMenuUtil
 			
 			itemOpen.setEnabled(open);
 			
-			itemOpenWith.setEnabled(MenuBuildUtils.hasOpenWithMenu( all_files ) && open);
+			itemOpenWith.setEnabled(MenuBuildUtils.hasOpenWithMenu( all_files, false ) && open);
 		}
 
 		// can't rename files for non-persistent downloads (e.g. shares) as these

@@ -2435,7 +2435,7 @@ public class TorrentMenuFancy
 					});
 		}
 
-		if (hasSelection && MenuBuildUtils.hasOpenWithMenu( dms )) {
+		if (hasSelection && MenuBuildUtils.hasOpenWithMenu( dms, false )) {
 			createMenuRow(
 				detailArea,
 				"menu.open.with", null,
@@ -2446,7 +2446,7 @@ public class TorrentMenuFancy
 					buildMenu(
 						Menu menuOpenWith )
 					{
-						MenuBuildUtils.addOpenWithMenu( menuOpenWith, true, dms );
+						MenuBuildUtils.addOpenWithMenu( menuOpenWith, true, dms, false );
 					}
 				});
 		}
