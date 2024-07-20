@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -87,7 +88,9 @@ public class ConsoleInput extends Thread {
 	private final List helpItems = new ArrayList();
 	private final UserProfile userProfile;
 
-	private final List<LogEvent> errorLogEvents = new ArrayList<>();
+	private ILogEventListener logHandler;
+	private ILogAlertListener alertHandler;
+	private final LinkedList<LogEvent> errorLogEvents = new LinkedList<>();
 	private int numNewErrorLogEvents = 0;
 	private boolean waitingForInput = false;
 
@@ -129,15 +132,7 @@ public class ConsoleInput extends Thread {
 		this.controlling = _controlling.booleanValue();
 		this.br = new CommandReader(_in);
 
-		com.biglybt.core.logging.Logger.addListener((ILogEventListener) event -> {
-			if (event.entryType == LogEvent.LT_ERROR) {
-				errorLogEvents.add(event);
-				if (waitingForInput && numNewErrorLogEvents == 0) {
-					System.out.println("New error(s) logged. Use `show errors` to view.");
-				}
-				numNewErrorLogEvents++;
-			}
-		});
+		registerLogHandler();
 
 		//System.out.println( "ConsoleInput: initializing..." );
 		initialise();
@@ -218,6 +213,14 @@ public class ConsoleInput extends Thread {
 		oldcommand.add("sh");
 		oldcommand.add("t");
 	}
+	
+	private void
+	destroyalise()
+	{
+		unregisterLogHandler();
+		unregisterAlertHandler();
+	}
+	
 	/**
 	 * begins the download of the torrent in the specified file, downloading
 	 * it to the specified output directory. We also annotate the download with the
@@ -300,10 +303,40 @@ public class ConsoleInput extends Thread {
 		}
 	}
 
-	protected void
+	private void
+	registerLogHandler()
+	{
+		logHandler = ((ILogEventListener) event -> {
+			if (event.entryType == LogEvent.LT_ERROR) {
+				synchronized( errorLogEvents ){
+					errorLogEvents.add(event);
+					if ( errorLogEvents.size() > 1024 ){
+						errorLogEvents.removeFirst();
+					}
+				}
+				
+				if (waitingForInput && numNewErrorLogEvents == 0) {
+					System.out.println("New error(s) logged. Use `show errors` to view.");
+				}
+				numNewErrorLogEvents++;
+			}
+		});
+		
+		com.biglybt.core.logging.Logger.addListener( logHandler );
+	}
+	
+	private void
+	unregisterLogHandler()
+	{
+		if ( logHandler != null ){
+			com.biglybt.core.logging.Logger.removeListener( logHandler );
+		}
+	}
+	
+	private void
 	registerAlertHandler()
 	{
-		com.biglybt.core.logging.Logger.addListener(new ILogAlertListener() {
+		alertHandler = new ILogAlertListener() {
 			private java.util.Set	history = Collections.synchronizedSet( new HashSet());
 
 			@Override
@@ -320,8 +353,19 @@ public class ConsoleInput extends Thread {
 				if (alert.err != null)
 					alert.err.printStackTrace( out );
 			}
-		});
+		};
+		
+		com.biglybt.core.logging.Logger.addListener( alertHandler );
 	}
+	
+	private void
+	unregisterAlertHandler()
+	{
+		if ( alertHandler != null ){
+			com.biglybt.core.logging.Logger.removeListener( alertHandler );
+		}
+	}
+	
 	/**
 	 * registers the commands available to be executed from this console
 	 */
@@ -674,204 +718,209 @@ public class ConsoleInput extends Thread {
 
 	@Override
 	public void run() {
-		List<String> comargs;
-		running = true;
-		
-		PrintStream originalOutputStream = out;
-		PrintStream redirectOutputStream = null;
-		
-		while (running) {
-			if (numNewErrorLogEvents > 0) {
-				System.out.println(numNewErrorLogEvents + " new errors logged. Use `show errors` to view.");
-				numNewErrorLogEvents = 0;
-			}
-			try {
-				out.flush();
-				
-				waitingForInput = true;
-				String line = br.readLine();
-				waitingForInput = false;
-				
-				if ( redirectOutputStream != null ){
-					
-					redirectOutputStream.println( "> " + line );
-				}
-				
-				comargs = br.parseCommandLine(line);
-			} catch (Exception e) {
-				out.println("> Stopping console input reader because of exception: " + e.getMessage());
-				running = false;
-				waitingForInput = false;
-				break;
-			}
+		try{
+			List<String> comargs;
+			running = true;
 			
-			if (!comargs.isEmpty()) {
-				
-				RedirectOutputStream ros = current_ros;
-				
-				if ( ros != null ){
-					
-					ros.requestTimeStamp();
-				}
-				
-					// logging is implemented in-line below
-				
-				if ( comargs.size() > 0 && comargs.get(0).equalsIgnoreCase( "logging" )){
-					
-					comargs.remove(0);
-					
-					if ( comargs.isEmpty()){
-						
-						out.println("> Missing subcommand for 'logging'" );
-					}
-				}
-			}
+			PrintStream originalOutputStream = out;
+			PrintStream redirectOutputStream = null;
 			
-			if (!comargs.isEmpty()) {
-				
-				int	argNum = comargs.size();
-
-				File	thisCommandoutputFile		= null;
-				boolean thisCommandoutputFileAppend	= false;
-				
-				if ( argNum == 1 && comargs.get(0).equals( ">$" )){
-				
+			while (running) {
+				if (numNewErrorLogEvents > 0) {
+					System.out.println(numNewErrorLogEvents + " new errors logged. Use `show errors` to view.");
+					numNewErrorLogEvents = 0;
+				}
+				try {
+					out.flush();
+					
+					waitingForInput = true;
+					String line = br.readLine();
+					waitingForInput = false;
+					
 					if ( redirectOutputStream != null ){
 						
-						redirectOutputStream.close();
-						
-						out = originalOutputStream;
-						
-						out.println( "> Output is no longer being copied to file" );
-						
-					}else{
-						
-						out.println("> '>$' used when not copying output" );
+						redirectOutputStream.println( "> " + line );
 					}
 					
-					continue;
+					comargs = br.parseCommandLine(line);
+				} catch (Exception e) {
+					out.println("> Stopping console input reader because of exception: " + e.getMessage());
+					running = false;
+					waitingForInput = false;
+					break;
+				}
+				
+				if (!comargs.isEmpty()) {
 					
-				}else if ( argNum >= 2 ){
-
-					File 	outputFile 				= null;
-					boolean outputFileAppend		= false;
-
-					String temp = comargs.get( argNum-2 );
-
-					if ( temp.equals( ">" ) || temp.equals( ">>" )){
-
-						File file = new File( comargs.get( argNum-1 ));
-
-						if ( !file.getParentFile().canWrite()){
-
-							out.println("> Invalid output file '" + file + "'" );
-
-							continue;
+					RedirectOutputStream ros = current_ros;
+					
+					if ( ros != null ){
+						
+						ros.requestTimeStamp();
+					}
+					
+						// logging is implemented in-line below
+					
+					if ( comargs.size() > 0 && comargs.get(0).equalsIgnoreCase( "logging" )){
+						
+						comargs.remove(0);
+						
+						if ( comargs.isEmpty()){
+							
+							out.println("> Missing subcommand for 'logging'" );
 						}
-
-						outputFile 			= file;
-						outputFileAppend	= temp.equals( ">>" );
-
-						comargs = comargs.subList( 0, argNum-2 );
 					}
+				}
+				
+				if (!comargs.isEmpty()) {
 					
-					if ( comargs.isEmpty()){
-						
-							// permanent redirect
-						
+					int	argNum = comargs.size();
+	
+					File	thisCommandoutputFile		= null;
+					boolean thisCommandoutputFileAppend	= false;
+					
+					if ( argNum == 1 && comargs.get(0).equals( ">$" )){
+					
 						if ( redirectOutputStream != null ){
 							
 							redirectOutputStream.close();
 							
-							redirectOutputStream = null;
-							
 							out = originalOutputStream;
+							
+							out.println( "> Output is no longer being copied to file" );
+							
+						}else{
+							
+							out.println("> '>$' used when not copying output" );
 						}
 						
-						try{
+						continue;
 						
-							RedirectOutputStream ros = new RedirectOutputStream(
-									new FileOutputStream( outputFile, outputFileAppend ), out );
-
-							PrintStream redirect = new PrintStream( new BufferedOutputStream( ros, 128 ));
-
-							redirectOutputStream = redirect;
-							
-							current_ros	= ros;
-							
-							out = redirectOutputStream;
-							
-							out.println("> Copying output to " + outputFile + ". Use '>$' to stop" );
-							
-							continue;
-							
-						}catch( Throwable e ){
-							
-							out.println("Exception occurred when opening output file" );
+					}else if ( argNum >= 2 ){
+	
+						File 	outputFile 				= null;
+						boolean outputFileAppend		= false;
+	
+						String temp = comargs.get( argNum-2 );
+	
+						if ( temp.equals( ">" ) || temp.equals( ">>" )){
+	
+							File file = new File( comargs.get( argNum-1 ));
+	
+							if ( !file.getParentFile().canWrite()){
+	
+								out.println("> Invalid output file '" + file + "'" );
+	
+								continue;
+							}
+	
+							outputFile 			= file;
+							outputFileAppend	= temp.equals( ">>" );
+	
+							comargs = comargs.subList( 0, argNum-2 );
 						}
 						
-					}else{
-						
-							// this command only output redirect
-						
-						thisCommandoutputFile			= outputFile;
-						thisCommandoutputFileAppend		= outputFileAppend;
+						if ( comargs.isEmpty()){
+							
+								// permanent redirect
+							
+							if ( redirectOutputStream != null ){
+								
+								redirectOutputStream.close();
+								
+								redirectOutputStream = null;
+								
+								out = originalOutputStream;
+							}
+							
+							try{
+							
+								RedirectOutputStream ros = new RedirectOutputStream(
+										new FileOutputStream( outputFile, outputFileAppend ), out );
+	
+								PrintStream redirect = new PrintStream( new BufferedOutputStream( ros, 128 ));
+	
+								redirectOutputStream = redirect;
+								
+								current_ros	= ros;
+								
+								out = redirectOutputStream;
+								
+								out.println("> Copying output to " + outputFile + ". Use '>$' to stop" );
+								
+								continue;
+								
+							}catch( Throwable e ){
+								
+								out.println("Exception occurred when opening output file" );
+							}
+							
+						}else{
+							
+								// this command only output redirect
+							
+							thisCommandoutputFile			= outputFile;
+							thisCommandoutputFileAppend		= outputFileAppend;
+						}
 					}
-				}
-
-				String command = ((String) comargs.get(0)).toLowerCase();
-				if( ".".equals(command) )
-				{
-					if (oldcommand.size() > 0 ) {
-						comargs.clear();
-						comargs.addAll(oldcommand);
-						command = ((String) comargs.get(0)).toLowerCase();
-					} else {
-						out.println("> No old command. Remove commands are not repeated to prevent errors");
+	
+					String command = ((String) comargs.get(0)).toLowerCase();
+					if( ".".equals(command) )
+					{
+						if (oldcommand.size() > 0 ) {
+							comargs.clear();
+							comargs.addAll(oldcommand);
+							command = ((String) comargs.get(0)).toLowerCase();
+						} else {
+							out.println("> No old command. Remove commands are not repeated to prevent errors");
+						}
 					}
-				}
-				oldcommand.clear();
-				oldcommand.addAll(comargs);
-				comargs.remove(0);
-
-				PrintStream	 base_os 	= null;
-
-				try {
-					if ( thisCommandoutputFile != null ){
-
-						PrintStream temp = new PrintStream( new BufferedOutputStream( new FileOutputStream( thisCommandoutputFile, thisCommandoutputFileAppend ), 128 ));
-
-						base_os = out;
-						out		= temp;
-					}
-
-					if (!invokeCommand(command, comargs)) {
-						out.println("> Command '" + command + "' unknown (or . used without prior command)");
-					}
-					out.flush();
-				} catch (Throwable e)
-				{
-					out.println("Exception occurred when executing command: '" + command + "'");
-					e.printStackTrace(out);
-				}finally{
-
-					if ( base_os != null ){
-
-						try{
-							PrintStream temp = out;
-
-							out = base_os;
-
-							temp.close();
-
-						}catch( Throwable e ){
-
-							out.println("Exception occurred when closing output file" );
-							e.printStackTrace(out);
+					oldcommand.clear();
+					oldcommand.addAll(comargs);
+					comargs.remove(0);
+	
+					PrintStream	 base_os 	= null;
+	
+					try {
+						if ( thisCommandoutputFile != null ){
+	
+							PrintStream temp = new PrintStream( new BufferedOutputStream( new FileOutputStream( thisCommandoutputFile, thisCommandoutputFileAppend ), 128 ));
+	
+							base_os = out;
+							out		= temp;
+						}
+	
+						if (!invokeCommand(command, comargs)) {
+							out.println("> Command '" + command + "' unknown (or . used without prior command)");
+						}
+						out.flush();
+					} catch (Throwable e)
+					{
+						out.println("Exception occurred when executing command: '" + command + "'");
+						e.printStackTrace(out);
+					}finally{
+	
+						if ( base_os != null ){
+	
+							try{
+								PrintStream temp = out;
+	
+								out = base_os;
+	
+								temp.close();
+	
+							}catch( Throwable e ){
+	
+								out.println("Exception occurred when closing output file" );
+								e.printStackTrace(out);
+							}
 						}
 					}
 				}
 			}
+		}finally{
+			
+			destroyalise();
 		}
 	}
 
@@ -1076,8 +1125,11 @@ public class ConsoleInput extends Thread {
 	}
 
 	public List<LogEvent> getErrorLogEvents() {
-		ArrayList<LogEvent> logEvents = new ArrayList<>(errorLogEvents);
-		errorLogEvents.clear();
+		ArrayList<LogEvent> logEvents;
+		synchronized( errorLogEvents ){
+			logEvents = new ArrayList<>(errorLogEvents);
+			errorLogEvents.clear();
+		}
 		numNewErrorLogEvents = 0;
 		return logEvents;
 	}

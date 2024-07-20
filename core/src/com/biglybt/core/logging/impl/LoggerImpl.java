@@ -326,11 +326,16 @@ public class LoggerImpl {
 
 		alertLogger.log(logText);
 
-		alertHistory.add(alert);
-
-		if (alertHistory.size() > MAXHISTORY)
-			alertHistory.remove(0);
-
+		synchronized( alertHistory ){
+			
+			alertHistory.add(alert);
+	
+			if (alertHistory.size() > MAXHISTORY){
+				
+				alertHistory.remove(0);
+			}
+		}
+		
 		for (int i = 0; i < alertListeners.size(); i++) {
 			try {
 				Object listener = alertListeners.get(i);
