@@ -1557,14 +1557,21 @@ TorrentUtils
 		Set<String> mergesSet = new HashSet<>();
 		mergesSet.add( NO_VALID_URL_URL );	// this results in removal of this dummy url if present
 		for ( List<String> l: merge_urls ){
-			mergesSet.addAll(l);
+			for ( String url: l ){
+				url = url.toLowerCase( Locale.US );
+				url = UrlUtils.getCanonicalString( url );	
+				mergesSet.add(url);
+			}
 		}
 		Iterator<List<String>> it1 = base_urls.iterator();
 		while( it1.hasNext()){
 			List<String> l = it1.next();
 			Iterator<String> it2 = l.iterator();
 			while( it2.hasNext()){
-				if ( mergesSet.contains( it2.next())){
+				String url= it2.next();
+				url = url.toLowerCase( Locale.US );
+				url = UrlUtils.getCanonicalString( url );	
+				if ( mergesSet.contains( url )){
 					it2.remove();
 				}
 			}
