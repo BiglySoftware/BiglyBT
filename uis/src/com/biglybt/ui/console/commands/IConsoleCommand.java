@@ -30,8 +30,8 @@ public abstract class IConsoleCommand {
 	protected static final class TorrentComparator implements Comparator<DownloadManager> {
 			@Override
 			public final int compare(DownloadManager aDL, DownloadManager bDL) {
-				boolean aIsComplete = aDL.getStats().getDownloadCompleted(false) == 1000;
-				boolean bIsComplete = bDL.getStats().getDownloadCompleted(false) == 1000;
+				boolean aIsComplete = aDL.isDownloadComplete(false);
+				boolean bIsComplete = bDL.isDownloadComplete(false);
 				if (aIsComplete && !bIsComplete)
 					return 1;
 				if (!aIsComplete && bIsComplete)

@@ -182,7 +182,7 @@ public class Show extends IConsoleCommand {
 
 				DownloadManagerStats stats = dm.getStats();
 
-				boolean bDownloadCompleted = stats.getDownloadCompleted(false) == 1000;
+				boolean bDownloadCompleted = dm.isDownloadComplete(false);
 				boolean bCanShow = ((bShowOnlyComplete == bShowOnlyIncomplete) || (bDownloadCompleted && bShowOnlyComplete) || (!bDownloadCompleted && bShowOnlyIncomplete));
 
 				if (bCanShow && bShowOnlyActive) {

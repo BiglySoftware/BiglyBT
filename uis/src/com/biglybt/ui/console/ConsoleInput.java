@@ -73,7 +73,7 @@ public class ConsoleInput extends Thread {
 	public volatile PrintStream out;
 	private RedirectOutputStream	current_ros;
 	
-	public final List torrents = new ArrayList();
+	public final List<DownloadManager> torrents = new ArrayList<>();
 	public File[] adds = null;
 
 	private final CommandReader br;

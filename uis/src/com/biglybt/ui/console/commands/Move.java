@@ -54,6 +54,10 @@ public class Move extends IConsoleCommand {
 			if (args.size() > 1) {
 				nmoveto = Integer.parseInt((String) args.get(1));
 				moveto = true;
+				if (nmoveto < 1 || nmoveto > ci.torrents.size()) {
+					ci.out.println("> Command 'move': #to is invalid" );
+					return;
+				}
 			}
 		} catch (NumberFormatException e) {
 			ci.out.println("> Command 'move': Subcommand '" + args.get(0) + "' unknown.");
@@ -64,15 +68,30 @@ public class Move extends IConsoleCommand {
 			ci.out.println("> Command 'move': Torrent #" + Integer.toString(number) + " unknown.");
 			return;
 		}
-		DownloadManager dm = (DownloadManager) ci.torrents.get(number - 1);
+		
+		DownloadManager dm = ci.torrents.get(number - 1);
 		String name = dm.getDisplayName();
 		if (name == null)
 			name = "?";
 
 		GlobalManager	gm = dm.getGlobalManager();
-
+		
 		if (moveto) {
-			gm.moveTo(dm, nmoveto - 1);
+			DownloadManager target = ci.torrents.get(nmoveto - 1);
+			boolean targetComplete = target.isDownloadComplete( false );
+			if ( dm.isDownloadComplete( false )){
+				if ( !targetComplete ){
+					ci.out.println("> Torrent # " + number + " can only be moved within the complete torrent section" );
+					return;
+				}
+				
+			}else{
+				if ( targetComplete ){
+					ci.out.println("> Torrent # " + number + " can only be moved within the incomplete torrent section" );
+					return;
+				}
+			}
+			gm.moveTo(dm, target.getPosition());
 			gm.fixUpDownloadManagerPositions();
 			ci.out.println("> Torrent #" + Integer.toString(number) + " (" + name + ") moved to #" + Integer.toString(nmoveto) + ".");
 		} else if (ncommand > 0) {
