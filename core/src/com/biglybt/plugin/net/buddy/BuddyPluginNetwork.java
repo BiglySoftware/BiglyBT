@@ -160,6 +160,7 @@ BuddyPluginNetwork
 	private AESemaphore						pd_queue_sem	= new AESemaphore( "BuddyPlugin:persistDispatch");
 	private AEThread2						pd_thread;
 
+	private volatile boolean closing;
 
 	protected
 	BuddyPluginNetwork(
@@ -977,6 +978,8 @@ BuddyPluginNetwork
 	{
 		logMessage( null, "Closing down" );
 
+		closing = true;
+		
 		List<BuddyPluginBuddy>	buddies = getAllBuddies();
 
 		synchronized( this ){
@@ -1520,7 +1523,7 @@ BuddyPluginNetwork
 				{
 					tick_count++;
 
-					if ( !plugin.isClassicEnabled()){
+					if ( closing || !plugin.isClassicEnabled()){
 
 						return;
 					}
