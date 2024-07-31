@@ -1202,7 +1202,9 @@ DiskManagerImpl
                 
                 String      ext  = data_file.getName();
 
-                if ( incomplete_suffix != null && ext.endsWith( incomplete_suffix )){
+                boolean has_incomp_suffix = incomplete_suffix != null && ext.endsWith( incomplete_suffix );
+                
+                if ( has_incomp_suffix ){
 
                 	ext = ext.substring( 0, ext.length() - incomplete_suffix.length());
                 }
@@ -1260,8 +1262,25 @@ DiskManagerImpl
 	                if (!mustExistOrAllocate && !skip_incomplete_file_checks && cache_file.exists()){
 	
 						data_file.delete();
+						
+	                }else{
+		
+		                	// handle case where file has incomplete suffix but file without the suffix exists
+		                	// for example, someone has copied the final file into place to recover things
+		                
+		                if ( !skip_incomplete_file_checks && has_incomp_suffix && !data_file.exists()){
+		                	
+		                	String name = data_file.getName();
+		                	
+		                	File temp = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
+		                	
+		                	if ( temp.exists()){
+		                				                	
+			                	FileUtil.renameFile( temp, data_file );
+		                	}
+		                }
 	                }
-	
+	                
 	                if ( skip_incomplete_file_checks || cache_file.exists() ){
 	
 	                	boolean did_allocate = false;
