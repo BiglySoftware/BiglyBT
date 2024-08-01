@@ -1275,7 +1275,9 @@ DiskManagerImpl
 		                	File temp = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
 		                	
 		                	if ( temp.exists()){
-		                				                	
+		                			
+		                		FileUtil.log( "Moving '" + temp + "' to '" + data_file + "' to restore the incomplete file suffix" );
+		                		
 			                	FileUtil.renameFile( temp, data_file );
 		                	}
 		                }
