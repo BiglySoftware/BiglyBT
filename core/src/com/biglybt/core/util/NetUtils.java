@@ -20,8 +20,6 @@
 
 package com.biglybt.core.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -567,37 +565,15 @@ NetUtils
 			se = e;
 		}
 
-		// Java 7 has getByIndex
-		try {
-			Method mGetByIndex = NetworkInterface.class.getDeclaredMethod(
-					"getByIndex", int.class);
-			List<NetworkInterface> list = new ArrayList<>();
-			int i = 0;
-			do {
-				//NetworkInterface nif = NetworkInterface.getByIndex(i);
-				NetworkInterface nif = null;
-				try {
-					nif = (NetworkInterface) mGetByIndex.invoke(null, i);
-				} catch (IllegalAccessException e) {
-					break;
-				} catch (InvocationTargetException ignore) {
-					// getByIndex throws SocketException
-				}
-				if (nif != null) {
-					list.add(nif);
-				} else if (i > 0) {
-					break;
-				}
-				i++;
-			} while (true);
-			if (list.size() > 0) {
-				return Collections.enumeration(list);
-			}
-		} catch (NoSuchMethodException ignore) {
+		final List<NetworkInterface> list = new ArrayList<>();
+
+		collectNetworkInterfacesByIndex(list);
+
+		if (!list.isEmpty()) {
+			return Collections.enumeration(list);
 		}
 
 		// Worst case, try some common interface names
-		List<NetworkInterface> list = new ArrayList<>();
 		final String[] commonNames = {
 			"lo",
 			"eth",
@@ -629,10 +605,29 @@ NetUtils
 			} catch (Throwable ignore) {
 			}
 		}
-		if (list.size() > 0) {
+
+		if (!list.isEmpty()) {
 			return Collections.enumeration(list);
 		}
 
 		throw se;
 	}
+
+	private static void collectNetworkInterfacesByIndex(List<NetworkInterface> list) {
+		int i = 0;
+		do {
+			NetworkInterface nif = null;
+			try {
+				nif = NetworkInterface.getByIndex(i);
+			} catch (SocketException ignore) {
+			}
+			if (nif != null) {
+				list.add(nif);
+			} else if (i > 0) {
+				break;
+			}
+			i++;
+		} while (true);
+	}
+
 }
