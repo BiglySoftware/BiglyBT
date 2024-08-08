@@ -606,7 +606,7 @@ BuddyPlugin
 						try{
 							synchronized( swt_ui_waiters ){
 								
-								swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
+								swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.ui.swt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
 									new Class[]{ BuddyPlugin.class, UIInstance.class } ).newInstance(
 										new Object[]{ BuddyPlugin.this, instance } );
 

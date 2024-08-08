@@ -786,7 +786,7 @@ MagnetPlugin
 						if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
 							try{
-								Class.forName("com.biglybt.plugin.magnet.swt.MagnetPluginUISWT").getConstructor(
+								Class.forName("com.biglybt.ui.swt.plugin.magnet.swt.MagnetPluginUISWT").getConstructor(
 									new Class[]{ UIInstance.class, TableContextMenuItem[].class }).newInstance(
 										new Object[]{ instance, menus.toArray( new TableContextMenuItem[menus.size()])} );
 

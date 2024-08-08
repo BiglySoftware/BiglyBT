@@ -53,6 +53,7 @@ import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
+import com.biglybt.ui.swt.plugin.net.buddy.swt.BuddyUIUtils;
 import com.biglybt.ui.swt.shells.main.MainMenuV3;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -64,7 +65,6 @@ import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
-import com.biglybt.plugin.net.buddy.swt.BuddyUIUtils;
 
 
 /**

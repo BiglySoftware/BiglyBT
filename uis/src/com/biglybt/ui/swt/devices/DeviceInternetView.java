@@ -22,7 +22,7 @@ package com.biglybt.ui.swt.devices;
 
 import com.biglybt.core.Core;
 import com.biglybt.plugin.net.netstatus.NetStatusPlugin;
-import com.biglybt.plugin.net.netstatus.swt.NetStatusPluginTester;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -41,6 +41,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.plugin.net.netstatus.swt.NetStatusPluginTester;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 

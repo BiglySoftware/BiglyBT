@@ -26,13 +26,13 @@ import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.plugin.net.buddy.swt.columns.ColumnChatMessageCount;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableColumnCoreCreationListener;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.columns.peer.ColumnPeerBoost;
 import com.biglybt.ui.swt.columns.torrent.*;
 import com.biglybt.ui.swt.columns.vuzeactivity.*;
+import com.biglybt.ui.swt.plugin.net.buddy.swt.columns.ColumnChatMessageCount;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.*;
 

@@ -32,7 +32,7 @@ BuddyPluginUI
 
 	static{
 		try{
-			impl_class = BuddyPluginUI.class.getClassLoader().loadClass("com.biglybt.plugin.net.buddy.swt.SBC_ChatOverview");
+			impl_class = BuddyPluginUI.class.getClassLoader().loadClass("com.biglybt.ui.swt.plugin.net.buddy.swt.SBC_ChatOverview");
 
 		}catch( Throwable e ){
 		}
