@@ -511,7 +511,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
 						try{
-							swt_ui = (UIAdapter)Class.forName("com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.StartStopRulesDefaultPluginSWTUI").newInstance();
+							swt_ui = (UIAdapter)Class.forName("com.biglybt.ui.swt.plugin.startstoprules.defaultplugin.ui.swt.StartStopRulesDefaultPluginSWTUI").newInstance();
 
 						}catch( Throwable e ){
 

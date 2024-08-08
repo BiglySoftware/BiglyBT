@@ -93,7 +93,7 @@ NetStatusPlugin
 
 						try{
 								Class.forName(
-										"com.biglybt.plugin.net.netstatus.swt.NetStatusPluginView").getMethod(
+										"com.biglybt.ui.swt.plugin.net.netstatus.swt.NetStatusPluginView").getMethod(
 												"initSWTUI", UIInstance.class).invoke(null, instance);
 
 						}catch( Throwable e ){

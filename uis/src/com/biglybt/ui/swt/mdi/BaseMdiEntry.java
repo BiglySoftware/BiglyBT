@@ -38,7 +38,6 @@ import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.ui.UIManagerImpl;
-import com.biglybt.plugin.net.buddy.swt.FriendsView;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
@@ -53,6 +52,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator;
 import com.biglybt.ui.swt.pifimpl.*;
+import com.biglybt.ui.swt.plugin.net.buddy.swt.FriendsView;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
@@ -1547,6 +1547,7 @@ public abstract class BaseMdiEntry
 								data_source = new String[]{(String) args.get(0), (String) args.get(1)};
 								break;
 							case "com.biglybt.plugin.net.buddy.swt.BuddyPluginView":
+							case "com.biglybt.ui.swt.plugin.net.buddy.swt.BuddyPluginView":
 								cla = FriendsView.class;
 								pi = pluginManager.getPluginInterfaceByID("azbuddy");
 								break;

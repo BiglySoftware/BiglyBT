@@ -28,7 +28,7 @@ import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.plugin.net.buddy.swt.columns.ColumnChatStatus;
+import com.biglybt.ui.swt.plugin.net.buddy.swt.columns.ColumnChatStatus;
 import com.biglybt.ui.swt.views.columnsetup.ColumnTC_ChosenColumn;
 import com.biglybt.ui.swt.views.columnsetup.ColumnTC_NameInfo;
 import com.biglybt.ui.swt.views.columnsetup.ColumnTC_Sample;

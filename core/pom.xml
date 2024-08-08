@@ -112,7 +112,26 @@
 				<jdk>[17,)</jdk>
 			</activation>
 			<build>
+				<resources>
+					<resource>
+						<targetPath>META-INF/services</targetPath>
+						<filtering>false</filtering>
+						<directory>src/META-INF/services</directory>
+						<excludes>
+							<exclude>*.NameServiceDescriptor</exclude>
+						</excludes>
+					</resource>
+				</resources>
 				<plugins>
+					<plugin>
+						<groupId>io.takari.maven.plugins</groupId>
+						<artifactId>takari-lifecycle-plugin</artifactId>
+						<configuration>
+							<excludes>
+								<exclude>**/core/util/spi/AENameServiceDescriptor.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
 					<plugin>
 					 <groupId>com.coderplus.maven.plugins</groupId>
 				   <artifactId>copy-rename-maven-plugin</artifactId>
