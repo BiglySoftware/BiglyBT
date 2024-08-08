@@ -115,6 +115,28 @@
 
     <profiles>
         <profile>
+            <id>no-swt</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.takari.maven.plugins</groupId>
+                        <artifactId>takari-lifecycle-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/biglybt/ui/swt/**</exclude>
+                                <exclude>**/biglybt/ui/swing/**</exclude>
+                                <exclude>**/biglybt/ui/images/**</exclude>
+                                <exclude>**/biglybt/ui/icons/**</exclude>
+                                <exclude>**/biglybt/ui/skin/**</exclude>
+                                <exclude>**/biglybt/plugin/**</exclude>
+                                <exclude>**/eclipse/swt/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>plugin-api</id>
             <build>
                 <plugins>
