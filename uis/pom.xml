@@ -128,7 +128,6 @@
                                 <exclude>**/biglybt/ui/images/**</exclude>
                                 <exclude>**/biglybt/ui/icons/**</exclude>
                                 <exclude>**/biglybt/ui/skin/**</exclude>
-                                <exclude>**/biglybt/plugin/**</exclude>
                                 <exclude>**/eclipse/swt/**</exclude>
                             </excludes>
                         </configuration>
