@@ -1061,6 +1061,8 @@ DownloadManagerStatsImpl
 		int max_rate_bps )
 	{
 		max_upload_rate_bps = max_rate_bps;
+		
+		download_manager.rateLimitChanged();
 	}
 
 	@Override
@@ -1075,12 +1077,9 @@ DownloadManagerStatsImpl
 	setDownloadRateLimitBytesPerSecond(
 		int max_rate_bps )
 	{
-		if ( Constants.IS_CVS_VERSION && max_download_rate_bps == -1 && max_rate_bps != -1 ){
-			
-			Debug.out( "Download changed from disabled to " + max_rate_bps + " for " + download_manager.getDisplayName());
-		}
-		
 		max_download_rate_bps = max_rate_bps;
+		
+		download_manager.rateLimitChanged();
 	}
 
 	@Override

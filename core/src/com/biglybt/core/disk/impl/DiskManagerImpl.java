@@ -2247,6 +2247,21 @@ DiskManagerImpl
 		return( switched_to_upload_only );
 	}
 	
+	@Override
+	public void
+	rateLimitChanged()
+	{
+		if ( switched_to_upload_only ){
+		
+				// user has explicitly switched out of disabled mode
+			
+			if ( download_manager.getStats().getDownloadRateLimitBytesPerSecond() != -1 ){
+				
+				switched_to_upload_only = false;
+			}
+		}
+	}
+	
     @Override
     public void
     setFailed(

@@ -1893,6 +1893,12 @@ DiskManagerUtil
 					}
 					
 					@Override
+					public void 
+					rateLimitChanged()
+					{
+					}
+					
+					@Override
 					public boolean isStopped(){
 						return true;
 					}

@@ -307,6 +307,11 @@ LWSDiskManager
 		throw( new RuntimeException( "filesExist not implemented" ));
 	}
 
+	@Override
+	public void 
+	rateLimitChanged()
+	{
+	}
 
 	@Override
 	public DiskManagerWriteRequest

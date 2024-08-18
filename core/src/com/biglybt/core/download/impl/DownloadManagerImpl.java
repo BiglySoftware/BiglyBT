@@ -1826,6 +1826,12 @@ DownloadManagerImpl
 		}
 	}
 
+	protected void
+	rateLimitChanged()
+	{
+		controller.rateLimitChanged();
+	}
+	
 	@Override
 	public int
 	getEffectiveUploadRateLimitBytesPerSecond()

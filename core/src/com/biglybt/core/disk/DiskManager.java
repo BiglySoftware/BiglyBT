@@ -400,6 +400,9 @@ DiskManager
 	public long
 	getPriorityChangeMarker();
 	
+	public void
+	rateLimitChanged();
+	
 	public interface
 	DownloadEndedProgress
 	{

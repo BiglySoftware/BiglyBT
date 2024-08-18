@@ -2576,6 +2576,18 @@ DownloadManagerController
 	{
 		stats.setDownloadRateLimitBytesPerSecond( b );
 	}
+	
+	protected void
+	rateLimitChanged()
+	{
+		DiskManager dm = getDiskManager();
+		
+		if ( dm != null ){
+			
+			dm.rateLimitChanged();
+		}
+	}
+	
 
 		// these per-download rates are not easy to implement as we either have per-peer limits or global limits, with the download-limits being implemented
 		// by adding them to all peers as peer-limits. So for the moment we stick with global (non-lan) limits
