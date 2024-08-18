@@ -50,7 +50,8 @@ CategoryImpl
 {
   final String sName;
   private final int type;
-  private final CopyOnWriteList<DownloadManager> managers_cow = new CopyOnWriteList<>();
+  private final CopyOnWriteList<DownloadManager> 	managers_cow	= new CopyOnWriteList<>();
+  private final IdentityHashSet<DownloadManager> 	managers_set	= new IdentityHashSet<>();
 
   int upload_speed;
   int download_speed;
@@ -246,13 +247,14 @@ CategoryImpl
     
     synchronized( managers_cow ){
     	
-    	do_add = !managers_cow.contains(manager);
+    	do_add = !managers_set.contains(manager);
     	
     	if ( do_add ){
     		
         	if ( type == Category.TYPE_USER ){
         		
         		managers_cow.add( manager );
+        		managers_set.add( manager );
         	}
     	}
     }
@@ -289,11 +291,12 @@ CategoryImpl
     
     synchronized( managers_cow ){
     	
-    	do_remove = type != Category.TYPE_USER || managers_cow.contains(manager);
+    	do_remove = type != Category.TYPE_USER || managers_set.contains(manager);
     
     	if ( do_remove ){
     	
     		managers_cow.remove(manager);
+    		managers_set.remove(manager);
     	}
     }
     
@@ -692,7 +695,7 @@ CategoryImpl
 
 	  	if ( type == Category.TYPE_USER ){
 
-	  		return( managers_cow.contains((DownloadManager)t));
+	  		return( managers_set.contains((DownloadManager)t));
 
 	  	}else if ( type == Category.TYPE_ALL ){
 
