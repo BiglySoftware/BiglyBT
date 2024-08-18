@@ -30,7 +30,9 @@ import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
-
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
@@ -165,7 +167,7 @@ public class ConfigSectionFile
 
 		BooleanParameterImpl pieceReorder = new BooleanParameterImpl(
 				BCFG_ENABLE_REORDER_STORAGE_MODE, "ConfigView.label.piecereorder");
-		add(pieceReorder, Parameter.MODE_INTERMEDIATE);
+		add(pieceReorder, Parameter.MODE_ADVANCED);
 
 		IntParameterImpl minMB = new IntParameterImpl(
 				ICFG_REORDER_STORAGE_MODE_MIN_MB, "ConfigView.label.piecereorderminmb");
@@ -210,6 +212,24 @@ public class ConfigSectionFile
 			minMB.setEnabled(reorder && pieceReorder.getValue());
 
 			incremental.setEnabled(inc);
+			
+			if ( param != null && pieceReorder.getValue() ){
+				
+				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+				
+				UIFunctionsUserPrompter promptErr = uiFunctions.getUserPrompter(
+						MessageText.getString(
+								"label.option.deprecated"),
+						MessageText.getString(
+								"ConfigView.section.file.reorder.warn.msg"),
+						new String[] {
+							MessageText.getString("Button.ok")
+				}, 0);
+				if (promptErr != null) {
+					promptErr.setIconResource(UIFunctionsUserPrompter.ICON_WARNING);
+					promptErr.open(null);
+				}
+			}
 		};
 
 		for (Parameter p : new Parameter[] {
