@@ -22,9 +22,11 @@ package com.biglybt.core.tag.impl;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
@@ -50,6 +52,16 @@ TagTypeBase
 
 	private static final TagManagerImpl manager = TagManagerImpl.getSingleton();
 
+	private static final AtomicInteger	all_tags_or_tag_membership_mut = new AtomicInteger();
+	
+	public static int
+	getTagAndTaggableMut()
+	{
+		return( all_tags_or_tag_membership_mut.get());
+	}
+	
+	private final AtomicInteger	tags_or_tag_membership_mut = new AtomicInteger();
+	
 	private final ListenerManager<TagTypeListener>	tt_listeners 	=
 		ListenerManager.createManager(
 			"TagTypeListeners",
@@ -75,6 +87,9 @@ TagTypeBase
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_ADDED;
 
+							tags_or_tag_membership_mut.incrementAndGet();
+							all_tags_or_tag_membership_mut.incrementAndGet();
+							
 						}else if ( type == TTL_TAG_METADATA_CHANGE ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_METADATA_CHANGED;
@@ -83,10 +98,16 @@ TagTypeBase
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_MEMBERSHIP_CHANGED;
 
+							tags_or_tag_membership_mut.incrementAndGet();
+							all_tags_or_tag_membership_mut.incrementAndGet();
+							
 						}else if ( type == TTL_REMOVE ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_REMOVED;
 
+							tags_or_tag_membership_mut.incrementAndGet();
+							all_tags_or_tag_membership_mut.incrementAndGet();
+							
 						}else if ( type == TTL_ATTENTION_REQUESTED ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_ATTENTION_REQUESTED;
@@ -117,15 +138,22 @@ TagTypeBase
 
 	private Map<String,TagGroupImpl>	tag_groups = new HashMap<>();
 
+	private final String TTP_TAGS_FOR_TAGGABLE_CACHE;
+
+	
 	protected
 	TagTypeBase(
 		int			_tag_type,
 		int			_tag_features,
-		String		_tag_name )
+		String		_tag_type_name )
 	{
 		tag_type			= _tag_type;
 		tag_type_features	= _tag_features;
-		tag_type_name		= _tag_name;
+		tag_type_name		= _tag_type_name;
+		
+		TTP_TAGS_FOR_TAGGABLE_CACHE = "TagTypeBase::tags_for_taggable_cache::" + tag_type;
+		
+		all_tags_or_tag_membership_mut.incrementAndGet();
 	}
 
 	protected void
@@ -339,13 +367,25 @@ TagTypeBase
 
 		return( null );
 	}
-
+	
 	@Override
 	public List<Tag>
 	getTagsForTaggable(
 		Taggable	taggable )
 	{
-		List<Tag>	result = new ArrayList<>();
+		int mut = tags_or_tag_membership_mut.get();
+		
+		Object[] cache = (Object[])taggable.getTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE );
+		
+		if ( cache != null ){
+			
+			if (((Integer)cache[0]) == mut ){
+				
+				return((List<Tag>)cache[1]);
+			}
+		}
+		
+		List<Tag>	result = null;
 
 		int taggable_type = taggable.getTaggableType();
 
@@ -355,11 +395,23 @@ TagTypeBase
 
 				if ( t.hasTaggable( taggable )){
 
+					if ( result == null ){
+						
+						result = new ArrayList<>();
+					}
+					
 					result.add( t );
 				}
 			}
 		}
 
+		if ( result == null ){
+			
+			result = Collections.emptyList();
+		}
+		
+		taggable.setTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE, new Object[]{ mut, result });
+		
 		return( result );
 	}
 

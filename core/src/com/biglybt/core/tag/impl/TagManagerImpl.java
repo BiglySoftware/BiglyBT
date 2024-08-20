@@ -1917,11 +1917,25 @@ TagManagerImpl
 		}
 	}
 
+	private static final String TTP_TAGS_FOR_TAGGABLE_CACHE = "TagManagerImpl::tags_for_taggable_cache";
+
 	@Override
 	public List<Tag>
 	getTagsForTaggable(
 		Taggable	taggable )
 	{
+		int mut = TagTypeBase.getTagAndTaggableMut();
+		
+		Object[] cache = (Object[])taggable.getTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE );
+		
+		if ( cache != null ){
+			
+			if (((Integer)cache[0]) == mut ){
+				
+				return((List<Tag>)cache[1]);
+			}
+		}
+		
 		Set<Tag>	result = new HashSet<>();
 
 		for ( TagType tt: tag_types ){
@@ -1929,7 +1943,11 @@ TagManagerImpl
 			result.addAll( tt.getTagsForTaggable( taggable ));
 		}
 
-		return(new ArrayList<>(result));
+		List<Tag> temp = new ArrayList<>(result);
+		
+		taggable.setTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE, new Object[]{ mut, temp });
+		
+		return( temp );
 	}
 
 	@Override
@@ -1938,17 +1956,15 @@ TagManagerImpl
 		int			tag_type,
 		Taggable	taggable )
 	{
-		Set<Tag>	result = new HashSet<>();
-
 		for ( TagType tt: tag_types ){
 
 			if ( tt.getTagType() == tag_type ){
 
-				result.addAll( tt.getTagsForTaggable( taggable ));
+				return( tt.getTagsForTaggable( taggable ));
 			}
 		}
 
-		return(new ArrayList<>(result));
+		return( Collections.emptyList());
 	}
 
 	@Override
