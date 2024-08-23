@@ -111,6 +111,8 @@ BuddyPluginView
 	private TaggableLifecycleAdapter taggableLifecycleAdapter;
 
 	private TableColumnCreationListener		columnMessagePending;
+	private TableColumnCreationListener		columnMessagePending2;
+	
 	private final List<TableColumn> columns = new ArrayList<>();
 
 	/**
@@ -1139,6 +1141,10 @@ BuddyPluginView
 
 			TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
 			
+			String MSG_STATUS_COL_KEY 	= "azbuddy.ui.column.msgpending.version.key";
+			String MSG_STATUS_COL_V1	= "1";
+			String MSG_STATUS_COL_V2	= "2";
+			
 			TableCellRefreshListener	msg_refresh_listener =
 					new TableCellRefreshListener()
 					{
@@ -1156,6 +1162,8 @@ BuddyPluginView
 								return;
 							}
 							
+							boolean is_v2 = cell.getTableColumn().getUserDataString( MSG_STATUS_COL_KEY ).equals( MSG_STATUS_COL_V2 );
+							
 							List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
 
 							boolean	is_pending 	= false;
@@ -1163,9 +1171,10 @@ BuddyPluginView
 							
 							String msg_history = "";
 							
+							
 							for ( ChatInstance instance: instances ){
 								
-								if ( instance.getMessageOutstanding()){
+								if ( instance.getMessageOutstanding() || ( is_v2 && instance.getMessageCount( true ) > 0 )){
 									
 									is_pending = true;
 								
@@ -1307,15 +1316,23 @@ BuddyPluginView
 
 								if ( dl != null ){
 									
+									boolean is_v2 = cell.getTableColumn().getUserDataString( MSG_STATUS_COL_KEY ).equals( MSG_STATUS_COL_V2 );
+									
 									List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
 									
 									for ( ChatInstance instance: instances ){
 										
-										if ( instance.getMessageOutstanding()){
+										if ( instance.getMessageOutstanding() || ( is_v2 && instance.getMessageCount( true ) > 0 )){
 											
 											try{
 												BuddyPluginUtils.getBetaPlugin().showChat( instance  );
 												
+												if ( is_v2 ){
+													
+														// guess the user wants this to hang around if using this column
+													
+													instance.setFavourite( true );
+												}
 											}catch( Throwable e ){
 												
 												Debug.out( e );
@@ -1331,13 +1348,21 @@ BuddyPluginView
 
 								if ( dl != null ){
 									
+									boolean is_v2 = cell.getTableColumn().getUserDataString( MSG_STATUS_COL_KEY ).equals( MSG_STATUS_COL_V2 );
+									
 									List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
 									
 									for ( ChatInstance instance: instances ){
 										
 										try{
-											BuddyPluginUtils.getBetaPlugin().showChat( instance  );
+											instance = BuddyPluginUtils.getBetaPlugin().showChat( instance  );
 												
+											if ( is_v2 ){
+												
+													// guess the user wants this to hang around if using this column
+											
+												instance.setFavourite( true );
+											}
 										}catch( Throwable e ){
 												
 											Debug.out( e );
@@ -1365,6 +1390,8 @@ BuddyPluginView
 					result.addCellMouseListener(msg_mouse_listener);
 					result.setIconReference("dchat_gray", true);
 					
+					result.setUserData( MSG_STATUS_COL_KEY, MSG_STATUS_COL_V1 );
+					
 					synchronized( columns ){
 						
 						columns.add(result);
@@ -1373,6 +1400,30 @@ BuddyPluginView
 			};
 			
 			table_manager.registerColumn( Download.class, "azbuddy.ui.column.msgpending", columnMessagePending );
+			
+			columnMessagePending2 = new TableColumnCreationListener() {
+				@Override
+				public void tableColumnCreated(TableColumn result) {
+					result.setAlignment(TableColumn.ALIGN_CENTER);
+					result.setPosition(TableColumn.POSITION_INVISIBLE);
+					result.setWidth(32);
+					result.setRefreshInterval(TableColumn.INTERVAL_INVALID_ONLY);
+					result.setType(TableColumn.TYPE_GRAPHIC);
+
+					result.addCellRefreshListener(msg_refresh_listener);
+					result.addCellMouseListener(msg_mouse_listener);
+					result.setIconReference("dchat_gray", true);
+					
+					result.setUserData( MSG_STATUS_COL_KEY, MSG_STATUS_COL_V2 );
+					
+					synchronized( columns ){
+						
+						columns.add(result);
+					}
+				}
+			};
+			
+			table_manager.registerColumn( Download.class, "azbuddy.ui.column.msgpending2", columnMessagePending2 );
 			
 		}else{
 
@@ -1401,8 +1452,10 @@ BuddyPluginView
 				TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
 				
 				table_manager.unregisterColumn(Download.class, "azbuddy.ui.column.msgpending");
+				table_manager.unregisterColumn(Download.class, "azbuddy.ui.column.msgpending2");
 				
-				columnMessagePending = null;
+				columnMessagePending	= null;
+				columnMessagePending2	= null;
 				
 				synchronized( columns ){
 					
