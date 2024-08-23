@@ -1936,14 +1936,24 @@ TagManagerImpl
 			}
 		}
 		
-		Set<Tag>	result = new HashSet<>();
+		Set<Tag>	result = null;
 
 		for ( TagType tt: tag_types ){
 
-			result.addAll( tt.getTagsForTaggable( taggable ));
+			List<Tag> tags = tt.getTagsForTaggable( taggable );
+			
+			if ( !tags.isEmpty()){
+			
+				if ( result == null ){
+					
+					result = new HashSet<>();
+				}
+				
+				result.addAll( tags );
+			}
 		}
 
-		List<Tag> temp = new ArrayList<>(result);
+		List<Tag> temp = result==null?Collections.emptyList():new ArrayList<>(result);
 		
 		taggable.setTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE, new Object[]{ mut, temp });
 		
