@@ -64,8 +64,6 @@ import com.biglybt.util.MapUtils;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 import com.biglybt.pif.ui.tables.TableRowMouseListener;
 import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
@@ -2543,7 +2541,7 @@ public class TableViewPainted
 
 							// if the vbar isn't visible then we can't say anything about how things might have moved
 						
-						boolean vBarVisible = vBar.isVisible();
+						boolean vBarVisible = vBar.isEnabled();
 						
 						int yDiff = oldClientArea.y - newClientArea.y;
 						if (Math.abs(yDiff) < clientArea.height || !vBarVisible ){
@@ -2849,7 +2847,10 @@ public class TableViewPainted
 	protected void swt_fixupSize() {
 		//debug("Set minSize to " + columnsWidth + "x" + totalHeight + ";ca=" + clientArea + ";" + Debug.getCompressedStackTrace());
 		boolean vBarValid = vBar != null && !vBar.isDisposed();
+		boolean vChanged = false;
+		int oldMax = -1;
 		if (vBarValid) {
+			oldMax = vBar.getMaximum();
 			int tableSize = clientArea.height;
 			int max = totalHeight;
 			if (max < tableSize) {
@@ -2857,13 +2858,13 @@ public class TableViewPainted
 				vBar.setEnabled(false);
 				vBar.setVisible(false);
 			} else {
-				if (!vBar.isVisible()) {
+				if (!vBar.isEnabled()) {
 					vBar.setVisible(true);
 					vBar.setEnabled(true);
 				}
 				if (vBar.getMaximum() != max) {
 					vBar.setMaximum(max);
-					swt_vBarChanged();
+					vChanged = true;
 				}
 				vBar.setThumb(tableSize);
 				vBar.setPageIncrement(tableSize);
@@ -2872,7 +2873,7 @@ public class TableViewPainted
 		if (hBar != null && !hBar.isDisposed()) {
 			int tableSize = cTable.getSize().x;
 			int max = columnsWidth;
-			if (vBarValid && vBar.isVisible() && getScrollbarsMode() == SWT.NONE) {
+			if (vBarValid && vBar.isEnabled() && getScrollbarsMode() == SWT.NONE) {
 				int vBarW = vBar.getSize().x;
 
 				max += vBarW;
@@ -2882,20 +2883,24 @@ public class TableViewPainted
 				hBar.setEnabled(false);
 				hBar.setVisible(false);
 			} else {
-				if (!hBar.isVisible()) {
+				if (!hBar.isEnabled()) {
 					hBar.setVisible(true);
 					hBar.setEnabled(true);
 				}
 				hBar.setValues(hBar.getSelection(), 0, max, tableSize, 50, tableSize);
 			}
-			if (vBarValid && hBar.isVisible()) {
+			if (vBarValid && hBar.isEnabled()) {
 				int hBarW = getScrollbarsMode() == SWT.NONE ? hBar.getSize().y : 0;
 
 				vBar.setThumb(clientArea.height - hBarW);
 				vBar.setMaximum(totalHeight - hBarW);
+				vChanged = true;
 				vBar.setPageIncrement(vBar.getPageIncrement() - hBarW);
 			}
-
+		}
+		
+		if ( vChanged && vBar.getMaximum() != oldMax ){
+			swt_vBarChanged();
 		}
 	}
 
