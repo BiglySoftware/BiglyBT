@@ -197,11 +197,22 @@ public class BooleanSwtParameter
 				// Checkbox with text in one widget
 				checkBox = new Button(ourParent, SWT.CHECK);
 				setRelatedControl(checkBox);
-				if (numExtraIndent > 0) {
-					checkBox.setText(text);
-				} else {
-					Messages.setLanguageText(checkBox, labelKey);
+				
+				if ( Constants.isLinux ){
+						// Text getting truncated, don't care, hack fix, someone else can worry one day
+					if (numExtraIndent > 0) {
+						checkBox.setText( text + "  " );
+					} else {
+						checkBox.setText( MessageText.getString(labelKey) + "  " );
+					}
+				}else{
+					if (numExtraIndent > 0) {
+						checkBox.setText(text);
+					} else {
+						Messages.setLanguageText(checkBox, labelKey);
+					}
 				}
+				
 				if (doGridData(ourParent)) {
 					GridData gridData = new GridData();
 					gridData.horizontalSpan = 2;
