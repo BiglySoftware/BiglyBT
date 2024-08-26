@@ -156,20 +156,31 @@ public class OpenTorrentWindow
 					
 					if ( prev != '\n' ){
 						
+						boolean addSep = false;
+						
 						try{
-							if (new URL( newText ).getProtocol().length() > 0 ){
-								
-								text = text.substring( 0, lastTextLength ) + "\r\n" + newText;
-								
-								lastText = text;	// set here so recursive modification doesn't go mad
-								
-								tb.setText( text );
-								
-								tb.setSelection( text.length());
-								
-								return;
-							}
+							addSep = new File( newText ).exists();
 						}catch( Throwable f ){
+						}
+						
+						if ( !addSep ){
+							try{
+								addSep = new URL( newText ).getProtocol().length() > 0;
+							}catch( Throwable f ){
+							}
+						}
+						
+						if ( addSep ){
+							
+							text = text.substring( 0, lastTextLength ) + "\r\n" + newText;
+							
+							lastText = text;	// set here so recursive modification doesn't go mad
+							
+							tb.setText( text );
+							
+							tb.setSelection( text.length());
+							
+							return;
 						}
 					}
 				}
