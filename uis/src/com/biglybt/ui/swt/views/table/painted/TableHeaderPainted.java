@@ -19,6 +19,8 @@
 package com.biglybt.ui.swt.views.table.painted;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
@@ -32,6 +34,8 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.common.table.TableColumnCore;
+import com.biglybt.ui.common.table.TableGroupRowRunner;
+import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.ConfigKeysSWT;
@@ -106,6 +110,7 @@ public class TableHeaderPainted
 		cHeaderArea.addListener(SWT.MouseDown, l);
 		cHeaderArea.addListener(SWT.MouseUp, l);
 		cHeaderArea.addListener(SWT.MouseMove, l);
+		cHeaderArea.addListener(SWT.MouseDoubleClick, l);
 
 		Transfer[] types = new Transfer[] {
 			TextTransfer.getInstance()
@@ -432,6 +437,8 @@ public class TableHeaderPainted
 	private static class MouseListeners
 		implements Listener
 	{
+		private int	upClicksPending = 0;
+				
 		private final Canvas cHeaderArea;
 
 		private final TableViewPainted tv;
@@ -454,7 +461,36 @@ public class TableHeaderPainted
 			if (cHeaderArea.isDisposed()) {
 				return;
 			}
+			
 			switch (e.type) {
+				case SWT.MouseDoubleClick:{
+					if ( upClicksPending == 1 ){
+						
+						upClicksPending = -1;
+						
+						TableColumnCore column = tv.getTableColumnByOffset(e.x);
+						
+						if ( column != null ){
+							
+							column.setPreferredWidth(-1);
+
+							tv.runForAllRows(new TableGroupRowRunner() {
+								@Override
+								public void run(TableRowCore row) {
+									row.fakeRedraw( column.getName());
+								}
+							});
+
+							int pref = column.getPreferredWidth();
+
+							if ( pref != -1 ){
+
+								column.setWidth( pref );
+							}
+						}
+					}
+					return;
+				}
 				case SWT.MouseDown: {
 					if (e.button != 1) {
 						return;
@@ -485,15 +521,21 @@ public class TableHeaderPainted
 					}
 					if (mouseDown) {
 						if (columnSizing == null) {
-							TableColumnCore column = tv.getTableColumnByOffset(e.x);
-							if (column != null) {
-								boolean addColumn = (e.stateMask & SWT.MOD1) > 0;
-								if (addColumn) {
-									tv.addSortColumn(column);
-								} else {
-									tv.setSortColumns(new TableColumnCore[] { column }, true);
+							upClicksPending++;
+							Utils.execSWTThreadLater(e.display.getDoubleClickTime()/2,()->{
+								if ( upClicksPending > 0 ){
+									upClicksPending--;
+									TableColumnCore column = tv.getTableColumnByOffset(e.x);
+									if (column != null) {
+										boolean addColumn = (e.stateMask & SWT.MOD1) > 0;
+										if (addColumn) {
+											tv.addSortColumn(column);
+										} else {
+											tv.setSortColumns(new TableColumnCore[] { column }, true);
+										}
+									}
 								}
-							}
+							});
 						} else {
 							int diff = (e.x - columnSizingStart);
 							columnSizing.setWidthPX(columnSizing.getWidth() + diff);
