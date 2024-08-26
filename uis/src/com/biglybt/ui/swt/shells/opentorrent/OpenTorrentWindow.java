@@ -23,13 +23,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.LinkedList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.RowData;
@@ -120,7 +117,7 @@ public class OpenTorrentWindow
 		soTextArea = (SWTSkinObjectTextbox) skin.getSkinObject("text-area");
 		
 		Text tb = ((Text) soTextArea.getControl());
-				
+			
 		Clipboard clipboard = new Clipboard(Display.getDefault());
 
 		String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
@@ -141,12 +138,45 @@ public class OpenTorrentWindow
 		
 		tb.setFocus();
 		tb.addModifyListener(new ModifyListener() {
+			
+			String lastText = tb.getText();
 			@Override
 			public void modifyText(ModifyEvent e) {
+				String text = tb.getText();
+				int lastTextLength = lastText.length();
+				
+					// If someone pastes a URL onto the end of existing text without a separator then stick one in
+					// Allows multiple pastes of magnets, for example, without manually having to add separators between each
+				
+				if ( lastTextLength > 0 && text.length() > lastTextLength + 10 && text.startsWith( lastText )){
+					
+					String newText = text.substring( lastTextLength );
+					
+					char prev = text.charAt( lastTextLength-1 );
+					
+					if ( prev != '\n' ){
+						
+						try{
+							if (new URL( newText ).getProtocol().length() > 0 ){
+								
+								text = text.substring( 0, lastTextLength ) + "\r\n" + newText;
+								
+								lastText = text;	// set here so recursive modification doesn't go mad
+								
+								tb.setText( text );
+								
+								tb.setSelection( text.length());
+								
+								return;
+							}
+						}catch( Throwable f ){
+						}
+					}
+				}
+				lastText = text;
 				int userMode = COConfigurationManager.getIntParameter("User Mode");
 				if (userMode > 0) {
 					if (soReferArea != null) {
-						String text = ((Text) e.widget).getText();
 						boolean hasURL = UrlUtils.parseTextForURL(text, false, true) != null;
 						soReferArea.setVisible(hasURL);
 					}
