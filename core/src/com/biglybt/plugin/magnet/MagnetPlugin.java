@@ -995,7 +995,7 @@ MagnetPlugin
 				conc = 1;
 			}
 			
-			ThreadPool tp = new ThreadPool( "Magnet Recovery", conc, true );
+			ThreadPool<AERunnable> tp = new ThreadPool<AERunnable>( "Magnet Recovery", conc, true );
 			
 			List<Map> sorted = new ArrayList<Map>( active.values());
 			
@@ -1029,6 +1029,31 @@ MagnetPlugin
 				//System.out.println( "Recovering: " + map );
 					
 				byte[]	hash = (byte[])map.get( "hash" );
+				
+				try{
+					Download existing_download = plugin_interface.getDownloadManager().getDownload( hash );
+					
+					if ( existing_download != null ){
+						
+						Debug.outNoStack( "Download '" + existing_download.getName() + "' already present, ignoring magnet recovery" );
+						
+						synchronized( download_activities ){
+							
+							Map temp = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+						
+							String hash_str = Base32.encode( hash );
+							
+							temp.remove( hash_str );
+						}
+						
+						COConfigurationManager.setDirty();
+						
+						continue;
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
 				
 				try{
 
