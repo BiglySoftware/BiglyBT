@@ -141,47 +141,56 @@ public class OpenTorrentWindow
 			
 			String lastText = tb.getText();
 			@Override
-			public void modifyText(ModifyEvent e) {
+			public void 
+			modifyText(
+				ModifyEvent e ) 
+			{
 				String text = tb.getText();
-				int lastTextLength = lastText.length();
+							
+				String lastTextTrim = lastText.replaceFirst("\\s++$", "");
+								
+				int lastTextLength = lastTextTrim.length();
 				
 					// If someone pastes a URL onto the end of existing text without a separator then stick one in
 					// Allows multiple pastes of magnets, for example, without manually having to add separators between each
 				
-				if ( lastTextLength > 0 && text.length() > lastTextLength + 10 && text.startsWith( lastText )){
+				if ( text.length() > lastTextLength + 10 && text.startsWith( lastTextTrim )){
 					
-					String newText = text.substring( lastTextLength );
-					
-					char prev = text.charAt( lastTextLength-1 );
-					
-					if ( prev != '\n' ){
+					String newText = text.substring( lastTextLength ).trim();
+																
+					boolean addSeparators = false;
+
+					try{
+						addSeparators = new File( newText ).exists();
 						
-						boolean addSep = false;
+					}catch( Throwable f ){
+					}
+
+					if ( !addSeparators ){
 						
 						try{
-							addSep = new File( newText ).exists();
+							addSeparators = new URL( newText ).getProtocol().length() > 0;
+							
 						}catch( Throwable f ){
 						}
+					}
+											
+					if ( addSeparators ){
 						
-						if ( !addSep ){
-							try{
-								addSep = new URL( newText ).getProtocol().length() > 0;
-							}catch( Throwable f ){
-							}
+						if ( lastTextLength > 0 && !lastTextTrim.endsWith( "\n" )){
+							
+							newText = "\r\n" + newText; 
 						}
 						
-						if ( addSep ){
-							
-							text = text.substring( 0, lastTextLength ) + "\r\n" + newText;
-							
-							lastText = text;	// set here so recursive modification doesn't go mad
-							
-							tb.setText( text );
-							
-							tb.setSelection( text.length());
-							
-							return;
-						}
+						text = lastTextTrim + newText + "\r\n";
+
+						lastText = text;	// set here so recursive modification doesn't go mad
+
+						tb.setText( text );
+
+						tb.setSelection( text.length());
+
+						return;
 					}
 				}
 				lastText = text;
@@ -492,7 +501,7 @@ public class OpenTorrentWindow
 					if (UrlUtils.isURL(sFileName)
 							|| (file.exists() && TorrentUtils.isTorrentFile(sFileName))) {
 						if (text.length() > 0) {
-							text += "\n";
+							text += "\r\n";
 						}
 						text += sFileName;
 						numAdded++;
@@ -503,7 +512,15 @@ public class OpenTorrentWindow
 			}
 
 			if (numAdded > 0) {
+				text += "\r\n";
+				
 				soTextArea.setText(text);
+				
+				Text tb = ((Text)soTextArea.getControl());
+				
+				tb.setSelection( text.length());
+				
+				tb.setFocus();
 			}
 		}
 
