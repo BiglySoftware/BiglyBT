@@ -4584,7 +4584,7 @@ DeviceManagerUI
 
 			Label label = new Label( composite, SWT.NULL );
 
-			label.setText( "Nothing to show for " + parent.getTitle());
+			label.setText( MessageText.getString( "label.nothing.to.show.for", new String[]{ parent.getTitle() }));
 
 			label.setLayoutData( data );
 		}
@@ -4818,10 +4818,10 @@ DeviceManagerUI
 				composite.setLayout( layout );
 
 				Label  ms_label = new Label( composite, SWT.NULL );
-				ms_label.setText( "Media Server: " + device.getName());
+				ms_label.setText( MessageText.getString( "label.media.server" ) + ": " + device.getName());
 
 				final Button refresh = new Button( composite, SWT.PUSH );
-				refresh.setText( "Refresh" );
+				refresh.setText( MessageText.getString("button.refresh" ));
 
 				final StyledText   info =
 					new StyledText(composite, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL)
@@ -5589,7 +5589,7 @@ DeviceManagerUI
 
 				Label label = new Label( composite, SWT.NULL );
 
-				label.setText( "Nothing to show for " + device.getName());
+				label.setText( MessageText.getString( "label.nothing.to.show.for", new String[]{ device.getName() }));
 
 				label.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 			}
