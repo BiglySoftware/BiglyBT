@@ -1983,24 +1983,36 @@ TagManagerImpl
 		int[]		tts,
 		Taggable	taggable )
 	{
-		Set<Tag>	result = new HashSet<>();
-
-		Set<Integer>	tt_set = new HashSet<>();
+		List<Tag> result = null;
 		
 		for ( int tt: tts ){
-			
-			tt_set.add( tt );
-		}
+
+			TagType tag_type = getTagType( tt );
 		
-		for ( TagType tt: tag_types ){
-
-			if ( tt_set.contains( tt.getTagType())){
-
-				result.addAll( tt.getTagsForTaggable( taggable ));
+			if ( tag_type != null ){
+				
+				List<Tag> temp = tag_type.getTagsForTaggable( taggable );
+				
+				if ( !temp.isEmpty()){
+					
+					if ( result == null ){
+						
+						result = new ArrayList<>();
+					}
+					
+					result.addAll( temp );
+				}
 			}
 		}
 
-		return(new ArrayList<>(result));
+		if ( result == null ){
+			
+			return( Collections.emptyList());
+			
+		}else{
+			
+			return( result );
+		}
 	}
 	
 	@Override
