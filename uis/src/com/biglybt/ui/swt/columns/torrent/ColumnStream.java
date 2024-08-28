@@ -218,12 +218,18 @@ public class ColumnStream
 				int triMiddleY	= ovalY + radius-1;
 				
 				gc.setBackground( Colors.white );
-										
-				gc.fillPolygon(new int[] {
+						
+				int[] points = {
 						triStartX, triMiddleY - triHalfHeight,
 						triStartX + triWidth, triMiddleY,
-						triStartX, triMiddleY + triHalfHeight
-					});
+						triStartX, triMiddleY + triHalfHeight };
+				
+					// seeing some ui weirdness with location of triangle being updated slightly
+					// when scrolling table, this seems to fix it :(
+				
+				gc.fillPolygon( points );
+				
+				gc.drawPolygon( points );
 			}
 		}
 	}
