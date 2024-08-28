@@ -194,7 +194,13 @@ public class ColumnStream
 	
 				gc.setBackground( swtColor );
 				
-				int radius = 8;
+				int radius 		= ( Math.min( height, width)-2)/2;
+				
+				radius = Math.min( radius, 16 );
+				
+				int triOffset	= radius*5/8;
+				
+				
 				int dim = radius*2;
 				
 				int padX	= ( width  - dim +1 )/2;
@@ -205,14 +211,14 @@ public class ColumnStream
 				
 				gc.fillOval(ovalX, ovalY, dim, dim);
 				
-				int triWidth 	= 8;
-				int triHeight 	= 8;
+				int triWidth 	= radius;
+				int triHeight 	= radius;
 				int triHalfHeight	= triHeight/2;
-				int triStartX	= ovalX + 5;
+				int triStartX	= ovalX + triOffset;
 				int triMiddleY	= ovalY + radius-1;
 				
 				gc.setBackground( Colors.white );
-						
+										
 				gc.fillPolygon(new int[] {
 						triStartX, triMiddleY - triHalfHeight,
 						triStartX + triWidth, triMiddleY,
