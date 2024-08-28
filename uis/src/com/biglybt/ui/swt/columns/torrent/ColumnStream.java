@@ -209,12 +209,12 @@ public class ColumnStream
 				int	ovalX = x+padX;
 				int ovalY = y+padY;
 				
-				gc.fillOval(ovalX, ovalY, dim, dim);
+				gc.fillOval(ovalX, ovalY, dim-1, dim-1);
 				
-				int triWidth 	= radius;
+				int triWidth 	= radius-1;
 				int triHeight 	= radius;
 				int triHalfHeight	= triHeight/2;
-				int triStartX	= ovalX + triOffset;
+				int triStartX	= ovalX + triOffset-1;
 				int triMiddleY	= ovalY + radius-1;
 				
 				gc.setBackground( Colors.white );
