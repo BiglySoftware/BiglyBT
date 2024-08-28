@@ -21,9 +21,11 @@
 package com.biglybt.ui.swt.columns.torrent;
 
 import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.skin.TorrentListViewsUtils;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -39,7 +41,10 @@ import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.util.PlayUtils;
 
 /**
@@ -67,6 +72,10 @@ public class ColumnStream
 
 	private static Image imgBlue;
 
+	private static final int[] colBlue		= {18, 62, 230 };
+	private static final int[] colGreen		= { 51, 180, 0 };
+	private static final int[] colDisabled	= { 130, 130, 130 };
+	
 	private static final Object  firstLock = new Object();
 
 	private static boolean first = true;
@@ -157,8 +166,59 @@ public class ColumnStream
 
 		Rectangle cellBounds = cell.getBounds();
 
-		if (img != null && !img.isDisposed()) {
-			Utils.drawImageCenterScaleDown(gc, img, cellBounds);
+		final boolean useImg = false;
+		
+		if ( useImg ){
+			
+			if ( img != null && !img.isDisposed()){
+				
+				Utils.drawImageCenterScaleDown(gc, img, cellBounds);
+			}
+			
+		}else{
+						
+			int[] colour = canStream ? colBlue : canPlay ? colGreen : colDisabled;
+			
+			Color swtColor = ColorCache.getColor(gc.getDevice(), colour);
+			
+			if ( swtColor != null ){
+				
+				Rectangle bounds = cell.getBounds();
+				int x = bounds.x;
+				int y = bounds.y;
+				int width = bounds.width;
+				int height = bounds.height;
+	
+				gc.setAdvanced(true);
+				gc.setAntialias(SWT.ON);
+	
+				gc.setBackground( swtColor );
+				
+				int radius = 8;
+				int dim = radius*2;
+				
+				int padX	= ( width  - dim +1 )/2;
+				int padY	= ( height - dim +1 )/2;
+				
+				int	ovalX = x+padX;
+				int ovalY = y+padY;
+				
+				gc.fillOval(ovalX, ovalY, dim, dim);
+				
+				int triWidth 	= 8;
+				int triHeight 	= 8;
+				int triHalfHeight	= triHeight/2;
+				int triStartX	= ovalX + 5;
+				int triMiddleY	= ovalY + radius-1;
+				
+				gc.setBackground( Colors.white );
+						
+				gc.fillPolygon(new int[] {
+						triStartX, triMiddleY - triHalfHeight,
+						triStartX + triWidth, triMiddleY,
+						triStartX, triMiddleY + triHalfHeight
+					});
+			}
 		}
 	}
 
