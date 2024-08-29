@@ -575,6 +575,15 @@ public interface TableColumn {
 	public String getIconReference();
 
 	/**
+	 * @since 3.6.0.1
+	 */
+	public boolean getIconReferenceEnabled();
+	
+	/**
+	 * @since 3.6.0.1
+	 */
+	public void setIconReferenceEnabled( boolean b );
+	/**
 	 * *since 4501
 	 * @param mode from Parameter. constants
 	 */

@@ -1194,6 +1194,22 @@ public abstract class TableViewSWT_Common
 
 			});
 			
+			if ( column.getIconReference() != null ){
+				
+				final MenuItem showIcon = new MenuItem(menu, SWT.CHECK);
+				Messages.setLanguageText(showIcon,
+						"pairing.ui.icon.show");
+
+				showIcon.setSelection( column.getIconReferenceEnabled());
+				
+				showIcon.addListener(SWT.Selection, e -> {
+					column.setIconReferenceEnabled( !column.getIconReferenceEnabled());
+					String tableID = tv.getTableID();
+					TableStructureEventDispatcher.getInstance(
+							tableID).tableStructureChanged(false, null);
+				});
+			}
+				
 			final MenuItem itemPrefSize = new MenuItem(menu, SWT.PUSH);
 			Messages.setLanguageText(itemPrefSize, "table.columns.pref.size");
 			itemPrefSize.addListener(SWT.Selection, e -> Utils.execSWTThread(() -> {

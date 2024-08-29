@@ -19,8 +19,6 @@
 package com.biglybt.ui.swt.views.table.painted;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
@@ -287,32 +285,36 @@ public class TableHeaderPainted
 
 			int xOfs = x + 2;
 
-			boolean onlyShowImage = column.showOnlyImage();
+			boolean showIcon		= column.getIconReferenceEnabled();
+			boolean onlyShowImage	= column.showOnlyImage();
 			String text = "";
-			if (!onlyShowImage) {
+			if (!onlyShowImage || !showIcon ) {
 				text = MessageText.getString(column.getTitleLanguageKey());
 			}
 
 			int style = SWT.WRAP | SWT.CENTER;
 			Image image = null;
-			String imageID = column.getIconReference();
-			if (imageID != null) {
-				image = ImageLoader.getInstance().getImage(imageID);
-				if (ImageLoader.isRealImage(image)) {
-					if (onlyShowImage) {
-						text = null;
-						Rectangle imageBounds = image.getBounds();
-						e.gc.drawImage(image,
-								(int) (x + (w / 2.0) - (imageBounds.width / 2.0) + 0.5),
-								(headerHeight / 2) - (imageBounds.height / 2));
+			String imageID = null;
+			if ( showIcon ){
+				imageID = column.getIconReference();
+				if (imageID != null) {
+					image = ImageLoader.getInstance().getImage(imageID);
+					if (ImageLoader.isRealImage(image)) {
+						if (onlyShowImage) {
+							text = null;
+							Rectangle imageBounds = image.getBounds();
+							e.gc.drawImage(image,
+									(int) (x + (w / 2.0) - (imageBounds.width / 2.0) + 0.5),
+									(headerHeight / 2) - (imageBounds.height / 2));
+						} else {
+							text = "%0 " + text;
+						}
 					} else {
-						text = "%0 " + text;
+						image = null;
 					}
-				} else {
-					image = null;
 				}
 			}
-
+			
 			if (text != null) {
 				sp = new GCStringPrinter(e.gc, text,
 						new Rectangle(xOfs, yOfs - 1, wText - 4, headerHeight - yOfs + 2),

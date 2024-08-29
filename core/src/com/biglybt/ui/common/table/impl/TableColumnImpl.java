@@ -180,8 +180,9 @@ public class TableColumnImpl
 
 	private List<Class<?>> forPluginDataSourceTypes = new ArrayList<>();
 
-	private String iconID;
-
+	private String	iconID;
+	private boolean	iconIDEnabled = true;
+	
 	private boolean firstLoad;
 
 	private boolean showOnlyImage;
@@ -1232,7 +1233,7 @@ public class TableColumnImpl
 	public final void loadSettings(Map mapSettings) {
 		postLoadConfig = false;
 		// Format: Key = [TableID].column.[columnname]
-		// Value[] = { visible, width, position, autotooltip, sortorder, userData, align }
+		// Value[] = { visible, width, position, autotooltip, sortorder, userData, align, fg, bg, iconenabled }
 
 		String itemPrefix = "Column." + sName;
 		String oldItemPrefix = "Table." + sTableID + "." + sName;
@@ -1328,8 +1329,13 @@ public class TableColumnImpl
 				setBackgroundColor( new int[]{ bgList.get(0).intValue(), bgList.get(1).intValue(), bgList.get(2).intValue()});
 			}
 		}		
-		
+		pos++;
+		if (list.length >= (pos + 1) && (list[pos] instanceof Number)) {
+			boolean b = ((Number) list[pos]).intValue() != 0;
+			setIconReferenceEnabled(b);
+		}
 		firstLoad = list.length == 0;
+		isDirty = false;	// just loaded them, can't be dirty yet surely!
 		postConfigLoad();
 	}
 
@@ -1381,7 +1387,8 @@ public class TableColumnImpl
 			new Integer(lLastSortValueChange == 0 ? -1 : (bSortAscending ? 1 : 0)),
 			userData != null ? userData : Collections.EMPTY_MAP,
 			new Integer(iAlignment == iDefaultAlignment ? -1 : iAlignment),
-			fgList, bgList
+			fgList, bgList,
+			new Integer(iconIDEnabled?1:0),
 		}));
 		isDirty = false;
 		// cleanup old config
@@ -1981,16 +1988,42 @@ public class TableColumnImpl
 	}
 
 	@Override
-	public void setIconReference(String iconID, boolean showOnlyIcon) {
+	public void 
+	setIconReference(
+		String	iconID, 
+		boolean showOnlyIcon ) 
+	{
 		this.iconID = iconID;
+		
 		this.showOnlyImage = showOnlyIcon;
 	}
 
 	@Override
-	public String getIconReference() {
-		return iconID;
+	public String 
+	getIconReference() 
+	{
+		return( iconID );
 	}
 
+	@Override
+	public void 
+	setIconReferenceEnabled(
+		boolean b )
+	{
+		if ( iconIDEnabled != b ){
+		
+			iconIDEnabled = b;
+			
+			markDirty();
+		}
+	}
+	
+	@Override
+	public boolean 
+	getIconReferenceEnabled()
+	{
+		return( iconIDEnabled );
+	}
 	@Override
 	public void setMinimumRequiredUserMode(int mode) {
 
@@ -2011,7 +2044,9 @@ public class TableColumnImpl
 
 
 	@Override
-	public boolean showOnlyImage() {
+	public boolean 
+	showOnlyImage() 
+	{
 		return showOnlyImage;
 	}
 
