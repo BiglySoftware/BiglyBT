@@ -218,6 +218,7 @@ public class ColumnStream
 				int triMiddleY	= ovalY + radius-1;
 				
 				gc.setBackground( Colors.white );
+				gc.setForeground( Colors.white );
 						
 				int[] points = {
 						triStartX, triMiddleY - triHalfHeight,
