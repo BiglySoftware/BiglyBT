@@ -43,6 +43,7 @@ import com.biglybt.pif.ui.tables.TableCellMenuEvent;
 import com.biglybt.pif.ui.tables.TableCellMenuListener;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableCellToolTipListener;
+import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -257,9 +258,15 @@ TagsColumnHelper
 		
 		cell.setData( TagsColumnHelper.class, layouts );
 
+		final int truncAllowance	= 5;
+		final int maxPrefWidth		= 256;
+		
 		try{
 			int	maxLines = 1;
-							
+				
+			int prefWidth 		= truncAllowance;
+			boolean	prefOnly	= false;
+			
 			for ( Tag tag : tags ){
 								
 				TagPainter painter = new TagPainter(tag);
@@ -280,6 +287,22 @@ TagsColumnHelper
 					continue;
 				}
 					
+				prefWidth += size.x + 1;
+				
+				if ( prefOnly ){
+					
+					painter.dispose();
+					
+					if ( prefWidth >= maxPrefWidth ){
+						
+						break;
+						
+					}else{
+					
+						continue;
+					}
+				}
+				
 				TagLayout	layout = new TagLayout();
 				
 				layouts.add( layout );
@@ -306,7 +329,9 @@ TagsColumnHelper
 							
 							layout.truncated = true;
 							
-							break;	// doesn't fit 
+							prefOnly = true;
+							
+							continue;	// doesn't fit 
 						}
 						
 						maxLines++;
@@ -322,6 +347,16 @@ TagsColumnHelper
 					
 					x = endX + 1;
 				}
+			}
+			
+			TableColumn tableColumn = cell.getTableColumn();
+			
+			if (tableColumn != null && tableColumn.getPreferredWidth() < prefWidth) {
+				
+				prefWidth = Math.max( 16, prefWidth );
+				prefWidth = Math.min( maxPrefWidth, prefWidth );
+				
+				tableColumn.setPreferredWidth(prefWidth);
 			}
 			
 				// now we know the number of valid lines we can lay out the tags
@@ -383,7 +418,7 @@ TagsColumnHelper
 					
 					layout.truncated = true;
 					
-					if ( prevLayout != null && clipW < 5 ){
+					if ( prevLayout != null && clipW < truncAllowance ){
 						
 						prevLayout.truncated = true;
 					}

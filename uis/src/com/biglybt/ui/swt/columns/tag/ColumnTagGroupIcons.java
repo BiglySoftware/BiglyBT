@@ -182,6 +182,8 @@ public class ColumnTagGroupIcons
 				}
 			}
 			
+			int prefWidth = 0;
+			
 			if ( images.size() > 0 ){
 				
 				int	width_per_image = bounds.width / images.size();
@@ -192,12 +194,24 @@ public class ColumnTagGroupIcons
 					
 					int iw = image.getBounds().width;
 					
+					prefWidth += iw;
+					
 					gc.drawImage( image,  bounds.x + (width_per_image-iw)/2, bounds.y );
 	
 					bounds.x += width_per_image;
 	
 					ImageLoader.getInstance().releaseImage( keys.get(i));
 				}
+			}
+			
+			TableColumn tableColumn = cell.getTableColumn();
+			
+			if (tableColumn != null && tableColumn.getPreferredWidth() < prefWidth) {
+				
+				prefWidth = Math.max( 16, prefWidth );
+				prefWidth = Math.min( 256, prefWidth );
+				
+				tableColumn.setPreferredWidth(prefWidth);
 			}
 		}
 	}
