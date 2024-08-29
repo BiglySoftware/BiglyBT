@@ -1936,7 +1936,7 @@ TagManagerImpl
 			}
 		}
 		
-		Set<Tag>	result = null;
+		List<Tag>	result = null;
 
 		for ( TagType tt: tag_types ){
 
@@ -1946,18 +1946,21 @@ TagManagerImpl
 			
 				if ( result == null ){
 					
-					result = new HashSet<>();
+					result = new ArrayList<>();
 				}
 				
 				result.addAll( tags );
 			}
 		}
 
-		List<Tag> temp = result==null?Collections.emptyList():new ArrayList<>(result);
+		if ( result == null ){
 		
-		taggable.setTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE, new Object[]{ mut, temp });
+			result = Collections.emptyList();
+		}
 		
-		return( temp );
+		taggable.setTaggableTransientProperty( TTP_TAGS_FOR_TAGGABLE_CACHE, new Object[]{ mut, result });
+		
+		return( result );
 	}
 
 	@Override

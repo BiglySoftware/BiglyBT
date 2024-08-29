@@ -2248,11 +2248,11 @@ TagBase
 	addTaggable(
 		Taggable	t )
 	{
+		tag_type.tagsOrMembershipChanged();
+		
 		t_listeners.dispatch( TL_ADD, t );
 
 		tag_type.taggableAdded( this, t );
-
-		tag_type.fireMembershipChanged( this );
 
 		if ( tag_limits != null ){
 
@@ -2265,12 +2265,11 @@ TagBase
 	removeTaggable(
 		Taggable	t )
 	{
+		tag_type.tagsOrMembershipChanged();
+		
 		t_listeners.dispatch( TL_REMOVE, t );
 
 		tag_type.taggableRemoved( this, t );
-
-		tag_type.fireMembershipChanged( this );
-
 	}
 
 	protected void

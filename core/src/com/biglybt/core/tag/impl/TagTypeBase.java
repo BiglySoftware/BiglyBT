@@ -86,9 +86,6 @@ TagTypeBase
 						if ( type == TTL_ADD ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_ADDED;
-
-							tags_or_tag_membership_mut.incrementAndGet();
-							all_tags_or_tag_membership_mut.incrementAndGet();
 							
 						}else if ( type == TTL_TAG_METADATA_CHANGE ){
 
@@ -97,16 +94,10 @@ TagTypeBase
 						}else if ( type == TTL_TAG_MEMBERHIP_CHANGE ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_MEMBERSHIP_CHANGED;
-
-							tags_or_tag_membership_mut.incrementAndGet();
-							all_tags_or_tag_membership_mut.incrementAndGet();
 							
 						}else if ( type == TTL_REMOVE ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_REMOVED;
-
-							tags_or_tag_membership_mut.incrementAndGet();
-							all_tags_or_tag_membership_mut.incrementAndGet();
 							
 						}else if ( type == TTL_ATTENTION_REQUESTED ){
 
@@ -277,6 +268,14 @@ TagTypeBase
 		throw( new TagException( "Not supported" ));
 	}
 
+	protected void
+	tagsOrMembershipChanged()
+	{
+		tags_or_tag_membership_mut.incrementAndGet();
+		
+		all_tags_or_tag_membership_mut.incrementAndGet();
+	}
+	
 	@Override
 	public void
 	addTag(
@@ -284,6 +283,8 @@ TagTypeBase
 	{
 		((TagBase)t).initialized();
 
+		tagsOrMembershipChanged();
+		
 		tt_listeners.dispatch( TTL_ADD, t );
 	}
 
@@ -294,6 +295,8 @@ TagTypeBase
 	{
 		((TagBase)t).destroy();
 
+		tagsOrMembershipChanged();
+		
 		tt_listeners.dispatch( TTL_REMOVE, t );
 
 		manager.removeConfig( t );
@@ -415,7 +418,7 @@ TagTypeBase
 		return( result );
 	}
 
-	protected void
+	private void
 	fireMembershipChanged(
 		Tag	t )
 	{
@@ -485,47 +488,52 @@ TagTypeBase
 		Tag			tag,
 		Taggable	tagged )
 	{
-		List<TagListener> listeners;
-
-		synchronized( tag_listeners ){
-
-			listeners = tag_listeners.get( tagged );
-		}
-
-		if ( listeners != null ){
-
-			for ( TagListener l: listeners ){
-
-				try{
-					l.taggableAdded(tag, tagged);
-
-				}catch( Throwable e ){
-
-					Debug.out( e );
-				}
+		try{
+			List<TagListener> listeners;
+	
+			synchronized( tag_listeners ){
+	
+				listeners = tag_listeners.get( tagged );
 			}
-		}
-
-		manager.taggableAdded( this, tag, tagged );
-		
-		TagGroup tg = tag.getGroupContainer();
-		
-		if ( tg != null && tg.getName() != null && tg.isExclusive()){
-			
-			List<Tag> tags = tg.getTags();
-			
-			for ( Tag t: tags ){
-				
-				if ( t != tag && t.hasTaggable( tagged )){
-					
-					boolean[] auto = t.isTagAuto();
-					
-					if ( !auto[0] ){
-						
-						t.removeTaggable( tagged );
+	
+			if ( listeners != null ){
+	
+				for ( TagListener l: listeners ){
+	
+					try{
+						l.taggableAdded(tag, tagged);
+	
+					}catch( Throwable e ){
+	
+						Debug.out( e );
 					}
 				}
 			}
+	
+			manager.taggableAdded( this, tag, tagged );
+			
+			TagGroup tg = tag.getGroupContainer();
+			
+			if ( tg != null && tg.getName() != null && tg.isExclusive()){
+				
+				List<Tag> tags = tg.getTags();
+				
+				for ( Tag t: tags ){
+					
+					if ( t != tag && t.hasTaggable( tagged )){
+						
+						boolean[] auto = t.isTagAuto();
+						
+						if ( !auto[0] ){
+							
+							t.removeTaggable( tagged );
+						}
+					}
+				}
+			}
+		}finally{
+			
+			fireMembershipChanged( tag );
 		}
 	}
 
@@ -562,28 +570,34 @@ TagTypeBase
 		Tag			tag,
 		Taggable	tagged )
 	{
-		List<TagListener> listeners;
-
-		synchronized( tag_listeners ){
-
-			listeners = tag_listeners.get( tagged );
-		}
-
-		if ( listeners != null ){
-
-			for ( TagListener l: listeners ){
-
-				try{
-					l.taggableRemoved(tag, tagged);
-
-				}catch( Throwable e ){
-
-					Debug.out( e );
+		try{
+			List<TagListener> listeners;
+	
+			synchronized( tag_listeners ){
+	
+				listeners = tag_listeners.get( tagged );
+			}
+	
+			if ( listeners != null ){
+	
+				for ( TagListener l: listeners ){
+	
+					try{
+						l.taggableRemoved(tag, tagged);
+	
+					}catch( Throwable e ){
+	
+						Debug.out( e );
+					}
 				}
 			}
+	
+			manager.taggableRemoved( this, tag, tagged );
+			
+		}finally{
+			
+			fireMembershipChanged(tag);
 		}
-
-		manager.taggableRemoved( this, tag, tagged );
 	}
 
 	@Override
