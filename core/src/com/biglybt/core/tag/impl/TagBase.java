@@ -2411,6 +2411,8 @@ TagBase
 
 		for( Taggable t: taggables ){
 
+			tag_type.tagsOrMembershipChanged();
+			
 			t_listeners.dispatch( TL_REMOVE, t );
 
 			tag_type.taggableRemoved( this, t );
