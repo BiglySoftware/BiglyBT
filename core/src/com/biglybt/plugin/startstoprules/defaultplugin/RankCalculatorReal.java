@@ -1456,7 +1456,9 @@ RankCalculatorReal
 	
 			DownloadManagerState dm_state = core_dm.getDownloadState();
 			
-			if ( 	( dm_state.getTransientFlags() & 
+			long tFlags = dm_state.getTransientFlags();
+			
+			if ( 	( tFlags & 
 						( 	DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP | 
 							DownloadManagerState.TRANSIENT_FLAG_TAG_FP )) != 0 ){
 				
@@ -1466,6 +1468,14 @@ RankCalculatorReal
 				return( true );
 			}
 			
+			if (( tFlags & DownloadManagerState.TRANSIENT_FLAG_TAG_NOT_FP ) != 0 ){
+			
+			if (rules.bDebugLog)
+				sExplainFP += "Not FP: Tag is Not FP\n";
+			
+				return( false );
+			}
+				
 			if (!dl.isPersistent()) {
 				if (rules.bDebugLog)
 					sExplainFP += "Not FP: Download not persistent\n";

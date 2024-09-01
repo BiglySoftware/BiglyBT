@@ -182,6 +182,7 @@ DownloadManagerState
 
 	public static final int	TRANSIENT_FLAG_FRIEND_FP	= 0x00000001;
 	public static final int	TRANSIENT_FLAG_TAG_FP		= 0x00000002;
+	public static final int	TRANSIENT_FLAG_TAG_NOT_FP	= 0x00000004;
 	
 			
 	public TOTorrent

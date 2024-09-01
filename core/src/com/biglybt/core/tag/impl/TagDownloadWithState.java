@@ -51,7 +51,8 @@ TagDownloadWithState
 	extends TagWithState
 	implements TagDownload, TaggableResolver.LifecycleControlListener
 {
-	private static Object	FP_DL_KEY = new Object();
+	private static Object	FP_DL_KEY		= new Object();
+	private static Object	NOT_FP_DL_KEY	= new Object();
 	
 	private int upload_rate_limit;
 	private int download_rate_limit;
@@ -74,8 +75,10 @@ TagDownloadWithState
 	private int		max_aggregate_share_ratio;
 	private int		max_aggregate_share_ratio_action;
 	private boolean	max_aggregate_share_ratio_priority;
+	
 	private boolean	fp_seeding;
-	private boolean fp_seeding_ever;
+	private boolean	not_fp_seeding;
+	private boolean fp_or_not_seeding_ever;
 	
 	private int		auto_sort_period;
 	private long	last_auto_sort	= -1;
@@ -265,6 +268,7 @@ TagDownloadWithState
 		max_aggregate_share_ratio_action	= readLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION, (long)TagFeatureRateLimit.SR_AGGREGATE_ACTION_DEFAULT ).intValue();
 		max_aggregate_share_ratio_priority	= readBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, TagFeatureRateLimit.AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY_DEFAULT );
 		fp_seeding							= readBooleanAttribute( AT_RATELIMIT_FP_SEEDING, false );
+		not_fp_seeding						= readBooleanAttribute( AT_RATELIMIT_NOT_FP_SEEDING, false );
 
 		auto_sort_period					= getAutoApplySortInterval();
 		
@@ -310,9 +314,9 @@ TagDownloadWithState
 						updateMaxShareRatio( manager, max_share_ratio );
 					}
 					
-					if ( fp_seeding ){
+					if ( fp_seeding || not_fp_seeding ){
 						
-						updateFPSeeding( manager, true );
+						updateFPSeeding( manager, fp_seeding, not_fp_seeding );
 					}
 										
 					ncp_pub_list_mutate_index.incrementAndGet();
@@ -350,9 +354,9 @@ TagDownloadWithState
 						updateMaxShareRatio( manager, 0 );
 					}
 					
-					if ( fp_seeding ){
+					if ( fp_seeding || not_fp_seeding ){
 						
-						updateFPSeeding( manager, false );
+						updateFPSeeding( manager, false, false );
 					}
 					
 					ncp_pub_list_mutate_index.incrementAndGet();
@@ -430,9 +434,9 @@ TagDownloadWithState
 				dm.updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, false );
 			}
 			
-			if ( fp_seeding ){
+			if ( fp_seeding || not_fp_seeding ){
 				
-				updateFPSeeding( dm, false );
+				updateFPSeeding( dm, false, false );
 			}
 		}
 
@@ -1531,6 +1535,32 @@ TagDownloadWithState
 		checkFPSeeding();
 	}
 	
+	@Override
+	public boolean
+	getNotFirstPrioritySeeding()
+	{
+		return( not_fp_seeding );
+	}
+
+	@Override
+	public void
+	setNotFirstPrioritySeeding(
+		boolean		b )
+	{
+		if ( b == not_fp_seeding ){
+
+			return;
+		}
+
+		not_fp_seeding	= b;
+
+		writeBooleanAttribute( AT_RATELIMIT_NOT_FP_SEEDING, b );
+
+		getTagType().fireMetadataChanged( this );
+
+		checkFPSeeding();
+	}
+	
 	public void
 	setPreventDelete(
 		boolean		b )
@@ -1822,12 +1852,12 @@ TagDownloadWithState
 	private void
 	checkFPSeeding()
 	{
-		if ( fp_seeding ){
+		if ( fp_seeding || not_fp_seeding ){
 							
-			fp_seeding_ever = true;
+			fp_or_not_seeding_ever = true;
 		}
 
-		if ( !fp_seeding_ever ){
+		if ( !fp_or_not_seeding_ever ){
 			
 			return;
 		}
@@ -1836,25 +1866,23 @@ TagDownloadWithState
 
 		Iterator<DownloadManager> it = dms.iterator();
 
-			// don't pause incomplete downloads!
-
 		while( it.hasNext()){
 
 			DownloadManager dm = it.next();
 
-			updateFPSeeding( dm, fp_seeding );
+			updateFPSeeding( dm, fp_seeding, not_fp_seeding );
 		}
 	}
 	
 	private void
 	updateFPSeeding(
 		DownloadManager		dm,
-		boolean				fp_seed )
-	
+		boolean				fp_seed,
+		boolean				not_fp_seed )
 	{
-		if ( fp_seed ){
+		if ( fp_seed || not_fp_seed ){
 			
-			fp_seeding_ever = true;
+			fp_or_not_seeding_ever = true;
 		}
 		
 		synchronized( FP_DL_KEY ){
@@ -1885,6 +1913,39 @@ TagDownloadWithState
 						dm.setUserData( FP_DL_KEY, null );
 						
 						dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, false );
+					}
+				}
+			}
+		}
+		
+		synchronized( NOT_FP_DL_KEY ){
+			
+			Map<DownloadManager,String> map = (Map<DownloadManager,String>)dm.getUserData( NOT_FP_DL_KEY );
+
+			if ( not_fp_seed ){
+				
+				if ( map == null ){
+					
+					map = new IdentityHashMap<>();
+					
+					dm.setUserData( NOT_FP_DL_KEY, map );
+					
+					dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_NOT_FP, true );
+				}
+				
+				map.put( dm, "" );
+				
+			}else{
+				
+				if ( map != null ){
+					
+					map.remove( dm );
+					
+					if ( map.isEmpty()){
+						
+						dm.setUserData( NOT_FP_DL_KEY, null );
+						
+						dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_NOT_FP, false );
 					}
 				}
 			}

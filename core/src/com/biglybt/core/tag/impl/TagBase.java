@@ -81,6 +81,7 @@ TagBase
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION	= "rl.maxaggsr.a";
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY	= "rl.maxaggsr.p";
 	protected static final String	AT_RATELIMIT_FP_SEEDING					= "rl.fps";
+	protected static final String	AT_RATELIMIT_NOT_FP_SEEDING				= "rl.nfps";
 	protected static final String	AT_RATELIMIT_BOOST						= "rl.bst";
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_DL				= "rl.maxadl";
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_CD				= "rl.maxacd";
@@ -1430,7 +1431,7 @@ TagBase
 	public boolean
 	getFirstPrioritySeeding()
 	{
-		return( true );
+		return( false );
 	}
 
 	public void
@@ -1440,6 +1441,19 @@ TagBase
 		Debug.out( "not supported" );
 	}
 
+	public boolean
+	getNotFirstPrioritySeeding()
+	{
+		return( false );
+	}
+
+	public void
+	setNotFirstPrioritySeeding(
+		boolean		priority )
+	{
+		Debug.out( "not supported" );
+	}
+	
 	
 		// limits
 

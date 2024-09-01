@@ -107,6 +107,7 @@ public class TagSettingsView
 		public BooleanSwtParameter activeLimitsStrict;
 
 		public BooleanSwtParameter firstPrioritySeeding;
+		public BooleanSwtParameter notFirstPrioritySeeding;
 
 		public FloatSwtParameter min_sr;
 
@@ -1222,6 +1223,32 @@ public class TagSettingsView
 									for (TagFeatureRateLimit rl : rls) {
 										if (rl.getFirstPrioritySeeding() != value) {
 											rl.setFirstPrioritySeeding(value);
+											changed = true;
+										}
+									}
+									return changed;
+								}
+							});
+					cols_used += 2;
+					params.notFirstPrioritySeeding = new BooleanSwtParameter(gTransfer,
+							"tag.notFirstPrioritySeeding", "label.not.first.priority.seeding", null,
+							new BooleanSwtParameter.ValueProcessor() {
+								@Override
+								public Boolean getValue(BooleanSwtParameter p) {
+									int value = -1;
+									for (TagFeatureRateLimit rl : rls) {
+										value = updateIntBoolean(rl.getNotFirstPrioritySeeding(),
+												value);
+									}
+									return value == 2 ? null : value == 1;
+								}
+
+								@Override
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									boolean changed = rls.length == 0;
+									for (TagFeatureRateLimit rl : rls) {
+										if (rl.getNotFirstPrioritySeeding() != value) {
+											rl.setNotFirstPrioritySeeding(value);
 											changed = true;
 										}
 									}

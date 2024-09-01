@@ -168,6 +168,13 @@ TagFeatureRateLimit
 	setFirstPrioritySeeding(
 		boolean	has_priority );
 	
+	public boolean
+	getNotFirstPrioritySeeding();
+
+	public void
+	setNotFirstPrioritySeeding(
+		boolean	has_not_priority );
+	
 	public int
 	getMaxActiveDownloads();
 	
