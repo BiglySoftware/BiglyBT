@@ -2999,7 +2999,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_FILE_COUNT_SELECTED	= 54;
 		private static final int	KW_TRACKERS				= 55;
 		private static final int	KW_POSITION				= 56;
-
+		private static final int	KW_LAST_QUEUED			= 57;
+	
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
 			keyword_map.put( "share_ratio", 			new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -3125,6 +3126,9 @@ TagPropertyConstraintHandler
 
 			keyword_map.put( "trackers", 				new int[]{KW_TRACKERS,				DEP_STATIC });
 			keyword_map.put( "position", 				new int[]{KW_POSITION,				DEP_STATIC });
+
+			keyword_map.put( "lastqueued", 				new int[]{KW_LAST_QUEUED,			DEP_RUNNING });
+			keyword_map.put( "last_queued", 			new int[]{KW_LAST_QUEUED,			DEP_RUNNING });
 
 		}
 
@@ -5245,6 +5249,30 @@ TagPropertyConstraintHandler
 	
 						return(( SystemTime.getCurrentTime() - timestamp )/1000 );
 					}
+					case KW_LAST_QUEUED:{
+						
+						DownloadManagerState dms = dm.getDownloadState();
+	
+						long timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME);
+						
+						if ( timestamp <= 0 ){
+							
+							timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
+						
+							if ( timestamp <= 0 ){
+							
+								timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+								
+								if ( timestamp <= 0 ){
+									
+									return( Long.MAX_VALUE );
+								}
+							}
+						}
+	
+						return(( SystemTime.getCurrentTime() - timestamp )/1000 );
+					}
+					
 					case KW_RESUME_IN:{
 	
 						long resume_millis = dm.getAutoResumeTime();
