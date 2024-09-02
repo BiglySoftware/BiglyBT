@@ -5256,17 +5256,12 @@ TagPropertyConstraintHandler
 						long timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME);
 						
 						if ( timestamp <= 0 ){
-							
-							timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
-						
-							if ( timestamp <= 0 ){
-							
-								timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+														
+							timestamp = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
 								
-								if ( timestamp <= 0 ){
+							if ( timestamp <= 0 ){
 									
-									return( Long.MAX_VALUE );
-								}
+								return( Long.MAX_VALUE );
 							}
 						}
 	
