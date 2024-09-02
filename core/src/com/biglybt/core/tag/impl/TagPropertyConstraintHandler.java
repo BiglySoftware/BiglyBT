@@ -2022,7 +2022,7 @@ TagPropertyConstraintHandler
 							return;
 						}
 
-						if ( canAddTaggable( dm )){
+						if ( !tag_maybe_null.hasTaggable( dm ) && canAddTaggable( dm )){
 
 							tag_maybe_null.addTaggable( dm );
 						}
