@@ -287,6 +287,7 @@ public class TableColumnCreator
 		c.put(DateAddedItem.COLUMN_ID, new cInfo(DateAddedItem.class, DateAddedItem.DATASOURCE_TYPE));
 		c.put(DateLastActiveItem.COLUMN_ID, new cInfo(DateLastActiveItem.class, DateLastActiveItem.DATASOURCE_TYPE));
 		c.put(DateLastQueuedItem.COLUMN_ID, new cInfo(DateLastQueuedItem.class, DateLastQueuedItem.DATASOURCE_TYPE));
+		c.put(DateLastXferItem.COLUMN_ID, new cInfo(DateLastXferItem.class, DateLastXferItem.DATASOURCE_TYPE));
 		c.put(LastScrapeTimeItem.COLUMN_ID, new cInfo(LastScrapeTimeItem.class, LastScrapeTimeItem.DATASOURCE_TYPE));
 		
 		c.put(IPFilterItem.COLUMN_ID, new cInfo(IPFilterItem.class, IPFilterItem.DATASOURCE_TYPE));

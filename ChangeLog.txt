@@ -34,6 +34,8 @@ FEATURE: UI    | Added additional "message status" chat column that retains stat
 FEATURE: UI    | Add a separator to "open torrents" text area when adding a new URI [Parg]
 FEATURE: UI    | Double-click table column header -> size to fit [Parg]
 FEATURE: UI    | Added table header menu to show/hide icons [Parg]
+FEATURE: UI    | Added a "last queued" column [Parg]
+FEATURE: UI    | Added a "last xfer" column [Parg]
 
 CHANGE: Tag    | Put download-state tags into a tag group [Parg]
 CHANGE: Tag    | Allow EOS-tag-remove to remove from same Tag [Parg]

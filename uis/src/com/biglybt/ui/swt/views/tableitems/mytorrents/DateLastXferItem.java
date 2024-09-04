@@ -27,12 +27,12 @@ import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
-public class DateLastQueuedItem
+public class DateLastXferItem
 	extends ColumnDateSizer
 {
 	public static final Class DATASOURCE_TYPE = Download.class;
 
-	public static final String COLUMN_ID = "DateTorrentLastQueued";
+	public static final String COLUMN_ID = "DateTorrentLastXfer";
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -40,7 +40,7 @@ public class DateLastQueuedItem
 		info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE);
 	}
 
-	public DateLastQueuedItem(String sTableID) {
+	public DateLastXferItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, TableColumnCreator.DATE_COLUMN_WIDTH, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
 		setMultiline(false);
@@ -52,10 +52,7 @@ public class DateLastQueuedItem
 		if (dm == null) {
 			timestamp = 0;
 		} else {
-			timestamp = dm.getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME);
-			if (timestamp == 0) {
-				timestamp = dm.getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
-			}
+			timestamp = dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_LAST_ADDED_TO_ACTIVE_TAG );
 		}
 		super.refresh(cell, timestamp);
 	}

@@ -42,7 +42,7 @@ public class DateLastActiveItem
 
 	public DateLastActiveItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, TableColumnCreator.DATE_COLUMN_WIDTH, sTableID);
-
+		setRefreshInterval(INTERVAL_LIVE);
 		setMultiline(false);
 	}
 

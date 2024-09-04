@@ -247,9 +247,11 @@ public class GlobalManagerImpl
 	static int		no_space_dl_restart_check_period_millis;
 	static long		no_space_dl_pause_min_bytes;
 
-	static int		missing_file_dl_restart_check_period_millis;
-	static Object	missing_file_dl_restart_key = new Object();
+	static int			missing_file_dl_restart_check_period_millis;
+	static final Object	missing_file_dl_restart_key = new Object();
 	
+	static final Object ACTIVE_KEY = new Object();
+
 	static{
 		 COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
@@ -5510,8 +5512,15 @@ public class GlobalManagerImpl
 
 						DownloadManagerStats stats = dm.getStats();
 
+						long total_data = stats.getTotalDataBytesReceived() + stats.getTotalDataBytesSent();
+							
+						Long old = (Long)dm.getUserData( ACTIVE_KEY );
+						
+						dm.setUserData( ACTIVE_KEY, total_data );
+						
 						boolean is_active =
-							stats.getDataReceiveRate() + stats.getDataSendRate() > 0 &&
+							(	stats.getDataReceiveRate() + stats.getDataSendRate() > 0 ||
+								old != null && old != total_data ) &&
 							!dm.isDestroyed();
 
 						if ( is_active ){
