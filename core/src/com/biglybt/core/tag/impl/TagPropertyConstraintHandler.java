@@ -2948,7 +2948,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_DOWNLOADING_FOR 	= 3;
 		private static final int	KW_SEEDING_FOR 		= 4;
 		private static final int	KW_SWARM_MERGE 		= 5;
-		private static final int	KW_LAST_ACTIVE 		= 6;
+		private static final int	KW_LAST_XFER 		= 6;
 		private static final int	KW_SEED_COUNT 		= 7;
 		private static final int	KW_PEER_COUNT 		= 8;
 		private static final int	KW_SEED_PEER_RATIO 	= 9;
@@ -3012,8 +3012,10 @@ TagPropertyConstraintHandler
 			keyword_map.put( "seeding_for", 			new int[]{KW_SEEDING_FOR,			DEP_RUNNING });
 			keyword_map.put( "swarmmergebytes", 		new int[]{KW_SWARM_MERGE,			DEP_RUNNING });
 			keyword_map.put( "swarm_merge_bytes", 		new int[]{KW_SWARM_MERGE,			DEP_RUNNING });
-			keyword_map.put( "lastactive", 				new int[]{KW_LAST_ACTIVE,			DEP_RUNNING });
-			keyword_map.put( "last_active", 			new int[]{KW_LAST_ACTIVE,			DEP_RUNNING });
+			keyword_map.put( "lastactive", 				new int[]{KW_LAST_XFER,				DEP_RUNNING });
+			keyword_map.put( "last_active", 			new int[]{KW_LAST_XFER,				DEP_RUNNING });
+			keyword_map.put( "lastxfer", 				new int[]{KW_LAST_XFER,				DEP_RUNNING });
+			keyword_map.put( "last_xfer", 				new int[]{KW_LAST_XFER,				DEP_RUNNING });
 			keyword_map.put( "seedcount", 				new int[]{KW_SEED_COUNT,			DEP_TIME  });
 			keyword_map.put( "seed_count", 				new int[]{KW_SEED_COUNT,			DEP_TIME });
 			keyword_map.put( "peercount", 				new int[]{KW_PEER_COUNT,			DEP_TIME });
@@ -5236,7 +5238,7 @@ TagPropertyConstraintHandler
 	
 						return( dm.getStats().getSecondsOnlySeeding());
 					}
-					case KW_LAST_ACTIVE:{
+					case KW_LAST_XFER:{
 	
 						DownloadManagerState dms = dm.getDownloadState();
 	
