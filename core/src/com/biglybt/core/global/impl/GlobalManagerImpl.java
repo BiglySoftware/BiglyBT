@@ -124,6 +124,7 @@ import com.biglybt.core.util.DelayedEvent;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.HashWrapper;
+import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.ListenerManager;
 import com.biglybt.core.util.ListenerManagerDispatcher;
@@ -5504,7 +5505,7 @@ public class GlobalManagerImpl
 		{
 			synchronized( this ){
 
-				Set<DownloadManager> active 	= new HashSet<>(tag_active.getTaggedDownloads());
+				Set<DownloadManager> active 	= new IdentityHashSet<>(tag_active.getTaggedDownloads());
 
 				for ( TagDownloadWithState tag: new TagDownloadWithState[]{ tag_downloading, tag_seeding }){
 

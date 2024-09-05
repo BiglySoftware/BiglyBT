@@ -385,6 +385,17 @@ MagnetPluginMDDownloader
 		
 					TorrentUtils.setFlag( meta_torrent, TorrentUtils.TORRENT_FLAG_LOW_NOISE, true );
 	
+					Map<String,Object> debug_data = new HashMap<>();
+					
+					debug_data.put( "args", args );
+					
+					if ( initial_metadata != null ){
+						
+						debug_data.put( "im", initial_metadata );
+					}
+					
+					meta_torrent.setAdditionalMapProperty( "metadata_download_debug", debug_data);
+					
 					meta_torrent.serialiseToBEncodedFile( torrent_file );
 		
 					download_manager.clearNonPersistentDownloadState( hash );
