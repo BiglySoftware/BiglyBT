@@ -23,13 +23,13 @@ package com.biglybt.core.networkmanager.admin.impl;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.List;
 
 import com.biglybt.core.Core;
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.ipchecker.natchecker.NatChecker;
 import com.biglybt.core.networkmanager.admin.NetworkAdminException;
 import com.biglybt.core.networkmanager.admin.NetworkAdminProgressListener;
+import com.biglybt.core.util.NetUtils;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 
 public class
@@ -66,34 +66,40 @@ NetworkAdminTCPTester
 
 				// fallback to something else
 
-			try{
-				  Socket socket = new Socket();
+			List<String> domains = NetUtils.getTestDomains();
+			
+			for ( String domain: domains ){
 
-				  if ( bind_ip != null ){
-
-					  socket.bind( new InetSocketAddress( bind_ip, bind_port ));
-
-				  }else if ( bind_port != 0 ){
-
-					  socket.bind( new InetSocketAddress( bind_port ));
-				  }
-
-				  socket.setSoTimeout( 10000 );
-
-				  	// TODO: v6 
-				  
-					String domain = COConfigurationManager.getStringParameter(
-						ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
-				  socket.connect( new InetSocketAddress( domain, 80 ), 10000 );
-
-				  socket.close();
-
-				  return( null );
-
-			}catch( Throwable f ){
-
-				throw( new NetworkAdminException( "Outbound test failed", e ));
+				try{
+					  Socket socket = new Socket();
+	
+					  try{
+						  if ( bind_ip != null ){
+		
+							  socket.bind( new InetSocketAddress( bind_ip, bind_port ));
+		
+						  }else if ( bind_port != 0 ){
+		
+							  socket.bind( new InetSocketAddress( bind_port ));
+						  }
+		
+						  socket.setSoTimeout( 10000 );
+		
+						  	// TODO: v6 
+						  
+						  socket.connect( new InetSocketAddress( domain, 80 ), 10000 );
+				
+						  return( null );
+						  
+					  }finally{
+						  
+						  socket.close();
+					  }
+				}catch( Throwable f ){
+				}
 			}
+
+			throw( new NetworkAdminException( "Outbound test failed", e ));
 		}
 	}
 

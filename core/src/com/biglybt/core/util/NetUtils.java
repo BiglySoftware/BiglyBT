@@ -26,6 +26,8 @@ import java.net.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl.runnableWithException;
 
@@ -634,5 +636,32 @@ NetUtils
 		}
 
 		throw se;
+	}
+		
+	public static List<String>
+	getTestDomains()
+	{
+		List<String>	result = new ArrayList<>();
+		
+		try{
+			String domains = COConfigurationManager.getStringParameter( ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN );
+			
+			String[] bits = domains.split("[,;]");
+			
+			for ( String bit: bits ){
+				
+				bit = bit.trim();
+				
+				if ( !bit.isEmpty()){
+					
+					result.add( bit );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( result );
 	}
 }

@@ -1908,74 +1908,76 @@ addressLoop:
 		InetAddress	bind_address,
 		int			timeout )
 	{
-		Socket	socket = null;
-
-		try{
-			socket = new Socket();
-
-			socket.bind( new InetSocketAddress( bind_address, 0 ));
-
-			socket.setSoTimeout( timeout );
-
-			String domain = COConfigurationManager.getStringParameter(
-				ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
-			InetAddress[] addresses = AddressUtils.getAllByName( domain );
-			
-			InetAddress target = null;
-			
-			boolean is6 = bind_address instanceof Inet6Address;
-			
-			for ( InetAddress ia: addresses ){
+		List<String> domains = NetUtils.getTestDomains();
+		
+		for ( String domain: domains ){
+			Socket	socket = null;
+	
+			try{
+				socket = new Socket();
+	
+				socket.bind( new InetSocketAddress( bind_address, 0 ));
+	
+				socket.setSoTimeout( timeout );
+	
+				InetAddress[] addresses = AddressUtils.getAllByName( domain );
 				
-				if ( ia instanceof Inet4Address ){
+				InetAddress target = null;
+				
+				boolean is6 = bind_address instanceof Inet6Address;
+				
+				for ( InetAddress ia: addresses ){
 					
-					if ( !is6 ){
+					if ( ia instanceof Inet4Address ){
 						
-						target = ia;
+						if ( !is6 ){
+							
+							target = ia;
+							
+							break;
+						}
+					}else{
 						
-						break;
-					}
-				}else{
-					
-					if ( is6 ){
-						
-						target = ia;
-						
-						break;
+						if ( is6 ){
+							
+							target = ia;
+							
+							break;
+						}
 					}
 				}
-			}
-			
-			InetSocketAddress isa;
-			
-			if ( target == null ){
 				
-				isa = new InetSocketAddress( domain, 80 );
+				InetSocketAddress isa;
 				
-			}else{
+				if ( target == null ){
+					
+					isa = new InetSocketAddress( domain, 80 );
+					
+				}else{
+					
+					isa = new InetSocketAddress( target, 80 );
+				}
 				
-				isa = new InetSocketAddress( target, 80 );
-			}
-			
-			socket.connect( isa, timeout );
-
-			return( true );
-
-		}catch( Throwable e ){
-
-			return( false );
-
-		}finally{
-
-			if ( socket != null ){
-
-				try{
-					socket.close();
-
-				}catch( Throwable f ){
+				socket.connect( isa, timeout );
+	
+				return( true );
+	
+			}catch( Throwable e ){
+	
+			}finally{
+	
+				if ( socket != null ){
+	
+					try{
+						socket.close();
+	
+					}catch( Throwable f ){
+					}
 				}
 			}
 		}
+		
+		return( false );
 	}
 
 	protected InetAddress
@@ -4777,9 +4779,6 @@ addressLoop:
 	generateDiagnostics(
 		final IndentWriter iw )
 	{
-		String domain = COConfigurationManager.getStringParameter(
-			ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
-
 		Set	public_addresses = new HashSet();
 
 		NetworkAdminHTTPProxy	proxy = getHTTPProxy();

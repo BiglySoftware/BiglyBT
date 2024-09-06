@@ -23,13 +23,13 @@ package com.biglybt.core.networkmanager.admin.impl;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 
 import com.biglybt.core.Core;
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.ipchecker.natchecker.NatChecker;
 import com.biglybt.core.networkmanager.admin.NetworkAdminException;
 import com.biglybt.core.networkmanager.admin.NetworkAdminProgressListener;
+import com.biglybt.core.util.NetUtils;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 
 public class
@@ -71,25 +71,28 @@ NetworkAdminHTTPTester
 
 				// fallback to something else
 
-			try{
-					// TODO: V6
+			List<String> domains = NetUtils.getTestDomains();
+			
+			for ( String domain: domains ){
 				
-				String domain = COConfigurationManager.getStringParameter(
-					ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
-				URL	url = new URL( "http://" + domain + "/" );
-
-				URLConnection connection = url.openConnection();
-
-				connection.setConnectTimeout( 10000 );
-
-				connection.connect();
-
-				return( null );
-
-			}catch( Throwable f ){
-
-				throw( new NetworkAdminException( "Outbound test failed", e ));
+				try{
+						// TODO: V6
+									
+					URL	url = new URL( "http://" + domain + "/" );
+	
+					URLConnection connection = url.openConnection();
+	
+					connection.setConnectTimeout( 10000 );
+	
+					connection.connect();
+	
+					return( null );
+	
+				}catch( Throwable f ){	
+				}
 			}
+			
+			throw( new NetworkAdminException( "Outbound test failed", e ));
 		}
 	}
 

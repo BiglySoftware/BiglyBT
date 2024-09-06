@@ -1260,29 +1260,33 @@ PairingManagerImpl
 									public void
 									run()
 									{
-										Socket socket = new Socket();
-
 										String	result = a_str;
 
-										try{
-											socket.bind( new InetSocketAddress( ia, 0 ));
-
-											String domain = COConfigurationManager.getStringParameter(
-												ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
-											socket.connect(  new InetSocketAddress( domain, 80 ), 10*1000 );
-
-											result += "*";
-
-										}catch( Throwable e ){
-
-										}finally{
+										List<String> domains = NetUtils.getTestDomains();
+										
+										for ( String domain: domains ){
+											
+											Socket socket = new Socket();
+		
 											try{
-												socket.close();
+												socket.bind( new InetSocketAddress( ia, 0 ));
+	
+												socket.connect(  new InetSocketAddress( domain, 80 ), 10*1000 );
+	
+												result += "*";
+	
+												break;
+												
 											}catch( Throwable e ){
+	
+											}finally{
+												try{
+													socket.close();
+												}catch( Throwable e ){
+												}
 											}
-
 										}
-
+										
 										synchronized( local_address_checks ){
 
 											local_address_checks.put( a_str, new Object[]{ new Long(now), result });
