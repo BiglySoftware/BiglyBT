@@ -24,14 +24,17 @@ package com.biglybt.core.util.spi;
 import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.NetUtils;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
@@ -185,46 +188,66 @@ AENameServiceDescriptor
 						throw( new RuntimeException( "Delegate Name Service unavailable" ));
 					}
 
-					host_name = "www.google.com";
+					List<String> domains = NetUtils.getTestDomains();
 
-					try{
-						Object result = null;
-
-						if ( delegate_iai_method_lookupAllHostAddr != null ){
-
-							try{
-								result = delegate_iai_method_lookupAllHostAddr.invoke(  delegate_iai, host_name );
-
-							}catch( Throwable e ){
+					if ( domains.isEmpty()){
+						
+						throw( new RuntimeException( "No test domains available" ));
+					}
+					
+					RuntimeException 	last_error	= null;
+					boolean				maybe_ok	= false;
+					
+					for ( String domain: domains ){
+						
+						try{
+							Object result = null;
+	
+							if ( delegate_iai_method_lookupAllHostAddr != null ){
+	
+								try{
+									result = delegate_iai_method_lookupAllHostAddr.invoke(  delegate_iai, domain );
+	
+								}catch( Throwable e ){
+								}
+							}
+	
+							if ( result == null ){
+	
+								result = delegate_ns_method_lookupAllHostAddr.invoke( delegate_ns, domain );
+							}
+	
+							last_error = null;
+							
+							break;
+							
+						}catch( Throwable e ){
+	
+							if ( e instanceof InvocationTargetException ){
+								
+								e = ((InvocationTargetException)e).getTargetException();
+							}
+							
+							if ( e instanceof UnknownHostException ){
+	
+									// guess their DNS might be down - don't treat as complete fail
+	
+								System.err.println( "DNS resolution of " + domain + " failed, DNS unavailable?" );
+	
+								maybe_ok = true;
+								
+							}else{
+	
+								last_error = new RuntimeException( "Delegate lookup failed", e );
 							}
 						}
-
-						if ( result == null ){
-
-							result = delegate_ns_method_lookupAllHostAddr.invoke( delegate_ns, host_name );
-						}
-
-
-
-					}catch( Throwable e ){
-
-						if ( e instanceof InvocationTargetException ){
-							
-							e = ((InvocationTargetException)e).getTargetException();
-						}
-						
-						if ( e instanceof UnknownHostException ){
-
-								// guess their DNS might be down - don't treat as complete fail
-
-							System.err.println( "DNS resolution of " + host_name + " failed, DNS unavailable?" );
-
-						}else{
-
-							throw( new RuntimeException( "Delegate lookup failed", e ));
-						}
 					}
-
+					
+					if ( last_error != null && !maybe_ok ){
+						
+						throw( last_error );
+					}
+					
 					// byte[][] or InetAddress[]
 
 					Class ret_type = method.getReturnType();
