@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.shells.main;
 
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.views.skin.VuzeMessageBox;
@@ -239,6 +240,14 @@ public class DebugMenuHelper
 				logAlert.forceNotify = true;
 				logAlert.details = "Details: \n\n" + text;
 				Logger.log(logAlert);
+				
+				LogAlert alert = new LogAlert( LogAlert.REPEATABLE, LogAlert.AT_INFORMATION, MessageText.getString( "ConfigView.section.interface.alerts" ));
+				
+				alert.details = MessageText.getString( "AlertMessageBox.information" );
+				
+				alert.isNative = true;
+				
+				Logger.log( alert );
 			}
 		});
 

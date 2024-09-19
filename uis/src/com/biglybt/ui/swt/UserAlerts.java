@@ -624,7 +624,8 @@ UserAlerts
 							
 							native_tray_icon.setPopupMenu( menu );
 							
-							MenuItem mi = new MenuItem( MessageText.getString( "sharing.progress.hide" ));
+							//MenuItem mi = new MenuItem( MessageText.getString( "sharing.progress.hide" ));
+							MenuItem mi = new MenuItem( "X" );
 							
 							mi.addActionListener(
 								new ActionListener(){
