@@ -30,6 +30,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pifimpl.local.network.ConnectionImpl;
 
 public class
@@ -249,9 +250,15 @@ PEPeerStatsImpl
     public int
     getPermittedBytesToSend()
     {
-    	return(NetworkManager.getSingleton().getRateHandler(
-    		((ConnectionImpl)owner.getPluginConnection()).getCoreConnection(),
-    		true ).getCurrentNumBytesAllowed()[0]);
+    	Connection plugin_con = owner.getPluginConnection();
+    	
+    	if ( plugin_con instanceof ConnectionImpl ){
+	    	return(NetworkManager.getSingleton().getRateHandler(
+	    		((ConnectionImpl)plugin_con).getCoreConnection(),
+	    		true ).getCurrentNumBytesAllowed()[0]);
+    	}else{
+    		return( Integer.MAX_VALUE );
+    	}
     }
 
     @Override
@@ -259,18 +266,28 @@ PEPeerStatsImpl
     permittedSendBytesUsed(
     	int num )
     {
-    	NetworkManager.getSingleton().getRateHandler(
-        	((ConnectionImpl)owner.getPluginConnection()).getCoreConnection(),
-        	true ).bytesProcessed( num, 0 );
+    	Connection plugin_con = owner.getPluginConnection();
+    	
+    	if ( plugin_con instanceof ConnectionImpl ){
+	    	NetworkManager.getSingleton().getRateHandler(
+	        	((ConnectionImpl)plugin_con).getCoreConnection(),
+	        	true ).bytesProcessed( num, 0 );
+    	}
     }
 
     @Override
     public int
     getPermittedBytesToReceive()
     {
-    	return(NetworkManager.getSingleton().getRateHandler(
-        	((ConnectionImpl)owner.getPluginConnection()).getCoreConnection(),
-        	false ).getCurrentNumBytesAllowed()[0]);
+    	Connection plugin_con = owner.getPluginConnection();
+    	
+    	if ( plugin_con instanceof ConnectionImpl ){
+	    	return(NetworkManager.getSingleton().getRateHandler(
+	        	((ConnectionImpl)plugin_con).getCoreConnection(),
+	        	false ).getCurrentNumBytesAllowed()[0]);
+    	}else{
+    		return( Integer.MAX_VALUE );
+    	}
     }
 
     @Override
@@ -278,8 +295,12 @@ PEPeerStatsImpl
     permittedReceiveBytesUsed(
     	int num )
     {
-       	NetworkManager.getSingleton().getRateHandler(
-        	((ConnectionImpl)owner.getPluginConnection()).getCoreConnection(),
-        	false ).bytesProcessed( num, 0 );
+    	Connection plugin_con = owner.getPluginConnection();
+    	
+    	if ( plugin_con instanceof ConnectionImpl ){
+	       	NetworkManager.getSingleton().getRateHandler(
+	        	((ConnectionImpl)plugin_con).getCoreConnection(),
+	        	false ).bytesProcessed( num, 0 );
+    	}
     }
 }
