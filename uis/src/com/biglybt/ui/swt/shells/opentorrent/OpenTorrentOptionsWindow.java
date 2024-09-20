@@ -788,8 +788,12 @@ public class OpenTorrentOptionsWindow
 				torrents_info_label = new Label( info_area, SWT.NULL );
 				torrents_info_label.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
-				sash_object.setVisible( false );
-				sash_object.setAboveVisible( false );
+				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP );
+
+				boolean always_show_sidebar = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR ) && !separate_dialogs;
+				
+				sash_object.setVisible( always_show_sidebar );
+				sash_object.setAboveVisible( always_show_sidebar );
 
 				so = skin_outter.getSkinObject("expand-area");
 
@@ -811,6 +815,8 @@ public class OpenTorrentOptionsWindow
 
 				selected_instances.add( instance );
 
+				setSelectedRows();
+				
 				UIUpdaterSWT.getInstance().addUpdater(this);
 
 				setupShowAgainOptions(skin_outter);
@@ -823,8 +829,6 @@ public class OpenTorrentOptionsWindow
 				
 				Runnable doOpen = ()->{
 					
-					boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
-
 					OpenTorrentOptionsWindow moveBelow = null;
 					
 					if ( separate_dialogs ){
@@ -989,36 +993,8 @@ public class OpenTorrentOptionsWindow
 					sash_object.setVisible( true );
 
 					sash_object.setAboveVisible( true );
-
-					Utils.execSWTThreadLater(
-						0,
-						new Runnable()
-						{
-							@Override
-							public void
-							run()
-							{
-								tvTorrents.processDataSourceQueueSync();
-
-								List<TableRowCore> rows = new ArrayList<>();
-
-								for ( OpenTorrentInstance instance: selected_instances ){
-
-									TableRowCore row = tvTorrents.getRow( instance );
-
-									if ( row != null ){
-
-										rows.add( row );
-									}
-								}
-
-								if ( rows.size() > 0 ){
-
-									tvTorrents.setSelectedRows( rows.toArray( new TableRowCore[ rows.size() ]));
-								}
-							}
-						});
-
+					
+					setSelectedRows();
 				}
 			}
 
@@ -1037,6 +1013,39 @@ public class OpenTorrentOptionsWindow
 			
 			activeWindowsChanged();
 		}
+	}
+	
+	private void
+	setSelectedRows()
+	{
+		Utils.execSWTThreadLater(
+				0,
+				new Runnable()
+				{
+					@Override
+					public void
+					run()
+					{
+						tvTorrents.processDataSourceQueueSync();
+
+						List<TableRowCore> rows = new ArrayList<>();
+
+						for ( OpenTorrentInstance instance: selected_instances ){
+
+							TableRowCore row = tvTorrents.getRow( instance );
+
+							if ( row != null ){
+
+								rows.add( row );
+							}
+						}
+
+						if ( rows.size() > 0 ){
+
+							tvTorrents.setSelectedRows( rows.toArray( new TableRowCore[ rows.size() ]));
+						}
+					}
+				});
 	}
 	
 	private boolean

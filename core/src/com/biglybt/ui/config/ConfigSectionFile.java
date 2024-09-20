@@ -101,6 +101,13 @@ public class ConfigSectionFile
 		paramShowSep.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramShowSep, listDefaultDir);
 
+		BooleanParameterImpl paramAlwaysSidebar = new BooleanParameterImpl(BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR,
+				"ConfigView.section.file.showopentorrentoptions.always.sidebar");
+		paramAlwaysSidebar.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramAlwaysSidebar, listDefaultDir);
+
+		paramShowSep.addDisabledOnSelection( paramAlwaysSidebar );
+			
 		IntParameterImpl autoClose = new IntParameterImpl(
 				ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS,
 				"ConfigView.label.showopentorrentoptions.autoclose");

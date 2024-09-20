@@ -37,6 +37,7 @@ FEATURE: UI    | Double-click table column header -> size to fit [Parg]
 FEATURE: UI    | Added table header menu to show/hide icons [Parg]
 FEATURE: UI    | Added a "last queued" column [Parg]
 FEATURE: UI    | Added a "last xfer" column [Parg]
+FEATURE: UI    | Added option to always show open-torrent-options dialog sidebar
 
 CHANGE: Tag    | Put download-state tags into a tag group [Parg]
 CHANGE: Tag    | Allow EOS-tag-remove to remove from same Tag [Parg]

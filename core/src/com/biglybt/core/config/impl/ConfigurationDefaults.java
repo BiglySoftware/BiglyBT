@@ -87,6 +87,9 @@ public class ConfigurationDefaults {
 
 
   private final Hashtable parameter_verifiers	= new Hashtable();
+  
+  		// these shouldn't be here as SWT UI specific...
+  
 	public static final String CFG_TORRENTADD_OPENOPTIONS_MANY = "many";
 	public static final String CFG_TORRENTADD_OPENOPTIONS_ALWAYS = "always";
 	public static final String CFG_TORRENTADD_OPENOPTIONS_NEVER = "never";
