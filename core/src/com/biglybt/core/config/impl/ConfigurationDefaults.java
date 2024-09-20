@@ -308,6 +308,7 @@ public class ConfigurationDefaults {
     
     def.put( CFG_TORRENTADD_OPENOPTIONS, CFG_TORRENTADD_OPENOPTIONS_ALWAYS);
     def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, TRUE );
+    def.put( ConfigKeys.File.ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS, ZERO );
     def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR, FALSE );
 
 	File f = null;
