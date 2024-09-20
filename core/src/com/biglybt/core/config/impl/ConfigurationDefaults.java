@@ -305,8 +305,10 @@ public class ConfigurationDefaults {
     def.put("User Mode", ZERO);
 
     //default data location options
+    
     def.put( CFG_TORRENTADD_OPENOPTIONS, CFG_TORRENTADD_OPENOPTIONS_ALWAYS);
-    def.put( CFG_TORRENTADD_OPENOPTIONS_SEP, TRUE );
+    def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, TRUE );
+    def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR, FALSE );
 
 	File f = null;
 
