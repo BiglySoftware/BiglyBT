@@ -29,6 +29,7 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.diskmanager.cache.CacheFileManager;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerStats;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 
@@ -205,9 +206,8 @@ DirectByteBufferPoolReal
 
        }catch (OutOfMemoryError ex) {
 
-         String msg = "Memory allocation failed: Out of direct memory space.\n"
-                    + "To fix: Use the -XX:MaxDirectMemorySize=512m command line option,\n"
-                    + "or upgrade your Java JRE to version 1.4.2_05 or 1.5 series or newer.";
+         String msg = MessageText.getString( "direct.memory.too.small" );
+         
        	 Debug.out( msg );
 
        	 Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, msg));
