@@ -22,6 +22,8 @@ package com.biglybt.core.tracker.server.impl.tcp.blocking;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -57,16 +59,31 @@ TRBlockingServer
 
 	public
 	TRBlockingServer(
-		String		_name,
-		int			_port,
-		InetAddress	_bind_ip,
-		boolean		_ssl,
-		boolean		_apply_ip_filter,
-		boolean		_start_up_ready )
+		String				_name,
+		int					_port,
+		InetAddress			_bind_ip,
+		boolean				_ssl,
+		boolean				_apply_ip_filter,
+		boolean				_start_up_ready )
 
 		throws TRTrackerServerException
 	{
-		super( _name, _port, _ssl, _apply_ip_filter, _start_up_ready );
+		this( _name, _port, _bind_ip, _ssl, _apply_ip_filter, _start_up_ready, new HashMap<>());
+	}
+	
+	public
+	TRBlockingServer(
+		String				_name,
+		int					_port,
+		InetAddress			_bind_ip,
+		boolean				_ssl,
+		boolean				_apply_ip_filter,
+		boolean				_start_up_ready,
+		Map<String,Object>	_properties )
+
+		throws TRTrackerServerException
+	{
+		super( _name, _port, _ssl, _apply_ip_filter, _start_up_ready, _properties );
 
 		boolean	ok = false;
 

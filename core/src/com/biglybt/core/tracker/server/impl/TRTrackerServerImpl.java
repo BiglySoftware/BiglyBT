@@ -37,6 +37,7 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.tracker.server.*;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.tracker.Tracker;
 
 public abstract class
 TRTrackerServerImpl
@@ -359,7 +360,11 @@ TRTrackerServerImpl
 
 	private final TRTrackerServerStatsImpl	stats = new TRTrackerServerStatsImpl( this );
 
-	private final String	name;
+	private final String				name;
+	private final Map<String,Object>	properties;
+	
+	private final boolean				reverse_proxy;
+	
 	private boolean	web_password_enabled;
 	private boolean	web_password_https_only;
 
@@ -392,13 +397,18 @@ TRTrackerServerImpl
 
 	public
 	TRTrackerServerImpl(
-		String		_name,
-		boolean		_start_up_ready )
+		String					_name,
+		boolean					_start_up_ready,
+		Map<String,Object>		_properties )
 	{
 		name		= _name==null?DEFAULT_NAME:_name;
 		is_ready	= _start_up_ready;
+		properties	= _properties==null?new HashMap<>():_properties;
 
-
+		Boolean b_rp = (Boolean)properties.get( Tracker.PR_REVERSE_PROXY );
+		
+		reverse_proxy = b_rp==null?false:b_rp;
+		
 		config_listener =
 			new COConfigurationListener()
 			{
@@ -623,13 +633,17 @@ TRTrackerServerImpl
 		String				password )
 	{
 		if ( headers.toLowerCase( Locale.US ).contains( "x-real-ip")){
-		
-				// someone messing about
+				
+			if ( !reverse_proxy ){
 			
-			return( false );
-		}
+					// someone messing about
+				
+				return( false );
+			}		
+		}else{
 		
-		headers = headers.trim() + "\r\nX-Real-IP: " + AddressUtils.getHostAddress( remote_ip ) + "\r\n\r\n";
+			headers = headers.trim() + "\r\nX-Real-IP: " + AddressUtils.getHostAddress( remote_ip ) + "\r\n\r\n";
+		}
 
 		for (int i=0;i<auth_listeners.size();i++){
 

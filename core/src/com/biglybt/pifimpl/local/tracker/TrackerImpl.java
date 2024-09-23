@@ -28,6 +28,7 @@ package com.biglybt.pifimpl.local.tracker;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -105,6 +106,13 @@ TrackerImpl
 		Debug.out( "Keep alive setting ignored for tracker" );
 	}
 
+	@Override
+	public Map<String, Object> 
+	getProperties()
+	{		
+		return ( new HashMap<>());
+	}
+	
 	@Override
 	public URL[]
 	getURLs()

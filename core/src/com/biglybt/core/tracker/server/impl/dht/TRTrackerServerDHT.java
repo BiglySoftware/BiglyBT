@@ -20,6 +20,7 @@
 package com.biglybt.core.tracker.server.impl.dht;
 
 import java.net.InetAddress;
+import java.util.Map;
 
 import com.biglybt.core.tracker.server.TRTrackerServerRequestListener;
 import com.biglybt.core.tracker.server.impl.TRTrackerServerImpl;
@@ -35,10 +36,11 @@ TRTrackerServerDHT
 {
 	public
 	TRTrackerServerDHT(
-		String		_name,
-		boolean		_start_up_ready )
+		String				name,
+		boolean				start_up_ready,
+		Map<String,Object>	properties )
 	{
-		super( _name, _start_up_ready );
+		super( name, start_up_ready, properties );
 	}
 
 	@Override

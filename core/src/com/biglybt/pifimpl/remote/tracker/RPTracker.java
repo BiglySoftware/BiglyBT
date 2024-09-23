@@ -325,6 +325,15 @@ RPTracker
 	}
 
 	@Override
+	public Map<String, Object> 
+	getProperties()
+	{
+		notSupported();
+		
+		return null;
+	}
+	
+	@Override
 	public void
 	addPageGenerator(
 		TrackerWebPageGenerator	generator )

@@ -24,7 +24,9 @@ import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -117,7 +119,21 @@ TRNonBlockingServer
 
 		throws TRTrackerServerException
 	{
-		this( _name, _port, _bind_ip, _apply_ip_filter, true, _processor_factory );
+		this( _name, _port, _bind_ip, _apply_ip_filter, new HashMap<>(), _processor_factory );
+	}
+	
+	public
+	TRNonBlockingServer(
+		String								_name,
+		int									_port,
+		InetAddress							_bind_ip,
+		boolean								_apply_ip_filter,
+		Map<String,Object>					_properties,
+		TRNonBlockingServerProcessorFactory	_processor_factory )
+
+		throws TRTrackerServerException
+	{
+		this( _name, _port, _bind_ip, _apply_ip_filter, true, _properties, _processor_factory );
 	}
 
 	public
@@ -127,11 +143,12 @@ TRNonBlockingServer
 		InetAddress							_bind_ip,
 		boolean								_apply_ip_filter,
 		boolean								_start_up_ready,
+		Map<String,Object>					_properties,
 		TRNonBlockingServerProcessorFactory	_processor_factory )
 
 		throws TRTrackerServerException
 	{
-		super( _name, _port, false, _apply_ip_filter, _start_up_ready );
+		super( _name, _port, false, _apply_ip_filter, _start_up_ready, _properties );
 
 		processor_factory	= _processor_factory;
 

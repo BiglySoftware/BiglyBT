@@ -41,6 +41,7 @@ Tracker
 		// properties for passing as, well, properties
 
 	public static final String	PR_NON_BLOCKING		= "nonblocking";		// Boolean
+	public static final String	PR_REVERSE_PROXY	= "reverseproxy";		// Boolean
 
 
 	public TrackerTorrent

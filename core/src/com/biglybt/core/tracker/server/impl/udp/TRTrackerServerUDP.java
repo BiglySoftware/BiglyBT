@@ -29,6 +29,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.logging.LogAlert;
@@ -61,11 +62,12 @@ TRTrackerServerUDP
 
 	public
 	TRTrackerServerUDP(
-		String	_name,
-		int		_port,
-		boolean	_start_up_ready )
+		String				_name,
+		int					_port,
+		boolean				_start_up_ready,
+		Map<String,Object>	_properties )
 	{
-		super( _name, _start_up_ready );
+		super( _name, _start_up_ready, _properties );
 
 		port		= _port;
 

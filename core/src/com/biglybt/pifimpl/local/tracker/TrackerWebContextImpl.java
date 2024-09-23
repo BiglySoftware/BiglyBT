@@ -29,6 +29,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,8 @@ TrackerWebContextImpl
 	extends		TrackerWCHelper
 	implements 	TRTrackerServerListener2, TRTrackerServerAuthenticationListener
 {
+	private final Map<String,Object>		properties;
+	
 	protected TRTrackerServer		server;
 
 	protected List<TrackerAuthenticationListener>			auth_listeners	= new ArrayList<>();
@@ -55,10 +58,12 @@ TrackerWebContextImpl
 		int						port,
 		int						protocol,
 		InetAddress				bind_ip,
-		Map<String,Object>		properties )
+		Map<String,Object>		_properties )
 
 		throws TrackerException
 	{
+		properties = _properties==null?new HashMap<>():_properties;
+		
 		setTracker( _tracker );
 
 		try{
@@ -127,6 +132,13 @@ TrackerWebContextImpl
 	getBindIP()
 	{
 		return( server.getBindIP());
+	}
+	
+	@Override
+	public Map<String, Object> 
+	getProperties()
+	{		
+		return( properties );
 	}
 
 	@Override

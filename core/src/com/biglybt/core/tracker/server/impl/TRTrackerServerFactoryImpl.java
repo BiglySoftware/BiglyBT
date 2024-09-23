@@ -169,6 +169,7 @@ TRTrackerServerFactoryImpl
 							bind_ip,
 							apply_ip_filter,
 							start_up_ready,
+							properties,
 							new TRNonBlockingServerProcessorFactory()
 							{
 								@Override
@@ -190,7 +191,7 @@ TRTrackerServerFactoryImpl
 					}
 				}else{
 
-					server = new TRBlockingServer( name, port, bind_ip, ssl, apply_ip_filter, start_up_ready );
+					server = new TRBlockingServer( name, port, bind_ip, ssl, apply_ip_filter, start_up_ready, properties );
 				}
 
 			}else if ( protocol == TRTrackerServerFactory.PR_UDP ){
@@ -200,11 +201,11 @@ TRTrackerServerFactoryImpl
 					throw( new TRTrackerServerException( "TRTrackerServerFactory: UDP doesn't support SSL"));
 				}
 
-				server = new TRTrackerServerUDP( name, port, start_up_ready );
+				server = new TRTrackerServerUDP( name, port, start_up_ready, properties );
 
 			}else{
 
-				server = new TRTrackerServerDHT( name, start_up_ready );
+				server = new TRTrackerServerDHT( name, start_up_ready, properties );
 			}
 
 			servers.add( server );

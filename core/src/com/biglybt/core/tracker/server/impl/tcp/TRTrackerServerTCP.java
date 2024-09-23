@@ -56,15 +56,16 @@ TRTrackerServerTCP
 
 	public
 	TRTrackerServerTCP(
-		String		_name,
-		int			_port,
-		boolean		_ssl,
-		boolean		_apply_ip_filter,
-		boolean		_start_up_ready )
+		String				_name,
+		int					_port,
+		boolean				_ssl,
+		boolean				_apply_ip_filter,
+		boolean				_start_up_ready,
+		Map<String,Object>	_properties )
 
 		throws TRTrackerServerException
 	{
-		super( _name, _start_up_ready );
+		super( _name, _start_up_ready, _properties );
 
 		port					= _port;
 		ssl						= _ssl;

@@ -27,6 +27,7 @@ package com.biglybt.pif.tracker.web;
 
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.Map;
 
 public interface
 TrackerWebContext
@@ -49,6 +50,9 @@ TrackerWebContext
 	setEnableKeepAlive(
 		boolean		enable );
 
+	public Map<String,Object>
+	getProperties();
+	
 	public void
 	addPageGenerator(
 		TrackerWebPageGenerator	generator );
