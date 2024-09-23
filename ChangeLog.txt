@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2024.09.xx | BiglyBT 3.7.0.0  (->B39)
+2024.09.xx | BiglyBT 3.7.0.0
 
 
 FEATURE: Tag   | Added option to hide empty tags in the sidebar [Parg]
@@ -23,6 +23,7 @@ FEATURE: Core  | Added option to switch downloads to "upload only" on disk write
 FEATURE: Core  | Categorise disk errors by type [Parg]
 FEATURE: Core  | Remember recent public IPs [Parg]
 FEATURE: Core  | Support multiple test domains [Parg]
+FEATURE: Core  | Added option to indicate if a service is behind a reverse proxy [Parg]
 FEATURE: UI    | Added copy-to-clipboard menu to DHT activity table [Parg]
 FEATURE: UI    | Added tooltip to tracker lag view showing slowest trackers [Parg]
 FEATURE: UI    | Allow up/down speed disable in basic torrent menu [Parg]
@@ -68,12 +69,13 @@ CHANGE: UI     | Replace play-now column images to remove vague 3D look [Parg]
 CHANGE: UI     | Set preferred width of search/subs results actions column [Parg]
 CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
 CHANGE: UI     | cs_CZ: Czech translation update [Ebedami]
+CHANGE: UI     | et_EE: Estonian translation update [priit.uring]
 CHANGE: UI     | de_DE: German translation update [Georg Engelmann]
 CHANGE: UI     | hu_HU: Hungarian translation update [DSandor]
 CHANGE: UI     | it_IT: Italian translation update [legacychimera247]
-CHANGE: UI     | ja_JP: Japanese translation update [tetoria]
+CHANGE: UI     | ja_JP: Japanese translation update [tetoria, ayano.midori]]
 CHANGE: UI     | ru_RU: Russian translation update [adem4ik]
-CHANGE: UI     | zh_CN: Simplified Chinese translation update [l329978214,ghostchu]
+CHANGE: UI     | zh_CN: Simplified Chinese translation update [l329978214, ghostchu]
 CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
 
 BUGFIX: Tag    | Improve save/reset behaviour for constraint edit [Parg]
