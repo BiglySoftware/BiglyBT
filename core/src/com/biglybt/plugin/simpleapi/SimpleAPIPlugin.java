@@ -1149,7 +1149,14 @@ SimpleAPIPlugin
 				}
 			}else if ( method.equals( "alert" )){
 				
-				DownloadManager dm = getDownloadFromHash( args );
+				DownloadManager dm = null;
+				
+				try{
+					dm = getDownloadFromHash( args );
+					
+				}catch( Throwable e ){
+					
+				}
 
 				String caption	= args.get( "caption" );
 				
@@ -1177,13 +1184,23 @@ SimpleAPIPlugin
 				
 				LogAlert alert = new LogAlert( LogAlert.REPEATABLE, atype, caption );
 				
-				alert.details = dm.getDisplayName();
+				if ( dm != null ){
+				
+					alert.details = dm.getDisplayName();
+				}
 				
 				String details	= args.get( "details" );
 
 				if ( details != null && !details.isEmpty()){
 					
-					alert.details += "\n\n" + details;
+					if ( dm != null ){
+					
+						alert.details += "\n\n" + details;
+					
+					}else{
+					
+						alert.details = details;
+					}
 				}
 				
 				alert.isNative = true;
