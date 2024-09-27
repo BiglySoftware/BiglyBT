@@ -1,8 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2024.09.xx | BiglyBT 3.7.0.0
-
+2024.09.27 | BiglyBT 3.7.0.0
 
 FEATURE: Tag   | Added option to hide empty tags in the sidebar [Parg]
 FEATURE: Tag   | Added "hide when empty" column to tags overview [Parg]
@@ -38,7 +37,7 @@ FEATURE: UI    | Double-click table column header -> size to fit [Parg]
 FEATURE: UI    | Added table header menu to show/hide icons [Parg]
 FEATURE: UI    | Added a "last queued" column [Parg]
 FEATURE: UI    | Added a "last xfer" column [Parg]
-FEATURE: UI    | Added option to always show open-torrent-options dialog sidebar
+FEATURE: UI    | Added option to always show open-torrent-options dialog sidebar [Parg]
 
 CHANGE: Tag    | Put download-state tags into a tag group [Parg]
 CHANGE: Tag    | Allow EOS-tag-remove to remove from same Tag [Parg]
@@ -67,13 +66,14 @@ CHANGE: UI     | Don't remove DND sub-folder from display when configured [Parg]
 CHANGE: UI     | Move SWT-specific plugin implementations to better package [Parg]
 CHANGE: UI     | Replace play-now column images to remove vague 3D look [Parg]
 CHANGE: UI     | Set preferred width of search/subs results actions column [Parg]
+CHANGE: UI     | Update magnet badge [Parg]
 CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
 CHANGE: UI     | cs_CZ: Czech translation update [Ebedami]
 CHANGE: UI     | et_EE: Estonian translation update [priit.uring]
 CHANGE: UI     | de_DE: German translation update [Georg Engelmann]
 CHANGE: UI     | hu_HU: Hungarian translation update [DSandor]
 CHANGE: UI     | it_IT: Italian translation update [legacychimera247]
-CHANGE: UI     | ja_JP: Japanese translation update [tetoria, ayano.midori]]
+CHANGE: UI     | ja_JP: Japanese translation update [tetoria, ayano.midori]
 CHANGE: UI     | ru_RU: Russian translation update [adem4ik]
 CHANGE: UI     | zh_CN: Simplified Chinese translation update [l329978214, ghostchu]
 CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
