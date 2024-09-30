@@ -1743,7 +1743,7 @@ public class MenuBuildUtils {
 		
 		moc_hist.add( 0, path );
 		
-		if ( moc_hist.size() > 10 ){
+		if ( moc_hist.size() > 50 ){	// user wants 50, if people complain too big then make it configurable
 			
 			moc_hist.remove( moc_hist.size()-1 );
 		}
