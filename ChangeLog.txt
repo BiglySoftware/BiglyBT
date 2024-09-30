@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2024.xx.yy | BiglyBT 3.7.0.1
+
 2024.09.27 | BiglyBT 3.7.0.0
 
 FEATURE: Tag   | Added option to hide empty tags in the sidebar [Parg]
