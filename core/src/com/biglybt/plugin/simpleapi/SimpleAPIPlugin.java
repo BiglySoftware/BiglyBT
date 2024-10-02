@@ -960,6 +960,28 @@ SimpleAPIPlugin
 						
 						dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_IP_FILTER, !enable );
 						
+					}else if ( name.equals( "uploadspeedlimit" )){
+
+						try{
+							int rate = Integer.parseInt( value );
+							
+							dm.getStats().setUploadRateLimitBytesPerSecond( rate );
+							
+						}catch( Throwable e ){
+							
+							throw( new Exception( "invalid rate limit '" + value + "'" ));
+						}
+					}else if ( name.equals( "downloadspeedlimit" )){
+
+						try{
+							int rate = Integer.parseInt( value );
+							
+							dm.getStats().setDownloadRateLimitBytesPerSecond( rate );
+							
+						}catch( Throwable e ){
+							
+							throw( new Exception( "invalid rate limit '" + value + "'" ));
+						}
 					}else if ( name.equals( "pluginoption" )){
 												
 						String[] opt_strs = value.split( "&" );
