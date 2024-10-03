@@ -38,6 +38,7 @@ FeatureAvailability
 
 	private static final long	FT_TRIGGER_SPEED_TEST_V1			= 0x0000000000000200;
 	private static final long	FT_DISABLE_MAGNET_MD				= 0x0000000000000800;
+	private static final long	FT_DISABLE_AUTO_IPV6_ENABLE			= 0x0000000000001000;
 
 	private static final VersionCheckClient vcc = VersionCheckClient.getSingleton();
 
@@ -125,6 +126,14 @@ FeatureAvailability
 	triggerSpeedTestV1()
 	{
 		final boolean result = ( vcc.getFeatureFlags() & FT_TRIGGER_SPEED_TEST_V1 ) != 0;
+
+		return( result );
+	}
+	
+	public static boolean
+	isAutoIPV6EnableDisabled()
+	{
+		final boolean result = ( vcc.getFeatureFlags() & FT_DISABLE_AUTO_IPV6_ENABLE ) != 0;
 
 		return( result );
 	}

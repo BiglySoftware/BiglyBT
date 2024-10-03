@@ -4219,7 +4219,7 @@ addressLoop:
 					"IPv6RouteTest", ()->{
 						for ( InetAddress address: addresses ){
 							
-							if ( canConnectWithBind( address, 30*1000 )){
+							if ((!FeatureAvailability.isAutoIPV6EnableDisabled()) || canConnectWithBind( address, 30*1000 )){
 								
 								COConfigurationManager.setParameter( "IPV6 Enable Support Auto Done", true );
 								
