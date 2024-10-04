@@ -906,7 +906,7 @@ WebPlugin
 					parameterChanged(
 						Parameter param )
 					{
-						updatePairing( p_sid );
+						updatePairing( p_sid, "Parameter '" + param.getLabelText() + "' changed" );
 
 						setupUPnP();
 					}
@@ -1489,7 +1489,7 @@ WebPlugin
 
 									if ( p_sid != null ){
 
-										updatePairing( p_sid );
+										updatePairing( p_sid, "I2P destination" );
 									}
 								}
 							}
@@ -1538,7 +1538,7 @@ WebPlugin
 
 									if ( p_sid != null ){
 
-										updatePairing( p_sid );
+										updatePairing( p_sid, "Tor destination" );
 									}
 								}
 							}
@@ -2322,7 +2322,8 @@ WebPlugin
 
 	protected void
 	updatePairing(
-		String		sid )
+		String		sid,
+		String		reason )
 	{
 		PairingManager pm = PairingManagerFactory.getSingleton();
 
@@ -2332,7 +2333,7 @@ WebPlugin
 
 			PairingConnectionData cd = service.getConnectionData();
 
-			log( "Updating pairing information" );
+			log( "Updating pairing information - " + reason );
 
 			try{
 				updatePairing( cd );
