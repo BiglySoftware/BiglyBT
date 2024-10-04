@@ -1206,9 +1206,10 @@ WebPlugin
 
 		if ( !file_root.exists()){
 
-			String	error = "WebPlugin: root dir '" + file_root + "' doesn't exist";
-
-			log.log( LoggerChannel.LT_ERROR, error );
+			// assume resource coming from jar, not an error
+			
+			// String	error = "WebPlugin: root dir '" + file_root + "' doesn't exist";
+			// log.log( LoggerChannel.LT_ERROR, error );
 
 		}else if ( !file_root.isDirectory()){
 
@@ -1696,6 +1697,8 @@ WebPlugin
 					{
 						boolean	result;
 
+						String error = null;
+
 						boolean	auto_auth =  param_auto_auth != null && param_auto_auth.getValue();
 
 						if ( !pw_enable.getValue()){
@@ -1747,7 +1750,7 @@ WebPlugin
 								}
 																
 								result = false;
-								
+																
 								String msg	= "";
 								
 								boolean port_ok = false;
@@ -1903,7 +1906,7 @@ WebPlugin
 								if ( !result ){
 									
 									
-									log.log( "Access denied: No password and " + msg + " (" + client_address + ")");
+									error = "Access denied: No password and " + msg + " (" + client_address + ")";
 								}
 							}
 						}else{
@@ -1917,7 +1920,7 @@ WebPlugin
 
 							if ( !user.equals( p_user_name.getValue())){
 
-								log.log( "Access denied: Incorrect user name: " + user + " (" + client_address + ")" );
+								error = "Access denied: Incorrect user name: " + user + " (" + client_address + ")";
 								
 								result = false;
 
@@ -1938,7 +1941,7 @@ WebPlugin
 								
 								if ( !result ){
 									
-									log.log( "Access denied: Incorrect password" + " (" + client_address + ")" );
+									error = "Access denied: Incorrect password" + " (" + client_address + ")";
 								}
 							}
 						}
@@ -1968,6 +1971,16 @@ WebPlugin
 							result = hasOurCookie( getHeaderField( headers, "Cookie" ));
 						}
 
+						if ( !result ){
+							
+							if ( error == null ){
+								
+								error = "Access denied";
+							}
+							
+							log.log( error );
+						}
+						
 						return( result );
 					}
 
