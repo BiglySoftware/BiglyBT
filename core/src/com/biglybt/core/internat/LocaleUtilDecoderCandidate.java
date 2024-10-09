@@ -22,9 +22,8 @@ package com.biglybt.core.internat;
 
 public class
 LocaleUtilDecoderCandidate
-	implements Comparable
 {
-	private final int					index;
+	private final int			index;
 	private String 				value;
 	private LocaleUtilDecoder	decoder;
 
@@ -50,43 +49,6 @@ LocaleUtilDecoderCandidate
 	{
 		decoder	= _decoder;
 		value	= _value;
-	}
-
-	@Override
-	public int
-	compareTo(Object o)
-	{
-	  LocaleUtilDecoderCandidate candidate = (LocaleUtilDecoderCandidate)o;
-
-	  int	res;
-
-	  if( value == null && candidate.value == null){
-
-		res	= 0;
-
-	  }else if ( value == null ){
-
-		res = 1;
-
-	  }else if ( candidate.value == null ){
-
-		res = -1;
-
-	  }else{
-
-		res = value.length() - candidate.value.length();
-
-		if ( res == 0 ){
-
-			res = index - candidate.index;
-		}
-	  }
-
-	  if ( decoder != null && candidate.getDecoder() != null ){
-
-	  	// System.out.println( "comp:" + decoder.getName() + "/" + candidate.getDecoder().getName() + " -> " + res );
-	  }
-	  return( res );
 	}
 
 	public int getIndex() {

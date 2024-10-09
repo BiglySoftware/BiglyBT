@@ -238,11 +238,13 @@ LocaleUtilSWT
     gridData.widthHint = 100;
     ok.setLayoutData(gridData);
 
+    s.pack();
+    
+    if ( !Utils.linkShellMetricsToConfig( s, "select.encoding" )){
+    	s.setSize(500,500);
 
-    s.setSize(500,500);
-    s.layout();
-
-    Utils.centreWindow(s);
+    	Utils.centreWindow(s);
+    }
 
     ok.addSelectionListener(new SelectionAdapter() {
       @Override
