@@ -705,54 +705,98 @@ TOTorrentDeserialiseImpl
 					has_v1 = true;			
 				
 					TOTorrentFileImpl[] files = new TOTorrentFileImpl[ meta_files.size()];
-	
+
 					if (hasUTF8Keys) {
-	  				for (int i=0;i<files.length;i++){
-	  					Map	file_map = (Map)meta_files.get(i);
-	
-	  					hasUTF8Keys &= file_map.containsKey(TK_PATH_UTF8);
-	  					if (!hasUTF8Keys) {
-	  						break;
-	  					}
-	  				}
-	
-	  				if (hasUTF8Keys) {
-	  					setNameUTF8((byte[])info.get( TK_NAME_UTF8 ));
-	  					setAdditionalStringProperty("encoding", ENCODING_ACTUALLY_UTF8_KEYS);
-	  				}
+						for (int i=0;i<files.length;i++){
+							Map	file_map = (Map)meta_files.get(i);
+
+							hasUTF8Keys &= file_map.containsKey(TK_PATH_UTF8);
+							if (!hasUTF8Keys) {
+								break;
+							}
+						}
+
+						if (hasUTF8Keys) {
+							setNameUTF8((byte[])info.get( TK_NAME_UTF8 ));
+							setAdditionalStringProperty("encoding", ENCODING_ACTUALLY_UTF8_KEYS);
+						}
 					}
-	
+
+					ByteArrayHashMap<byte[]> comp_cache = new ByteArrayHashMap<>();
+					
 					for (int i=0;i<files.length;i++){
 	
 						Map	file_map = (Map)meta_files.get(i);
 	
 						long	len = ((Long)file_map.get( TK_LENGTH )).longValue();
 	
-						List	paths = (List)file_map.get( TK_PATH );
-						List	paths8 = (List)file_map.get( TK_PATH_UTF8 );
+						List	paths	= (List)file_map.get( TK_PATH );
+						
+						List	paths8	= (List)file_map.get( TK_PATH_UTF8 );
 	
 						byte[][]	path_comps = null;
-						if (paths != null) {
-		  					path_comps = new byte[paths.size()][];
+						
+						if ( paths != null ){
 		
-		  					for (int j=0;j<paths.size();j++){
+		  					int limit = paths.size()-1;
+
+		  					path_comps = new byte[limit+1][];
+				  					
+		  					for ( int j=0; j<=limit; j++ ){
 		
-		  						path_comps[j] = (byte[])paths.get(j);
+		  						byte[] comp = (byte[])paths.get(j);
+		  						
+		  						if ( j < limit ){
+		  							
+		  							byte[] existing = comp_cache.get( comp );
+		  							
+		  							if ( existing == null ){
+		  								
+		  								comp_cache.put( comp, comp );
+		  								
+		  							}else{
+		  								
+		  								comp = existing;
+		  							}
+		  						}
+		  						
+		  						path_comps[j] = comp;
 		  					}
 						}
 	
 						TOTorrentFileImpl file;
 	
-						if (hasUTF8Keys) {
-							byte[][]	path_comps8 = new byte[paths8.size()][];
+						if ( hasUTF8Keys ){
+							
+							int limit = paths8.size()-1;
+							
+							byte[][]	path_comps8 = new byte[limit+1][];
+							
+							for ( int j=0; j<=limit; j++){
 	
-							for (int j=0;j<paths8.size();j++){
-	
-								path_comps8[j] = (byte[])paths8.get(j);
+								byte[] comp = (byte[])paths8.get(j);
+		  						
+		  						if ( j < limit ){
+		  							
+		  							byte[] existing = comp_cache.get( comp );
+		  							
+		  							if ( existing == null ){
+		  								
+		  								comp_cache.put( comp, comp );
+		  								
+		  							}else{
+		  								
+		  								comp = existing;
+		  							}
+		  						}
+		  						
+		  						path_comps8[j] = comp;
 							}
 	
 							file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps, path_comps8 );
-						} else {
+							
+						}else{
+							
 							file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps );
 						}
 	

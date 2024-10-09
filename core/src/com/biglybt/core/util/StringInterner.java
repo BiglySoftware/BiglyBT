@@ -297,6 +297,7 @@ StringInterner
 
 
 
+	/*
 	public static byte[] internBytes(byte[] toIntern) {
 
 		if ( DISABLE_INTERNING ){
@@ -356,7 +357,8 @@ StringInterner
 
 		return internedArray;
 	}
-
+	*/
+	
 	/**
 	 * This is based on File.hashCode() and File.equals(), which can return different values for different representations of the same paths.
 	 * Thus internFile should be used with canonized Files exclusively

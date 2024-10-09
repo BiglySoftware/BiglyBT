@@ -199,8 +199,10 @@ TOTorrentFileImpl
 					throw (new TOTorrentException("Torrent file contains illegal '..' component", TOTorrentException.RT_DECODE_FAILS));
 
 				// intern directories as they're likely to repeat
-				if(i < (pc.length - 1))
-					pc[i] = StringInterner.internBytes(pc[i]);
+				// parg - removed this, costly and simpler to do on a per-torrent file basis when
+				// decoding the file components
+				//if(i < (pc.length - 1))
+				//	pc[i] = StringInterner.internBytes(pc[i]);
 			}
 		}
 	}
