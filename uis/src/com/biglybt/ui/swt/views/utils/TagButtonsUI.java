@@ -73,6 +73,11 @@ public class TagButtonsUI
 		mainLayout.type = SWT.VERTICAL;
 		cMainComposite.setLayout(mainLayout);
 
+		for ( TagCanvas tc: tagWidgets ){
+			
+			tc.dispose();
+		}
+		
 		tagWidgets.clear();
 
 		Listener menuDetectListener = allowContextMenu ? event -> {
@@ -336,5 +341,16 @@ public class TagButtonsUI
 		}
 
 		return UPDATETAG_SUCCESS;
+	}
+	
+	public void
+	dispose()
+	{
+		for ( TagCanvas tc: tagWidgets ){
+			
+			tc.dispose();
+		}
+		
+		tagWidgets.clear();
 	}
 }

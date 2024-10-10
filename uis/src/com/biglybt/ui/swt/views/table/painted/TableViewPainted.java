@@ -1581,6 +1581,26 @@ public class TableViewPainted
 			}
 		});
 
+		SelectedContentListener selectedContentListener = 
+			new SelectedContentListener() {
+				@Override
+				public void currentlySelectedContentChanged(
+						ISelectedContent[] currentContent, String viewID) {
+					if ( cTable == null || cTable.isDisposed()){
+						SelectedContentManager.removeCurrentlySelectedContentListener( this );
+					}else{
+						//redrawTable();
+						TableRowCore[] rows = getSelectedRows();
+						for (TableRowCore row : rows) {
+							row.invalidate();
+							redrawRow((TableRowPainted) row, false);
+						}
+					}
+				}
+			};
+
+		SelectedContentManager.addCurrentlySelectedContentListener(selectedContentListener);
+	
 		cTable.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
@@ -1588,27 +1608,10 @@ public class TableViewPainted
 					canvasImage.dispose();
 					canvasImage = null;
 				}
+				SelectedContentManager.removeCurrentlySelectedContentListener( selectedContentListener );
 			}
 		});
-
-
-		SelectedContentManager.addCurrentlySelectedContentListener(new SelectedContentListener() {
-			@Override
-			public void currentlySelectedContentChanged(
-					ISelectedContent[] currentContent, String viewID) {
-				if ( cTable == null || cTable.isDisposed()){
-					SelectedContentManager.removeCurrentlySelectedContentListener( this );
-				}else{
-					//redrawTable();
-					TableRowCore[] rows = getSelectedRows();
-					for (TableRowCore row : rows) {
-						row.invalidate();
-						redrawRow((TableRowPainted) row, false);
-					}
-				}
-			}
-		});
-
+		
 		cTable.addFocusListener(new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {

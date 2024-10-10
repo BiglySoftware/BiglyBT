@@ -33,6 +33,8 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.TOTorrentFactory.TorrentDataHolder;
 import com.biglybt.core.util.*;
 
 public class
@@ -170,7 +172,7 @@ TOTorrentDeserialiseImpl
 
 	public
 	TOTorrentDeserialiseImpl(
-		byte[]		bytes )
+		TorrentDataHolder		bytes )
 
 		throws TOTorrentException
 	{
@@ -278,12 +280,20 @@ TOTorrentDeserialiseImpl
 											TOTorrentException.RT_READ_FAILS ));
 		}
 
-		construct( metaInfo.toByteArray());
-	}
+		byte[] bytes = metaInfo.toByteArray();
+		
+		metaInfo = null;	// allow it to be GC'd while construction takes place
+		
+		TorrentDataHolder d_bytes = new TOTorrentFactory.TorrentDataHolder( bytes );
 
+		bytes = null;
+		
+		construct( d_bytes );
+	}
+	
 	protected void
 	construct(
-		byte[]		bytes )
+		TorrentDataHolder		bytes )
 
 		throws TOTorrentException
 	{
@@ -292,8 +302,10 @@ TOTorrentDeserialiseImpl
 
 			decoder.setVerifyMapOrder( true );
 
-			Map meta_data = decoder.decodeByteArray( bytes );
+			Map meta_data = decoder.decodeByteArray( bytes.getBytes());
 
+			bytes.release();
+			
 			// print( "", "", meta_data );
 
 			construct( meta_data );

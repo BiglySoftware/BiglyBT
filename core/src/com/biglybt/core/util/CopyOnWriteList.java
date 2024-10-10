@@ -296,6 +296,16 @@ implements Iterable<T>
 		}
 	}
 
+	public int
+	indexOf(
+		T		obj )
+	{
+		synchronized( this ){
+			
+			return( list.indexOf(obj));
+		}
+	}
+	
 	public boolean
 	remove(
 		T	obj )

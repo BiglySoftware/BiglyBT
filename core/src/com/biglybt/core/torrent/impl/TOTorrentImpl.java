@@ -1043,7 +1043,7 @@ TOTorrentImpl
 			throw( new TOTorrentException( 	"Torrent isn't hybrid", TOTorrentException.RT_CREATE_FAILED ));
 		}
 		
-		TOTorrent clone = TOTorrentFactory.deserialiseFromBEncodedByteArray( serialiseToByteArray());
+		TOTorrent clone = TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( serialiseToByteArray()));
 
 		TorrentUtils.clearTorrentFileName( clone );
 		
@@ -1070,7 +1070,7 @@ TOTorrentImpl
 		try{
 				// recreate with new properties so result represents this
 			
-			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( BEncoder.encode( clone.serialiseToMap())));
+			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( BEncoder.encode( clone.serialiseToMap()))));
 			
 		}catch( Throwable e ){
 			
@@ -1120,7 +1120,7 @@ TOTorrentImpl
 		throws TOTorrentException
 	{
 		
-		TOTorrent clone = TOTorrentFactory.deserialiseFromBEncodedByteArray( serialiseToByteArray());
+		TOTorrent clone = TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( serialiseToByteArray()));
 
 		TorrentUtils.clearTorrentFileName( clone );
 		
@@ -1162,7 +1162,7 @@ TOTorrentImpl
 		try{
 				// recreate with new properties so result represents this
 			
-			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( BEncoder.encode( clone.serialiseToMap())));
+			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( BEncoder.encode( clone.serialiseToMap()))));
 			
 		}catch( Throwable e ){
 			

@@ -249,6 +249,127 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
+	private static void
+	setupTableTorrents()
+	{
+		TableColumnManager tcm = TableColumnManager.getInstance();
+
+		if (tcm.getDefaultColumnNames(TABLEID_TORRENTS) == null) {
+
+			tcm.registerColumn(OpenTorrentInstance.class,
+					TableColumnOTOT_Position.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOT_Position(column);
+						}
+					});
+
+			tcm.registerColumn(OpenTorrentInstance.class,
+					TableColumnOTOT_Name.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOT_Name(column);
+						}
+					});
+
+			tcm.registerColumn(OpenTorrentInstance.class,
+					TableColumnOTOT_Size.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOT_Size(column);
+						}
+					});
+			
+			tcm.registerColumn(OpenTorrentInstance.class,
+					TableColumnOTOT_SaveLocation.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOT_SaveLocation(column);
+						}
+					});
+
+			tcm.setDefaultColumnNames(TABLEID_TORRENTS, new String[] {
+
+				TableColumnOTOT_Position.COLUMN_ID,
+				TableColumnOTOT_Name.COLUMN_ID,
+				TableColumnOTOT_Size.COLUMN_ID,
+				TableColumnOTOT_SaveLocation.COLUMN_ID,
+			});
+
+			tcm.setDefaultSortColumnName(TABLEID_TORRENTS, TableColumnOTOT_Position.COLUMN_ID);
+		}
+	}
+	
+	private static void
+	setupTableFiles()
+	{
+		TableColumnManager tcm = TableColumnManager.getInstance();
+		if (tcm.getDefaultColumnNames(TABLEID_FILES) == null) {
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Position.COLUMN_ID,
+					new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Position(column);
+						}
+					});
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Download.COLUMN_ID,
+					new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Download(column);
+						}
+					});
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Name.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Name(column);
+						}
+					});
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Size.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Size(column);
+						}
+					});
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Path.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Path(column);
+						}
+					});
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Ext.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Ext(column);
+						}
+					});
+
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_Priority.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_Priority(column);
+						}
+					});
+
+			tcm.setDefaultColumnNames(TABLEID_FILES, new String[] {
+				TableColumnOTOF_Position.COLUMN_ID,
+				TableColumnOTOF_Download.COLUMN_ID,
+				TableColumnOTOF_Name.COLUMN_ID,
+				TableColumnOTOF_Size.COLUMN_ID,
+				TableColumnOTOF_Path.COLUMN_ID,
+				TableColumnOTOF_Priority.COLUMN_ID
+			});
+			tcm.setDefaultSortColumnName(TABLEID_FILES, TableColumnOTOF_Position.COLUMN_ID);
+		}
+	}
+	
 	private static final String CONFIG_FILE = "oto.config";
 	
 	private static volatile boolean initialised;
@@ -380,15 +501,16 @@ public class OpenTorrentOptionsWindow
 
 	private OpenTorrentInstanceListener	optionListener;
 
-	private List<OpenTorrentInstance>	open_instances 		= new ArrayList<>();
+	private CopyOnWriteList<OpenTorrentInstance>	open_instances 		= new CopyOnWriteList<>();
+	
 	private List<OpenTorrentInstance>	selected_instances 	= new ArrayList<>();
 
 	private OpenTorrentInstance			multi_selection_instance;
 
-	protected Map<String,DiscoveredTag> listDiscoveredTags = new TreeMap<>();
-
 	AsyncDispatcher spaceUpdateDispatcher = new AsyncDispatcher();
 
+	private List<Object[]> paramListeners = new ArrayList<>();
+	
 	public static void
 	addTorrent(
 		TorrentOpenOptions torrentOptions )
@@ -574,6 +696,53 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
+	private static void
+	rcmSearch(
+		HashWrapper			hash,
+		String[]			nets )
+	{
+		try{
+			RelatedContentManager rcm = RelatedContentManager.getSingleton();
+	
+			rcm.lookupAttributes(
+				hash.getBytes(),
+				nets,
+				new RelatedAttributeLookupListener(){
+	
+					@Override
+					public void lookupStart() {
+					}
+	
+					@Override
+					public void tagFound(String tag, String network) {
+	
+						OpenTorrentOptionsWindow window;
+						
+						synchronized( active_windows ){
+							
+							window = active_windows.get( hash );
+						}
+						
+						if ( window != null ){
+								
+							window.rcmTagFound( hash, tag, nets );
+						}
+					}
+	
+					@Override
+					public void lookupComplete() {
+					}
+	
+					@Override
+					public void lookupFailed(ContentException error) {
+					}
+				});
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
 	private
 	OpenTorrentOptionsWindow()
 	{
@@ -659,20 +828,22 @@ public class OpenTorrentOptionsWindow
 						COConfigurationManager.setParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, checked );
 					});
 					
-					COConfigurationManager.addParameterListener(
-						ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP,
-							new ParameterListener(){
-								public void 
-								parameterChanged(
-									String name)
-								{
-									if ( opt_sep_dialog.isDisposed()){
-										COConfigurationManager.removeParameterListener( name, this );
-									}else{
-										opt_sep_dialog.setChecked( COConfigurationManager.getBooleanParameter( name ));
-									}
-								}
-							});
+					ParameterListener listener = new ParameterListener(){
+						public void 
+						parameterChanged(
+							String name)
+						{
+							if ( opt_sep_dialog.isDisposed()){
+								COConfigurationManager.removeParameterListener( name, this );
+							}else{
+								opt_sep_dialog.setChecked( COConfigurationManager.getBooleanParameter( name ));
+							}
+						}
+					};
+					
+					COConfigurationManager.addParameterListener( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, listener );
+	
+					paramListeners.add( new Object[]{ ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, listener });
 				}
 				
 				SWTSkinObject soButtonArea = skin_outter.getSkinObject("button-area");
@@ -1016,6 +1187,21 @@ public class OpenTorrentOptionsWindow
 	}
 	
 	private void
+	rcmTagFound(
+		HashWrapper		hash,
+		String			tag,
+		String[]		nets )
+	{
+		for ( OpenTorrentInstance inst: open_instances ){
+			
+			if ( inst.getHash().equals( hash )){
+		
+				inst.rcmTagFound( tag, nets );
+			}
+		}
+	}
+	
+	private void
 	setSelectedRows()
 	{
 		Utils.execSWTThreadLater(
@@ -1063,7 +1249,7 @@ public class OpenTorrentOptionsWindow
 	private List<OpenTorrentInstance>
 	getInstances()
 	{
-		return( new ArrayList<>( open_instances));
+		return( new ArrayList<>( open_instances.getList()));
 	}
 
 	private OpenTorrentInstance
@@ -1084,7 +1270,7 @@ public class OpenTorrentOptionsWindow
 	private void
 	cancelPressed()
 	{
-		for ( final OpenTorrentInstance instance: new ArrayList<>( open_instances )){
+		for ( OpenTorrentInstance instance: open_instances ){
 			
 			instance.cancelPressed();
 		}
@@ -1105,7 +1291,7 @@ public class OpenTorrentOptionsWindow
 
 		AsyncDispatcher dispatcher = new AsyncDispatcher();
 
-		for ( final OpenTorrentInstance instance: new ArrayList<>( open_instances )){
+		for ( OpenTorrentInstance instance: open_instances ){
 
 			String dataDir = instance.cmbDataDir.getText();
 
@@ -1353,53 +1539,7 @@ public class OpenTorrentOptionsWindow
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		label.setLayoutData(gd);
 
-
-		TableColumnManager tcm = TableColumnManager.getInstance();
-
-		if (tcm.getDefaultColumnNames(TABLEID_TORRENTS) == null) {
-
-			tcm.registerColumn(OpenTorrentInstance.class,
-					TableColumnOTOT_Position.COLUMN_ID, new TableColumnCreationListener() {
-						@Override
-						public void tableColumnCreated(TableColumn column) {
-							new TableColumnOTOT_Position(column);
-						}
-					});
-
-			tcm.registerColumn(OpenTorrentInstance.class,
-					TableColumnOTOT_Name.COLUMN_ID, new TableColumnCreationListener() {
-						@Override
-						public void tableColumnCreated(TableColumn column) {
-							new TableColumnOTOT_Name(column);
-						}
-					});
-
-			tcm.registerColumn(OpenTorrentInstance.class,
-					TableColumnOTOT_Size.COLUMN_ID, new TableColumnCreationListener() {
-						@Override
-						public void tableColumnCreated(TableColumn column) {
-							new TableColumnOTOT_Size(column);
-						}
-					});
-			
-			tcm.registerColumn(OpenTorrentInstance.class,
-					TableColumnOTOT_SaveLocation.COLUMN_ID, new TableColumnCreationListener() {
-						@Override
-						public void tableColumnCreated(TableColumn column) {
-							new TableColumnOTOT_SaveLocation(column);
-						}
-					});
-
-			tcm.setDefaultColumnNames(TABLEID_TORRENTS, new String[] {
-
-				TableColumnOTOT_Position.COLUMN_ID,
-				TableColumnOTOT_Name.COLUMN_ID,
-				TableColumnOTOT_Size.COLUMN_ID,
-				TableColumnOTOT_SaveLocation.COLUMN_ID,
-			});
-
-			tcm.setDefaultSortColumnName(TABLEID_TORRENTS, TableColumnOTOT_Position.COLUMN_ID);
-		}
+		setupTableTorrents();
 
 		tvTorrents = TableViewFactory.createTableViewSWT(OpenTorrentInstance.class,
 				TABLEID_TORRENTS, TABLEID_TORRENTS, null, "#", SWT.BORDER
@@ -2107,8 +2247,14 @@ public class OpenTorrentOptionsWindow
 		}
 
 		images_to_dispose.clear();
-
+		
 		tvTorrents.delete();
+		
+		tvTorrents = null;
+		
+		for ( Object[] entry: paramListeners ){
+			COConfigurationManager.removeParameterListener((String)entry[0],(ParameterListener)entry[1]);
+		}
 	}
 
 	protected class
@@ -2117,8 +2263,8 @@ public class OpenTorrentOptionsWindow
 	{
 		final private HashWrapper						hash;
 		
-		final private TorrentOpenOptions 				torrentOptions;
-		final private List<TorrentOpenOptions>			torrentOptionsMulti;
+		final private TorrentOpenOptions 					torrentOptions;
+		final private List<TorrentOpenOptions>				torrentOptionsMulti;
 		
 		final private boolean							isSingleOptions;		// true -> torrentOptions is active, false -> torrentOptions is null and torrentOptionsMulti active
 		
@@ -2190,6 +2336,9 @@ public class OpenTorrentOptionsWindow
 		private Button btnUnmarkSelected;
 		private Button btnRename;
 		private Button btnRetarget;
+				
+		protected Map<String,DiscoveredTag> listDiscoveredTags = new TreeMap<>();
+
 		private Composite tagButtonsArea;
 
 		private TagFeatureFileLocation		tag_save_location;
@@ -2285,77 +2434,41 @@ public class OpenTorrentOptionsWindow
 
 			if ( TagManagerFactory.getTagManager().isEnabled()){
 
-				try {
-					RelatedContentManager rcm = RelatedContentManager.getSingleton();
+				Map<String,Boolean> enabledNetworks = torrentOptions.getEnabledNetworks();
 
-					Map<String,Boolean> enabledNetworks = torrentOptions.getEnabledNetworks();
+				List<String> networks = new ArrayList<>();
 
-					List<String> networks = new ArrayList<>();
+				for ( Map.Entry<String,Boolean> entry: enabledNetworks.entrySet()){
 
-					for ( Map.Entry<String,Boolean> entry: enabledNetworks.entrySet()){
+					if ( entry.getValue()){
 
-						if ( entry.getValue()){
-
-							networks.add( entry.getKey());
-						}
+						networks.add( entry.getKey());
 					}
-
-					if ( networks.size() > 0 ){
-
-						final String[] nets = networks.toArray( new String[networks.size()]);
-
-						List<String>	tag_cache = TorrentUtils.getTagCache( torrentOptions.getTorrent());
-
-						synchronized( listDiscoveredTags ){
-							for ( String tag: tag_cache ){
-								String lcTag = tag.toLowerCase();
-								if ( !listDiscoveredTags.containsKey( lcTag )){
-									listDiscoveredTags.put( lcTag, new DiscoveredTag( tag, nets));								
-									torrentOptions.addSwarmTag( tag );
-								}
-							}
-						}
-						rcm.lookupAttributes(
-							hash.getBytes(),
-							nets,
-							new RelatedAttributeLookupListener(){
-
-								@Override
-								public void lookupStart() {
-								}
-
-								@Override
-								public void tagFound(String tag, String network) {
-
-									String lcTag = tag.toLowerCase();
-									synchronized( listDiscoveredTags ){
-										if (listDiscoveredTags.containsKey(lcTag)) {
-											return;
-										}
-										listDiscoveredTags.put( lcTag, new DiscoveredTag( tag, nets));
-										torrentOptions.addSwarmTag( tag );
-									}
-
-									buildTagButtonPanel();
-								}
-
-								@Override
-								public void lookupComplete() {
-								}
-
-								@Override
-								public void lookupFailed(ContentException error) {
-								}
-							});
-						}
-
-				} catch (ContentException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
 
-			}
+				if ( networks.size() > 0 ){
 
+					final String[] nets = networks.toArray( new String[networks.size()]);
+
+					List<String>	tag_cache = TorrentUtils.getTagCache( torrentOptions.getTorrent());
+
+					synchronized( listDiscoveredTags ){
+						for ( String tag: tag_cache ){
+							String lcTag = tag.toLowerCase();
+							if ( !listDiscoveredTags.containsKey( lcTag )){
+								listDiscoveredTags.put( lcTag, new DiscoveredTag( tag, nets));								
+								torrentOptions.addSwarmTag( tag );
+							}
+						}
+					}
+					
+						// decouple from instance to prevent long running lookup
+						// from holding reference to potentially large memory
+						// ui component
+					
+					rcmSearch( hash, nets );
+				}
+			}
 		}
 
 		private
@@ -2574,6 +2687,23 @@ public class OpenTorrentOptionsWindow
 			tagButtonsUI.updateFields(null);
 		}
 
+		private void
+		rcmTagFound(
+			String		tag,
+			String[]	nets )
+		{
+			String lcTag = tag.toLowerCase();
+			synchronized( listDiscoveredTags ){
+				if (listDiscoveredTags.containsKey(lcTag)) {
+					return;
+				}
+				listDiscoveredTags.put( lcTag, new DiscoveredTag( tag, nets));
+				torrentOptions.addSwarmTag( tag );
+			}
+
+			buildTagButtonPanel();
+		}
+		
 		private void
 		showTreeView()
 		{
@@ -4280,10 +4410,10 @@ public class OpenTorrentOptionsWindow
 						}
 	
 						if (!file.exists()) {
-							fileInfo.isValid = false;
+							fileInfo.setValid( false );
 							bTorrentValid = false;
-						} else if (!fileInfo.isValid) {
-							fileInfo.isValid = true;
+						} else if (!fileInfo.isValid()) {
+							fileInfo.setValid( true );
 						}
 					}
 					
@@ -4643,14 +4773,14 @@ public class OpenTorrentOptionsWindow
 									f_pi.getIPC().invoke(
 										"lookupBySize", 
 											new Object[]{
-												new Long(file.lSize),
+												new Long(file.getSize()),
 												new String[]{ AENetworkClassifier.AT_PUBLIC },
 												file.getDestFileName() });
 										
 								}catch( Throwable e ){
 								
 									f_pi.getIPC().invoke(
-										"lookupBySize", new Object[]{new Long(file.lSize)});
+										"lookupBySize", new Object[]{new Long(file.getSize())});
 								}
 							}catch (Throwable e) {
 
@@ -6034,71 +6164,7 @@ public class OpenTorrentOptionsWindow
 		}
 
 		private void setupTVFiles(SWTSkinObjectContainer soFilesTable, SWTSkinObjectTextbox soFilesFilter ) {
-			TableColumnManager tcm = TableColumnManager.getInstance();
-			if (tcm.getDefaultColumnNames(TABLEID_FILES) == null) {
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Position.COLUMN_ID,
-						new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Position(column);
-							}
-						});
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Download.COLUMN_ID,
-						new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Download(column);
-							}
-						});
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Name.COLUMN_ID, new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Name(column);
-							}
-						});
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Size.COLUMN_ID, new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Size(column);
-							}
-						});
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Path.COLUMN_ID, new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Path(column);
-							}
-						});
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Ext.COLUMN_ID, new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Ext(column);
-							}
-						});
-
-				tcm.registerColumn(TorrentOpenFileOptions.class,
-						TableColumnOTOF_Priority.COLUMN_ID, new TableColumnCreationListener() {
-							@Override
-							public void tableColumnCreated(TableColumn column) {
-								new TableColumnOTOF_Priority(column);
-							}
-						});
-
-				tcm.setDefaultColumnNames(TABLEID_FILES, new String[] {
-					TableColumnOTOF_Position.COLUMN_ID,
-					TableColumnOTOF_Download.COLUMN_ID,
-					TableColumnOTOF_Name.COLUMN_ID,
-					TableColumnOTOF_Size.COLUMN_ID,
-					TableColumnOTOF_Path.COLUMN_ID,
-					TableColumnOTOF_Priority.COLUMN_ID
-				});
-				tcm.setDefaultSortColumnName(TABLEID_FILES, TableColumnOTOF_Position.COLUMN_ID);
-			}
+			setupTableFiles();
 
 			tvFiles = TableViewFactory.createTableViewSWT(TorrentOpenFileOptions.class,
 					TABLEID_FILES, TABLEID_FILES, null, "#", SWT.BORDER
@@ -6393,7 +6459,7 @@ public class OpenTorrentOptionsWindow
 
 
 					String dest_path = tfi_focus.getDestPathName();
-					String parentDir = tfi_focus.parent.getParentDir();
+					String parentDir = tfi_focus.getTorrentOptions().getParentDir();
 
 					List<String> folder_list = new ArrayList<>();
 
@@ -6760,7 +6826,7 @@ public class OpenTorrentOptionsWindow
 						boolean	enable=false;
 						if ( rows.length == 1 ){
 							TorrentOpenFileOptions tfi = ((TorrentOpenFileOptions) rows[0].getDataSource());
-							enable = tfi.lSize >= 50*1024*1024;
+							enable = tfi.getSize() >= 50*1024*1024;
 						}
 						btnSwarmIt.setEnabled(enable);
 					}
@@ -7086,7 +7152,7 @@ public class OpenTorrentOptionsWindow
 				}
 			}else{
 				for (TorrentOpenFileOptions fileInfo : infos) {
-					int style = (fileInfo.parent.getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING)
+					int style = (fileInfo.getTorrentOptions().getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING)
 							? SWT.OPEN : SWT.SAVE;
 					FileDialog fDialog = new FileDialog(shell, SWT.SYSTEM_MODAL
 							| style);
@@ -7115,21 +7181,21 @@ public class OpenTorrentOptionsWindow
 
 					fDialog.setFileName(sFileName);
 					fDialog.setText(MessageText.getString("MainWindow.dialog.choose.savepath")
-							+ " (" + fileInfo.orgFullName + ")");
+							+ " (" + fileInfo.getOriginalFullName() + ")");
 					String sNewName = fDialog.open();
 
 					if (sNewName == null)
 						return;
 
-					if (fileInfo.parent.getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING) {
+					if (fileInfo.getTorrentOptions().getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING) {
 						File file = FileUtil.newFile(sNewName);
-						if (file.length() == fileInfo.lSize)
+						if (file.length() == fileInfo.getSize())
 							fileInfo.setFullDestName(sNewName);
 						else {
 							MessageBoxShell mb = new MessageBoxShell(SWT.OK,
 									"OpenTorrentWindow.mb.badSize", new String[] {
 										file.getName(),
-										fileInfo.orgFullName
+										fileInfo.getOriginalFullName()
 									});
 							mb.setParent(shell);
 							mb.open(null);
@@ -7948,10 +8014,10 @@ public class OpenTorrentOptionsWindow
 
 			TorrentOpenFileOptions[] dataFiles = torrentOptions.getFiles();
 			for (TorrentOpenFileOptions file : dataFiles) {
-				totalSize += file.lSize;
+				totalSize += file.getSize();
 
 				if (file.isToDownload()) {
-					checkedSize += file.lSize;
+					checkedSize += file.getSize();
 					numToDownload++;
 				}
 			}
@@ -8092,7 +8158,7 @@ public class OpenTorrentOptionsWindow
 							}
 						}
 
-						part.bytesToConsume += file.lSize;
+						part.bytesToConsume += file.getSize();
 					}
 				}
 
@@ -8262,7 +8328,7 @@ public class OpenTorrentOptionsWindow
 			for (int j = 0; j < files.length; j++) {
 				TorrentOpenFileOptions fileInfo = files[j];
 				if (fileInfo.getDestFileFullName().exists()) {
-					sExistingFiles += fileInfo.orgFullName + " - "
+					sExistingFiles += fileInfo.getOriginalFullName() + " - "
 							+ torrentOptions.getTorrentName() + "\n";
 					iNumExistingFiles++;
 					if (iNumExistingFiles > 5) {
@@ -8426,6 +8492,15 @@ public class OpenTorrentOptionsWindow
 		{
 			tvFiles.delete();
 			
+			tvFiles = null;
+			
+			if ( tagButtonsUI != null ){
+				
+				tagButtonsUI.dispose();
+				
+				tagButtonsUI = null;
+			}
+						
 			COConfigurationManager.removeParameterListeners(
 					new String[]{
 						"File.Torrent.AutoSkipExtensions",
@@ -8784,7 +8859,7 @@ public class OpenTorrentOptionsWindow
 
 			if ( data instanceof TorrentOpenFileOptions ){
 
-				size = ((TorrentOpenFileOptions)data).lSize;
+				size = ((TorrentOpenFileOptions)data).getSize();
 
 			}else{
 

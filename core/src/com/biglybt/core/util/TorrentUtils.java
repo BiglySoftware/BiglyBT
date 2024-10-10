@@ -47,6 +47,7 @@ import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.torrent.*;
+import com.biglybt.core.torrent.TOTorrentFactory.TorrentDataHolder;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
 import com.biglybt.util.MapUtils;
@@ -408,7 +409,7 @@ TorrentUtils
 				// have to go to byte-array level when cloning otherwise nested Map entries end up being shared between
 				// the original and the clone...
 			
-			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( BEncoder.encode( torrent.serialiseToMap())));
+			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( BEncoder.encode( torrent.serialiseToMap()))));
 			
 		}catch( IOException e ){
 			
@@ -4889,8 +4890,8 @@ TorrentUtils
 					rd.setProperty( "URL_Read_Timeout", timeout );
 				}
 
-				byte[] bytes = FileUtil.readInputStreamAsByteArray( rd.download(), BDecoder.MAX_BYTE_ARRAY_SIZE );
-
+				TorrentDataHolder bytes = new TOTorrentFactory.TorrentDataHolder( FileUtil.readInputStreamAsByteArray( rd.download(), BDecoder.MAX_BYTE_ARRAY_SIZE ));
+				
 				return( TOTorrentFactory.deserialiseFromBEncodedByteArray( bytes ));
 
 			}finally{

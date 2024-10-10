@@ -937,19 +937,18 @@ public class TorrentOpenOptions
 	public void
 	rebuildOriginalNames()
 	{
-		if (files == null) {
+		if ( files == null ){
+			
 			return;
 		}
-		TOTorrentFile[] tfiles = torrent.getFiles();
+
 		for (int i = 0; i < files.length; i++) {
-			TOTorrentFile	torrentFile = tfiles[i];
 
 			if (files[i] != null) {
-				files[i].orgFullName = torrentFile.getRelativePath(); // translated to locale
-				files[i].setOriginalFileName( FileUtil.newFile(files[i].orgFullName).getName());
+				
+				files[i].setOriginalFileNames();
 			}
 		}
-
 	}
 
 	public void
@@ -976,17 +975,14 @@ public class TorrentOpenOptions
 		for ( int i=0;i<tfiles.length;i++){
 
 			TOTorrentFile	torrentFile = tfiles[i];
-
-			String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
-			String	orgFileName = FileUtil.newFile(orgFullName).getName();
-
+			
 			boolean	wanted = !skip[i];
 
 			TorrentOpenFileOptions file = files[i];
 			
 			if ( file == null ){
 				
-				file = files[i] = new TorrentOpenFileOptions( this, i, orgFullName, orgFileName, torrentFile.getLength(), wanted );
+				file = files[i] = new TorrentOpenFileOptions( this, torrentFile, wanted );
 				
 			}else{
 								
@@ -997,7 +993,7 @@ public class TorrentOpenOptions
 			
 			if ( !priority_file_exts.isEmpty()){
 				
-                String      ext  = orgFileName;
+                String      ext  = file.getOriginalFileName();
 
                 int separator = ext.lastIndexOf(".");
 
@@ -1086,7 +1082,7 @@ public class TorrentOpenOptions
 				
 				if ( !ext.isEmpty()){
 					
-					long file_size = file.lSize;
+					long file_size = file.getSize();
 					
 					long[] size = ext_map.get( ext );
 					
@@ -1259,7 +1255,7 @@ public class TorrentOpenOptions
 
 				for ( TorrentOpenFileOptions file: files ){
 
-					totalSize += file.lSize;
+					totalSize += file.getSize();
 				}
 			}
 		}
@@ -1376,7 +1372,7 @@ public class TorrentOpenOptions
 				continue;
 
 			File file = fileInfo.getDestFileFullName();
-			if (!file.exists() || file.length() != fileInfo.lSize) {
+			if (!file.exists() || file.length() != fileInfo.getSize()) {
 				return false;
 			}
 		}
@@ -2132,7 +2128,7 @@ public class TorrentOpenOptions
 
 							for (int iIndex = 0; iIndex < fileInfos.length; iIndex++) {
 								DiskManagerFileInfo fileInfo = fileInfos[iIndex];
-								if (iIndex < files.length && files[iIndex].lSize == fileInfo.getLength()) {
+								if (iIndex < files.length && files[iIndex].getSize() == fileInfo.getLength()) {
 									// Always pull destination file from fileInfo and not from
 									// TorrentFileInfo because the destination may have changed
 									// by magic code elsewhere

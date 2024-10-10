@@ -1138,7 +1138,7 @@ MagnetPlugin
 											if ( result != null ){
 												
 												try{
-													TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
+													TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( result ));
 													
 													String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
 													
@@ -1834,7 +1834,7 @@ MagnetPlugin
 		if ( dn != null || new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 || !initial_tags.isEmpty() || !other_metadata.isEmpty()){
 
 			try{
-				TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( torrent_data );
+				TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray(new TOTorrentFactory.TorrentDataHolder( torrent_data ));
 
 				boolean	update_torrent = false;
 
@@ -3074,7 +3074,7 @@ MagnetPlugin
 													byte[]	data = (byte[])value.getValue(byte[].class);
 
 													try{
-														TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( data );
+														TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( new TOTorrentFactory.TorrentDataHolder( data ));
 
 														if ( Arrays.equals( hash, torrent.getHash())){
 

@@ -169,6 +169,7 @@ public class TagPainter
 			font.dispose();
 			font = null;
 		}
+		trigger = null;
 		disposed = true;
 	}
 

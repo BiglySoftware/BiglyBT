@@ -84,10 +84,10 @@ TOTorrentFactory
 	{
 		return( new TOTorrentDeserialiseImpl( is ));
 	}
-
+	
     public static TOTorrent
     deserialiseFromBEncodedByteArray(
-        byte[]      bytes )
+    	TorrentDataHolder      bytes )
 
         throws TOTorrentException
     {
@@ -267,5 +267,30 @@ TOTorrentFactory
 		TOTorrentListener		listener )
 	{
 		TOTorrentImpl.removeGlobalListener( listener );
+	}
+	
+	public static class
+	TorrentDataHolder
+	{
+		private byte[] bytes;
+		
+		public
+		TorrentDataHolder(
+			byte[]		_bytes )
+		{
+			bytes = _bytes;
+		}
+		
+		public byte[] 
+		getBytes()
+		{
+			return( bytes );
+		}
+		
+		public void 
+		release()
+		{
+			bytes = null;
+		}
 	}
 }

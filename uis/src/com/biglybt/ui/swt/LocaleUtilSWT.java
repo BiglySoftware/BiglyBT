@@ -19,8 +19,8 @@
 
 package com.biglybt.ui.swt;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -33,7 +33,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.*;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
@@ -47,9 +46,9 @@ public class
 LocaleUtilSWT
 	implements LocaleUtilListener
 {
-  protected static boolean 				rememberEncodingDecision = true;
-  protected static LocaleUtilDecoder 	rememberedDecoder 		 = null;
-  protected static Object				remembered_on_behalf_of;
+  protected static boolean 					rememberEncodingDecision = true;
+  protected static LocaleUtilDecoder 		rememberedDecoder 		 = null;
+  protected static WeakReference<Object>	remembered_on_behalf_of_ref = new WeakReference<>(null);
 
 
   public
@@ -67,9 +66,9 @@ LocaleUtilSWT
 			throws LocaleUtilEncodingException
 	{
 		if (!forceAsk) {
-			if (decision_owner != remembered_on_behalf_of) {
+			if (decision_owner != remembered_on_behalf_of_ref.get()) {
 
-				remembered_on_behalf_of = decision_owner;
+				remembered_on_behalf_of_ref = new WeakReference<>( decision_owner );
 				rememberedDecoder = null;
 			}
 

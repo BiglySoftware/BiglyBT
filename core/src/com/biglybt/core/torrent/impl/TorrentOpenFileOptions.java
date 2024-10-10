@@ -17,7 +17,9 @@
 
 package com.biglybt.core.torrent.impl;
 
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner;
 
 import java.io.File;
 
@@ -29,17 +31,18 @@ import java.io.File;
  */
 public class TorrentOpenFileOptions
 {
-	/** relative path + full file name as specified by the torrent */
-	/** @todo: getter/setters */
-	public String orgFullName;
+	private final TorrentOpenOptions torrentOptions;
 
-	/** @todo: getter/setters */
+	/** relative path + full file name as specified by the torrent */
+
+	private final TOTorrentFile	tfile;
+	
+	private String orgParent;
+
 	private String orgFileName;
 
-	/** @todo: getter/setters */
-	public final long lSize;
-
 	/** Whether to download this file.  Probably should be switched to the DND state variable */
+	
 	private boolean toDownload;
 	private int		priority;
 	private boolean	priority_auto;
@@ -49,67 +52,95 @@ public class TorrentOpenFileOptions
 
 	private boolean	didManualRename;
 
-	/** @todo: getter/setters */
-	private final int iIndex;
+	private boolean isValid;
 
-	/** @todo: getter/setters */
-	public boolean isValid;
-
-	/** @todo: getter/setters */
-	public final TorrentOpenOptions parent;
-
-
-	/**
-	 * Init
-	 *
-	 * @param parent
-	 * @param torrentFile
-	 * @param iIndex
-	 */
 	public
 	TorrentOpenFileOptions(
 		TorrentOpenOptions 	parent,
-		int 				iIndex,
-		String				orgFullName,
-		String				orgFileName,
-		long				lSize,
+		TOTorrentFile		tfile,
 		boolean				wanted )
 	{
-		this.parent 		= parent;
-		this.iIndex 		= iIndex;
-		this.orgFullName	= orgFullName;
-		this.orgFileName	= orgFileName;
-
-		this.lSize 	= lSize;
-
+		this.torrentOptions 	= parent;
+		this.tfile			= tfile;
+		
+		setOriginalFileNames();
+		
 		setToDownload( wanted );
 
 		isValid = true;
 	}
 
+	protected void
+	setOriginalFileNames()
+	{
+			// called directly after a torrent locale change
+		
+		String fileStr = tfile.getRelativePath(); // translated to locale
+		
+		File file = FileUtil.newFile( fileStr );
+		
+		String parent	= file.getParent();
+		
+		if ( parent == null || parent.isEmpty()){
+			
+			orgParent = null;
+			
+		}else{
+			
+			orgParent = StringInterner.intern( parent );
+		}
+		
+		orgFileName = file.getName();
+	}
+	
 	public TorrentOpenOptions
 	getTorrentOptions()
 	{
-		return( parent );
+		return( torrentOptions );
 	}
 	
 	public int
 	getIndex()
 	{
-		return( iIndex );
+		return( tfile.getIndex());
 	}
 
+	public boolean
+	isValid()
+	{
+		return( isValid );
+	}
+	
+	public void
+	setValid(
+		boolean	b )
+	{
+		isValid = b;
+	}
+	
+	public long
+	getSize()
+	{
+		return( tfile.getLength());
+	}
+	
+	public String
+	getOriginalFullName()
+	{
+		if ( orgParent == null ){
+			
+			return( orgFileName );
+			
+		}else{
+		
+			return( orgParent + File.separator + orgFileName );
+		}
+	}
+	
 	public String
 	getOriginalFileName()
 	{
 		return( orgFileName );
-	}
-	
-	public void
-	setOriginalFileName(
-		String str )
-	{
-		orgFileName = str;
 	}
 	
 	public void setFullDestName(String newFullName)
@@ -128,8 +159,8 @@ public class TorrentOpenFileOptions
 
 	public void setDestPathName(String newPath)
 	{
-		if(parent.getTorrent().isSimpleTorrent())
-			parent.setParentDir(newPath);
+		if(torrentOptions.getTorrent().isSimpleTorrent())
+			torrentOptions.setParentDir(newPath);
 		else
 			destPathName = newPath;
 	}
@@ -145,14 +176,20 @@ public class TorrentOpenFileOptions
 		}
 	}
 
-	public String getDestPathName() {
-		if (destPathName != null)
+	public String 
+	getDestPathName() 
+	{
+		if ( destPathName != null ){
+			
 			return destPathName;
-
-		if (parent.getTorrent().isSimpleTorrent())
-			return parent.getParentDir();
-
-		return FileUtil.newFile(parent.getDataDir(), orgFullName).getParent();
+		}
+		
+		if ( torrentOptions.getTorrent().isSimpleTorrent()){
+			
+			return torrentOptions.getParentDir();
+		}
+		
+		return FileUtil.newFile(torrentOptions.getDataDir(), getOriginalFullName()).getParent();
 	}
 
 	public boolean
@@ -161,24 +198,32 @@ public class TorrentOpenFileOptions
 		return( didManualRename );
 	}
 
-	public String getDestFileName() {
+	public String 
+	getDestFileName()
+	{
 		return destFileName == null ? orgFileName : destFileName;
 	}
 
-	public File getDestFileFullName() {
+	public File 
+	getDestFileFullName() 
+	{
 		String path = getDestPathName();
+		
 		String file = getDestFileName();
+		
 		return FileUtil.newFile(path,file);
 	}
 
-	public boolean okToDisable() {
-		return /* lSize >= MIN_NODOWNLOAD_SIZE	|| */parent.okToDisableAll();
+	public boolean 
+	okToDisable() 
+	{
+		return( torrentOptions.okToDisableAll());
 	}
 
 	public File
 	getInitialLink()
 	{
-		return( parent.getInitialLinkage( iIndex ));
+		return( torrentOptions.getInitialLinkage( getIndex()));
 	}
 
 	public boolean isLinked()
@@ -192,7 +237,7 @@ public class TorrentOpenFileOptions
 
 	public void setToDownload(boolean toDownload) {
 		this.toDownload = toDownload;
-		parent.fileDownloadStateChanged(this, toDownload);
+		torrentOptions.fileDownloadStateChanged(this, toDownload);
 	}
 
 	public int
@@ -216,6 +261,7 @@ public class TorrentOpenFileOptions
 		
 		priority = _priority;
 		
-		parent.filePriorityStateChanged(this, _priority);
+		torrentOptions.filePriorityStateChanged(this, _priority);
 	}
 }
+

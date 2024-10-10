@@ -61,6 +61,7 @@ import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.TOTorrentFactory.TorrentDataHolder;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.vuzefile.VuzeFile;
@@ -6855,7 +6856,11 @@ SubscriptionManagerImpl
 
 			log( "Subscription torrent downloaded" );
 
-			TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( torrent_data );
+			TorrentDataHolder d_bytes = new TOTorrentFactory.TorrentDataHolder( torrent_data );
+			
+			torrent_data = null;
+			
+			TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( d_bytes );
 
 				// update size is just that of signed content, torrent itself is .vuze file
 				// so take this into account

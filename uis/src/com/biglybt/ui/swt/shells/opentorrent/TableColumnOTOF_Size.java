@@ -57,9 +57,9 @@ public class TableColumnOTOF_Size
   		return;
   	}
   	TorrentOpenFileOptions tfi = (TorrentOpenFileOptions) ds;
-  	cell.setSortValue(tfi.lSize);
-  	cell.setText(DisplayFormatters.formatByteCountToKiBEtc(tfi.lSize));
-  	TableColumnSWTUtils.setSizeAlpha( cell, tfi.lSize );
+  	cell.setSortValue(tfi.getSize());
+  	cell.setText(DisplayFormatters.formatByteCountToKiBEtc(tfi.getSize()));
+  	TableColumnSWTUtils.setSizeAlpha( cell, tfi.getSize() );
   }
 
 	@Override
@@ -70,7 +70,7 @@ public class TableColumnOTOF_Size
   	}
   	TorrentOpenFileOptions tfi = (TorrentOpenFileOptions) ds;
 
-  	float pct = tfi.lSize / (float) tfi.parent.getTorrent().getSize();
+  	float pct = tfi.getSize() / (float) tfi.getTorrentOptions().getTorrent().getSize();
 
   	Rectangle bounds = cell.getBounds();
 
@@ -96,7 +96,7 @@ public class TableColumnOTOF_Size
 		}
 		TorrentOpenFileOptions tfi = (TorrentOpenFileOptions) ds;
 
-		String tooltip = NumberFormat.getInstance().format(tfi.lSize) + " "
+		String tooltip = NumberFormat.getInstance().format(tfi.getSize()) + " "
 			+ MessageText.getString("DHTView.transport.bytes");
 
 		cell.setToolTip(tooltip);
