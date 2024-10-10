@@ -363,6 +363,7 @@ StringInterner
 	 * This is based on File.hashCode() and File.equals(), which can return different values for different representations of the same paths.
 	 * Thus internFile should be used with canonized Files exclusively
 	 */
+	/*
 	public static File internFile(File toIntern) {
 
 		if ( DISABLE_INTERNING ){
@@ -423,7 +424,8 @@ StringInterner
 
 		return internedFile;
 	}
-
+	*/
+	
 	public static URL internURL(URL toIntern) {
 
 		if ( DISABLE_INTERNING ){
