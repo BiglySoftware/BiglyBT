@@ -5840,6 +5840,136 @@ public class ManagerUtils {
 		file_info.setSkipped( skipped );
 	}
 	
+	/**
+	 * Takes account of whether the download has ever been started and if not selects between normal/delete 
+	 * as opposed to normal/do-not-download
+	 * @param file_infos
+	 * @param skipped
+	 */
+	
+	public static void
+	setFilesSkipped(
+		List<DiskManagerFileInfo>	file_infos,
+		boolean						skipped )
+	{
+		Map<DownloadManager,List<DiskManagerFileInfo>> dm_map = new IdentityHashMap<>();
+		
+		for ( DiskManagerFileInfo file: file_infos ){
+			
+			DownloadManager dm = file.getDownloadManager();
+			
+			if ( dm == null ){
+				
+				continue;
+			}
+			
+			List<DiskManagerFileInfo> files = dm_map.get( dm );
+			
+			if ( files == null ){
+				
+				files = new ArrayList<>();
+				
+				dm_map.put( dm, files );
+			}
+			
+			files.add( file );
+		}
+		
+		for ( Map.Entry<DownloadManager,List<DiskManagerFileInfo>> entry: dm_map.entrySet()){
+			
+			DownloadManager				dm		= entry.getKey();
+			List<DiskManagerFileInfo>	files	= entry.getValue();
+			
+			DiskManagerFileInfoSet info_set = dm.getDiskManagerFileInfoSet();
+
+			if ( skipped ){
+				
+				if ( dm.getState() == DownloadManager.STATE_STOPPED ){
+					
+					if ( !dm.isDataAlreadyAllocated() && dm.getStats().getSecondsDownloading() <= 0 ){
+										
+						List<DiskManagerFileInfo>	change_compact			= new ArrayList<>( files.size());
+						List<DiskManagerFileInfo>	change_reorder_compact	= new ArrayList<>( files.size());
+						
+						for ( DiskManagerFileInfo file_info: files ){
+							
+							if ( !file_info.getFile( true ).exists()){
+								
+								int existing_storage_type = file_info.getStorageType();
+								
+								int compact_target;
+								
+								if ( existing_storage_type == DiskManagerFileInfo.ST_COMPACT || existing_storage_type == DiskManagerFileInfo.ST_LINEAR ){
+									
+									compact_target 		= DiskManagerFileInfo.ST_COMPACT;
+									
+								}else{
+									
+									compact_target 		= DiskManagerFileInfo.ST_REORDER_COMPACT;
+								}
+																
+								if ( existing_storage_type != compact_target ){
+									
+									if ( compact_target == DiskManagerFileInfo.ST_COMPACT ){
+										
+										change_compact.add( file_info );
+									
+									}else{
+										
+										change_reorder_compact.add( file_info );
+									}
+								}
+							}
+						}
+						
+						if ( !change_compact.isEmpty()){
+							
+							boolean[]	changed = new boolean[info_set.nbFiles()];
+							
+							for ( DiskManagerFileInfo file: change_compact ){
+										
+								changed[file.getIndex()]	= true;
+							}
+							
+							info_set.setStorageTypes( changed, DiskManagerFileInfo.ST_COMPACT );
+						}
+						
+						if ( !change_reorder_compact.isEmpty()){
+							
+							boolean[]	changed = new boolean[info_set.nbFiles()];
+							
+							for ( DiskManagerFileInfo file: change_reorder_compact ){
+										
+								changed[file.getIndex()]	= true;
+							}
+							
+							info_set.setStorageTypes( changed, DiskManagerFileInfo.ST_REORDER_COMPACT );
+						}
+					}
+				}
+			}
+			
+			boolean[]	changed = new boolean[info_set.nbFiles()];
+			
+			boolean has_changes = false;
+			
+			for ( DiskManagerFileInfo file_info: files ){
+
+				if ( file_info.isSkipped() != skipped ){
+					
+					changed[ file_info.getIndex() ] = true;
+					
+					has_changes = true;
+				}
+			}
+			
+			if ( has_changes ){
+			
+				info_set.setSkipped( changed, skipped );
+			}
+		}
+	}
+	
 	private static final Object LOW_RES_RECHECK_KEY = new Object();
 	
 	public static boolean

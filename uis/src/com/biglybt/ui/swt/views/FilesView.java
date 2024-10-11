@@ -2203,6 +2203,10 @@ public class FilesView
 		public List<FilesViewTreeNode>
 		getKids();
 		
+		public void
+		getLeaves(
+			List<FilesViewNodeLeaf>		leaves );
+		
 		public int
 		getDepth();
 		
@@ -2419,12 +2423,31 @@ public class FilesView
 		setSkipped(
 			boolean b )
 		{	
-			for ( FilesViewTreeNode kid: kids.values()){
+			List<FilesViewNodeLeaf>	leaves = new ArrayList<>();
+			
+			getLeaves( leaves );
+			
+			List<DiskManagerFileInfo>	delegates = new ArrayList<>( leaves.size());
+			
+			for ( FilesViewNodeLeaf l: leaves ){
 				
-				kid.setSkipped( b );
+				delegates.add( l.getTarget());
 			}
+			
+			ManagerUtils.setFilesSkipped( delegates, b );
 		}
 
+		@Override
+		public void
+		getLeaves(
+			List<FilesViewNodeLeaf>	result )
+		{
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				kid.getLeaves( result );
+			}
+		}
+		
 		@Override
 		public Boolean 
 		isSkipping()
@@ -2808,6 +2831,14 @@ public class FilesView
 		getKids()
 		{
 			return( Collections.emptyList());
+		}
+		
+		@Override
+		public void
+		getLeaves(
+			List<FilesViewNodeLeaf>	result )
+		{
+			result.add( this );
 		}
 		
 		@Override
