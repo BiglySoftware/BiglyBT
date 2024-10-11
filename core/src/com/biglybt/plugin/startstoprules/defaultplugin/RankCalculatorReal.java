@@ -158,6 +158,27 @@ RankCalculatorReal
 	// don't count x peers as a full copy if seeds below
 	private static int iFakeFullCopySeedStart;
 
+	private static void
+	checkConfigListener(
+		PluginConfig		config )
+	{
+		synchronized( RankCalculatorReal.class ){
+
+			if (configListener == null) {
+
+				configListener = new COConfigurationListener() {
+					@Override
+					public void configurationSaved() {
+						reloadConfigParams(config);
+					}
+				};
+
+				COConfigurationManager.addListener(configListener);
+				configListener.configurationSaved();
+			}
+		}
+	}
+	
 	//
 	// Class variables
 
@@ -262,24 +283,7 @@ RankCalculatorReal
 				
 		setupTagData();
 		
-		try {
-			downloadData_this_mon.enter();
-
-			if (configListener == null) {
-
-				configListener = new COConfigurationListener() {
-					@Override
-					public void configurationSaved() {
-						reloadConfigParams(rules.plugin_config);
-					}
-				};
-
-				COConfigurationManager.addListener(configListener);
-				configListener.configurationSaved();
-			}
-		} finally {
-			downloadData_this_mon.exit();
-		}
+		checkConfigListener( rules.plugin_config );
 	}
 
 	@Override

@@ -2480,9 +2480,13 @@ MagnetPlugin
 
 										if ( dummy_hash || Arrays.equals( torrent.getHash(), hash )){
 
+											Map map = torrent.serialiseToMap();
+											
+											torrent = null;
+											
 											synchronized( md_downloader ){
 
-												result_holder[0] = BEncoder.encode( torrent.serialiseToMap());
+												result_holder[0] = BEncoder.encode( map );
 											}
 										}
 									}
@@ -2521,6 +2525,8 @@ MagnetPlugin
 							if ( result_holder[0] != null ){
 								
 								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks,  md_downloader[0] ));
+								
+								result_holder[0] = null;
 								
 								return;
 							}
@@ -2616,7 +2622,7 @@ MagnetPlugin
 									@Override
 									public void
 									complete(
-										TOTorrent		torrent,
+										TOTorrent[]		torrent,
 										Set<String>		peer_networks )
 									{
 										if ( listener != null ){
@@ -2628,7 +2634,11 @@ MagnetPlugin
 											additional_networks.addAll( peer_networks );
 
 											try{
-												result_holder[0] = BEncoder.encode( torrent.serialiseToMap());
+												Map map = torrent[0].serialiseToMap();
+											
+												torrent[0] = null;
+											
+												result_holder[0] = BEncoder.encode(  map );
 
 											}catch( Throwable e ){
 
@@ -2700,6 +2710,8 @@ MagnetPlugin
 							if ( result_holder[0] != null ){
 
 								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
+								
+								result_holder[0] = null;
 								
 								return;
 							}
@@ -2952,6 +2964,8 @@ MagnetPlugin
 										
 										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
 										
+										result_holder[0] = null;
+										
 										return;
 									}
 									
@@ -3131,6 +3145,8 @@ MagnetPlugin
 
 										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
 										
+										result_holder[0] = null;
+										
 										return;
 									}
 									
@@ -3201,7 +3217,9 @@ MagnetPlugin
 														done = true;
 														
 														result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
-																												
+																
+														result_holder[0] = null;
+														
 													}else if ( result_error[0] != null ){
 						
 														done = true;

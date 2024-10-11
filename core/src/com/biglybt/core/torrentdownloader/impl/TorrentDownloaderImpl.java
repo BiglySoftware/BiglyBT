@@ -71,7 +71,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
   private boolean cancel = false;
   private String filename, directoryname;
   private File file = null;
-  private final byte[] buf = new byte[1020];
+  private final byte[] buf = new byte[128*1024];
   private int bufBytes = 0;
   private boolean deleteFileOnCancel = true;
   private boolean ignoreReponseCode = false;

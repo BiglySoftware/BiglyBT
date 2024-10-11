@@ -185,7 +185,7 @@ MagnetPluginMDDownloader
 		final Throwable[] 	error 				= { null };
 		final boolean[]		manually_removed 	= { false };
 		
-		final ByteArrayOutputStream	result = new ByteArrayOutputStream(32*1024);
+		ByteArrayOutputStream	result = new ByteArrayOutputStream(32*1024);
 
 		TOTorrentAnnounceURLSet[]	url_sets = null;
 
@@ -1061,8 +1061,12 @@ MagnetPluginMDDownloader
 					
 					byte[]	bytes = result.toByteArray();
 	
+					result = null;	// release mem, for large torrents this can be important...
+					
 					Map<String,Object>	info = BDecoder.decode( bytes );
 	
+					bytes = null;	// release mem
+					
 					Map<String,Object>	map = new HashMap<>();
 	
 					map.put( "info", info );
@@ -1159,7 +1163,13 @@ MagnetPluginMDDownloader
 					}catch( Throwable e ){
 					}
 					
-					reportComplete( torrent, peer_networks );
+						// allows reportComplete to release torrent memory
+					
+					TOTorrent[] t = { torrent };
+					
+					torrent = null;
+					
+					reportComplete( t, peer_networks );
 	
 				}else{
 						
@@ -1334,7 +1344,7 @@ MagnetPluginMDDownloader
 		
 		private void
 		reportComplete(
-			TOTorrent		torrent,
+			TOTorrent[]		torrent,
 			Set<String>		peer_networks )
 		{
 			synchronized( INSTANCE_LOCK ){
@@ -1365,7 +1375,7 @@ MagnetPluginMDDownloader
 		
 		public void
 		complete(
-			TOTorrent		torrent,
+			TOTorrent[]		torrent,
 			Set<String>		peer_networks );
 
 		public void

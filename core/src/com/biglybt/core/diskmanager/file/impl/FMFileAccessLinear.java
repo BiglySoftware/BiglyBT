@@ -69,7 +69,7 @@ FMFileAccessLinear
 		throws FMFileManagerException
 	{
 		try{
-			AEThread2.setDebug( owner );
+			// AEThread2.setDebug( owner );
 
 			return( fa.getLength());
 
@@ -88,7 +88,7 @@ FMFileAccessLinear
 		throws FMFileManagerException
 	{
 		try{
-			AEThread2.setDebug( owner );
+			// AEThread2.setDebug( owner );
 
 			try{
 				fa.setLength( length );
@@ -200,7 +200,7 @@ FMFileAccessLinear
 			throw( new FMFileManagerException( FMFileManagerException.OP_READ, "read failed: file is closed"));
 		}
 
-		AEThread2.setDebug( owner );
+		// AEThread2.setDebug( owner );
 
 		try{
 			if(USE_MMAP)
@@ -248,7 +248,7 @@ FMFileAccessLinear
 			throw( new FMFileManagerException( FMFileManagerException.OP_READ, "read failed: file is closed"));
 		}
 
-		AEThread2.setDebug( owner );
+		// AEThread2.setDebug( owner );
 
 		int[]	original_positions = new int[buffers.length];
 
@@ -426,7 +426,7 @@ FMFileAccessLinear
 			throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "write failed: file is closed"));
 		}
 
-		AEThread2.setDebug( owner );
+		// AEThread2.setDebug( owner );
 
 		int[]	original_positions = new int[buffers.length];
 

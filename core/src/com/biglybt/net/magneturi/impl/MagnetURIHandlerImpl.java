@@ -734,10 +734,11 @@ MagnetURIHandlerImpl
 							}
 						});
 
+				final byte[][] 		f_data 	= { null };
+
 				try{
 					final String f_arg_str = arg_str;
 
-					final byte[][] 		f_data 	= { null };
 					final Throwable[]	f_error = { null };
 
 					final AESemaphore wait_sem = new AESemaphore( "download-waiter" );
@@ -886,6 +887,8 @@ MagnetURIHandlerImpl
 
 				}finally{
 
+					f_data[0] = null;
+					
 					keep_alive.cancel();
 				}
 
