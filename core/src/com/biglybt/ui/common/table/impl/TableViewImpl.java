@@ -230,7 +230,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 * Up to date list of selected rows, so we can access rows without being on SWT Thread.
 	 * Guaranteed to have no nulls
 	 */
-	private List<TableRowCore> selectedRows = new ArrayList<>(1);
+	private LinkedHashSet<TableRowCore> selectedRows = new LinkedHashSet<>(1);
 
 	private List<Object> listSelectedCoreDataSources;
 
@@ -2309,7 +2309,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			if (selectedRows.size() == 0) {
 				return null;
 			}
-			return selectedRows.get(0);
+			return selectedRows.iterator().next();
 		}
 	}
 
@@ -2327,7 +2327,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	public Object getFirstSelectedDataSource(boolean bCoreObject) {
 		synchronized (rows_sync) {
 			if (selectedRows.size() > 0) {
-				return selectedRows.get(0).getDataSource(bCoreObject);
+				return selectedRows.iterator().next().getDataSource(bCoreObject);
 			}
 		}
 		return null;
@@ -2556,7 +2556,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		final List<TableRowCore> oldSelectionList = new ArrayList<>();
 
-		List<TableRowCore> listNewlySelected;
+		LinkedHashSet<TableRowCore> listNewlySelected;
 		boolean somethingChanged;
 		synchronized (rows_sync) {
 			if (selectedRows.size() == 0 && newSelectionArray.length == 0) {
@@ -2567,7 +2567,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			listSelectedCoreDataSources = null;
 			selectedRows.clear();
 
-			listNewlySelected = new ArrayList<>(1);
+			listNewlySelected = new LinkedHashSet<>();
 
 			// We'll remove items still selected from oldSelectionLeft, leaving
 			// it with a list of items that need to fire the deselection event.
