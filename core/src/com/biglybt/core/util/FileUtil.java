@@ -686,119 +686,125 @@ public class FileUtil {
   {
 	  try{
 		  class_mon.enter();
-
-		  byte[] encoded_data;
 		  
-		  try{
-			  encoded_data  = BEncoder.encode(data);
-			  
-		  }catch( Throwable e ){
-
-			  Debug.out( "Save of '" + file_name + "' fails", e );
-
-			  return( false );
-		  }
+		  byte[] encoded_data = BEncoder.encodeIfLessThan( data, 2*1024*1024 );
 		  
-		  File existing = newFile(  parent_dir, file_name );
-		  
-		  if ( existing.length() == encoded_data.length ) {
+		  if ( encoded_data != null ){
 			  
-			  //System.out.println( "same length for " + file_name );
+			  File existing = newFile(  parent_dir, file_name );
 			  
-			  try{
-				  BufferedInputStream	bin = new BufferedInputStream( newFileInputStream(existing), encoded_data.length );
-
+			  if ( existing.length() == encoded_data.length ) {
+				  
+				  //System.out.println( "same length for " + file_name );
+				  
 				  try{
-					  BDecoder	decoder = new BDecoder();
+					  byte[] existing_data = readFileAsByteArray( existing );
 
-					  Map	old = decoder.decodeStream( bin );
-
-					  if ( BEncoder.mapsAreIdentical( data, old )) {
-
-						  //System.out.println( "same data for " + file_name );
+					  if ( Arrays.equals( encoded_data, existing_data )){
+						  
+						  // System.out.println( "same data for " + file_name );
 
 						  return( true );
 					  }
-				  }finally{
-
-					  bin.close();
+					
+				  }catch( Throwable e ) {
 				  }
-			  }catch( Throwable e ) {
 			  }
 		  }
-
+		  
 		  try{
 			  getReservedFileHandles();
+			  
 			  File temp = newFile(  parent_dir, file_name + ".saving");
-			  BufferedOutputStream	baos = null;
 
+			  FileOutputStream tempOS = null;
+				 
 			  try{
-				  FileOutputStream tempOS = newFileOutputStream( temp, false );
-				  baos = new BufferedOutputStream( tempOS, 8192 );
-				  baos.write( encoded_data );
-				  baos.flush();
-
-				  tempOS.getFD().sync();
-
-				  baos.close();
-				  baos = null;
-
-				  	//only use newly saved file if it got this far, i.e. it saved successfully
-
-				  if ( temp.length() > 1L ){
-
-					  File file = newFile( parent_dir, file_name );
-
-					  if ( file.exists()){
-
-						  if ( !file.delete()){
-
-							  Debug.out( "Save of '" + file_name + "' fails - couldn't delete " + file.getAbsolutePath());
+				  try{
+					  tempOS = newFileOutputStream( temp, false );
+					  
+					  if ( encoded_data != null ){
+						  
+						  BufferedOutputStream	baos = null;
+	
+						  try{
+							  baos = new BufferedOutputStream( tempOS, 8192 );
+							  
+							  baos.write( encoded_data );
+							  
+							  baos.flush();
+		
+							  tempOS.getFD().sync();
+							  
+						  }finally{
+							  
+							  baos.close();
+							  
+							  baos = null;
 						  }
+					  }else{
+						  
+						  BEncoder.encodeToStream( data, tempOS );
+						  
+						  tempOS.getFD().sync();
 					  }
-
-					  if (file.exists()) {
-					  	Debug.out(file + " still exists after delete attempt");
-					  }
-
-					  if ( temp.renameTo( file )){
-
-						  return( true );
-
-					  }
-
-					  // rename failed, sleep a little and try again
-					  Thread.sleep(50);
-					  if ( temp.renameTo( file )){
-					  	//System.err.println("2nd attempt of rename succeeded for " + temp.getAbsolutePath() + " to " + file.getAbsolutePath());
-					  	return true;
-					  }
-
-				  	Debug.out( "Save of '" + file_name + "' fails - couldn't rename " + temp.getAbsolutePath() + " to " + file.getAbsolutePath());
+				  }finally{
+					  
+					  tempOS.close();
+						  
+					  tempOS = null;
 				  }
-
-				  return( false );
-
 			  }catch( Throwable e ){
 
 				  Debug.out( "Save of '" + file_name + "' fails", e );
 
 				  return( false );
-
-			  }finally{
-
-				  try{
-					  if (baos != null){
-
-						  baos.close();
-					  }
-				  }catch( Exception e){
-
-					  Debug.out( "Save of '" + file_name + "' fails", e );
-
-					  return( false );
-				  }
 			  }
+
+			  	//only use newly saved file if it got this far, i.e. it saved successfully
+
+			  if ( temp.length() > 1L ){
+
+				  File file = newFile( parent_dir, file_name );
+
+				  if ( file.exists()){
+
+					  if ( !file.delete()){
+
+						  Debug.out( "Save of '" + file_name + "' fails - couldn't delete " + file.getAbsolutePath());
+					  }
+				  }
+
+				  if (file.exists()) {
+					  Debug.out(file + " still exists after delete attempt");
+				  }
+
+				  if ( temp.renameTo( file )){
+
+					  return( true );
+
+				  }
+
+				  	// rename failed, sleep a little and try again
+				  
+				  try{
+					  Thread.sleep(50);
+					  
+				  }catch( Throwable e ){
+				  }
+				  
+				  if ( temp.renameTo( file )){
+					
+					  	//System.err.println("2nd attempt of rename succeeded for " + temp.getAbsolutePath() + " to " + file.getAbsolutePath());
+					  
+					  return true;
+				  }
+
+				  Debug.out( "Save of '" + file_name + "' fails - couldn't rename " + temp.getAbsolutePath() + " to " + file.getAbsolutePath());
+			  }
+
+			  return( false );
+
 		  }finally{
 
 			  releaseReservedFileHandles();

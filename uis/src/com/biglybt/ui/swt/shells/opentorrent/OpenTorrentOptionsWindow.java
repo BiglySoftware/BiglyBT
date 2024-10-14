@@ -423,11 +423,21 @@ public class OpenTorrentOptionsWindow
 		new FrequencyLimitedDispatcher(	AERunnable.create(()->{saveActiveWindows();}), 10*1000 );
 	
 	private static void
-	activeWindowsChanged()
+	activeWindowsChanged(
+		boolean		delay )
 	{
 		if ( initialised ){
 			
-			dispatcher.dispatch(()->{ freq_disp.dispatch();	});
+			AERunnable run  = AERunnable.create(()->{ dispatcher.dispatch(()->{ freq_disp.dispatch();	});});
+			
+			if ( delay ){
+				
+				new DelayedEvent( "oto:save", 10*1000, run );
+				
+			}else{
+				
+				run.runSupport();
+			}
 		}
 	}
 	
@@ -676,7 +686,7 @@ public class OpenTorrentOptionsWindow
 
 					reuse_window.swt_addTorrent( hw, torrentOptions );
 
-					activeWindowsChanged();
+					activeWindowsChanged( true );
 					
 					return;
 				}
@@ -690,7 +700,7 @@ public class OpenTorrentOptionsWindow
 
 			new_window.swt_addTorrent( hw, torrentOptions );
 			
-			activeWindowsChanged();
+			activeWindowsChanged( true);
 			
 			return;
 		}
@@ -1140,7 +1150,7 @@ public class OpenTorrentOptionsWindow
 								}
 							}
 							
-							activeWindowsChanged();
+							activeWindowsChanged( false );
 						}
 					}
 				});
@@ -1182,7 +1192,7 @@ public class OpenTorrentOptionsWindow
 				t_man.optionsRemoved( torrentOptions );
 			}
 			
-			activeWindowsChanged();
+			activeWindowsChanged( false );
 		}
 	}
 	
@@ -1918,7 +1928,7 @@ public class OpenTorrentOptionsWindow
 			t_man.optionsRemoved( instance.getOptions());
 		}
 		
-		activeWindowsChanged();
+		activeWindowsChanged( false );
 
 		int index = open_instances.indexOf( instance );
 
@@ -2309,9 +2319,9 @@ public class OpenTorrentOptionsWindow
 
 		private long	currentSelectedDataSize;
 
-		private Map<File,FileStatsCacheItem> fileStatCache = new HashMap<>();
+		private Map<StringInterner.DirKey,FileStatsCacheItem> fileStatCache = new HashMap<>();
 
-		private Map<File,File> parentToRootCache = new HashMap<>();
+		private Map<StringInterner.DirKey,String> parentToRootCache = new HashMap<>();
 
 		private SWTSkinObjectExpandItem soExpandItemFiles;
 
@@ -8113,7 +8123,7 @@ public class OpenTorrentOptionsWindow
 				diskFreeInfoRefreshPending = false;
 
 				final HashSet FSroots = new HashSet(Arrays.asList(Utils.listFileRootsWithTimeout()));
-				final HashMap partitions = new HashMap();
+				final HashMap<String,Partition> partitions = new HashMap();
 
 				for ( TorrentOpenOptions too: torrentOptionsMulti ){
 					TorrentOpenFileOptions[] files = too.getFiles();
@@ -8123,38 +8133,40 @@ public class OpenTorrentOptionsWindow
 							continue;
 
 						// reduce each file to its partition root
-						File root = file.getDestFileFullName().getAbsoluteFile();
+						File rootFile = file.getDestFileFullName().getAbsoluteFile();
 
-						Partition part = (Partition) partitions.get(parentToRootCache.get(root.getParentFile()));
+						StringInterner.DirKey parentKey = new StringInterner.DirKey( rootFile.getParentFile());
+						
+						Partition part = partitions.get(parentToRootCache.get(parentKey));
 
 						if (part == null) {
 							File next;
 							while (true) {
-								root = root.getParentFile();
-								next = root.getParentFile();
+								rootFile = rootFile.getParentFile();
+								next = rootFile.getParentFile();
 								if (next == null)
 									break;
 
 								// bubble up until we hit an existing directory
-								if (!getCachedExistsStat(root) || !root.isDirectory())
+								if (!getCachedExistsStat(rootFile) || !rootFile.isDirectory())
 									continue;
 
 								// check for mount points (different free space) or simple loops in the directory structure
-								if (FSroots.contains(root) || root.equals(next)
-										|| getCachedDirFreeSpace(next) != getCachedDirFreeSpace(root))
+								if (FSroots.contains(rootFile) || rootFile.equals(next)
+										|| getCachedDirFreeSpace(next) != getCachedDirFreeSpace(rootFile))
 									break;
 							}
 
-							parentToRootCache.put(
-									file.getDestFileFullName().getAbsoluteFile().getParentFile(),
-									root);
+							String rootStr = StringInterner.intern( rootFile.getAbsolutePath());
+							
+							parentToRootCache.put( parentKey, rootStr);
 
-							part = (Partition) partitions.get(root);
+							part = partitions.get(rootStr);
 
 							if (part == null) {
-								part = new Partition(root);
+								part = new Partition(rootFile);
 								
-								partitions.put(root, part);
+								partitions.put(rootStr, part);
 							}
 						}
 
@@ -8517,9 +8529,13 @@ public class OpenTorrentOptionsWindow
 		getCachedDirFreeSpace(
 			File directory) 
 		{
-			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(directory);
-			if (item == null){
-				fileStatCache.put(directory, item = new FileStatsCacheItem(directory));
+			StringInterner.DirKey key = new StringInterner.DirKey( directory );
+			
+			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(key);
+			
+			if ( item == null ){
+				
+				fileStatCache.put(key, item = new FileStatsCacheItem(key, directory ));
 			}
 			return item;
 		}
@@ -8528,18 +8544,23 @@ public class OpenTorrentOptionsWindow
 		getCachedExistsStat(
 			File directory) 
 		{
-			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(directory);
-			if (item == null){
-				fileStatCache.put(directory, item = new FileStatsCacheItem(directory));
+			StringInterner.DirKey key = new StringInterner.DirKey( directory );
+			
+			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(key);
+			
+			if ( item == null ){
+				
+				fileStatCache.put(key, item = new FileStatsCacheItem(key, directory ));
 			}
+			
 			return item.exists;
 		}
 
 		private class 
 		FileStatsCacheItem
 		{
-			final File		file;
-			final boolean 	exists;
+			final StringInterner.DirKey		dirKey;
+			final boolean 					exists;
 
 			volatile long freeSpace;
 
@@ -8548,15 +8569,16 @@ public class OpenTorrentOptionsWindow
 			
 			public 
 			FileStatsCacheItem(
-				File f) 
+				StringInterner.DirKey 	k,
+				File					dir )
 			{
-				file = f;
+				dirKey = k;
 				
-				exists = file.exists();
+				exists = dir.exists();
 				
 				if ( exists ){
 					
-					freeSpace = FileUtil.getUsableSpace( file );
+					freeSpace = FileUtil.getUsableSpace( dir );
 					
 				}else{
 					
@@ -8584,7 +8606,9 @@ public class OpenTorrentOptionsWindow
 					try{
 						//long start = SystemTime.getMonotonousTime();
 						
-						long space = FileUtil.getUsableSpace(file);
+						File file = dirKey.getFile();
+						
+						long space = FileUtil.getUsableSpace( file );
 						
 						//System.out.println( "getFreeSpace(" + file + " ) - " + (SystemTime.getMonotonousTime() - start ));
 						

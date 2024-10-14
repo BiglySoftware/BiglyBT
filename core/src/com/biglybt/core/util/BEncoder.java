@@ -19,6 +19,7 @@
 
 package com.biglybt.core.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
@@ -766,6 +767,139 @@ BEncoder
     	return( true );
     }
 
+    public static long
+    getEncodedSize(
+    	Map		map )
+    {
+    	try{
+	    	long[] result = {0};
+	    	
+	    	encodeToStream( 
+	    		map,
+	    		new OutputStream()
+	    		{
+	    			@Override
+		    	    public void 
+		    	    write(
+		    	    	int val)
+		    	    {
+		    	    	result[0]++;
+		    	    }
+		
+		    	    @Override
+		    	    public void 
+		    	    write(
+		    	    	byte src[])
+		    	    {
+		    	    	result[0] += src.length;
+		    	    }
+		
+		    	    @Override
+		    	    public void 
+		    	    write(
+		    	    	byte src[], 
+		    	    	int off, 
+		    	    	int len) 
+		    	    {
+		    	    	result[0] += len;
+		    	    }
+		
+		    	    @Override
+		    	    public void flush() {}
+		
+		    	    @Override
+		    	    public void close() {}
+	    		});
+	    	
+	    	return( result[0] );
+    	}catch( Throwable e ){
+    		
+    		Debug.out( e );
+    		
+    		return( -1 );
+    	}
+    }
+    
+    public static byte[]
+    encodeIfLessThan(
+    	Map			map,
+    	long		max_size )
+    {
+    	try{
+    		ByteArrayOutputStream baos = new ByteArrayOutputStream( 32*1024 );
+    		
+	    	encodeToStream( 
+	    		map,
+	    		new OutputStream()
+	    		{
+	    			@Override
+		    	    public void 
+		    	    write(
+		    	    	int val)
+		    	    {
+	    				baos.write( val );
+	    				
+	    				if ( baos.size() > max_size ){
+	    					
+	    					throw( new Error());
+	    				}
+		    	    }
+		
+		    	    @Override
+		    	    public void 
+		    	    write(
+		    	    	byte src[])
+		    	    
+		    	    	throws IOException
+		    	    {
+		    	    	baos.write( src );
+		    	    	
+		    	    	if ( baos.size() > max_size ){
+	    					
+	    					throw( new Error());
+	    				}
+		    	    }
+		
+		    	    @Override
+		    	    public void 
+		    	    write(
+		    	    	byte src[], 
+		    	    	int off, 
+		    	    	int len) 
+		    	    {
+		    	    	baos.write( src, off, len);
+		    	    	
+		    	    	if ( baos.size() > max_size ){
+	    					
+	    					throw( new Error());
+	    				}
+		    	    }
+		
+		    	    @Override
+		    	    public void 
+		    	    flush()
+		    	    	throws IOException
+		    	    {
+		    	    	baos.flush();
+		    	    }
+		
+		    	    @Override
+		    	    public void 
+		    	    close()
+		    	    	throws IOException
+		    	    {
+		    	    	baos.close();
+		    	    }
+	    		});
+	    	
+	    	return( baos.toByteArray());
+	    	
+    	}catch( Throwable e ){
+    		
+    		return( null );
+    	}
+    }
+    
     public static Map
     cloneMap(
     	Map		map )

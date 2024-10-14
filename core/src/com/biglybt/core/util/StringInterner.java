@@ -788,4 +788,133 @@ StringInterner
 			return super.toString() + " " + getURL();
 		}
 	}
+	
+	public static class
+	FileKey
+	{
+		private final int 		hash_code;
+		private final String[]	comps;
+		
+		public
+		FileKey(
+			File	file )
+		{
+			this( file, false );
+		}
+		
+		protected
+		FileKey(
+			File	file,
+			boolean	is_dir )
+		{
+			List<String> l = null;
+		
+			int hc = 0;
+			
+			while( file != null ){
+				
+				String name = file.getName();
+						
+				if ( name == null ){
+					
+					break;
+					
+				}else if ( name.isEmpty()){
+					
+					name = file.getPath();
+				}
+				
+				hc += name.hashCode();
+				
+				if ( l == null ){
+					
+					l = new ArrayList<>( 10 );
+					
+					l.add( is_dir?intern( name ):name );
+					
+				}else{
+					
+					l.add( intern( name ));
+				}
+				
+				file = file.getParentFile();
+			}
+				
+			hash_code = hc;
+			
+			comps = l.toArray( new String[l.size()]);
+		}
+		
+		public File
+		getFile()
+		{
+			int pos = comps.length-1;
+			
+			if ( pos < 0 ){
+				
+				return( FileUtil.newFile( "" ));
+			}
+							
+			File result = FileUtil.newFile( comps[pos--] );
+			
+			while( pos >= 0 ){
+				
+				result = FileUtil.newFile( result, comps[pos--]);
+			}
+			
+			return( result );
+		}
+		
+		@Override
+		public int 
+		hashCode()
+		{
+			return( hash_code );
+		}
+		
+		@Override
+		public boolean 
+		equals(
+			Object obj )
+		{
+			if ( obj instanceof FileKey ){
+				
+				FileKey other = (FileKey)obj;
+				
+				String[] ocomps = other.comps;
+				
+				int num_comps = comps.length;
+				
+				if ( num_comps != ocomps.length ){
+					
+					return( false );
+				}
+				
+				for ( int i=0; i<num_comps; i++){
+					
+					if ( !comps[i].equals( ocomps[i] )){
+						
+						return( false );
+					}
+				}
+				
+				return( true );
+			}else{
+				
+				return( false );
+			}
+		}
+	}
+	
+	public static class
+	DirKey
+		extends FileKey
+	{
+		public
+		DirKey(
+			File	dir )
+		{
+			super( dir, true );
+		}
+	}
 }
