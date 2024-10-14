@@ -575,7 +575,7 @@ ClientInstanceManagerImpl
 		InetSocketAddress	originator,
 		byte[]				data,
 		int					length )
-	{
+	{	
 		try{
 			Map	map = BDecoder.decode( data, 0, length );
 
@@ -653,7 +653,7 @@ ClientInstanceManagerImpl
 			}
 		}catch( Throwable e ){
 
-			Debug.out( "Invalid packet received from " + originator, e );
+			Debug.out( "Invalid packet received from from \"" + originator + "\" on \"" + network_interface + "/" + local_address + "\", data=" + new String( data, 0, length ), e );
 		}
 	}
 
