@@ -2785,7 +2785,7 @@ SpeedLimitHandler
 		private final com.biglybt.pif.download.DownloadManager		download_manager;
 		private final Set<String>									has_cats_or_tags;
 
-		final List<Runnable>	listener_removers = new ArrayList<>();
+		final Map<Download,List<Runnable>>	listener_removers = new IdentityHashMap<>();
 
 		private volatile boolean	destroyed;
 
@@ -2809,14 +2809,17 @@ SpeedLimitHandler
 
 				download_manager.removeListener( this );
 
-				for ( Runnable r: listener_removers ){
+				for ( List<Runnable> dl_listeners: listener_removers.values()){
 
-					try{
-						r.run();
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
+					for ( Runnable r: dl_listeners ){
+						
+						try{
+							r.run();
+	
+						}catch( Throwable e ){
+	
+							Debug.out( e );
+						}
 					}
 				}
 
@@ -2841,6 +2844,21 @@ SpeedLimitHandler
 					return;
 				}
 
+				List<Runnable> _dl_listeners = listener_removers.get( download );
+				
+				if ( _dl_listeners == null ){
+					
+					_dl_listeners = new ArrayList<>();
+					
+					listener_removers.put( download, _dl_listeners );
+					
+				}else{
+					
+					Debug.out( "already present" );
+				}
+				
+				List<Runnable> dl_listeners = _dl_listeners;
+				
 				if ( !has_cats_or_tags.isEmpty()){
 
 						// attribute listener
@@ -2914,7 +2932,7 @@ SpeedLimitHandler
 
 						tt.addTagListener( core_download, tag_listener );
 
-						listener_removers.add(
+						dl_listeners.add(
 							new Runnable(){
 								@Override
 								public void run()
@@ -2988,7 +3006,7 @@ SpeedLimitHandler
 											peer_manager.removeListener( listener );
 										}};
 
-								listener_removers.add( pm_listener_remover );
+								dl_listeners.add( pm_listener_remover );
 							}
 
 							Peer[] peers = peer_manager.getPeers();
@@ -3011,7 +3029,7 @@ SpeedLimitHandler
 								
 								current_pm = null;
 								
-								if ( listener_removers.remove( pm_listener_remover  )){
+								if ( dl_listeners.remove( pm_listener_remover  )){
 
 									pm_listener_remover.run();
 									
@@ -3023,7 +3041,7 @@ SpeedLimitHandler
 
 				download.addPeerListener( peer_listener );
 
-				listener_removers.add(
+				dl_listeners.add(
 					new Runnable(){
 						@Override
 						public void run()
@@ -3040,6 +3058,24 @@ SpeedLimitHandler
 		downloadRemoved(
 			Download	download )
 		{
+			synchronized( lock ){
+				
+				List<Runnable> dl_listeners = listener_removers.remove( download );
+				
+				if ( dl_listeners != null ){
+					
+					for ( Runnable r: dl_listeners ){
+
+						try{
+							r.run();
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+						}
+					}
+				}
+			}
 		}
 	}
 

@@ -2414,7 +2414,7 @@ DownloadManagerStateImpl
 				continue;
 			}
 
-			links.put( source_index, new StringInterner.FileKey( link_source ), new StringInterner.FileKey( link_destination ));
+			links.put( source_index, new StringInterner.FileKey( link_source ), link_destination==null?null:new StringInterner.FileKey( link_destination ));
 
 			changed = true;
 		}

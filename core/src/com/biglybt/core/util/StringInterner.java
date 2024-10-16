@@ -912,6 +912,15 @@ StringInterner
 				file = file.getParentFile();
 			}
 				
+			if ( l == null ){
+				
+				String msg = "Invalid file, no components (" + file + "/" + tail + ")";
+				
+				Debug.out( msg );
+				
+				throw( new Error( msg ));
+			}
+			
 			hash_code = hc;
 			
 			comps = l.toArray( new String[l.size()]);
