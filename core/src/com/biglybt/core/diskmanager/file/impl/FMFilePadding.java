@@ -25,6 +25,7 @@ import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner;
 
 public class 
 FMFilePadding
@@ -36,15 +37,15 @@ FMFilePadding
 	private final long				length;
 	private final boolean			is_clone;
 	
-	private File	file;
+	private StringInterner.FileKey	file;
 	private int		mode	= FMFile.FM_READ;
 	private boolean	is_open;
 	
 	protected
 	FMFilePadding(
-		FMFileOwner		_owner,
-		File			_file,
-		boolean			_is_clone )
+		FMFileOwner				_owner,
+		StringInterner.FileKey	_file,
+		boolean					_is_clone )
 	{
 		owner		= _owner;
 		length		= owner.getTorrentFile().getLength();
@@ -78,7 +79,7 @@ FMFilePadding
 
 		throws FMFileManagerException
 	{	
-		file = new_file;
+		file = new StringInterner.FileKey( new_file );
 		
 		pl.bytesDone( length );
 		
@@ -91,7 +92,7 @@ FMFilePadding
 
 		throws FMFileManagerException
 	{
-		file = FileUtil.newFile( file.getParentFile(), new_name );
+		file = new StringInterner.FileKey( FileUtil.newFile( file.getFile().getParentFile(), new_name ));
 	}
 
 	public void

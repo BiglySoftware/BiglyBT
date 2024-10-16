@@ -49,8 +49,8 @@ public class
 DiskManagerFileInfoImpl
 	implements DiskManagerFileInfo, CacheFileOwner
 {
-  private File					root_dir;
-  private final String	relative_file;
+  private File							root_dir;
+  private final StringInterner.FileKey	relative_file;
 
   final int			file_index;
   CacheFile		cache_file;
@@ -73,12 +73,12 @@ DiskManagerFileInfoImpl
 
   public
   DiskManagerFileInfoImpl(
-	DiskManagerHelper	_disk_manager,
-  	File				_root_dir,
-  	String				_relative_file,
-  	int					_file_index,
-	TOTorrentFile		_torrent_file,
-	int					_storage_type )
+	DiskManagerHelper		_disk_manager,
+  	File					_root_dir,
+  	StringInterner.FileKey	_relative_file,
+  	int						_file_index,
+	TOTorrentFile			_torrent_file,
+	int						_storage_type )
 
   	throws CacheFileManagerException
   {
@@ -92,7 +92,8 @@ DiskManagerFileInfoImpl
 
     int	cache_st = DiskManagerUtil.convertDMStorageTypeToCache( _storage_type );
 
-  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, FileUtil.newFile( root_dir, relative_file), cache_st, false );
+  	cache_file = CacheFileManagerFactory.getSingleton().createFile( 
+  					this, new StringInterner.FileKey( root_dir, relative_file.toString()), cache_st, false );
 
   	if ( cache_st == CacheFile.CT_COMPACT || cache_st == CacheFile.CT_PIECE_REORDER_COMPACT ){
 
@@ -110,7 +111,7 @@ DiskManagerFileInfoImpl
 	}
 	
   	@Override
-	  public String
+	public String
   	getCacheFileOwnerName()
   	{
   		return( diskManager.getInternalName());
@@ -232,7 +233,7 @@ DiskManagerFileInfoImpl
   getFile(
 	boolean	follow_link )
 	{
-		File file = FileUtil.newFile(root_dir, relative_file);
+		File file = FileUtil.newFile(root_dir, relative_file.toString());
 
 		if (!follow_link) {
 

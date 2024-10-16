@@ -225,7 +225,7 @@ CacheFileManagerImpl
 	public CacheFile
 	createFile(
 		final CacheFileOwner	owner,
-		File					file,
+		StringInterner.FileKey	file,
 		int						type,
 		boolean					force )
 

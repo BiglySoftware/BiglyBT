@@ -31,6 +31,7 @@ import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.StringInterner;
 
 public class
 FMFileUnlimited
@@ -38,11 +39,11 @@ FMFileUnlimited
 {
 	protected
 	FMFileUnlimited(
-		FMFileOwner			owner,
-		FMFileManagerImpl	manager,
-		File				file,
-		int					type,
-		boolean				force )
+		FMFileOwner					owner,
+		FMFileManagerImpl			manager,
+		StringInterner.FileKey		file,
+		int							type,
+		boolean						force )
 
 		throws FMFileManagerException
 	{

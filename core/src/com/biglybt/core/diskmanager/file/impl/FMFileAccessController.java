@@ -109,7 +109,10 @@ FMFileAccessController
 
 		}else{
 
-			if ( FileUtil.newFile( control_dir, controlFileName ).exists()){
+			if ( FMFileAccessCompact.isCompact(
+					owner.getOwner().getTorrentFile(),
+					control_dir, controlFileName,
+					_target_type )){
 
 				type = FMFile.FT_COMPACT;
 
@@ -141,6 +144,8 @@ FMFileAccessController
 
 			if ( type == FMFile.FT_LINEAR ){
 
+					// note, this will be converted to compact if required below...
+				
 				file_access = new FMFileAccessLinear( owner );
 
 			}else if ( type == FMFile.FT_COMPACT ){
@@ -396,34 +401,10 @@ FMFileAccessController
 
 		}else{
 
-			TOTorrent	torrent = tf.getTorrent();
+			int	file_index = tf.getIndex();
 
-			TOTorrentFile[]	files = torrent.getFiles();
-
-			int	file_index = -1;
-
-			for (int i=0;i<files.length;i++){
-
-				if ( files[i] == tf ){
-
-					file_index = i;
-
-					break;
-				}
-			}
-
-			if ( file_index == -1 ){
-
-				Debug.out("File '" + owner.getName() + "' not found in torrent!" );
-
-				controlFileName = null;
-				control_dir 	= null;
-
-			}else{
-
-				control_dir 	= owner.getOwner().getControlFileDir( );
-				controlFileName =  StringInterner.intern("fmfile" + file_index + ".dat");
-			}
+			control_dir 	= owner.getOwner().getControlFileDir( );
+			controlFileName =  StringInterner.intern("fmfile" + file_index + ".dat");
 		}
 	}
 

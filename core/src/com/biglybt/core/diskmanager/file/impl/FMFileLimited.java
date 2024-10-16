@@ -25,14 +25,11 @@ package com.biglybt.core.diskmanager.file.impl;
  *
  */
 
-//import java.nio.ByteBuffer;
-
-import java.io.File;
-
 import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.StringInterner;
 
 public class
 FMFileLimited
@@ -40,11 +37,11 @@ FMFileLimited
 {
 	protected
 	FMFileLimited(
-		FMFileOwner			owner,
-		FMFileManagerImpl	manager,
-		File				file,
-		int					type,
-		boolean				force )
+		FMFileOwner					owner,
+		FMFileManagerImpl			manager,
+		StringInterner.FileKey		file,
+		int							type,
+		boolean						force )
 
 		throws FMFileManagerException
 	{

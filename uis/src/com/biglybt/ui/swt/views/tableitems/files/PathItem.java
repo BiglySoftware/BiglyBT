@@ -25,9 +25,8 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.torrent.TOTorrent;
-import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
@@ -80,7 +79,7 @@ public class PathItem
   @Override
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
-    cell.setText(determinePath(fileInfo, show_full_path));
+    cell.setText( StringInterner.intern( determinePath(fileInfo, show_full_path)));
   }
 
   protected static String determinePath(DiskManagerFileInfo fileInfo, boolean _show_file_path) {

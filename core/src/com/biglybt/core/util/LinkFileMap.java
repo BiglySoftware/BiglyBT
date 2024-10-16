@@ -22,6 +22,8 @@ package com.biglybt.core.util;
 import java.io.File;
 import java.util.*;
 
+import com.biglybt.core.util.StringInterner.FileKey;
+
 public class
 LinkFileMap
 {
@@ -44,7 +46,7 @@ LinkFileMap
 		 * reworked
 		 */
 
-	private final Map<wrapper,Entry>	name_map 	= new HashMap<>();
+	private final Map<FileKey,Entry>	name_map 	= new HashMap<>();
 	private final Map<Integer,Entry>	index_map 	= new HashMap<>();
 
 	public File
@@ -58,7 +60,9 @@ LinkFileMap
 
 			if ( entry != null ){
 
-				return( entry.getToFile());
+				FileKey to_fk = entry.getToFile();
+				
+				return( to_fk==null?null:to_fk.getFile());
 			}
 		}else{
 
@@ -66,7 +70,7 @@ LinkFileMap
 			// Debug.out( "unexpected index: " + index );
 		}
 
-		Entry entry = name_map.get( new wrapper( from_file ));
+		Entry entry = name_map.get( new FileKey( from_file ));
 
 		if ( entry == null ){
 
@@ -83,7 +87,9 @@ LinkFileMap
 				return( null );
 			}
 
-			return( entry.getToFile());
+			FileKey to_fk = entry.getToFile();
+			
+			return( to_fk==null?null:to_fk.getFile());
 		}
 	}
 
@@ -105,7 +111,7 @@ LinkFileMap
 			Debug.out( "unexpected index" );
 		}
 
-		Entry entry = name_map.get( new wrapper( from_file ));
+		Entry entry = name_map.get( new FileKey( from_file ));
 
 		if ( entry == null ){
 
@@ -128,11 +134,11 @@ LinkFileMap
 
 	public void
 	put(
-		int			index,
-		File		from_file,
-		File		to_file )
-	{
-		Entry entry = new Entry( index, from_file, to_file );
+		int							index,
+		FileKey		from_fk,
+		FileKey		to_fk )
+	{		
+		Entry entry = new Entry( index, from_fk, to_fk );
 
 		if ( index >= 0 ){
 
@@ -142,39 +148,37 @@ LinkFileMap
 
 			if ( name_map.size() > 0 ){
 
-				name_map.remove( new wrapper( from_file ));
+				name_map.remove( from_fk );
 			}
 		}else{
 
-			wrapper wrap = new wrapper( from_file );
-
-			Entry existing = name_map.get( wrap );
+			Entry existing = name_map.get( from_fk );
 
 			if ( 	existing == null ||
-					!existing.getFromFile().equals( from_file) ||
-					!existing.getToFile().equals( to_file )){
+					!existing.getFromFile().equals( from_fk) ||
+					!existing.getToFile().equals( to_fk )){
 
 				Debug.out( "unexpected index" );
 			}
 
-			name_map.put( wrap, entry );
+			name_map.put( from_fk, entry );
 		}
 	}
 
 	public void
 	putMigration(
-		File		from_file,
-		File		to_file )
+		FileKey		from_file,
+		FileKey		to_file )
 	{
 		Entry entry = new Entry( -1, from_file, to_file );
 
-		name_map.put( new wrapper( from_file ), entry );
+		name_map.put( from_file, entry );
 	}
 
 	public void
 	remove(
-		int			index,
-		File		key )
+		int							index,
+		FileKey		key )
 	{
 		if ( index >= 0 ){
 
@@ -187,7 +191,7 @@ LinkFileMap
 
 		if ( name_map.size() > 0 ){
 
-			name_map.remove( new wrapper( key ));
+			name_map.remove( key );
 		}
 	}
 
@@ -196,7 +200,7 @@ LinkFileMap
 	{
 		for (Entry entry: index_map.values()){
 
-			File to_file = entry.getToFile();
+			FileKey to_file = entry.getToFile();
 
 			if ( to_file != null ){
 
@@ -217,7 +221,7 @@ LinkFileMap
 
 		for (Entry entry: index_map.values()){
 
-			File to_file = entry.getToFile();
+			FileKey to_file = entry.getToFile();
 
 			if ( to_file != null ){
 
@@ -286,15 +290,15 @@ LinkFileMap
 	public static class
 	Entry
 	{
-		private final int		index;
-		private final File	from_file;
-		private final File	to_file;
+		private final int						index;
+		private final FileKey	from_file;
+		private final FileKey	to_file;
 
 		private
 		Entry(
-			int		_index,
-			File	_from_file,
-			File	_to_file )
+			int							_index,
+			FileKey		_from_file,
+			FileKey		_to_file )
 		{
 			index		= _index;
 			from_file	= _from_file;
@@ -307,13 +311,13 @@ LinkFileMap
 			return( index );
 		}
 
-		public File
+		public FileKey
 		getFromFile()
 		{
 			return( from_file );
 		}
 
-		public File
+		public FileKey
 		getToFile()
 		{
 			return( to_file );
@@ -323,38 +327,6 @@ LinkFileMap
 		getString()
 		{
 			return( index + ": " + from_file + " -> " + to_file );
-		}
-	}
-
-	private static class
-	wrapper
-	{
-		private final String		file_str;
-
-		protected
-		wrapper(
-			File	file )
-		{
-			file_str	= file.toString();
-		}
-
-
-		public boolean
-		equals(
-			Object	other )
-		{
-			if ( other instanceof wrapper ){
-
-				return( file_str.equals(((wrapper)other).file_str ));
-			}
-
-			return( false );
-		}
-
-		public int
-		hashCode()
-		{
-			return( file_str.hashCode());
 		}
 	}
 }

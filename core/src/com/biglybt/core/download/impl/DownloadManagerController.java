@@ -2416,7 +2416,8 @@ DownloadManagerController
 		
 			if ( disk_manager_pieces_snapshot == null ){
 				
-				disk_manager_pieces_snapshot = DiskManagerUtil.getDiskManagerPiecesSnapshot( download_manager );			
+				disk_manager_pieces_snapshot = 
+					DiskManagerUtil.getDiskManagerPiecesSnapshot( download_manager, getDiskManagerFileInfoSet());			
 			}
 			
 			return( disk_manager_pieces_snapshot );

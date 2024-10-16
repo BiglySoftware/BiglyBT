@@ -48,7 +48,7 @@ FMFileImpl
 	protected static final String		READ_ACCESS_MODE	= "r";
 	protected static final String		WRITE_ACCESS_MODE	= "rw"; // "rwd"; - removing this to improve performance
 
-	private static final Map<String,List<Object[]>>			file_map 		= new HashMap<>();
+	private static final Map<StringInterner.FileKey,List<Object[]>>			file_map 		= new HashMap<>();
 	
 	private static final AEMonitor		file_map_mon	= new AEMonitor( "FMFile:map");
 
@@ -91,10 +91,10 @@ FMFileImpl
 	
 	private int					access_mode			= FM_READ;
 
-	private File				linked_file;
-	private long				last_modified;
-	private String				canonical_path;
-	private FileAccessor		fa;
+	private StringInterner.FileKey	linked_file;
+	private long					last_modified;
+	private StringInterner.FileKey	canonical_path;
+	private FileAccessor			fa;
 
 	private FMFileAccessController		file_access;
 
@@ -109,11 +109,11 @@ FMFileImpl
 
 	protected
 	FMFileImpl(
-		FMFileOwner			_owner,
-		FMFileManagerImpl	_manager,
-		File				_file,
-		int					_type,
-		boolean 			_force )
+		FMFileOwner				_owner,
+		FMFileManagerImpl		_manager,
+		StringInterner.FileKey	_file,
+		int						_type,
+		boolean 				_force )
 
 		throws FMFileManagerException
 	{
@@ -128,14 +128,20 @@ FMFileImpl
 		boolean	file_reserved		= false;
 		boolean	ok 					= false;
 
-		try{
+		File lf = linked_file.getFile();
 
-			String linked_path = linked_file.getPath();
+		try{			
+			String linked_path = lf.getPath();
 			try {
 
-				canonical_path = linked_file.getCanonicalPath();
-				if(canonical_path.equals(linked_path)) {
-					canonical_path = linked_path;
+				String cp = lf.getCanonicalPath();
+				
+				if ( cp.equals(linked_path)){
+					
+					canonical_path = linked_file;
+				}else{
+					
+					canonical_path = new StringInterner.FileKey( cp );
 				}
 
 			}catch( IOException ioe ) {
@@ -144,7 +150,7 @@ FMFileImpl
 
 		        if( msg != null && msg.contains("There are no more files")) {
 
-		          String abs_path = linked_file.getAbsolutePath();
+		          String abs_path = lf.getAbsolutePath();
 
 		          String error = "Caught 'There are no more files' exception during file.getCanonicalPath(). " +
 		                         "os=[" +Constants.OSName+ "], file.getPath()=[" + linked_path + "], file.getAbsolutePath()=[" +abs_path+ "]. ";
@@ -155,7 +161,7 @@ FMFileImpl
 		        throw ioe;
 			}
 
-			createDirs( linked_file );
+			createDirs( lf );
 
 			reserveFile();
 
@@ -169,7 +175,7 @@ FMFileImpl
 
 			if ( file_was_created ){
 
-				linked_file.delete();
+				lf.delete();
 			}
 
 			deleteDirs();
@@ -234,7 +240,9 @@ FMFileImpl
 	public boolean
 	exists()
 	{
-		return( linked_file.exists());
+		File lf = linked_file.getFile();
+		
+		return( lf.exists());
 	}
 
 	@Override
@@ -310,7 +318,7 @@ FMFileImpl
 	protected File
 	getLinkedFile()
 	{
-		return( linked_file );
+		return( linked_file.getFile());
 	}
 
 	@Override
@@ -333,7 +341,7 @@ FMFileImpl
 
 			String	new_canonical_path;
 
-			File	new_linked_file	= manager.getFileLink( tf.getTorrent(), tf.getIndex(), new_unlinked_file );
+			File	new_linked_file	= manager.getFileLink( tf.getTorrent(), tf.getIndex(), new StringInterner.FileKey( new_unlinked_file )).getFile();
 
 			try{
 
@@ -372,10 +380,12 @@ FMFileImpl
 
 			createDirs( new_linked_file );
 
-			if ( !linked_file.exists() || FileUtil.renameFile( linked_file, new_linked_file, pl )) {
+			File lf = linked_file.getFile();
+			
+			if ( !lf.exists() || FileUtil.renameFile( lf, new_linked_file, pl )) {
 
-				linked_file		= new_linked_file;
-				canonical_path	= new_canonical_path;
+				linked_file		= new StringInterner.FileKey( new_linked_file );
+				canonical_path	= new StringInterner.FileKey( new_canonical_path );
 
 				reserveFile();
 
@@ -422,6 +432,8 @@ FMFileImpl
 
 		throws FMFileManagerException
 	{
+		File lf = linked_file.getFile();
+		
 		try{
 			this_mon.enter();
 
@@ -429,7 +441,7 @@ FMFileImpl
 			
 			String	new_canonical_path;
 
-			File 	new_linked_file = FileUtil.newFile( linked_file.getParentFile(), new_name );
+			File 	new_linked_file = FileUtil.newFile( lf.getParentFile(), new_name );
 
 			try{
 
@@ -466,10 +478,10 @@ FMFileImpl
 
 			close();	// full close, this will release any slots in the limited file case
 
-			if ( !linked_file.exists() || linked_file.renameTo( new_linked_file )){
+			if ( !lf.exists() || lf.renameTo( new_linked_file )){
 
-				linked_file		= new_linked_file;
-				canonical_path	= new_canonical_path;
+				linked_file		= new StringInterner.FileKey( new_linked_file );
+				canonical_path	= new StringInterner.FileKey( new_canonical_path );
 
 				reserveFile();
 
@@ -591,9 +603,11 @@ FMFileImpl
 	getFileAccessor()
 		throws FileNotFoundException
 	{
+		File lf = linked_file.getFile();
+		
 		try{
 		
-			fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+			fa = FileUtil.newFileAccessor( lf, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 			
 		}catch( FileNotFoundException e ){
 			
@@ -601,10 +615,14 @@ FMFileImpl
 			
 			if ( 	switch_to_upload_only_enable && 
 					access_mode == FM_WRITE && 
-					linked_file.exists()  && 
-					linked_file.canRead()){
+					lf.exists()  && 
+					lf.canRead()){
 				
-				fa = FileUtil.newFileAccessor( linked_file, READ_ACCESS_MODE );
+				fa = FileUtil.newFileAccessor( lf, READ_ACCESS_MODE );
+				
+			}else{
+				
+				throw( e );
 			}
 		}
 	}
@@ -674,9 +692,11 @@ FMFileImpl
 				// yet allocated - attempt to create the file on demand
 
 			try{
-				linked_file.getParentFile().mkdirs();
+				File lf = linked_file.getFile();
+				
+				lf.getParentFile().mkdirs();
 
-				linked_file.createNewFile();
+				lf.createNewFile();
 
 				getFileAccessor();
 
@@ -693,13 +713,13 @@ FMFileImpl
 
 				Debug.printStackTrace( e );
 
-				throw( new FMFileManagerException( access_mode==FM_READ?FMFileManagerException.OP_READ:FMFileManagerException.OP_WRITE, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
+				throw( new FMFileManagerException( access_mode==FM_READ?FMFileManagerException.OP_READ:FMFileManagerException.OP_WRITE, "open fails for '" + linked_file.getFile().getAbsolutePath() + "'", e ));
 			}
 		}catch( Throwable e ){
 
 			Debug.printStackTrace( e );
 
-			throw( new FMFileManagerException( access_mode==FM_READ?FMFileManagerException.OP_READ:FMFileManagerException.OP_WRITE, "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
+			throw( new FMFileManagerException( access_mode==FM_READ?FMFileManagerException.OP_READ:FMFileManagerException.OP_WRITE, "open fails for '" + linked_file.getFile().getAbsolutePath() + "'", e ));
 		}
 	}
 
@@ -791,9 +811,11 @@ FMFileImpl
 	{
 		close();
 
-		if ( linked_file.exists()){
+		File lf = linked_file.getFile();
 
-			if ( !linked_file.delete()){
+		if ( lf.exists()){
+
+			if ( !lf.delete()){
 
 				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "Failed to delete '" + linked_file + "'" ));
 			}
@@ -890,7 +912,7 @@ FMFileImpl
 	getLastModified()
 	{
 		if (last_modified == 0) {
-			last_modified = linked_file.lastModified();
+			last_modified = linked_file.getFile().lastModified();
 		}
 		return( last_modified );
 	}
@@ -1300,7 +1322,9 @@ FMFileImpl
 	protected String
 	getString()
 	{
-		File cPath = FileUtil.newFile(canonical_path);
+		String cp = canonical_path.toString();
+		
+		File cPath = canonical_path.getFile();
 		String sPaths;
 		
 		FileAccessor current_fa = fa;
@@ -1309,11 +1333,11 @@ FMFileImpl
 		
 		if (cPath.equals(linked_file)){
 			
-			sPaths = "can/link=" + Debug.secretFileName(canonical_path);
+			sPaths = "can/link=" + Debug.secretFileName(cp);
 			
 		}else{
 			
-			sPaths = "can=" + Debug.secretFileName(canonical_path) + ",link="
+			sPaths = "can=" + Debug.secretFileName(cp) + ",link="
 					+ Debug.secretFileName(linked_file.toString());
 		}
 		
@@ -1333,11 +1357,11 @@ FMFileImpl
 			try{
 				file_map_mon.enter();
 
-				Iterator<String>	it = file_map.keySet().iterator();
+				Iterator<StringInterner.FileKey>	it = file_map.keySet().iterator();
 
 				while( it.hasNext()){
 
-					String	key = (String)it.next();
+					StringInterner.FileKey	key = it.next();
 
 					List<Object[]>	owners = file_map.get(key);
 
@@ -1358,7 +1382,7 @@ FMFileImpl
 					}
 
 
-					writer.println( Debug.secretFileName(key) + " -> " + str );
+					writer.println( Debug.secretFileName(key.toString()) + " -> " + str );
 				}
 			}finally{
 

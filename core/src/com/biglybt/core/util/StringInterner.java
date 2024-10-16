@@ -802,17 +802,78 @@ StringInterner
 			this( file, false );
 		}
 		
+		public
+		FileKey(
+			String	str )
+		{
+			this( null, str, false );
+		}
+		public
+		FileKey(
+			File	file,
+			String	tail )
+		{
+			this( file, tail, false );
+		}
+		
 		protected
 		FileKey(
 			File	file,
+			boolean	is_dir )
+		{
+			this( file, null, is_dir );
+		}
+		
+		protected
+		FileKey(
+			File	original_file,
+			String	tail,
 			boolean	is_dir )
 		{
 			List<String> l = null;
 		
 			int hc = 0;
 			
-			while( file != null ){
+			if ( tail != null && !tail.isEmpty()){
 				
+				int pos = tail.length();
+				
+				while( pos >= 0 ){
+					
+					int next = tail.lastIndexOf( File.separator, pos-1 );
+					
+					String name;
+					
+					if ( next < 0 ){
+					
+						name = tail.substring( 0, pos );
+						
+					}else{
+						
+						name = tail.substring( next+1, pos );
+					}
+					
+					hc += name.hashCode();
+					
+					if ( l == null ){
+						
+						l = new ArrayList<>( 10 );
+						
+						l.add( is_dir?intern( name ):name );
+						
+					}else{
+						
+						l.add( intern( name ));
+					}
+					
+					pos = next;
+				}
+			}
+			
+			File file = original_file;
+			
+			while( file != null ){
+								
 				String name = file.getName();
 						
 				if ( name == null ){
@@ -822,6 +883,17 @@ StringInterner
 				}else if ( name.isEmpty()){
 					
 					name = file.getPath();
+					
+					if ( name.endsWith( File.separator )){
+						
+							// if this is the only component then we retain it verbatim as it might be the volume label (e.g. C:\)
+							// otherwise we remove it as it will be re-added when reconstructed
+						
+						if ( l != null ){
+						
+							name = name.substring( 0, name.length() -1 );
+						}
+					}
 				}
 				
 				hc += name.hashCode();
@@ -843,26 +915,49 @@ StringInterner
 			hash_code = hc;
 			
 			comps = l.toArray( new String[l.size()]);
+			/*
+			if ( tail == null ){
+				
+				if ( !original_file.getAbsolutePath().equals( getFile().getAbsolutePath())){
+					
+					Debug.out( "DERP: " + original_file.getAbsolutePath() + " -> " + toString());
+				}
+			}else{
+				if ( !new File( original_file, tail ).getAbsolutePath().equals( getFile().getAbsolutePath())){
+					
+					Debug.out( "DERP: " + original_file.getAbsolutePath() + " + " + tail + " ->" +toString());
+				}
+			}
+			*/
 		}
 		
 		public File
 		getFile()
 		{
+			return( FileUtil.newFile( toString()));
+		}
+		
+		public String
+		toString()
+		{
+			//Debug.out("");
 			int pos = comps.length-1;
 			
 			if ( pos < 0 ){
 				
-				return( FileUtil.newFile( "" ));
+				return( "" );
 			}
 							
-			File result = FileUtil.newFile( comps[pos--] );
+			StringBuilder result = new StringBuilder( comps[pos--] );
 			
 			while( pos >= 0 ){
 				
-				result = FileUtil.newFile( result, comps[pos--]);
+				result.append(File.separator);
+				
+				result.append( comps[pos--]);
 			}
 			
-			return( result );
+			return( result.toString());
 		}
 		
 		@Override

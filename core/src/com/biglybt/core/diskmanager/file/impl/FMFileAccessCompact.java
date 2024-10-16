@@ -23,8 +23,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
-import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.FileUtil;
@@ -35,13 +35,50 @@ FMFileAccessCompact
 {
 	private final static byte SS = DirectByteBuffer.SS_FILE;
 
+	protected static boolean
+	isCompact(
+		TOTorrentFile	torrent_file,
+		File			control_dir,
+		String			control_file_name,
+		int				target_type )
+	{
+		if ( target_type == FMFile.FT_COMPACT ){
+			
+			int piece_size = (int) torrent_file.getTorrent().getPieceLength();
+	
+			long	file_length	= torrent_file.getLength();
+	
+			long	file_offset_in_torrent = torrent_file.getOffsetInTorrent();
+	
+			int piece_offset	= piece_size - (int)( file_offset_in_torrent % piece_size);
+	
+			if ( piece_offset == piece_size){
+	
+				piece_offset	= 0;
+			}
+	
+			long first_piece_length	= piece_offset;
+	
+			if ( first_piece_length >= file_length && target_type == FMFile.FT_COMPACT ){
+				
+					// first piece takes up all the file, optimise to avoid state file
+				
+				return( true );
+			}
+		}
+	
+		return( FileUtil.newFile( control_dir, control_file_name ).exists());
+	}
+	
 	private final File				controlFileDir;
-	private final String				controlFileName;
+	private final String			controlFileName;
 	private final FMFileAccess		delegate;
 
-	private volatile long		current_length;
-	private static final long				version				= 0;
+	private volatile long		current_length_in_state;
+	private static final long	version				= 0;
 
+	private final boolean		state_required;
+	
 	private volatile boolean	write_required;
 
 	private long	first_piece_start;
@@ -65,23 +102,9 @@ FMFileAccessCompact
 		try{
 			int piece_size = (int) torrent_file.getTorrent().getPieceLength();
 
-			TOTorrent	torrent = torrent_file.getTorrent();
-
 			long	file_length	= torrent_file.getLength();
 
-			long	file_offset_in_torrent = 0;
-
-			for (int i=0;i<torrent.getFiles().length;i++){
-
-				TOTorrentFile	f = torrent.getFiles()[i];
-
-				if ( f == torrent_file){
-
-					break;
-				}
-
-				file_offset_in_torrent	+= f.getLength();
-			}
+			long	file_offset_in_torrent = torrent_file.getOffsetInTorrent();
 
 			int piece_offset	= piece_size - (int)( file_offset_in_torrent % piece_size);
 
@@ -95,16 +118,20 @@ FMFileAccessCompact
 
 			if ( first_piece_length >= file_length ){
 
-					// first piece takes up all the file
+					// first piece takes up all the file,  optimise to avoid state file
 
 				first_piece_length 	= file_length;
 				last_piece_start	= file_length;
 				last_piece_length	= 0;
 
+				state_required = false;
+				
 			}else{
 
 				last_piece_length	= ( file_length - piece_offset ) % piece_size;
 				last_piece_start	= file_length - last_piece_length;
+				
+				state_required = true;
 			}
 
 			/*
@@ -114,15 +141,19 @@ FMFileAccessCompact
 					", lp = " + last_piece_start + "/" + last_piece_length );
 			*/
 
-			if ( !FileUtil.newFile(controlFileDir,controlFileName).exists()){
-
-				if (!controlFileDir.isDirectory() && !FileUtil.mkdirs(controlFileDir)) {
-					throw new FMFileManagerException( FMFileManagerException.OP_OPEN, "Directory creation failed: "	+ controlFileDir);
+			if ( state_required ){
+				
+				if ( !FileUtil.newFile(controlFileDir,controlFileName).exists()){
+	
+					if (!controlFileDir.isDirectory() && !FileUtil.mkdirs(controlFileDir)){
+						
+						throw new FMFileManagerException( FMFileManagerException.OP_OPEN, "Directory creation failed: "	+ controlFileDir);
+					}
+	
+				}else{
+	
+					readState();
 				}
-
-			}else{
-
-				readState();
 			}
 		}catch( Throwable e ){
 
@@ -170,7 +201,14 @@ FMFileAccessCompact
 
 		throws FMFileManagerException
 	{
-		return( current_length );
+		if ( state_required ){
+		
+			return( current_length_in_state );
+			
+		}else{
+			
+			return( delegate.getLength( fa ));
+		}
 	}
 
 	@Override
@@ -181,11 +219,17 @@ FMFileAccessCompact
 
 		throws FMFileManagerException
 	{
-		if ( length != current_length ){
-
-			current_length	= length;
-
-			write_required = true;
+		if ( state_required ){
+			
+			if ( length != current_length_in_state ){
+	
+				current_length_in_state	= length;
+	
+				write_required = true;
+			}
+		}else{
+			
+			delegate.setLength( fa, length );
 		}
 	}
 
@@ -316,9 +360,12 @@ FMFileAccessCompact
 			}
 		}
 
-		if ( position > current_length ){
+		if ( state_required ){
+		
+			if ( position > current_length_in_state ){
 
-			setLength( fa, position );
+				setLength( fa, position );
+			}
 		}
 	}
 
@@ -443,9 +490,12 @@ FMFileAccessCompact
 			position += len;
 		}
 
-		if ( position > current_length ){
-
-			setLength( fa, position );
+		if ( state_required ){
+			
+			if ( position > current_length_in_state ){
+	
+				setLength( fa, position );
+			}
 		}
 	}
 
@@ -477,26 +527,28 @@ FMFileAccessCompact
 	{
 	}
 
-	protected void
+	private void
 	readState()
 
 		throws FMFileManagerException
 	{
-		try{
-			Map	data =
-				FileUtil.readResilientFile( controlFileDir, controlFileName, false );
-
-			if ( data != null && data.size() > 0 ){
-
-				//Long	version = (Long)data.get( "version" );
-
-				Long	length = (Long)data.get( "length" );
-
-				current_length	= length.longValue();
+		if ( state_required ){
+			
+			try{
+				Map	data = FileUtil.readResilientFile( controlFileDir, controlFileName, false );
+	
+				if ( data != null && data.size() > 0 ){
+	
+					//Long	version = (Long)data.get( "version" );
+	
+					Long	length = (Long)data.get( "length" );
+	
+					current_length_in_state	= length.longValue();
+				}
+			}catch( Throwable e ){
+	
+				throw( new FMFileManagerException( FMFileManagerException.OP_READ, "Failed to read control file state", e ));
 			}
-		}catch( Throwable e ){
-
-			throw( new FMFileManagerException( FMFileManagerException.OP_READ, "Failed to read control file state", e ));
 		}
 	}
 
@@ -505,25 +557,28 @@ FMFileAccessCompact
 
 		throws FMFileManagerException
 	{
-		boolean	write = write_required;
-
-		if ( write ){
-
-			write_required	= false;
-
-			try{
-				Map<String, Long>	data = new HashMap<>();
-
-				data.put( "version", version);
-
-				data.put( "length", current_length);
-
-				FileUtil.writeResilientFile(
-						controlFileDir, controlFileName, data, false );
-
-			}catch( Throwable e ){
-
-				throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "Failed to write control file state", e ));
+		if ( state_required ){
+			
+			boolean	write = write_required;
+	
+			if ( write ){
+	
+				write_required	= false;
+	
+				try{
+					Map<String, Long>	data = new HashMap<>();
+	
+					data.put( "version", version);
+	
+					data.put( "length", current_length_in_state );
+	
+					FileUtil.writeResilientFile(
+							controlFileDir, controlFileName, data, false );
+	
+				}catch( Throwable e ){
+	
+					throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "Failed to write control file state", e ));
+				}
 			}
 		}
 	}
@@ -539,6 +594,12 @@ FMFileAccessCompact
 	public String
 	getString()
 	{
-		return( "compact" );
+		if ( state_required ){
+	
+			return( "compact" );
+		}else{
+			
+			return( "compact-opt" );
+		}
 	}
 }

@@ -21,6 +21,7 @@ package com.biglybt.core.disk.impl.piecemapper;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.util.StringInterner;
 
 public interface
 DMPieceMapperFile
@@ -31,7 +32,7 @@ DMPieceMapperFile
 	/**
 	 * @return Relative file location and file name
 	 */
-	public String
+	public StringInterner.FileKey
 	getRelativeDataPath();
 
 	public TOTorrentFile

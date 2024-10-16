@@ -4038,6 +4038,8 @@ public class FileUtil {
 		String		parent,
 		String...		subDirs )
 	{
+		//Debug.out( parent + "." + subDirs );
+		
 		return fileHandling.newFile(parent, subDirs);
 	}
 
@@ -4046,6 +4048,8 @@ public class FileUtil {
 		File		parent_file,
 		String...		subDirs )
 	{
+		//Debug.out( parent_file + "." + subDirs );
+		
 		return fileHandling.newFile(parent_file, subDirs);
 	}
 	

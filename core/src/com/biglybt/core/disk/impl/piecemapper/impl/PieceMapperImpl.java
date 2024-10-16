@@ -96,7 +96,7 @@ PieceMapperImpl
 		// not needed as fileName already normalised
 		// fileName = FileUtil.convertOSSpecificChars( fileName,  false );
 
-		btFileList.add(new PieceMapperImpl.fileInfo(torrent_file,"", fileName ));
+		btFileList.add(new PieceMapperImpl.fileInfo(torrent_file, new StringInterner.FileKey( fileName )));
 	}
 
 	private void
@@ -135,40 +135,10 @@ PieceMapperImpl
 
 		throws UnsupportedEncodingException
 	{
-		//build the path
-
-		byte[][]	path_components = torrent_file.getPathComponents();
-
-		/* replaced the following two calls:
-		StringBuffer pathBuffer = new StringBuffer(256);
-		pathBuffer.setLength(0);
-		*/
-		StringBuilder pathBuffer = new StringBuilder(0);
-
-		int lastIndex = path_components.length - 1;
-		for (int j = 0; j < lastIndex; j++) {
-			//attach every element
-
-			String	comp = locale_decoder.decodeString( path_components[j]);
-
-			comp = FileUtil.convertOSSpecificChars( comp,  true);
-
-			pathBuffer.append(comp);
-			pathBuffer.append(separator);
-		}
-
-		//no, then we must be a part of the path
-		//add the file entry to the file holder list
-
-		String	last_comp = locale_decoder.decodeString(path_components[lastIndex]);
-
-		last_comp = FileUtil.convertOSSpecificChars( last_comp, false );
-
 		btFileList.add(
 			new fileInfo(
 				torrent_file,
-				pathBuffer.toString(),
-				last_comp ));
+				new StringInterner.FileKey( torrent_file.getRelativePath(locale_decoder))));
 	}
 
 
@@ -331,42 +301,46 @@ PieceMapperImpl
 	{
 		private DiskManagerFileInfo					file;
 		private final TOTorrentFile					torrent_file;
-		private final String 						relative_path;
-		private final String 						name;
-
+		private final StringInterner.FileKey		fk;
+		
 		/**
 		 * @param _relative_path  Blank or Relative Path with trailing File.separator
 		 */
 		public
 		fileInfo(
-			TOTorrentFile	_torrent_file,
-			String 			_relative_path,
-			String 			_name )
+			TOTorrentFile			_torrent_file,
+			StringInterner.FileKey	_fk )
 		{
 			torrent_file	= _torrent_file;
-			relative_path = StringInterner.intern(_relative_path);
-			name 			= _name;
+			fk				= _fk;
 		}
 
 		@Override
-		public long getLength() {
+		public long 
+		getLength() 
+		{	
 			return torrent_file.getLength();
 		}
+		
 		@Override
-		public String getRelativeDataPath()
+		public StringInterner.FileKey 
+		getRelativeDataPath()
 		{
-			return relative_path + name;
+			return( fk );
 		}
+		
 		@Override
 		public TOTorrentFile
 		getTorrentFile()
 		{
 			return( torrent_file );
 		}
+		
 		@Override
 		public DiskManagerFileInfo getFileInfo() {
 			return file;
 		}
+		
 		@Override
 		public void setFileInfo(DiskManagerFileInfo _file) {
 			file = _file;

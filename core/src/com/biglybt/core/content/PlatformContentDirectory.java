@@ -21,6 +21,8 @@
 package com.biglybt.core.content;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,6 +117,7 @@ PlatformContentDirectory
 		}
 	}
 
+	
 	@Override
 	public ContentFile
 	lookupContentFile(
@@ -131,112 +134,54 @@ PlatformContentDirectory
 
 				return( null );
 			}
-
-			Torrent	t_torrent = download.getTorrent();
-
-			if ( t_torrent == null ){
-
-				return( null );
+			
+			String key = "PlatformContentDirectory:cfhandler";
+			
+			ContentFileHandler cfh = (ContentFileHandler)download.getUserData( key );
+			
+			if ( cfh == null ){
+				
+				cfh = new ContentFileHandler( download );
+				
+				download.setUserData( key, cfh );
 			}
-
-			String ud_key = "PlatformContentDirectory" + ":" + index;
-
-			ContentFile acf = (ContentFile)download.getUserData( ud_key );
-
-			if ( acf != null ){
-
-				return( acf );
-			}
-
-			final DiskManagerFileInfo	file = download.getDiskManagerFileInfo(index);
-
-			acf = new ContentFile() {
-				@Override
-				public DiskManagerFileInfo getFile() {
-					return (file);
-				}
-
-				@Override
-				public Object getProperty(String name) {
-					try {
-						if (name.equals(PT_DATE)) {
-
-							return (new Long(file.getDownload().getCreationTime()));
-
-						} else if (name.equals(PT_CATEGORIES)) {
-
-							try {
-								String cat = file.getDownload().getCategoryName();
-
-								if (cat != null && cat.length() > 0) {
-
-									if (!cat.equalsIgnoreCase("Categories.uncategorized")) {
-
-										return (new String[] {
-											cat
-										});
-									}
-								}
-							} catch (Throwable e) {
-
-							}
-
-							return (new String[0]);
-
-						} else if (name.equals(PT_TAGS)) {
-
-							List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable(
-									PluginCoreUtils.unwrap(file.getDownload()));
-
-							List<String> tag_names = new ArrayList<>();
-
-							for (Tag tag : tags) {
-
-								if (tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL) {
-
-									tag_names.add(tag.getTagName(true));
-								}
-							}
-
-							return (tag_names.toArray(new String[tag_names.size()]));
-
-						} else if (name.equals(PT_PERCENT_DONE)) {
-
-							long size = file.getLength();
-
-							return (new Long(
-									size == 0 ? 100 : (1000 * file.getDownloaded() / size)));
-
-						} else if (name.equals(PT_ETA)) {
-
-							return (getETA(file));
-						}
-					} catch (Throwable e) {
-					}
-
-					return (null);
-				}
-			};
-
-			download.setUserData( ud_key, acf );
-
-			final ContentFile f_acf = acf;
-
+			
+			return( cfh.getContentFile( index ));
+			
+		}catch( Throwable e ){
+			
+			return( null );
+		}
+	}
+	
+	private static class
+	ContentFileHandler
+	{
+		private final Download	download;
+		
+		private final Map<Integer, ContentFile>	cfs = new HashMap<>();	                                       	                     
+		
+		private
+		ContentFileHandler(
+			Download		_download )
+		{
+			download = _download;
+						
 			download.addAttributeListener(
-				new DownloadAttributeListener()
-				{
-					@Override
-					public void
-					attributeEventOccurred(
-						Download 			download,
-						TorrentAttribute 	attribute,
-						int 				eventType )
+					new DownloadAttributeListener()
 					{
-						fireCatsChanged( f_acf );
-					}
-				},
-				ta_category,
-				DownloadAttributeListener.WRITTEN );
+						@Override
+						public void
+						attributeEventOccurred(
+							Download 			download,
+							TorrentAttribute 	attribute,
+							int 				eventType )
+						{
+							fireCatsChanged( cfs.values());
+						}
+					},
+					ta_category,
+					DownloadAttributeListener.WRITTEN );
 
 			TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).addTagListener(
 					PluginCoreUtils.unwrap( download ),
@@ -271,19 +216,107 @@ PlatformContentDirectory
 						update(
 							Taggable	tagged )
 						{
-							fireTagsChanged( f_acf );
+							fireTagsChanged( cfs.values());
 						}
 					});
+		}
+		
+		private	ContentFile
+		getContentFile(
+			int		index )
+		{
+			ContentFile acf = cfs.get( index );
+			
+			if ( acf != null ){
+				
+				return( acf );
+			}
+			
+			acf = 
+				new ContentFile() 
+				{
+					@Override
+					public DiskManagerFileInfo 
+					getFile() 
+					{
+						return( download.getDiskManagerFileInfo(index));
+					}
+	
+					@Override
+					public Object 
+					getProperty(
+						String name )
+					{
+						DiskManagerFileInfo file = getFile();
+						
+						try {
+							if (name.equals(PT_DATE)) {
+	
+								return (new Long(file.getDownload().getCreationTime()));
+	
+							} else if (name.equals(PT_CATEGORIES)) {
+	
+								try {
+									String cat = file.getDownload().getCategoryName();
+	
+									if (cat != null && cat.length() > 0) {
+	
+										if (!cat.equalsIgnoreCase("Categories.uncategorized")) {
+	
+											return (new String[] {
+												cat
+											});
+										}
+									}
+								} catch (Throwable e) {
+	
+								}
+	
+								return (new String[0]);
+	
+							} else if (name.equals(PT_TAGS)) {
+	
+								List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable(
+										PluginCoreUtils.unwrap(file.getDownload()));
+	
+								List<String> tag_names = new ArrayList<>();
+	
+								for (Tag tag : tags) {
+	
+									if (tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL) {
+	
+										tag_names.add(tag.getTagName(true));
+									}
+								}
+	
+								return (tag_names.toArray(new String[tag_names.size()]));
+	
+							} else if (name.equals(PT_PERCENT_DONE)) {
+	
+								long size = file.getLength();
+	
+								return (new Long( size == 0 ? 100 : (1000 * file.getDownloaded() / size)));
+	
+							} else if (name.equals(PT_ETA)) {
+	
+								return(getETA(file));
+							}
+						} catch (Throwable e) {
+						}
+	
+						return (null);
+					}
+				};
+
+			cfs.put( index, acf );		
 
 			return( acf );
-
-		}catch( Throwable e ){
-
-			return( null );
 		}
 	}
+	
 
-	protected long
+
+	private static long
 	getETA(
 		DiskManagerFileInfo		file )
 	{
@@ -313,26 +346,53 @@ PlatformContentDirectory
 		}
 	}
 
-	public static void
+	private static void
 	fireCatsChanged(
-		ContentFile acf )
+		Collection<ContentFile> cfs )
 	{
 		for ( ContentDirectoryListener l: listeners ){
 
-			l.contentChanged( acf, ContentFile.PT_CATEGORIES );
+			for ( ContentFile cf: cfs ){
+				
+				l.contentChanged( cf, ContentFile.PT_CATEGORIES );
+			}
+		}
+	}
+
+	private static void
+	fireTagsChanged(
+		Collection<ContentFile> cfs )
+	{
+		for ( ContentDirectoryListener l: listeners ){
+
+			for ( ContentFile cf: cfs ){
+			
+				l.contentChanged( cf, ContentFile.PT_TAGS );
+			}
+		}
+	}
+
+	public static void
+	fireCatsChanged(
+		ContentFile		cf )
+	{
+		for ( ContentDirectoryListener l: listeners ){
+			
+			l.contentChanged( cf, ContentFile.PT_CATEGORIES );
 		}
 	}
 
 	public static void
 	fireTagsChanged(
-		ContentFile acf )
+		ContentFile		cf )
 	{
 		for ( ContentDirectoryListener l: listeners ){
-
-			l.contentChanged( acf, ContentFile.PT_TAGS );
+			
+			l.contentChanged( cf, ContentFile.PT_TAGS );
 		}
 	}
 
+	
 	@Override
 	public void
 	addListener(

@@ -1977,21 +1977,22 @@ DownloadManagerImpl
 
 			try{
 
-				File	to			= entry.getToFile();
+				StringInterner.FileKey	to_fk	= entry.getToFile();
 
-				if ( to == null ){
+				if ( to_fk == null ){
 
 						// represents a deleted link, nothing to update
 
 					continue;
 				}
 
-				to = FileUtil.getCanonicalFileSafe( to );
+				File to = FileUtil.getCanonicalFileSafe( to_fk.getFile());
 
 				int		file_index 	= entry.getIndex();
-				File	from 		= entry.getFromFile();
+				
+				StringInterner.FileKey	from_fk 		= entry.getFromFile();
 
-				from = FileUtil.getCanonicalFileSafe( from );
+				File from = FileUtil.getCanonicalFileSafe( from_fk.getFile());
 
 				updateFileLink( file_index, old_save_path, new_save_path, from, to, 
 					from_indexes, from_links, to_links );

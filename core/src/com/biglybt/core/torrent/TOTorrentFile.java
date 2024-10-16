@@ -22,6 +22,8 @@ package com.biglybt.core.torrent;
 
 import java.util.Map;
 
+import com.biglybt.core.internat.LocaleUtilDecoder;
+
 public interface
 TOTorrentFile
 {
@@ -34,6 +36,9 @@ TOTorrentFile
 	public long
 	getLength();
 
+	public long
+	getOffsetInTorrent();
+	
 	public byte[][]
 	getPathComponents();
 
@@ -42,6 +47,8 @@ TOTorrentFile
 	 */
 	public String getRelativePath();
 
+	public String getRelativePath( LocaleUtilDecoder decoder );
+	
 	public int
 	getFirstPieceNumber();
 

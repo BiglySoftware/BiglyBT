@@ -712,7 +712,7 @@ DiskManagerUtil
 														return( CacheFileOwner.CACHE_MODE_NORMAL );
 													}
 												},
-												target_file,
+												new StringInterner.FileKey( target_file ),
 												DiskManagerUtil.convertDMStorageTypeToCache( newStorageType ), force );
 
 										try{
@@ -830,7 +830,7 @@ DiskManagerUtil
 
 		            	private volatile CacheFile   read_cache_file;
 		            	// do not access this field directly, use lazyGetFile() instead
-		            	private WeakReference dataFile = new WeakReference(null);
+		            	private WeakReference<StringInterner.FileKey> dataFile = new WeakReference<>(null);
 
 		            	private volatile Boolean skipping;
 		            	
@@ -1178,48 +1178,29 @@ DiskManagerUtil
 
 		            	private File lazyGetFile()
 		            	{
-		            		File toReturn = (File)dataFile.get();
-		            		if(toReturn != null)
-		            			return toReturn;
-
-		            		TOTorrent tor = download_manager.getTorrent();
-
-		            		File  dataPath = root_dir;
-		            		File simpleFile = null;
-
-		            		// for a simple torrent the target file can be changed
-
-		            		if ( tor == null || tor.isSimpleTorrent()){
-
-		            				// rumour has it tor can sometimes be null
-
-		            			simpleFile = download_manager.getAbsoluteSaveLocation();
-
-		            		}else{
-		            			byte[][]path_comps = torrent_file.getPathComponents();
-
-		            			for (int j=0;j<path_comps.length;j++){
-
-		            				String comp;
-		            				try
-		            				{
-		            					comp = locale_decoder.decodeString( path_comps[j] );
-		            				} catch (UnsupportedEncodingException e)
-		            				{
-		            					Debug.printStackTrace(e);
-		            					comp = "undecodableFileName"+file_index;
-		            				}
-
-		            				comp = FileUtil.convertOSSpecificChars( comp,  j != path_comps.length-1 );
-
-		            				dataPath = FileUtil.newFile(dataPath, comp);
-		            			}
+		            		StringInterner.FileKey fk = dataFile.get();
+		            		
+		            		if ( fk == null ){
+		            					            		
+			            		TOTorrent tor = download_manager.getTorrent();
+	
+			            		// for a simple torrent the target file can be changed
+	
+			            		if ( tor == null || tor.isSimpleTorrent()){
+	
+			            				// rumour has it tor can sometimes be null
+	
+			            			fk = new StringInterner.FileKey( download_manager.getAbsoluteSaveLocation());
+	
+			            		}else{
+	
+			            			fk = new StringInterner.FileKey( root_dir, torrent_file.getRelativePath( locale_decoder ));
+			            		}
+	
+			            		dataFile = new WeakReference<>( fk );
 		            		}
-
-		            		dataFile = new WeakReference(toReturn = simpleFile != null ? simpleFile : dataPath );
-
-		            		//System.out.println("new file:"+toReturn);
-		            		return toReturn;
+		            		
+	            			return( fk.getFile());
 		            	}
 
 		            	@Override
@@ -1362,7 +1343,7 @@ DiskManagerUtil
 	                									return( CacheFileOwner.CACHE_MODE_NORMAL );
 	                								}
 	                							},
-	                							getFile( true ),
+	                							new StringInterner.FileKey( getFile( true )),
 	                							convertDMStorageTypeToCache( type ), false );
 
 	                				}catch( Throwable e ){
@@ -1786,7 +1767,8 @@ DiskManagerUtil
 	
 	public static DiskManagerPiece[]
 	getDiskManagerPiecesSnapshot(
-		DownloadManager		dm )
+		DownloadManager				dm,
+		DiskManagerFileInfoSet		file_set )
 	{
 		try{
 			TOTorrent torrent = dm.getTorrent();
@@ -1805,6 +1787,7 @@ DiskManagerUtil
 	
 	        DiskManagerPiece[] pieces      = new DiskManagerPiece[nbPieces];
 
+	        /*
 			DiskManagerFileInfoSet file_set = 
 				getFileInfoSkeleton(
 					dm,
@@ -1822,7 +1805,8 @@ DiskManagerUtil
 						public void filePriorityChanged(DiskManager dm, List<DiskManagerFileInfo> files){
 						}
 					});
-				
+			*/
+	        
 			DiskManagerFileInfo[] files = file_set.getFiles();
 	
 	        LocaleUtilDecoder   locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );

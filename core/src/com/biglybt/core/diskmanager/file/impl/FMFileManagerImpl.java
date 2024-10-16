@@ -167,12 +167,12 @@ FMFileManagerImpl
 
 				int		index	= entry.getIndex();
 
-				File	source 	= entry.getFromFile();
-				File	target	= entry.getToFile();
+				StringInterner.FileKey	source 	= entry.getFromFile();
+				StringInterner.FileKey	target	= entry.getToFile();
 
 				// System.out.println( "setLink:" + source + " -> " + target );
 
-				if ( target != null && !FileUtil.areFilePathsIdentical( source, target )){
+				if ( target != null && !FileUtil.areFilePathsIdentical( source.getFile(), target.getFile() )){
 
 					if ( index >= 0 ){
 
@@ -194,11 +194,11 @@ FMFileManagerImpl
 	}
 
 	@Override
-	public File
+	public StringInterner.FileKey
 	getFileLink(
-		TOTorrent	torrent,
-		int			file_index,
-		File		file )
+		TOTorrent				torrent,
+		int						file_index,
+		StringInterner.FileKey	file )
 	{
 			// this function works on the currently defined links and will only accept
 			// them as valid if their 'from' location matches the 'file' being queried.
@@ -216,9 +216,9 @@ FMFileManagerImpl
 
 			LinkFileMap	links_entry = getLinksEntry( torrent );
 
-			LinkFileMap.Entry	entry = links_entry.getEntry( file_index, file );
+			LinkFileMap.Entry	entry = links_entry.getEntry( file_index, file.getFile());
 
-			File res = null;
+			StringInterner.FileKey res = null;
 
 			if ( entry == null ){
 
@@ -254,10 +254,10 @@ FMFileManagerImpl
 	@Override
 	public FMFile
 	createFile(
-		FMFileOwner	owner,
-		File		file,
-		int			type,
-		boolean		force )
+		FMFileOwner				owner,
+		StringInterner.FileKey	file,
+		int						type,
+		boolean					force )
 
 		throws FMFileManagerException
 	{
@@ -565,10 +565,10 @@ FMFileManagerImpl
 
 						int		index	= entry.getIndex();
 
-						File	source 	= entry.getFromFile();
-						File	target	= entry.getToFile();
+						StringInterner.FileKey	source 	= entry.getFromFile();
+						StringInterner.FileKey	target	= entry.getToFile();
 						
-						if ( target != null && !FileUtil.areFilePathsIdentical( source, target )){
+						if ( target != null && !FileUtil.areFilePathsIdentical( source.getFile(), target.getFile())){
 						
 							writer.println( index + ": " + source + " -> " + target );
 						}

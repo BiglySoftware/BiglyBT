@@ -813,7 +813,7 @@ DiskManagerImpl
 
             DMPieceMapperFile pm_info = pm_files[i];
 
-            String relative_file = pm_info.getRelativeDataPath();
+            StringInterner.FileKey relative_file = pm_info.getRelativeDataPath();
 
             long target_length = pm_info.getLength();
 
@@ -935,7 +935,7 @@ DiskManagerImpl
     	DMPieceMapperFile			pm_info,
     	int							file_index,
     	File						root_dir,
-    	String					relative_file,
+    	StringInterner.FileKey		relative_file,
     	int							storage_type )
 
     	throws CacheFileManagerException
@@ -960,7 +960,7 @@ DiskManagerImpl
 
         	if ( Debug.getNestedExceptionMessage(e).contains( "volume label syntax is incorrect" )){
 
-						File target_file = FileUtil.newFile( root_dir, relative_file);
+				File target_file = FileUtil.newFile( root_dir, relative_file.toString());
 
         		File actual_file = state.getFileLink( file_index, target_file );
 
@@ -1019,7 +1019,7 @@ DiskManagerImpl
 
         				if ( comps.isEmpty()){
 
-        					String prefix = Base32.encode( new SHA1Simple().calculateHash( relative_file.getBytes( Constants.UTF_8 ))).substring( 0, 4 );
+        					String prefix = Base32.encode( new SHA1Simple().calculateHash( relative_file.toString().getBytes( Constants.UTF_8 ))).substring( 0, 4 );
 
         					comp = prefix + "_" + comp;
         				}
@@ -1110,9 +1110,9 @@ DiskManagerImpl
 
 				DMPieceMapperFile pm_info = pm_files[i];
 
-				String relative_data_file = pm_info.getRelativeDataPath();
+				StringInterner.FileKey relative_data_file = pm_info.getRelativeDataPath();
 
-				allocation_task = relative_data_file;
+				allocation_task = relative_data_file.toString();
 
 				DiskManagerFileInfoImpl fileInfo;
 
@@ -1161,9 +1161,9 @@ DiskManagerImpl
 
                 final long target_length = pm_info.getLength();
 
-                String relative_data_file = pm_info.getRelativeDataPath();
+                StringInterner.FileKey relative_data_file = pm_info.getRelativeDataPath();
 
-                allocation_task = relative_data_file;
+                allocation_task = relative_data_file.toString();
 
                 DiskManagerFileInfoImpl fileInfo = allocated_files[i];
 
@@ -3050,7 +3050,7 @@ DiskManagerImpl
 	
 				  File old_file = files[i].getFile(false);
 	
-				  File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, old_file );
+				  File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, new StringInterner.FileKey( old_file )).getFile();
 	
 				  if ( !linked_file.equals(old_file)){
 	
@@ -3753,7 +3753,7 @@ DiskManagerImpl
 
                 File    target = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 
-                target = FMFileManagerFactory.getSingleton().getFileLink( torrent, 0, target.getCanonicalFile());
+                target = FMFileManagerFactory.getSingleton().getFileLink( torrent, 0, new StringInterner.FileKey( target.getCanonicalFile())).getFile();
 
                 FileUtil.deleteWithRecycle( target, force_no_recycle );
 
@@ -3862,7 +3862,7 @@ DiskManagerImpl
 
                 file = file.getCanonicalFile();
 
-                File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, file );
+                File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, new StringInterner.FileKey( file )).getFile();
 
                 boolean skip = false;
 
@@ -3948,7 +3948,7 @@ DiskManagerImpl
             boolean delete;
 
             if (has_links) {
-            	File linked_file = fm_factory.getFileLink( torrent, i, file );
+            	File linked_file = fm_factory.getFileLink( torrent, i, new StringInterner.FileKey( file )).getFile();
 
             	if ( linked_file == file ){
 

@@ -2352,7 +2352,7 @@ DownloadManagerStateImpl
 			return;
 		}
 
-		links.put( source_index, link_source, link_destination );
+		links.put( source_index, new StringInterner.FileKey( link_source), link_destination==null?null:new StringInterner.FileKey( link_destination ));
 
 		List	list = new ArrayList();
 
@@ -2363,8 +2363,9 @@ DownloadManagerStateImpl
 			LinkFileMap.Entry	entry = it.next();
 
 			int		index	= entry.getIndex();
-			File	source 	= entry.getFromFile();
-			File	target 	= entry.getToFile();
+			
+			StringInterner.FileKey	source 	= entry.getFromFile();
+			StringInterner.FileKey	target 	= entry.getToFile();
 
 			String	str = index + "\n" + source + "\n" + (target==null?"":target.toString());
 
@@ -2413,7 +2414,7 @@ DownloadManagerStateImpl
 				continue;
 			}
 
-			links.put( source_index, link_source, link_destination );
+			links.put( source_index, new StringInterner.FileKey( link_source ), new StringInterner.FileKey( link_destination ));
 
 			changed = true;
 		}
@@ -2434,8 +2435,9 @@ DownloadManagerStateImpl
 			LinkFileMap.Entry	entry = it.next();
 
 			int		index	= entry.getIndex();
-			File	source 	= entry.getFromFile();
-			File	target 	= entry.getToFile();
+			
+			StringInterner.FileKey	source 	= entry.getFromFile();
+			StringInterner.FileKey	target 	= entry.getToFile();
 
 			String	str = index + "\n" + source + "\n" + (target==null?"":target.toString());
 
@@ -2469,8 +2471,9 @@ DownloadManagerStateImpl
 			LinkFileMap.Entry	entry = it.next();
 
 			int		index	= entry.getIndex();
-			File	source 	= entry.getFromFile();
-			File	target 	= entry.getToFile();
+			
+			StringInterner.FileKey	source 	= entry.getFromFile();
+			StringInterner.FileKey	target 	= entry.getToFile();
 
 			if ( target != null ){
 
@@ -2572,8 +2575,9 @@ DownloadManagerStateImpl
 
 					try{
 						int		index 	= Integer.parseInt( bits[0].trim());
-						File	source	= FileUtil.newFile(bits[1]);
-						File	target	= bits.length<3?null:FileUtil.newFile(bits[2]);
+						
+						StringInterner.FileKey	source	= new StringInterner.FileKey( (bits[1]));
+						StringInterner.FileKey	target	= bits.length<3?null:new StringInterner.FileKey((bits[2]));
 
 						if( index >= 0 ){
 
@@ -2603,9 +2607,9 @@ DownloadManagerStateImpl
 
 				if ( sep != -1 ){
 
-					File target = (sep == entry.length()-1)?null:FileUtil.newFile( entry.substring( sep+1 ));
+					StringInterner.FileKey target = (sep == entry.length()-1)?null:new StringInterner.FileKey( entry.substring( sep+1 ));
 
-					res.putMigration( FileUtil.newFile( entry.substring(0,sep)), target );
+					res.putMigration( new StringInterner.FileKey( entry.substring(0,sep)), target );
 				}
 			}
 		}
