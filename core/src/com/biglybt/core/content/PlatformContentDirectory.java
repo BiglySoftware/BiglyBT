@@ -23,8 +23,10 @@ package com.biglybt.core.content;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -32,7 +34,6 @@ import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadAttributeListener;
 import com.biglybt.pif.download.DownloadManager;
-import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
@@ -279,7 +280,9 @@ PlatformContentDirectory
 								List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable(
 										PluginCoreUtils.unwrap(file.getDownload()));
 	
-								List<String> tag_names = new ArrayList<>();
+									// can be duplicates...
+								
+								Set<String> tag_names = new HashSet<>();
 	
 								for (Tag tag : tags) {
 	
