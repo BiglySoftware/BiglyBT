@@ -30,6 +30,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.util.*;
+import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
@@ -656,9 +657,31 @@ SBC_SearchResultsView
 		btnAddEdit.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				
 				UIFunctions functions = UIFunctionsManager.getUIFunctions();
-				if (functions != null) {
-					functions.viewURL(Constants.URL_SEARCH_ADDEDIT, null, "");
+				
+				if ( functions != null ){
+					
+					String server = Constants.URL_SEARCH_ADDEDIT;
+					
+					try{
+						Map vc_data = VersionCheckClient.getSingleton().getMostRecentVersionCheckData();
+						
+						if ( vc_data != null ){
+							
+							byte[] b_ss = (byte[])vc_data.get( "search_server" );
+						
+							if ( b_ss != null ){
+										
+								String ss = new String( b_ss, "UTF-8" );
+											
+								server = ss;
+							}
+						}
+					}catch( Throwable f ){
+					}
+					
+					functions.viewURL(server, null, "");
 				}
 			}
 

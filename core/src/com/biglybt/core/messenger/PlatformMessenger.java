@@ -28,6 +28,7 @@ import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.Timer;
+import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderException;
@@ -351,9 +352,32 @@ public class PlatformMessenger
 
 		// Note: We used to append ContentNetworkVuzeGeneric.URL_PARAMS to this
 		String sURL_RPC;
+		
 		if ((lastServer != null && (lastServer.endsWith("-subscription")) || urlStem.toString().startsWith("msg=searchtemplate"))) {
-			sURL_RPC = Constants.URL_RPC2 + "?" + urlStem.toString();
-		} else {
+			
+			String rcp2 = Constants.URL_RPC2;
+			
+			try{
+				Map vc_data = VersionCheckClient.getSingleton().getMostRecentVersionCheckData();
+				
+				if ( vc_data != null ){
+					
+					byte[] b_ss = (byte[])vc_data.get( "vrpc2_server" );
+				
+					if ( b_ss != null ){
+								
+						String ss = new String( b_ss, "UTF-8" );
+									
+						rcp2 = ss;
+					}
+				}
+			}catch( Throwable f ){
+			}
+			
+			sURL_RPC = rcp2 + "?" + urlStem.toString();
+			
+		}else{
+			
 			sURL_RPC = Constants.URL_RPC + "?" + urlStem.toString();
 		}
 
