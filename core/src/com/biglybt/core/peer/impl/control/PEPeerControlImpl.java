@@ -1572,6 +1572,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return;
 		}
 
+		if ( is_metadata_download ){
+			
+			return;
+		}
+		
 		long remaining = 0;
 
 		// for every piece
