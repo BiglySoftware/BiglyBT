@@ -579,7 +579,9 @@ public class OpenTorrentOptionsWindow
 					SimpleTimer.addEvent(
 						"awc", SystemTime.getOffsetTime( 1000 ),
 						(ev)->{
-							addTorrentSupport( torrentOptions, attempt_count+1 );
+							Utils.execSWTThread(()->{
+								addTorrentSupport( torrentOptions, attempt_count+1 );
+							});
 						});
 					
 					return;
@@ -1775,15 +1777,27 @@ public class OpenTorrentOptionsWindow
 	{
 		open_instances.add( instance );
 
-		updateDialogTitle();
-
-		instance.initialize();
-
-		tvTorrents.addDataSources( new OpenTorrentInstance[]{ instance });
-
-		updateInstanceInfo();
-
-		swt_updateTVTorrentButtons();
+		try{
+			updateDialogTitle();
+	
+			instance.initialize();
+	
+			tvTorrents.addDataSources( new OpenTorrentInstance[]{ instance });
+	
+			tvTorrents.processDataSourceQueueSync();
+			
+			tvTorrents.refreshTable( false );
+			
+			updateInstanceInfo();
+	
+			swt_updateTVTorrentButtons();
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			removeInstance( instance, true );
+		}
 	}
 
 	private void
@@ -1934,56 +1948,72 @@ public class OpenTorrentOptionsWindow
 
 		open_instances.remove( instance );
 
-		updateDialogTitle();
-
-		tvTorrents.removeDataSource( instance );
-
-		instance.getComposite().dispose();
-
-		updateInstanceInfo();
-
-		if ( selected_instances.contains( instance ) && selected_instances.size() > 1 ){
-
-			List<OpenTorrentInstance> temp = new ArrayList<>( selected_instances );
-
-			temp.remove( instance );
-
-			selectInstances( temp );
-
-		}else{
-
-			int	num_instances = open_instances.size();
-
-			if ( num_instances > index ){
-
-				selectInstance( open_instances.get( index ));
-
-			}else if ( num_instances > 0 ){
-
-				selectInstance( open_instances.get( num_instances-1 ));
-
+		try{
+			updateDialogTitle();
+	
+			tvTorrents.removeDataSource( instance );
+	
+			instance.getComposite().dispose();
+	
+			updateInstanceInfo();
+	
+			if ( selected_instances.contains( instance ) && selected_instances.size() > 1 ){
+	
+				List<OpenTorrentInstance> temp = new ArrayList<>( selected_instances );
+	
+				temp.remove( instance );
+	
+				selectInstances( temp );
+	
 			}else{
-
-				selectInstance( null );
+	
+				int	num_instances = open_instances.size();
+	
+				if ( num_instances > index ){
+	
+					selectInstance( open_instances.get( index ));
+	
+				}else if ( num_instances > 0 ){
+	
+					selectInstance( open_instances.get( num_instances-1 ));
+	
+				}else{
+	
+					selectInstance( null );
+				}
 			}
-		}
-
-		swt_updateTVTorrentButtons();
-
-		refreshTVTorrentIndexes();
-
-		if ( is_removal ){
+	
+			swt_updateTVTorrentButtons();
+	
+			refreshTVTorrentIndexes();
 			
-			instance.cancelPressed();
-		}
-		
-		instance.dispose();
-		
-		if ( open_instances.isEmpty()){
+		}finally{
 			
-			if ( dlg != null ){
+			if ( is_removal ){
+			
+				try{
+					instance.cancelPressed();
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+			
+			try{
+				instance.dispose();
 				
-				dlg.close();
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+			
+			if ( open_instances.isEmpty()){
+				
+				if ( dlg != null ){
+					
+					dlg.close();
+				}
 			}
 		}
 	}

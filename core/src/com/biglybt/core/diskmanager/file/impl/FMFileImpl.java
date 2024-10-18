@@ -1023,9 +1023,11 @@ FMFileImpl
 
 			if ( owners == null ){
 
-				Debug.out( "reserveAccess fail" );
+				String str = "File '"+canonical_path+"' has not been reserved (no entries), '" + owner.getName()+"'";
+						
+				Debug.out( "reserveAccess fail: " + str );
 
-				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "File '"+canonical_path+"' has not been reserved (no entries), '" + owner.getName()+"'"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, str ));
 			}
 
 			for ( Object[] entry: owners ){
@@ -1042,9 +1044,11 @@ FMFileImpl
 
 			if ( my_entry == null ){
 
-				Debug.out( "reserveAccess fail" );
+				String str = "File '"+canonical_path+"' has not been reserved (not found), '" + owner.getName()+"'";
+				
+				Debug.out( "reserveAccess fail: " + str );
 
-				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "File '"+canonical_path+"' has not been reserved (not found), '" + owner.getName()+"'"));
+				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, str ));
 			}
 
 			my_entry[1] = Boolean.valueOf(access_mode == FM_WRITE);
