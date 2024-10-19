@@ -109,6 +109,11 @@ PeerImpl
   public Message[] getSupportedMessages() {
     com.biglybt.core.peermanager.messaging.Message[] core_msgs = delegate.getSupportedMessages();
 
+    if ( core_msgs == null ){
+    	
+    	return( null );	// peer doesn't support messaging or isn't yet fully connected
+    }
+    
     Message[] plug_msgs = new Message[ core_msgs.length ];
 
     for( int i=0; i < core_msgs.length; i++ ) {
