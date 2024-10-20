@@ -948,6 +948,9 @@ public class ClientStatsView
 				return "HTTP Seed";
 			}
 		}
+		if ( s.startsWith( "Unknown [" ) && s.length() >= 11){
+			s = s.substring( 0,11 )+ "]";
+		}
 		return s.replaceAll(" v?[0-9._]+", "");
 	}
 }
