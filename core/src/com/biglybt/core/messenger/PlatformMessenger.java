@@ -355,7 +355,7 @@ public class PlatformMessenger
 		
 		if ((lastServer != null && (lastServer.endsWith("-subscription")) || urlStem.toString().startsWith("msg=searchtemplate"))) {
 			
-			String rcp2 = Constants.URL_RPC2;
+			String rpc2 = Constants.URL_RPC2;
 			
 			try{
 				Map vc_data = VersionCheckClient.getSingleton().getMostRecentVersionCheckData();
@@ -368,13 +368,15 @@ public class PlatformMessenger
 								
 						String ss = new String( b_ss, "UTF-8" );
 									
-						rcp2 = ss;
+						rpc2 = ss;
 					}
 				}
 			}catch( Throwable f ){
 			}
 			
-			sURL_RPC = rcp2 + "?" + urlStem.toString();
+			// rpc2 = "http://127.0.0.1:9898/rpc.php";
+			
+			sURL_RPC = rpc2 + "?" + urlStem.toString();
 			
 		}else{
 			
@@ -649,7 +651,13 @@ public class PlatformMessenger
 		}
 
 		rd.setProperty( "URL_Connection", "Keep-Alive" );
-
+		
+		rd.setProperty( "URL_Connect_Timeout", 10*1000 );
+		
+		rd.setProperty( "URL_Read_Timeout", 20*1000 );
+		
+		rd.setProperty(postData, rd);
+		
 		rd = rdf.getRetryDownloader(rd, 3);
 
 		// We could report percentage to listeners, but there's no need to atm

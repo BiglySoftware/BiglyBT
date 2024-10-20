@@ -680,7 +680,7 @@ SBC_SearchResultsView
 						}
 					}catch( Throwable f ){
 					}
-					
+										
 					functions.viewURL(server, null, "");
 				}
 			}
