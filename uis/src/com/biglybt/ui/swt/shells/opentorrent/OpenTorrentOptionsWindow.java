@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -4515,7 +4516,7 @@ public class OpenTorrentOptionsWindow
 					// make the error state visible
 					soExpandItemSaveTo.setExpanded(true);
 				} else {
-					cmbDataDir.setBackground(null);
+					Utils.setSkinnedBackground( cmbDataDir,(Color)null );
 				}
 				cmbDataDir.redraw();
 				cmbDataDir.update();
