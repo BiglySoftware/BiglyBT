@@ -298,7 +298,7 @@ public class SWTSkinObjectBrowser
 		if (!noListeners) {
   		context.addMessageListener(new TorrentListener());
   		context.addMessageListener(new VuzeListener());
-  		context.addMessageListener(new DisplayListener());
+  		context.addMessageListener(new DisplayListener(browser));
   		context.addMessageListener(new ConfigListener(browser));
 		}
 

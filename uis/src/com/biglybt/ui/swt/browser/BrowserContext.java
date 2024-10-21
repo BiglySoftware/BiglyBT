@@ -535,7 +535,7 @@ public class BrowserContext
 							&& !event_location.equals("")
 							&& !event_location.contains("/client.vuze.com/")
 							&& !event_location.contains("/client.biglybt.com/")
-						//	&& !event_location.startsWith( "http://127.0.0.1" )
+							// && !event_location.startsWith( "http://127.0.0.1" )
 							&& !isPageLoadingOrRecent) {
 						event.doit = false;
 						

@@ -680,7 +680,9 @@ SBC_SearchResultsView
 						}
 					}catch( Throwable f ){
 					}
-										
+					
+					// server = "http://127.0.0.1:9899/xsearch/engineselector.php?azid=anonymous&azv=5.7.5.0&locale=en_US&os.name=Windows%207&vzemb=1";
+					
 					functions.viewURL(server, null, "");
 				}
 			}

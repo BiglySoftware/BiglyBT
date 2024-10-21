@@ -133,7 +133,7 @@ public class BrowserWindow
 				+ Math.random(), browser, null, true);
 		context.addMessageListener(new TorrentListener());
 		context.addMessageListener(new VuzeListener());
-		context.addMessageListener(new DisplayListener());
+		context.addMessageListener(new DisplayListener(browser));
 		context.addMessageListener(new ConfigListener(browser));
 		context.addMessageListener(
 				new MetaSearchListener(new OpenCloseSearchDetailsListener() {

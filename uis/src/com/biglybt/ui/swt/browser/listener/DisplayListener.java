@@ -20,10 +20,16 @@ package com.biglybt.ui.swt.browser.listener;
 
 import java.util.Map;
 
+import org.eclipse.swt.widgets.Shell;
+
 import com.biglybt.core.messenger.browser.BrowserMessage;
 import com.biglybt.core.messenger.browser.listeners.AbstractBrowserMessageListener;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.swt.BrowserWrapper;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
+import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.donations.DonationWindow;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.util.MapUtils;
@@ -43,15 +49,21 @@ public class DisplayListener
 
 	public static final String OP_OPEN_SEARCH = "open-search";
 
-	public DisplayListener(String id) {
-		super(id);
+	public static final String OP_CLOSE_WINDOW = "close-window";
+
+	private final BrowserWrapper	browser;
+	
+	public DisplayListener(BrowserWrapper _browser, String _id) {
+		super(_id);
+		
+		browser = _browser;
 	}
 
 	/**
 	 *
 	 */
-	public DisplayListener() {
-		this(DEFAULT_LISTENER_ID);
+	public DisplayListener(BrowserWrapper browser) {
+		this(browser,DEFAULT_LISTENER_ID);
 	}
 
 	@Override
@@ -72,6 +84,26 @@ public class DisplayListener
 			UIFunctions uif = UIFunctionsManager.getUIFunctions();
 			if (uif != null) {
 				uif.doSearch(MapUtils.getMapString(decodedMap, "search-text", ""));
+			}
+		}else if ( OP_CLOSE_WINDOW.equals(opid)){
+			
+			if ( browser != null ){
+				
+				Utils.execSWTThreadLater(1, ()->{
+					
+					UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+					
+					if (uiFunctions != null) {
+						Shell mainShell = uiFunctions.getMainShell();
+						
+						Shell browserShell = browser.getShell();
+						
+						if ( browserShell != mainShell ){
+						
+							browserShell.dispose();
+						}
+					}
+				});
 			}
 		} else {
 			throw new IllegalArgumentException("Unknown operation: " + opid);
