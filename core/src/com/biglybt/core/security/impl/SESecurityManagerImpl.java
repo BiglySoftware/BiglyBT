@@ -48,6 +48,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
+import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.security.SECertificateListener;
 import com.biglybt.core.security.SEKeyDetails;
 import com.biglybt.core.security.SEPasswordListener;
@@ -461,6 +462,25 @@ SESecurityManagerImpl
 					getPasswordAuthentication()
 
 					{
+						String	host = getRequestingHost();
+						int		port = getRequestingPort();
+						
+						if ( host != null ){
+					
+							try{
+								String str = AEPluginProxyHandler.lookupPluginProxyURLHostRewrite( host );
+								
+								if ( str != null ){
+									
+									host = str;
+								}
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+						
 						try{
 							auth_mon.enter();
 
@@ -468,8 +488,8 @@ SESecurityManagerImpl
 								getAuthentication(
 										getRequestingPrompt(),
 										getRequestingProtocol(),
-										getRequestingHost(),
-										getRequestingPort());
+										host,
+										port );
 
 							/*
 							System.out.println( "Authenticator:getPasswordAuth: res = " + res );
