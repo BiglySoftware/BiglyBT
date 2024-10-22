@@ -636,7 +636,7 @@ RSSEngine
 
 							}
 
-						}else if( lc_child_name.equals( "infohash" ) || lc_child_name.equals( "info_hash" )){
+						}else if( lc_child_name.equals( "infohash" ) || lc_child_name.equals( "info_hash" ) || lc_child_name.equals( "torrent_sha1" )){
 
 							item_hash = value;
 
