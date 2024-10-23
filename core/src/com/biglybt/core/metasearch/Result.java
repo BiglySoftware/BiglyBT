@@ -78,6 +78,8 @@ Result
 	public abstract String getUID();
 	public abstract String getHash();
 
+	public abstract String getDescription();
+	
 	protected
 	Result(
 		Engine		_engine )

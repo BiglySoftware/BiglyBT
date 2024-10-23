@@ -60,6 +60,13 @@ public class ColumnSearchSubResultName
 
 		cell.setText(str);
 
+		String desc = result.getDescription();
+		
+		if ( desc != null ){
+			
+			cell.setToolTip(desc);
+		}
+		
 		return;
 
 	}

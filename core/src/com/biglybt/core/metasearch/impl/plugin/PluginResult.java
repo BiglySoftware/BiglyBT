@@ -158,6 +158,12 @@ PluginResult
 		return(getIntProperty( SearchResult.PR_COMMENTS ));
 	}
 
+	public String 
+	getDescription()
+	{
+		return( getStringProperty( SearchResult.PR_DESCRIPTION ));
+	}
+	
 	@Override
 	public int
 	getVotes()

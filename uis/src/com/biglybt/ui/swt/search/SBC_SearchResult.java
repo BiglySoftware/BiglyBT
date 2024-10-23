@@ -278,6 +278,14 @@ SBC_SearchResult
 		return( result.getTags());
 	}
 	
+	
+	@Override
+	public String 
+	getDescription()
+	{
+		return( result.getDescription());
+	}
+	
 	@Override
 	public long
 	getTime()

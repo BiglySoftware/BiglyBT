@@ -53,6 +53,7 @@ SearchResult
 	public static final int	PR_TAGS					= 25;	// String[]
 
 	public static final int	PR_COMPLETED_COUNT		= 26;	// Long	(-1 unknown)
+	public static final int	PR_DESCRIPTION			= 27;	// String	// NOT MAPPED AS PER BELOW
 
 		// if you add more properties make sure you amend the mapping in PluginEngine appropriately
 		// AND the reverse mapping in MetaSearchManagerImpl

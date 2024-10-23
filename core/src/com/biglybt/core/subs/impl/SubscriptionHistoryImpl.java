@@ -348,6 +348,12 @@ SubscriptionHistoryImpl
 		}
 	}
 
+	public Subscription
+	getSubscription()
+	{
+		return( subs );
+	}
+	
 	@Override
 	public boolean
 	isEnabled()

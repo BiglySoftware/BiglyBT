@@ -77,6 +77,9 @@ SearchSubsResultBase
 	public String[]
 	getTags();
 
+	public String
+	getDescription();
+	
 	public long
 	getTime();
 

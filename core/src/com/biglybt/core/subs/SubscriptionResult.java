@@ -29,6 +29,9 @@ public interface
 SubscriptionResult
 	extends UtilitiesImpl.PluginSubscriptionResult
 {
+	public Subscription
+	getSubscription();
+	
 	public String
 	getID();
 

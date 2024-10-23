@@ -111,6 +111,13 @@ public class WebResult extends Result {
 		}
 	}
 	
+	@Override
+	public String 
+	getDescription()
+	{
+		return( null );
+	}
+	
 	public void setCategoryFromHTML(String category) {
 		if(category != null) {
 			addTagFromHTML(category);	// hack, we currently just pick up cats

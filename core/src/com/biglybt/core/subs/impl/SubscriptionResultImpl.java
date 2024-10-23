@@ -30,6 +30,7 @@ import java.util.Map;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
+import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.*;
@@ -408,6 +409,13 @@ SubscriptionResultImpl
 		}
 	}
 
+	@Override
+	public Subscription 
+	getSubscription()
+	{
+		return( history.getSubscription());
+	}
+	
 	@Override
 	public String
 	getID()

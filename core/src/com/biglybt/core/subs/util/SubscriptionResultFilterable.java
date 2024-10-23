@@ -40,6 +40,7 @@ SubscriptionResultFilterable
 	private final String			torrent_link;
 	private final String			details_link;
 	private final String			category;
+	private final String			desc;
 
 	private long				time;
 	private boolean				read;
@@ -111,6 +112,8 @@ SubscriptionResultFilterable
 			
 			asset_date = ad.getTime();
 		}
+		
+		desc = (String)(String)properties.get( SearchResult.PR_DESCRIPTION );
 		
 		updateMutables( _result, properties );
 	}
@@ -323,6 +326,13 @@ SubscriptionResultFilterable
 		return( category );
 	}
 
+	@Override
+	public String 
+	getDescription()
+	{
+		return( desc );
+	}
+	
 	@Override
 	public String[] 
 	getTags()

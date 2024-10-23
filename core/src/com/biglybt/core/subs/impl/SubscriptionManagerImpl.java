@@ -1056,6 +1056,8 @@ SubscriptionManagerImpl
 					try{
 						List<SubscriptionResult>	matches = matchSubscriptionResults( matcher );
 
+						String subs_str = MessageText.getString( "subscriptions.column.name" );
+								
 						for ( final SubscriptionResult result: matches ){
 
 							final Map result_properties = result.toPropertyMap();
@@ -1074,6 +1076,12 @@ SubscriptionManagerImpl
 								hashes.add( hash_str );
 							}
 
+							Subscription subs = result.getSubscription();
+							
+							String desc = (String)result_properties.get( SearchResult.PR_DESCRIPTION );
+							
+							String f_desc = (desc==null?"":(desc+", ")) + subs_str + ": " + subs.getName();
+														
 							SearchResult search_result =
 								new SearchResult()
 								{
@@ -1082,7 +1090,14 @@ SubscriptionManagerImpl
 									getProperty(
 										int		property_name )
 									{
-										return( result_properties.get( property_name ));
+										if ( property_name == SearchResult.PR_DESCRIPTION ){
+											
+											return( f_desc );
+											
+										}else{
+										
+											return( result_properties.get( property_name ));
+										}
 									}
 								};
 
