@@ -927,7 +927,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String		value )
 	{
 		try{
-			setByteArrayOption( net, key, name, value.getBytes( "UTF-8" ));
+			setByteArrayOption( net, key, name, value.getBytes( Constants.UTF_8 ));
 
 		}catch( Throwable e ){
 
@@ -946,7 +946,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		if ( bytes != null ){
 
 			try{
-				return( new String( bytes, "UTF-8" ));
+				return( new String( bytes, Constants.UTF_8 ));
 
 			}catch( Throwable e ){
 
@@ -987,7 +987,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String	key )
 	{
 		try{
-			return( Base32.encode( key.getBytes( "UTF-8" )));
+			return( Base32.encode( key.getBytes( Constants.UTF_8 )));
 
 		}catch( Throwable e ){
 
@@ -1002,7 +1002,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String		key )
 	{
 		try{
-			return( new String( Base32.decode( key ),"UTF-8" ));
+			return( new String( Base32.decode( key ), Constants.UTF_8 ));
 
 		}catch( Throwable e ){
 
@@ -1399,7 +1399,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 										checked.add( tracker );
 										
 										try{
-											String config_key = "azbuddy.dchat.autotracker.host." + Base32.encode( tracker.getBytes( "UTF-8" ));
+											String config_key = "azbuddy.dchat.autotracker.host." + Base32.encode( tracker.getBytes( Constants.UTF_8 ));
 										
 											boolean done = COConfigurationManager.getBooleanParameter( config_key, false );
 											
@@ -1504,7 +1504,34 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	protected void
 	closedown()
 	{
-
+		if ( azmsgsync_pi != null ){
+			
+				// clear up any dead download chat configs as they build up...
+			
+			try{
+				List<Map<String,Object>> reply = (List<Map<String,Object>>)azmsgsync_pi.getIPC().invoke( "listMessageHandlers", new Object[]{ new HashMap<String,Object>() });
+				
+				for ( Map<String,Object> map: reply ){
+					
+					String key = new String((byte[])map.get( "key" ), Constants.UTF_8 );
+					
+					if ( BuddyPluginUtils.isUnknownDownloadChatKey( key )){
+						
+						try{
+							azmsgsync_pi.getIPC().invoke( "destroyMessageHandler", new Object[]{ map });
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
 	}
 
 	private void
@@ -1778,7 +1805,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream( 10*1024 );
 
-			PrintWriter pw = new PrintWriter( new OutputStreamWriter( baos, "UTF-8" ));
+			PrintWriter pw = new PrintWriter( new OutputStreamWriter( baos, Constants.UTF_8 ));
 
 			pw.println( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" );
 
@@ -2301,7 +2328,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		try{
 
-			pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( log_file, true ), "UTF-8" ));
+			pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( log_file, true ), Constants.UTF_8 ));
 
 			SimpleDateFormat time_format 	= new SimpleDateFormat( "yyyy/MM/dd HH:mm" );
 
@@ -2390,11 +2417,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		Map<String,Object>		options = new HashMap<>();
 
-		options.put( "import_data", import_data.getBytes( "UTF-8" ));
+		options.put( "import_data", import_data.getBytes( Constants.UTF_8 ));
 
 		Map<String,Object> reply = (Map<String,Object>)azmsgsync_pi.getIPC().invoke( "importMessageHandler", new Object[]{ options } );
 
-		String	key			= new String((byte[])reply.get( "key" ), "UTF-8" );
+		String	key			= new String((byte[])reply.get( "key" ), Constants.UTF_8 );
 		String	network	 	= (String)reply.get( "network" );
 		Object	handler 	= reply.get( "handler" );
 
@@ -2990,7 +3017,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				Map<String,Object>		options = new HashMap<>();
 
 				options.put( "network", network );
-				options.put( "key", key.getBytes( "UTF-8" ));
+				options.put( "key", key.getBytes( Constants.UTF_8 ));
 
 				if ( network == AENetworkClassifier.AT_PUBLIC ){
 
@@ -4010,7 +4037,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							Map<String,Object>		options = new HashMap<>();
 
 							options.put( "network", network );
-							options.put( "key", key.getBytes( "UTF-8" ));
+							options.put( "key", key.getBytes( Constants.UTF_8 ));
 
 							if ( private_target != null ){
 
@@ -5824,14 +5851,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					if ( o_message instanceof String ){
 
-						payload.put( "msg", ((String)o_message).getBytes( "UTF-8" ));
+						payload.put( "msg", ((String)o_message).getBytes( Constants.UTF_8 ));
 
 					}else{
 
 						payload.put( "msg", (byte[])o_message );
 					}
 
-					payload.put( "nick", getNickname( false ).getBytes( "UTF-8" ));
+					payload.put( "nick", getNickname( false ).getBytes( Constants.UTF_8 ));
 
 					if ( prev_message != null ){
 
@@ -7714,13 +7741,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					if ( msg_bytes != null ){
 
-						return( new String( msg_bytes, "UTF-8" ));
+						return( new String( msg_bytes, Constants.UTF_8 ));
 					}
 				}
 
 
 
-				return( new String((byte[])map.get( "content" ), "UTF-8" ));
+				return( new String((byte[])map.get( "content" ), Constants.UTF_8 ));
 
 			}catch( Throwable e ){
 
@@ -7934,7 +7961,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				if ( nick != null ){
 
 					try{
-						String str = new String( nick, "UTF-8" );
+						String str = new String( nick, Constants.UTF_8 );
 
 						if ( str.length() > 0 ){
 

@@ -676,6 +676,43 @@ BuddyPluginUtils
 		return( key );
 	}
 
+	public static boolean
+	isUnknownDownloadChatKey(
+		String		key )
+	{
+		if ( !key.startsWith( "Download:" )){
+			
+			return( false );
+		}
+		
+		if ( !key.endsWith( "}" )){
+			
+			return( false );
+		}
+		
+		int pos = key.lastIndexOf( "{" );
+		
+		if ( pos >= 0 ){
+		
+			String hash_str = key.substring( pos+1, key.length()-1 );
+			
+			if ( hash_str.length() == 40 ){
+				
+				byte[] hash = ByteFormatter.decodeString( hash_str );
+				
+				if ( hash != null ){
+					
+					if ( CoreFactory.getSingleton().getGlobalManager().getDownloadManager( new HashWrapper( hash )) == null ){
+												
+						return( true );
+					}
+				}
+			}
+		}
+		
+		return( false );
+	}
+	
 	public static String
 	getTrackerChatKey(
 		String		url )
