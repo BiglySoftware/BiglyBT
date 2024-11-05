@@ -1532,6 +1532,36 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				Debug.out( e );
 			}
 		}
+		
+		synchronized( opts_map ){
+			
+			boolean dirty = false;
+			
+			Iterator<String> it = opts_map.keySet().iterator();
+			
+			while( it.hasNext()){
+				
+				String 	net_key = it.next();
+
+				String[] bits = net_key.split( ":", 2 );
+
+				String key	= decodeKey( bits[1] );
+				
+				if ( BuddyPluginUtils.isUnknownDownloadChatKey( key )){
+					
+					it.remove();
+					
+					dirty = true;
+				}
+			}
+			
+			if ( dirty ){
+			
+				COConfigurationManager.setParameter( "azbuddy.dchat.optsmap", opts_map );
+				
+				COConfigurationManager.setDirty();
+			}
+		}
 	}
 
 	private void
