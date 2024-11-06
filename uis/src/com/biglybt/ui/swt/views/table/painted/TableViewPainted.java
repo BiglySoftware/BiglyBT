@@ -2291,8 +2291,7 @@ public class TableViewPainted
 	}
 
 	private void swt_visibleRowsChanged() {
-		final List<TableRowSWT> newlyVisibleRows = new ArrayList<>();
-		final List<TableRowSWT> nowInVisibleRows;
+		
 		final ArrayList<TableRowSWT> rowsStayedVisibleButMoved = new ArrayList<>();
 		List<TableRowSWT> newVisibleRows;
 		if (isVisible()) {
@@ -2305,14 +2304,19 @@ public class TableViewPainted
 		} else {
 			newVisibleRows = Collections.emptyList();
 		}
-		nowInVisibleRows = new ArrayList<>(0);
+		final LinkedHashSet<TableRowSWT>	nowInVisibleRows;
+		
 		synchronized (visibleRows_sync) {
 			if (visibleRows != null) {
-				nowInVisibleRows.addAll(visibleRows);
+				nowInVisibleRows = new LinkedHashSet<>( visibleRows );
+			}else{
+				nowInVisibleRows = new LinkedHashSet<>();
 			}
 		}
 
-		LinkedHashSet<TableRowPainted> rows = new LinkedHashSet<>(newVisibleRows.size());
+		LinkedHashSet<TableRowPainted>	rows = new LinkedHashSet<>(newVisibleRows.size());
+		final List<TableRowSWT>			newlyVisibleRows = new ArrayList<>(newVisibleRows.size());
+
 		for (TableRowSWT row : newVisibleRows) {
 			rows.add((TableRowPainted) row);
 			boolean removed = nowInVisibleRows.remove(row);
@@ -3327,6 +3331,7 @@ public class TableViewPainted
 				synchronized (heightChangeSync) {
 					qdRowHeightChanged = false;
 				}
+				System.out.println( "derp" );
 				// if moving visibleRowsChanged(), make sure subrows being resized on
 				// add trigger work properly
 				visibleRowsChanged();
