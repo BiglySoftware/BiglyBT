@@ -1410,6 +1410,8 @@ public class FilesView
 
 				removeManagerListeners( managers );
 				
+				tree_file_map.clear();
+				
 				break;
 			}
 		}
