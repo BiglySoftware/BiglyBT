@@ -3331,7 +3331,6 @@ public class TableViewPainted
 				synchronized (heightChangeSync) {
 					qdRowHeightChanged = false;
 				}
-				System.out.println( "derp" );
 				// if moving visibleRowsChanged(), make sure subrows being resized on
 				// add trigger work properly
 				visibleRowsChanged();
