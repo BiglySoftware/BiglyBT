@@ -26,6 +26,7 @@ import com.biglybt.core.util.StringInterner.FileKey;
 
 public class
 LinkFileMap
+	implements BEncodableObject
 {
 		/*
 		 * History here: Before 5001_B22 file linkage was performed by linking source files and target files - source file being the
@@ -134,7 +135,7 @@ LinkFileMap
 
 	public void
 	put(
-		int							index,
+		int			index,
 		FileKey		from_fk,
 		FileKey		to_fk )
 	{		
@@ -235,6 +236,12 @@ LinkFileMap
 		return( size );
 	}
 
+	public boolean
+	isEmpty()
+	{
+		return( index_map.isEmpty());
+	}
+	
 	public Iterator<Entry>
 	entryIterator()
 	{
@@ -255,6 +262,67 @@ LinkFileMap
 		return( name_map.values().iterator());
 	}
 
+	@Override
+	public Object 
+	toBencodeObject()
+	{
+		List<String>	list = new ArrayList<>();
+
+		Iterator<LinkFileMap.Entry>	it = entryIterator();
+
+		while( it.hasNext()){
+
+			LinkFileMap.Entry	entry = it.next();
+
+			int		index	= entry.getIndex();
+			
+			StringInterner.FileKey	source 	= entry.getFromFile();
+			StringInterner.FileKey	target 	= entry.getToFile();
+
+			String	str = index + "\n" + source + "\n" + (target==null?"":target.toString());
+
+			list.add( str );
+		}
+		
+		return( list );
+	}
+	
+	public void
+	fromBencodeObject(
+		List<String>		list )
+	{
+		for (int i=0;i<list.size();i++){
+
+			String	entry = (String)list.get(i);
+
+			String[] bits = entry.split( "\n" );
+
+			if ( bits.length >= 2 ){
+
+				try{
+					int		index 	= Integer.parseInt( bits[0].trim());
+					
+					StringInterner.FileKey	source	= new StringInterner.FileKey( (bits[1]));
+					StringInterner.FileKey	target	= bits.length<3?null:new StringInterner.FileKey((bits[2]));
+
+					if( index >= 0 ){
+
+						put( index, source, target );
+
+					}else{
+
+							// can get here when partially resolved link state is saved and then re-read
+
+						putMigration( source, target );
+					}
+				}catch( Throwable e ){
+
+					Debug.out( e );
+				}
+			}
+		}
+	}
+	
 	public String
 	getString()
 	{
@@ -290,13 +358,13 @@ LinkFileMap
 	public static class
 	Entry
 	{
-		private final int						index;
+		private final int		index;
 		private final FileKey	from_file;
 		private final FileKey	to_file;
 
 		private
 		Entry(
-			int							_index,
+			int			_index,
 			FileKey		_from_file,
 			FileKey		_to_file )
 		{

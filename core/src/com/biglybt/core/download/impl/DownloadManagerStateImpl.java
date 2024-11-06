@@ -2068,7 +2068,7 @@ DownloadManagerStateImpl
 	public String[]
 	getNetworks()
 	{
-		List	values = getListAttributeSupport( AT_NETWORKS );
+		List	values = getListAttributeSupport( AT_NETWORKS, true );
 
 		List	res = new ArrayList();
 
@@ -2097,9 +2097,12 @@ DownloadManagerStateImpl
 	}
 
 	  @Override
-	  public boolean isNetworkEnabled(
-	      String network) {
-	    List	values = getListAttributeSupport( AT_NETWORKS );
+	  public boolean 
+	  isNetworkEnabled(
+	      String network) 
+	  {
+	    List	values = getListAttributeSupport( AT_NETWORKS, true );
+	    
 	    return values.contains(network);
 	  }
 
@@ -2125,7 +2128,7 @@ DownloadManagerStateImpl
 	  setNetworkEnabled(
 	      String network,
 	      boolean enabled) {
-	    List	values = getListAttributeSupport( AT_NETWORKS );
+	    List	values = getListAttributeSupport( AT_NETWORKS, true );
 	    boolean alreadyEnabled = values.contains(network);
 
 	    if(enabled && !alreadyEnabled) {
@@ -2147,7 +2150,7 @@ DownloadManagerStateImpl
 	public String[]
 	getPeerSources()
 	{
-		List	values = getListAttributeSupport( AT_PEER_SOURCES );
+		List	values = getListAttributeSupport( AT_PEER_SOURCES, true );
 
 		List	res = new ArrayList();
 
@@ -2180,7 +2183,7 @@ DownloadManagerStateImpl
 	isPeerSourceEnabled(
 		String peerSource )
 	{
-		List	values = getListAttributeSupport( AT_PEER_SOURCES );
+		List	values = getListAttributeSupport( AT_PEER_SOURCES, true );
 
 		return values.contains(peerSource);
 	}
@@ -2211,7 +2214,7 @@ DownloadManagerStateImpl
 			}
 		}
 
-		List	values = getListAttributeSupport( AT_PEER_SOURCES_DENIED );
+		List	values = getListAttributeSupport( AT_PEER_SOURCES_DENIED, true );
 
 		if ( values != null ){
 
@@ -2243,7 +2246,7 @@ DownloadManagerStateImpl
 			setPeerSourceEnabled( peerSource, false );
 		}
 
-		List	values = getListAttributeSupport( AT_PEER_SOURCES_DENIED );
+		List	values = getListAttributeSupport( AT_PEER_SOURCES_DENIED, true );
 
 		if ( values == null ){
 
@@ -2309,7 +2312,7 @@ DownloadManagerStateImpl
 			  return;
 		  }
 
-		  List	values = getListAttributeSupport( AT_PEER_SOURCES );
+		  List	values = getListAttributeSupport( AT_PEER_SOURCES, true );
 		  boolean alreadyEnabled = values.contains(source);
 
 		  if(enabled && !alreadyEnabled) {
@@ -2354,24 +2357,6 @@ DownloadManagerStateImpl
 
 		links.put( source_index, new StringInterner.FileKey( link_source), link_destination==null?null:new StringInterner.FileKey( link_destination ));
 
-		List	list = new ArrayList();
-
-		Iterator<LinkFileMap.Entry>	it = links.entryIterator();
-
-		while( it.hasNext()){
-
-			LinkFileMap.Entry	entry = it.next();
-
-			int		index	= entry.getIndex();
-			
-			StringInterner.FileKey	source 	= entry.getFromFile();
-			StringInterner.FileKey	target 	= entry.getToFile();
-
-			String	str = index + "\n" + source + "\n" + (target==null?"":target.toString());
-
-			list.add( str );
-		}
-
 		//System.out.println( "setFileLink: " + link_source + " -> " + link_destination );
 
 		synchronized( this ){
@@ -2379,7 +2364,7 @@ DownloadManagerStateImpl
 			file_link_cache = new WeakReference<>(links);
 		}
 
-		setListAttribute( AT_FILE_LINKS2, list );
+		setBEncodableAttribute( AT_FILE_LINKS2, links, false );
 		
 		download_manager.informLocationChange( source_index );
 	}
@@ -2419,39 +2404,19 @@ DownloadManagerStateImpl
 			changed = true;
 		}
 
-		if ( !changed ){
+		if ( changed ){
 
-			return;
-		}
+			//System.out.println( "setFileLinks: " + links.getString());
 
-		//System.out.println( "setFileLinks: " + links.getString());
+			synchronized( this ){
 
-		List	list = new ArrayList();
+				file_link_cache = new WeakReference<>(links);
+			}
 
-		Iterator<LinkFileMap.Entry>	it = links.entryIterator();
-
-		while( it.hasNext()){
-
-			LinkFileMap.Entry	entry = it.next();
-
-			int		index	= entry.getIndex();
-			
-			StringInterner.FileKey	source 	= entry.getFromFile();
-			StringInterner.FileKey	target 	= entry.getToFile();
-
-			String	str = index + "\n" + source + "\n" + (target==null?"":target.toString());
-
-			list.add( str );
-		}
-
-		synchronized( this ){
-
-			file_link_cache = new WeakReference<>(links);
-		}
-
-		setListAttribute( AT_FILE_LINKS2, list );
+			setBEncodableAttribute( AT_FILE_LINKS2, links, false );
 		
-		download_manager.informLocationChange( null );
+			download_manager.informLocationChange( null );
+		}
 	}
 
 	@Override
@@ -2460,8 +2425,6 @@ DownloadManagerStateImpl
 	{
 		LinkFileMap	links = getFileLinks();
 
-		List	list = new ArrayList();
-
 		Iterator<LinkFileMap.Entry>	it = links.entryIterator();
 
 		boolean	changed = false;
@@ -2469,30 +2432,25 @@ DownloadManagerStateImpl
 		while( it.hasNext()){
 
 			LinkFileMap.Entry	entry = it.next();
-
-			int		index	= entry.getIndex();
 			
-			StringInterner.FileKey	source 	= entry.getFromFile();
 			StringInterner.FileKey	target 	= entry.getToFile();
 
 			if ( target != null ){
 
+				links.put( entry.getIndex(), entry.getFromFile(), null );
+				
 				changed = true;
 			}
-
-			String	str = index + "\n" + source + "\n";
-
-			list.add( str );
 		}
 
 		if ( changed ){
 
 			synchronized( this ){
 
-				file_link_cache = null;
+				file_link_cache = new WeakReference<>( links );
 			}
 
-			setListAttribute( AT_FILE_LINKS2, list );
+			setBEncodableAttribute( AT_FILE_LINKS2, links, false );
 			
 			download_manager.informLocationChange( null );
 		}
@@ -2559,49 +2517,28 @@ DownloadManagerStateImpl
 	private LinkFileMap
 	getFileLinksSupport()
 	{
+		BEncodableObject obj = getBencodableAttribute( AT_FILE_LINKS2 );
+		
+		if ( obj != null ){
+			
+			return((LinkFileMap)obj);
+		}
+		
 		LinkFileMap	res = new LinkFileMap();
 
-		List	new_values = getListAttributeSupport( AT_FILE_LINKS2 );
+		List<String>	new_values = getListAttributeSupport( AT_FILE_LINKS2, false );
 
 		if ( new_values.size() > 0 ){
 
-			for (int i=0;i<new_values.size();i++){
-
-				String	entry = (String)new_values.get(i);
-
-				String[] bits = entry.split( "\n" );
-
-				if ( bits.length >= 2 ){
-
-					try{
-						int		index 	= Integer.parseInt( bits[0].trim());
-						
-						StringInterner.FileKey	source	= new StringInterner.FileKey( (bits[1]));
-						StringInterner.FileKey	target	= bits.length<3?null:new StringInterner.FileKey((bits[2]));
-
-						if( index >= 0 ){
-
-							res.put( index, source, target );
-
-						}else{
-
-								// can get here when partially resolved link state is saved and then re-read
-
-							res.putMigration( source, target );
-						}
-					}catch( Throwable e ){
-
-						Debug.out( e );
-					}
-				}
-			}
+			res.fromBencodeObject( new_values );
+			
 		}else{
-
-			List	old_values = getListAttributeSupport( AT_FILE_LINKS_DEPRECATED );
+			
+			List<String>	old_values = getListAttributeSupport( AT_FILE_LINKS_DEPRECATED, false );
 
 			for (int i=0;i<old_values.size();i++){
 
-				String	entry = (String)old_values.get(i);
+				String	entry = old_values.get(i);
 
 				int	sep = entry.indexOf( "\n" );
 
@@ -2615,7 +2552,15 @@ DownloadManagerStateImpl
 		}
 
 		//System.out.println( "getFileLinks: " + res.getString());
-
+		
+		if ( !res.isEmpty()){
+			
+				// we want to hold the decoded file links in memory, not the
+				// original String version
+			
+			setBEncodableAttribute( AT_FILE_LINKS2, res, true );
+		}
+		
 		return( res );
 	}
 
@@ -2923,7 +2868,7 @@ DownloadManagerStateImpl
 
 		}else{
 
-			List	l = getListAttributeSupport( attribute_name );
+			List	l = getListAttributeSupport( attribute_name, true );
 
 			if ( l == null ){
 
@@ -2946,9 +2891,10 @@ DownloadManagerStateImpl
 		}
 	}
 
-	protected List
+	protected List<String>
 	getListAttributeSupport(
-		String	attribute_name )
+		String		attribute_name,
+		boolean		intern )
 	{
 		informWillRead( attribute_name );
 
@@ -2957,7 +2903,7 @@ DownloadManagerStateImpl
 
 			List	values = (List)attributes.get( attribute_name );
 
-			List	res = new ArrayList(values != null ? values.size() : 0);
+			List<String>	res = new ArrayList<>(values != null ? values.size() : 0);
 
 			if ( values != null ){
 
@@ -2968,14 +2914,21 @@ DownloadManagerStateImpl
 					if ( o instanceof byte[] ){
 
 						byte[]	bytes = (byte[])o;
-						String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING_CHARSET));
+						
+						String s = new String(bytes, Constants.DEFAULT_ENCODING_CHARSET);
 
+						if ( intern ){
+						
+							s = StringInterner.intern( s );
+						}
+						
 						res.add(s);
+						
 						values.set(i, s);
 
 					}else if ( o instanceof String ){
 
-						res.add( o );
+						res.add((String)o );
 					}
 				}
 			}
@@ -3010,7 +2963,7 @@ DownloadManagerStateImpl
 				}
 			}else{
 
-				List old_value = getListAttributeSupport( attribute_name );
+				List old_value = getListAttributeSupport( attribute_name, true );
 
 				if ( old_value == null || old_value.size() != attribute_value.size()){
 
@@ -3048,6 +3001,60 @@ DownloadManagerStateImpl
 		}
 	}
 
+	private BEncodableObject
+	getBencodableAttribute(
+		String				attribute_name )
+	{
+		try{
+			this_mon.enter();
+		
+			Object obj = attributes.get( attribute_name );
+			
+			if ( obj instanceof BEncodableObject ){
+				
+				return((BEncodableObject)obj);
+			}
+		}finally{
+
+			this_mon.exit();
+		}
+		
+		return( null );
+	}
+	
+	/**
+	 * Assumption is that the value has changed so we don't check for that
+	 * @param attribute_name
+	 * @param attribute_value
+	 */
+	
+	private void
+	setBEncodableAttribute(
+		String				attribute_name,
+		BEncodableObject	attribute_value,
+		boolean				cache_only )
+	{
+		try{
+			this_mon.enter();
+			
+			if ( !cache_only ){
+			
+				setDirty( false );
+			}
+			
+			attributes.put( attribute_name, attribute_value );
+			
+		}finally{
+
+			this_mon.exit();
+		}
+		
+		if ( !cache_only ){
+		
+			informWritten( attribute_name );
+		}
+	}
+	
 	@Override
 	public Map
 	getMapAttribute(
