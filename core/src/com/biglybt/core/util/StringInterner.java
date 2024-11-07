@@ -75,14 +75,14 @@ StringInterner
 		"passive",
 	};
 
-	private static final ByteArrayHashMap	byte_map = new ByteArrayHashMap( COMMON_KEYS.length );
+	// private static final ByteArrayHashMap	byte_map = new ByteArrayHashMap( COMMON_KEYS.length );
 
 	static{
 		try{
 			for (int i=0;i<COMMON_KEYS.length;i++){
 
-				byte_map.put( COMMON_KEYS[i].getBytes(Constants.BYTE_ENCODING_CHARSET), COMMON_KEYS[i] );
-				managedInterningSet.add(new WeakStringEntry(COMMON_KEYS[i]));
+				// byte_map.put( COMMON_KEYS[i].getBytes(Constants.BYTE_ENCODING_CHARSET), COMMON_KEYS[i] );
+				managedInterningSet.add(new WeakStringEntry(COMMON_KEYS[i], true));
 			}
 		}catch( Throwable e ){
 
@@ -118,7 +118,7 @@ StringInterner
 
 	// private final static ReferenceQueue queue = new ReferenceQueue();
 
-
+	/*
 	public static String
 	intern(
 		byte[]	bytes )
@@ -129,7 +129,8 @@ StringInterner
 
 		return( res );
 	}
-
+	*/
+	
 	/**
 	 * A generic interning facility for heavyweight or frequently duplicated
 	 * Objects that have a reasonable <code>equals()</code> implementation.<br>
@@ -234,6 +235,7 @@ StringInterner
 		return internedString;
 	}
 
+	/*
 	public static char[] intern(char[] toIntern) {
 
 		if ( DISABLE_INTERNING ){
@@ -293,7 +295,7 @@ StringInterner
 
 		return internedCharArray;
 	}
-
+	*/
 
 
 
@@ -535,20 +537,22 @@ StringInterner
 					break aging;
 				if (TRACE_CLEANUP)
 					System.out.println("Doing cleanup " + currentSetSize);
-				ArrayList remaining = new ArrayList();
+				List<WeakWeightedEntry> remaining = new ArrayList<>(currentSetSize);
 				// remove objects that aren't shared by multiple holders first (interning is useless)
-				for (Iterator it = managedInterningSet.iterator(); it.hasNext();)
+				for (Iterator<WeakWeightedEntry> it = managedInterningSet.iterator(); it.hasNext();)
 				{
 					if (managedInterningSet.size() < IMMEDIATE_CLEANUP_GOAL && !scheduled)
 						break aging;
 					WeakWeightedEntry entry = (WeakWeightedEntry) it.next();
-					if (entry.hits == 0)
-					{
+					if ( entry.permanent ){
+						
+					}else if (entry.hits == 0){
 						if (TRACE_CLEANUP)
 							System.out.println("0-remove: " + entry);
 						it.remove();
-					} else
+					}else{
 						remaining.add(entry);
+					}
 				}
 				currentSetSize = managedInterningSet.size();
 				if (currentSetSize < SCHEDULED_CLEANUP_TRIGGER && scheduled)
@@ -623,15 +627,24 @@ StringInterner
 	}
 
 	private static abstract class WeakWeightedEntry extends WeakEntry {
+		final boolean permanent;
 		final short	size;
 		short		hits;
 
 		public WeakWeightedEntry(Object o, int hash, int size)
 		{
 			super(o, managedRefQueue,hash);
+			permanent = false;
 			this.size = (short) (size & 0x7FFF);
 		}
-
+		
+		public WeakWeightedEntry(Object o, boolean perm, int hash, int size )
+		{
+			super(o, managedRefQueue,hash);
+			permanent = perm;
+			this.size = (short) (size & 0x7FFF);
+		}
+		
 		public void incHits() {
 			if (hits < Short.MAX_VALUE)
 				hits++;
@@ -655,6 +668,7 @@ StringInterner
 		}
 	}
 
+	/*
 	private static class WeakByteArrayEntry extends WeakWeightedEntry {
 		public WeakByteArrayEntry(byte[] array)
 		{
@@ -662,9 +676,9 @@ StringInterner
 			super(array, HashCodeUtils.hashCode(array), array.length + 8);
 		}
 
-		/**
-		 * override equals since byte arrays need Arrays.equals
-		 */
+		
+		// override equals since byte arrays need Arrays.equals
+		 
 		public boolean equals(Object obj) {
 			if (this == obj)
 				return true;
@@ -685,17 +699,18 @@ StringInterner
 			return super.toString() + " " + (getArray() == null ? "null" : new String(getArray()));
 		}
 	}
-
+	*/
+	
+	/*
 	private static class WeakCharArrayEntry extends WeakWeightedEntry {
 		public WeakCharArrayEntry(char[] array)
 		{
 			// byte-array object
 			super(array, HashCodeUtils.hashCode(array), array.length + 8);
 		}
-
-		/**
-		 * override equals since byte arrays need Arrays.equals
-		 */
+		
+		//override equals since byte arrays need Arrays.equals
+		 
 		public boolean equals(Object obj) {
 			if (this == obj)
 				return true;
@@ -716,14 +731,19 @@ StringInterner
 			return super.toString() + " " + (getCharArray() == null ? "null" : new String(getCharArray()));
 		}
 	}
-
+	*/
+	
 	private static class WeakStringEntry extends WeakWeightedEntry {
 		public WeakStringEntry(String entry)
 		{
 			// string object with 2 fields, char-array object
 			super(entry, entry.hashCode(), 16 + 8 + entry.length() * 2);
 		}
-
+		public WeakStringEntry(String entry,boolean perm )
+		{
+			// string object with 2 fields, char-array object
+			super(entry, perm, entry.hashCode(), 16 + 8 + entry.length() * 2);
+		}
 		public String getString() {
 			return (String) get();
 		}
@@ -733,6 +753,7 @@ StringInterner
 		}
 	}
 
+	/*
 	private static class WeakFileEntry extends WeakWeightedEntry {
 		public WeakFileEntry(File entry)
 		{
@@ -748,7 +769,8 @@ StringInterner
 			return super.toString() + " " + getFile();
 		}
 	}
-
+	*/
+	
 	private static class WeakURLEntry extends WeakWeightedEntry {
 		public WeakURLEntry(URL entry)
 		{
