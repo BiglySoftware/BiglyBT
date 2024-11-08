@@ -554,7 +554,12 @@ public class FilesView
 			DiskManagerFileInfo file = (DiskManagerFileInfo)selected;
 			
 			DownloadManager dm = file.getDownloadManager();
-						
+					
+			if ( dm == null ){
+				
+				continue;	// root of multi-download view, for example
+			}
+			
 			Set<Integer> sel = sel_map.get( dm );
 			
 			if ( sel == null ){
