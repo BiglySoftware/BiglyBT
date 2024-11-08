@@ -61,18 +61,19 @@ StringInterner
 
 	private static final String[] COMMON_KEYS = {
 		"src","port","prot","ip","udpport","azver","httpport","downloaded",
-		"Content","Refresh On","path.utf-8","uploaded","completed","persistent","attributes","encoding",
+		"Content", "path", "path.utf-8","uploaded","completed","persistent","attributes","encoding",
 		"azureus_properties","stats.download.added.time","networks","p1","resume data","dndflags","blocks","resume",
-		"primaryfile","resumecomplete","data","peersources","name.utf-8","valid","torrent filename","parameters",
+		"primaryfile","resumecomplete","data","peersources", "name", "name.utf-8","valid","torrent filename","parameters",
 		"secrets","timesincedl","tracker_cache","filedownloaded","timesinceul","tracker_peers","trackerclientextensions","GlobalRating",
-		"comment.utf-8","Count","String","stats.counted","Thumbnail","Plugin.<internal>.DDBaseTTTorrent::sha1","type","Title",
-		"displayname","Publisher","Creation Date","Revision Date","Content Hash","flags","stats.download.completed.time","Description",
-		"Progressive","Content Type","QOS Class","DRM","hash","ver","id",
+		"comment.utf-8","Count","String","Thumbnail","Plugin.<internal>.DDBaseTTTorrent::sha1","type","Title",
+		"displayname", "flags","stats.download.completed.time","Description",
+		"hash","ver","id",
 		"body","seed","eip","rid","iip","dp2","tp","orig",
-		"dp","Quality","private","dht_backup_enable","max.uploads","filelinks","Speed Bps","cdn_properties",
-		"sha1","ed2k","DRM Key","Plugin.aeseedingengine.attributes","initial_seed","dht_backup_requested","ta","size",
-		"DIRECTOR PUBLISH","Plugin.azdirector.ContentMap","dateadded","bytesin","announces","status","bytesout","scrapes",
+		"dp","private","dht_backup_enable","max.uploads","filelinks",
+		"sha1","ed2k","dht_backup_requested","ta","size",
+		"dateadded","bytesin","announces","status","bytesout","scrapes",
 		"passive",
+		"pre", "seq", "nick", "msg", "zo",		// frequent msgsync keys
 	};
 
 	// private static final ByteArrayHashMap	byte_map = new ByteArrayHashMap( COMMON_KEYS.length );
@@ -744,21 +745,25 @@ StringInterner
 	*/
 	
 	private static class WeakStringEntry extends WeakWeightedEntry {
+		//private final String debug;
 		public WeakStringEntry(String entry)
 		{
 			// string object with 2 fields, char-array object
 			super(entry, entry.hashCode(), 16 + 8 + entry.length() * 2);
+			//debug = new String( entry.toCharArray());
 		}
 		public WeakStringEntry(String entry,boolean perm )
 		{
 			// string object with 2 fields, char-array object
 			super(entry, perm, entry.hashCode(), 16 + 8 + entry.length() * 2);
+			//debug = new String( entry.toCharArray());
 		}
 		public String getString() {
 			return (String) get();
 		}
 
 		public String toString() {
+			//return super.toString() + " " + getString() + "/" + debug;
 			return super.toString() + " " + getString();
 		}
 	}
