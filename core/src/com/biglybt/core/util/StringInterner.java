@@ -843,8 +843,9 @@ StringInterner
 		FileKey(
 			String	str )
 		{
-			this( null, str, false );
+			this((File)null, str, false );
 		}
+		
 		public
 		FileKey(
 			File	file,
@@ -859,6 +860,15 @@ StringInterner
 			boolean	is_dir )
 		{
 			this( file, null, is_dir );
+		}
+		
+		protected
+		FileKey(
+			FileKey	fk,
+			String	tail,
+			boolean	is_dir )
+		{
+			this( fk.getFile(), tail, is_dir );
 		}
 		
 		protected
@@ -949,18 +959,17 @@ StringInterner
 				file = file.getParentFile();
 			}
 				
-			if ( l == null ){
-				
-				String msg = "Invalid file, no components (" + file + "/" + tail + ")";
-				
-				Debug.out( msg );
-				
-				throw( new Error( msg ));
-			}
-			
 			hash_code = hc;
 			
-			comps = l.toArray( new String[l.size()]);
+			if ( l == null ){
+				
+				comps = new String[0];
+				
+			}else{
+			
+				comps = l.toArray( new String[l.size()]);
+			}
+			
 			/*
 			if ( tail == null ){
 				
@@ -983,10 +992,15 @@ StringInterner
 			return( FileUtil.newFile( toString()));
 		}
 		
+		public boolean
+		isEmpty()
+		{
+			return( comps.length == 0 );
+		}
+		
 		public String
 		toString()
 		{
-			//Debug.out("");
 			int pos = comps.length-1;
 			
 			if ( pos < 0 ){
@@ -1056,6 +1070,21 @@ StringInterner
 			File	dir )
 		{
 			super( dir, true );
+		}
+		
+		public
+		DirKey(
+			String	str )
+		{
+			super((File)null, str, true );
+		}
+		
+		public
+		DirKey(
+			DirKey	dir,
+			String	str )
+		{
+			super( dir, str, true );
 		}
 	}
 }

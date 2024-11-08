@@ -1255,6 +1255,10 @@ public class FilesViewMenuUtil
 					} else {
 						// Parent directory has changed.
 						
+							// e.g. a/b/c/d/fred.gif 
+							// if the rename applies to "c" (e.g. -> Z) then the structure map will 
+							// map fred.gif -> a/b/c (i.e. the parent of "c")
+						
 						if ( structure_map != null ){
 							
 							String node = structure_map.get( fileInfo );
@@ -1269,7 +1273,7 @@ public class FilesViewMenuUtil
 									
 									rel_path = rel_path.substring( 0, pos );
 								
-									if ( rel_path.startsWith( node )){
+									if ( rel_path.length() > node.length() && rel_path.startsWith( node )){
 									
 										String subfolder = node.isEmpty()?rel_path:rel_path.substring( node.length() + 1);
 									

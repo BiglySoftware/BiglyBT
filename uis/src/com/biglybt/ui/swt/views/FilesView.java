@@ -1172,6 +1172,10 @@ public class FilesView
 			
 			List<DiskManagerFileInfo> inner_files = new ArrayList<>();
 			
+				// structure map is used when renaming (moving) an inner node so that
+				// the rename code knows where in the hierarchy to apply the actual rename to
+				// For example, if we rename a/b/c/d/e.gif at inner node "c" we pass in "a/b/c"
+			
 			Map<DiskManagerFileInfo,String>	structure_map = new HashMap<>();
 			
 			for ( int i=0;i<data_sources.length;i++ ){
@@ -1183,10 +1187,8 @@ public class FilesView
 					FilesView.FilesViewNodeInner inner = (FilesView.FilesViewNodeInner )file;
 				
 					List<DiskManagerFileInfo> temp = inner.getFiles( true );
-					
-					FilesView.FilesViewNodeInner parent = inner.getParent();
-					
-					String path = parent==null?"":parent.getPath();
+										
+					String path = inner.getNodePath();
 					
 					for ( DiskManagerFileInfo f: temp ){
 						
@@ -1921,7 +1923,7 @@ public class FilesView
 
 				int uid = 0;
 				
-				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, uid, dm.getDisplayName(), "", null );
+				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, uid, dm.getDisplayName(), new StringInterner.FileKey( "" ), null );
 
 				synchronized( tree_file_map ){
 					
@@ -1962,7 +1964,7 @@ public class FilesView
 	
 						int	pos = 0;
 					
-						String subfolder = "";
+						StringInterner.DirKey subfolder = new StringInterner.DirKey( "" );
 						
 						while( true ){
 	
@@ -2003,10 +2005,13 @@ public class FilesView
 								}
 								
 								if ( subfolder.isEmpty()){
-									subfolder = bit;
+																		
+									subfolder = new StringInterner.DirKey( bit );
 								}else{
-									subfolder += file_separator + bit;
+									
+									subfolder = new StringInterner.DirKey( subfolder, bit );
 								}
+								
 								node = n;
 							}
 						}
@@ -2056,7 +2061,7 @@ public class FilesView
 
 				synchronized( tree_file_map ){
 				
-					current_root = new FilesViewNodeInner( null, -1,  MessageText.getString( "label.downloads" ), "", null );
+					current_root = new FilesViewNodeInner( null, -1,  MessageText.getString( "label.downloads" ), new StringInterner.FileKey( "" ), null );
 
 					tree_file_map.clear();
 						
@@ -2070,7 +2075,7 @@ public class FilesView
 						
 						int uid = 0;
 	
-						FilesViewNodeInner root =  new FilesViewNodeInner( dm, uid, "(" + num + ") " + dm.getDisplayName(), "", current_root );
+						FilesViewNodeInner root =  new FilesViewNodeInner( dm, uid, "(" + num + ") " + dm.getDisplayName(), new StringInterner.FileKey( "" ), current_root );
 		
 						Map<Integer,Boolean>	expansion_state;
 						
@@ -2109,7 +2114,7 @@ public class FilesView
 		
 							int	pos = 0;
 						
-							String subfolder = "";
+							StringInterner.DirKey subfolder = new StringInterner.DirKey( "" );
 							
 							while( true ){
 		
@@ -2150,9 +2155,12 @@ public class FilesView
 									}
 									
 									if ( subfolder.isEmpty()){
-										subfolder = bit;
+																			
+										subfolder = new StringInterner.DirKey( bit );
+										
 									}else{
-										subfolder += file_separator + bit;
+										
+										subfolder = new StringInterner.DirKey( subfolder, bit );
 									}
 									
 									node = n;
@@ -2269,7 +2277,7 @@ public class FilesView
 		private final DownloadManager						dm;
 		private final int									uid;
 		private final String								node_name;
-		private final String								node_path;
+		private final StringInterner.FileKey				node_path;
 		private final FilesViewNodeInner					parent;
 		private final Map<String,FilesViewTreeNode>			kids = new TreeMap<>( tree_comp );
 		
@@ -2283,12 +2291,12 @@ public class FilesView
 			DownloadManager			_dm,
 			int						_uid,
 			String					_node_name,
-			String					_node_path,
+			StringInterner.FileKey	_node_path,
 			FilesViewNodeInner		_parent )
 		{
 			dm			= _dm;
 			uid			= _uid;
-			node_name	= _node_name;
+			node_name	= StringInterner.intern( _node_name );
 			node_path	= _node_path;
 			parent		= _parent;
 		}
@@ -2374,9 +2382,9 @@ public class FilesView
 		}
 
 		protected String
-		getPath()
+		getNodePath()
 		{
-			return( node_path );
+			return( node_path.toString() + File.separator + node_name );
 		}
 		
 		@Override
@@ -2720,7 +2728,7 @@ public class FilesView
 		public File
 		getFile( boolean follow_link )
 		{
-			return( node_path.isEmpty()?new File(node_name):new File( node_path, node_name ));
+			return( node_path.isEmpty()?new File(node_name):new File( node_path.getFile(), node_name ));
 		}
 
 		@Override
@@ -3240,6 +3248,7 @@ public class FilesView
 		return( temp );
 	}
 	  
+	/*
 	private boolean doAllExist(DiskManagerFileInfo[] files) {
 		for (DiskManagerFileInfo fileinfo : files) {
 			if (tv.isFiltered(fileinfo)) {
@@ -3258,5 +3267,5 @@ public class FilesView
 		}
 		return true;
 	}
-
+	*/
 }
