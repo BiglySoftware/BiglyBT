@@ -46,10 +46,10 @@ StringInterner
 	private static final boolean TRACE_MULTIHITS = false;
 
 
-	private static final int IMMEDIATE_CLEANUP_TRIGGER = 2000;
-	private static final int IMMEDIATE_CLEANUP_GOAL = 1500;
-	private static final int SCHEDULED_CLEANUP_TRIGGER = 1500;
-	private static final int SCHEDULED_CLEANUP_GOAL = 1000;
+	private static final int IMMEDIATE_CLEANUP_TRIGGER = 10000;
+	private static final int IMMEDIATE_CLEANUP_GOAL = 8000;
+	private static final int SCHEDULED_CLEANUP_TRIGGER = IMMEDIATE_CLEANUP_GOAL;
+	private static final int SCHEDULED_CLEANUP_GOAL = 7000;
 	private static final int SCHEDULED_AGING_THRESHOLD = 750;
 
 	private static final LightHashSet managedInterningSet = new LightHashSet(800);
@@ -227,7 +227,7 @@ StringInterner
 		if(hit) {
 			internedEntry.incHits();
 			checkEntry.destroy();
-			if(TRACE_MULTIHITS && internedEntry.hits % 10 == 0)
+			if(TRACE_MULTIHITS && internedEntry.getHits() % 10 == 0)
 				System.out.println("multihit "+internedEntry);
 		}
 
@@ -478,7 +478,7 @@ StringInterner
 		{
 			internedEntry.incHits();
 			checkEntry.destroy();
-			if (TRACE_MULTIHITS && internedEntry.hits % 10 == 0)
+			if (TRACE_MULTIHITS && internedEntry.getHits() % 10 == 0)
 				System.out.println("multihit " + internedEntry);
 		}
 
@@ -490,15 +490,16 @@ StringInterner
 	}
 
 
-	private final static Comparator	savingsComp	= new Comparator()
-												{
-													@Override
-													public int compare(Object o1, Object o2) {
-														WeakWeightedEntry w1 = (WeakWeightedEntry) o1;
-														WeakWeightedEntry w2 = (WeakWeightedEntry) o2;
-														return w1.hits * w1.size - w2.hits * w2.size;
-													}
-												};
+	private final static Comparator	savingsComp	=
+		new Comparator()
+		{
+			@Override
+			public int compare(Object o1, Object o2) {
+				WeakWeightedEntry w1 = (WeakWeightedEntry) o1;
+				WeakWeightedEntry w2 = (WeakWeightedEntry) o2;
+				return w1.hits * w1.size - w2.hits * w2.size;
+			}
+		};
 
 	private static void sanitizeLight()
 	{
@@ -544,7 +545,7 @@ StringInterner
 					if (managedInterningSet.size() < IMMEDIATE_CLEANUP_GOAL && !scheduled)
 						break aging;
 					WeakWeightedEntry entry = (WeakWeightedEntry) it.next();
-					if ( entry.permanent ){
+					if ( entry.isPermanent() ){
 						
 					}else if (entry.hits == 0){
 						if (TRACE_CLEANUP)
@@ -627,26 +628,23 @@ StringInterner
 	}
 
 	private static abstract class WeakWeightedEntry extends WeakEntry {
-		final boolean permanent;
-		final short	size;
-		short		hits;
+		private final short	size;
+		private short		hits;
 
 		public WeakWeightedEntry(Object o, int hash, int size)
 		{
 			super(o, managedRefQueue,hash);
-			permanent = false;
 			this.size = (short) (size & 0x7FFF);
 		}
 		
 		public WeakWeightedEntry(Object o, boolean perm, int hash, int size )
 		{
 			super(o, managedRefQueue,hash);
-			permanent = perm;
-			this.size = (short) (size & 0x7FFF);
+			this.size = perm?Short.MIN_VALUE:(short) (size & 0x7FFF);
 		}
 		
 		public void incHits() {
-			if (hits < Short.MAX_VALUE)
+			if (hits < Short.MAX_VALUE )
 				hits++;
 		}
 
@@ -655,10 +653,22 @@ StringInterner
 				hits--;
 		}
 
+		public int
+		getHits()
+		{
+			return( hits );
+		}
+		
 		public String toString() {
-			return this.getClass().getName().replaceAll("^.*\\..\\w+$", "") + " h=" + (int) hits + ";s=" + (int) size;
+			return this.getClass().getName().replaceAll("^.*\\..\\w+$", "") + " h=" + (int)hits  + ";s=" + (size==Short.MIN_VALUE?"p":String.valueOf(size));
 		}
 
+		public boolean
+		isPermanent()
+		{
+			return( size == Short.MIN_VALUE );
+		}
+		
 		public void destroy() {
 			hits = -1;
 		}
