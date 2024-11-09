@@ -26,6 +26,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.StringInterner;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Utils;
@@ -85,22 +86,28 @@ public class PathNameItem extends CoreTableColumnSWT implements
 	public void refresh(TableCell cell, boolean sortOnlyRefresh)
 	{
 		final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
+		
 		String file_name = (fileInfo == null) ? "" : fileInfo.getFile(true).getName();
-		if (file_name == null)
+		
+		if (file_name == null){
 			file_name = "";
-		String file_path = PathItem.determinePath(fileInfo, show_full_path);
-
-		if ( !file_path.isEmpty()){
-
-			if ( !file_path.endsWith( File.separator )){
-
-				file_path += File.separator;
-			}
-
-			file_name = file_path + file_name;
 		}
+		
+		StringInterner.DirKey dk = PathItem.determinePath(fileInfo, show_full_path);
+
+		StringInterner.FileKey  fk;
+		
+		if ( dk.isEmpty()){
+			
+			fk = new StringInterner.FileKey( file_name );
+			
+		}else{
+
+			fk =  new StringInterner.FileKey( dk, file_name );
+		}
+		
 		//setText returns true only if the text is updated
-		if (cell.setText(file_name) || !cell.isValid()) {
+		if (cell.setText(fk) || !cell.isValid()) {
 			if (bShowIcon && !sortOnlyRefresh) {
 				Image icon = null;
 

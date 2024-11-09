@@ -21,6 +21,7 @@
 
 package com.biglybt.pif.ui.tables;
 
+import com.biglybt.core.util.StringInterner.StringSupplier;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.ui.common.table.TableView;
 
@@ -94,12 +95,16 @@ public interface TableCell {
    *         False - the text was the same and not modified.
    */
   boolean setText(String text);
+  
+  boolean setText(StringSupplier	supplier );
 
   /** Retrieve the Cell's text
    *
    * @return Cell's text
    */
   String getText();
+  
+  StringSupplier getTextSupplier();
 
   /**
    * For image based cells should return a textual equivalent. This is useful for filtering, for example.

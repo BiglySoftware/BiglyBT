@@ -79,19 +79,19 @@ public class PathItem
   @Override
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
-    cell.setText( StringInterner.intern( determinePath(fileInfo, show_full_path)));
+    cell.setText( determinePath(fileInfo, show_full_path));
   }
 
-  protected static String determinePath(DiskManagerFileInfo fileInfo, boolean _show_file_path) {
+  protected static StringInterner.DirKey determinePath(DiskManagerFileInfo fileInfo, boolean _show_file_path) {
 
     if( fileInfo == null ) {
-    	return "";
+    	return StringInterner.DirKey.EMPTY_PATH;
     }
 
     if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
 		FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
 		if ( !node.isLeaf()){
-			return( "" );
+			return( StringInterner.DirKey.EMPTY_PATH );
 		}
     }
     
@@ -101,7 +101,7 @@ public class PathItem
   	DownloadManager dm = fileInfo.getDownloadManager();
 
   	if ( dm == null ){
-  		return( "" );
+  		return( StringInterner.DirKey.EMPTY_PATH );
   	}
    	File dl_save_path_file = dm.getAbsoluteSaveLocation();
 
@@ -211,7 +211,7 @@ public class PathItem
     }
     */
 
-    return path;
+    return( new StringInterner.DirKey( path ));
   }
 
 }

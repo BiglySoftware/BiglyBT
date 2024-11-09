@@ -24,6 +24,8 @@ import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.StringInterner.StringSupplier;
+import com.biglybt.core.util.StringInterner.StringSupplierBasic;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.tables.TableColumn;
@@ -43,7 +45,7 @@ public class TableCellPainted
 
 	private Rectangle bounds;
 
-	private String text = "";
+	private StringSupplier text = StringSupplierBasic.EMPTY_STRING;
 
 	private int marginWidth;
 
@@ -113,7 +115,7 @@ public class TableCellPainted
 	}
 
 	@SuppressWarnings("null")
-	public static boolean stringEquals(String s0, String s1) {
+	public static boolean stringEquals(StringSupplier s0, StringSupplier s1) {
 		boolean s0Null = s0 == null;
 		boolean s1Null = s1 == null;
 		if (s0Null || s1Null) {
@@ -127,11 +129,19 @@ public class TableCellPainted
 	 */
 	@Override
 	public String getText() {
-		if (hasFlag(FLAG_SORTVALUEISTEXT) && sortValue instanceof String) {
-			return (String) sortValue;
+		if (hasFlag(FLAG_SORTVALUEISTEXT)){
+			
+			if ( sortValue instanceof String) {
+		
+				return((String) sortValue );
+				
+			}else if ( sortValue instanceof StringSupplier ){
+			
+				return(((StringSupplier) sortValue).get());
+			}
 		}
 
-		return text;
+		return text.get();
 	}
 
 	/* (non-Javadoc)
@@ -419,11 +429,19 @@ public class TableCellPainted
 	}
 
 	@Override
-	public boolean uiSetText(String text) {
+	public boolean 
+	uiSetText(StringSupplier text) {
 		boolean bChanged = !stringEquals(this.text, text);
 		if (bChanged) {
 			this.text = text;
 		}
 		return bChanged;
+	}
+	
+	@Override
+	public StringSupplier
+	getTextSupplier()
+	{
+		return( text );
 	}
 }

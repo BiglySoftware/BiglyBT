@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 
 public class
@@ -826,9 +827,149 @@ StringInterner
 		}
 	}
 	
+	/**
+	 * NOTE this should always return the same string, it is not intended to support
+	 * a mutable result...
+	 */
+	
+	public interface
+	StringSupplier
+		extends Supplier<String>, Comparable<StringSupplier>
+	{
+		public boolean
+		isEmpty();
+	}
+
+	public static class
+	StringSupplierBasic
+		implements StringSupplier
+	{
+		public static final StringSupplier	EMPTY_STRING = new StringSupplierBasic("");
+		
+		final private String str;
+		
+		public 
+		StringSupplierBasic(
+			String		_str )
+		{
+			str		= _str==null?"":_str;
+		}
+		
+		public boolean
+		isEmpty()
+		{
+			return( str.isEmpty());
+		}
+		
+		@Override
+		public boolean 
+		equals(
+			Object obj)
+		{
+			if ( obj instanceof StringSupplierBasic ){
+				
+				return( str.equals(((StringSupplierBasic)obj).str ));
+				
+			}else if ( obj instanceof StringSupplier ){
+				
+				return( str.equals(((StringSupplier)obj).get()));
+				
+			}else{
+				
+				return( false );
+			}
+		}
+		
+		@Override
+		public int 
+		compareTo(
+			StringSupplier o)
+		{
+			return( get().compareTo( o.get()));
+		}
+		
+		@Override
+		public String 
+		get()
+		{
+			return( str );
+		}
+	}
+	
+	/**
+	 * As above, must always return the same string. Also null/"" is NOT SUPPORTED
+	 */
+	
+	public static class
+	StringSupplierGenerated
+		implements StringSupplier
+	{
+		private final Supplier<String>	supplier;
+		
+		public 
+		StringSupplierGenerated(
+			Supplier<String>	_supplier )
+		{
+			supplier = _supplier;
+		}
+		
+		public boolean
+		isEmpty()
+		{
+			return( false );		// assume always something to avoid unnecessary gets...
+		}
+		
+		@Override
+		public boolean 
+		equals(
+			Object obj)
+		{
+			if ( obj instanceof StringSupplier ){
+				
+				return( supplier.get().equals(((StringSupplier)obj).get()));
+				
+			}else{
+				
+				return( false );
+			}
+		}
+		
+		@Override
+		public int 
+		compareTo(
+			StringSupplier o)
+		{
+			return( get().compareTo( o.get()));
+		}
+		
+		@Override
+		public String 
+		get()
+		{
+			if ( Constants.IS_CVS_VERSION ){
+				
+				String value = supplier.get();
+				
+				if ( value == null || value.isEmpty()){
+					
+					Debug.out( "Unsupported" );
+				}
+				
+				return( value );
+				
+			}else{
+			
+				return( supplier.get());
+			}
+		}
+	}
+	
 	public static class
 	FileKey
+		implements StringSupplier
 	{
+		public static final FileKey EMPTY_FILE = new FileKey( "" );
+
 		private final int 		hash_code;
 		private final String[]	comps;
 		
@@ -860,6 +1001,14 @@ StringInterner
 			boolean	is_dir )
 		{
 			this( file, null, is_dir );
+		}
+		
+		public
+		FileKey(
+			FileKey	fk,
+			String	tail )
+		{
+			this( fk, tail, false );
 		}
 		
 		protected
@@ -1021,6 +1170,13 @@ StringInterner
 		}
 		
 		@Override
+		public String 
+		get()
+		{
+			return( toString());
+		}
+		
+		@Override
 		public int 
 		hashCode()
 		{
@@ -1054,10 +1210,23 @@ StringInterner
 				}
 				
 				return( true );
+				
+			}else if ( obj instanceof StringSupplier ){
+				
+				return( get().equals(((StringSupplier)obj).get()));
+				
 			}else{
 				
 				return( false );
 			}
+		}
+		
+		@Override
+		public int 
+		compareTo(
+			StringSupplier o )
+		{
+			return( get().compareTo(o.get()));
 		}
 	}
 	
@@ -1065,6 +1234,8 @@ StringInterner
 	DirKey
 		extends FileKey
 	{
+		public static final DirKey EMPTY_PATH = new DirKey( "" );
+		
 		public
 		DirKey(
 			File	dir )

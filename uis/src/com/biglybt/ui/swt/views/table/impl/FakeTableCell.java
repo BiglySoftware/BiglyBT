@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
@@ -36,6 +37,8 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.tracker.host.TRHostTorrent;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.StringSupplier;
+import com.biglybt.core.util.StringInterner.StringSupplierBasic;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
@@ -790,6 +793,11 @@ public class FakeTableCell
 	public String getText() {
 		return text;
 	}
+	
+	@Override
+	public StringSupplier getTextSupplier() {
+		return new StringSupplierBasic( text );
+	}
 
 	// @see com.biglybt.pif.ui.tables.TableCell#getToolTip()
 	@Override
@@ -956,6 +964,13 @@ public class FakeTableCell
 		return true;
 	}
 
+	@Override
+	public boolean 
+	setText(
+		StringSupplier supplier)
+	{
+		return( setText( supplier.get()));
+	}
 	
 	@Override
 	public String 
@@ -1162,7 +1177,7 @@ public class FakeTableCell
 		}
 
 		setForeground(-1, -1, -1);
-		setText(null);
+		setText((String)null);
 		setToolTip(null);
 
 		composite.addDisposeListener(new DisposeListener() {

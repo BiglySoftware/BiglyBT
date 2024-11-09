@@ -27,6 +27,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.StringSupplier;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
@@ -1678,10 +1679,30 @@ public class TableColumnImpl
 				}
 			}
 
+			boolean c0isStringSupplier = c0 instanceof StringSupplier;
+			boolean c1isStringSupplier = c1 instanceof StringSupplier;
+			if (c0isStringSupplier && c1isStringSupplier) {
+				String c0String = ((StringSupplier)c0).get();
+				String c1String = ((StringSupplier)c1).get();
+				if ( intiutiveSorting ){		
+					if (bSortAscending) {
+						return ( intuitiveComparator.compare( c0String, c1String ));
+					}
+	
+					return ( intuitiveComparator.compare( c1String, c0String ));
+				}else{
+					if (bSortAscending) {
+						return (c0String).compareToIgnoreCase(c1String);
+					}
+	
+					return (c1String).compareToIgnoreCase(c0String);
+				}
+			}
+			
 			int val;
-			if (c0isString && !c1isString) {
+			if ((c0isString && !c1isString) || (c0isStringSupplier && !c1isStringSupplier)) {
 				val = -1;
-			} else if (c1isString && !c0isString) {
+			} else if ( (c1isString && !c0isString) || (c1isStringSupplier && !c0isStringSupplier)) {
 				val = 1;
 			} else {
 				val = c1.compareTo(c0);

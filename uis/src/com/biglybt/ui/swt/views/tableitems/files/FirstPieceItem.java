@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views.tableitems.files;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.util.StringInterner.StringSupplierGenerated;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -77,6 +78,12 @@ public class FirstPieceItem
 
 		// < 0 -> unknown skeleton value
 
-    cell.setText( sort_value<0 || fileInfo == null?"":(""+fileInfo.getFirstPieceNumber()));
+    if ( sort_value<0 || fileInfo == null ){
+    	cell.setText( "" );
+    }else{
+    	cell.setText(
+    		new StringSupplierGenerated(
+    			()->String.valueOf(fileInfo.getFirstPieceNumber())));	
+    }
   }
 }

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableColumnSortObject;
@@ -40,6 +41,8 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.StringSupplier;
+import com.biglybt.core.util.StringInterner.StringSupplierBasic;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.Utils;
@@ -842,7 +845,11 @@ public abstract class TableCellSWTBase
 				if (bCellVisible) {
 					if (bDebug)
 						debug("fast refresh: setText");
-					ret = setText((String) sortValue);
+					if ( sortValue instanceof String ){
+						ret = setText((String)sortValue);
+					}else{
+						ret = setText((StringSupplier)sortValue);
+					}
 					setFlag(FLAG_VALID);
 				}
 			} else if ((iInterval == TableColumnCore.INTERVAL_LIVE
@@ -938,10 +945,13 @@ public abstract class TableCellSWTBase
 
 		if (hasFlag(FLAG_SORTVALUEISTEXT)) {
 			clearFlag(FLAG_SORTVALUEISTEXT);
-			if (sortValue instanceof String)
+			if (sortValue instanceof String){
 				// Make sure text is actually in the cell (it may not have been if
 				// cell wasn't created at the time of setting)
 				setText((String) sortValue);
+			}else if ( sortValue instanceof StringSupplier ){
+				setText((StringSupplier) sortValue);
+			}
 		}
 
 		if ((valueToSort instanceof String) && (sortValue instanceof String)
@@ -949,6 +959,11 @@ public abstract class TableCellSWTBase
 			return false;
 		}
 
+		if ((valueToSort instanceof StringSupplier) && (sortValue instanceof StringSupplier)
+				&& sortValue.equals(valueToSort)) {
+			return false;
+		}
+		
 		if ((valueToSort instanceof Number) && (sortValue instanceof Number)
 				&& sortValue.equals(valueToSort)) {
 			return false;
@@ -1179,6 +1194,14 @@ public abstract class TableCellSWTBase
 				Collator collator = Collator.getInstance(Locale.getDefault());
 				return collator.compare(ourSortValue, otherSortValue);
 			}
+			if (ourSortValue instanceof StringSupplier && otherSortValue instanceof StringSupplier) {
+				// Collator.getInstance cache's Collator object, so this is relatively
+				// fast.  However, storing it as static somewhere might give a small
+				// performance boost.  If such an approach is take, ensure that the static
+				// variable is updated the user chooses an different language.
+				Collator collator = Collator.getInstance(Locale.getDefault());
+				return collator.compare(((StringSupplier)ourSortValue).get(), ((StringSupplier)otherSortValue).get());
+			}
 			try {
 				return ourSortValue.compareTo(otherSortValue);
 			} catch (ClassCastException e) {
@@ -1209,18 +1232,24 @@ public abstract class TableCellSWTBase
 	}
 
 	@Override
-	public boolean setText(String text) {
+	public boolean 
+	setText(
+		StringSupplier textSupplier) 
+	{
 		if (isDisposed()) {
 			return false;
 		}
 
-		if (text == null)
-			text = "";
+		if ( textSupplier == null ){
+			
+			textSupplier = StringSupplierBasic.EMPTY_STRING;
+		}
+		
 		boolean bChanged = false;
 
-		if (hasFlag(FLAG_SORTVALUEISTEXT) && !text.equals(sortValue)) {
+		if (hasFlag(FLAG_SORTVALUEISTEXT) && !textSupplier.equals(sortValue)) {
 			bChanged = true;
-			sortValue = text;
+			sortValue = textSupplier;
 			tableColumnCore.setLastSortValueChange(SystemTime.getCurrentTime());
 			if (bDebug)
 				debug("Setting SortValue to text;");
@@ -1234,11 +1263,11 @@ public abstract class TableCellSWTBase
 		//  		return false;
 		//  	}
 
-		if (uiSetText(text) && !hasFlag(FLAG_SORTVALUEISTEXT))
+		if (uiSetText(textSupplier) && !hasFlag(FLAG_SORTVALUEISTEXT))
 			bChanged = true;
 
 		if (bDebug) {
-			debug("setText (" + bChanged + ") : " + text);
+			debug("setText (" + bChanged + ") : " + textSupplier.get());
 		}
 
 		if (bChanged) {
@@ -1257,13 +1286,21 @@ public abstract class TableCellSWTBase
 		}
 
 		else {
-			this.oToolTip = text;
+			this.oToolTip = textSupplier;
 			setFlag(FLAG_TOOLTIPISAUTO);
 		}
 
 		return bChanged;
 	}
 
+	@Override
+	public boolean 
+	setText(
+		String text)
+	{
+		return( setText( new StringSupplierBasic( text )));
+	}
+	
 	@Override
 	public void setToolTip(Object tooltip) {
 		oToolTip = tooltip;
@@ -1277,12 +1314,38 @@ public abstract class TableCellSWTBase
 
 	@Override
 	public Object getToolTip() {
-		return ( TableTooltips.tooltips_disabled && !tableColumnCore.doesAutoTooltip())?null:oToolTip;
+		if ( TableTooltips.tooltips_disabled && !tableColumnCore.doesAutoTooltip()){
+			
+			return( null );
+		}
+		
+		if ( oToolTip instanceof StringSupplier ){
+			
+			return(((StringSupplier)oToolTip).get());
+			
+		}else{
+			
+			return( oToolTip );
+		}
 	}
 
 	@Override
-	public Object getDefaultToolTip() {
-		return ( TableTooltips.tooltips_disabled && !tableColumnCore.doesAutoTooltip())?null:defaultToolTip;
+	public Object 
+	getDefaultToolTip() 
+	{
+		if ( TableTooltips.tooltips_disabled && !tableColumnCore.doesAutoTooltip()){
+			
+			return( null );
+		}
+		
+		if ( defaultToolTip instanceof StringSupplier ){
+			
+			return(((StringSupplier)defaultToolTip).get());
+			
+		}else{
+			
+			return( defaultToolTip );
+		}
 	}
 
 	@Override
@@ -1290,7 +1353,7 @@ public abstract class TableCellSWTBase
 		defaultToolTip = tt;
 	}
 
-	public abstract boolean uiSetText(String text);
+	public abstract boolean uiSetText(StringSupplier text);
 
   @Override
   public void doPaint(GC gc) {

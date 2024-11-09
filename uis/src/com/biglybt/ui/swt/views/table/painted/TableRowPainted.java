@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.StringSupplier;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableRowCore;
@@ -676,7 +677,7 @@ public class TableRowPainted
 				//return;
 			}
 
-			String text = cell.getText();
+			StringSupplier textSupplier = cell.getTextSupplier();
 
 			Color fg = cell.getForegroundSWT();
 			if ( fg == null && enableColumnFG ){
@@ -749,7 +750,7 @@ public class TableRowPainted
 				cell.doPaint(gc);
 				gcChanged = true;
 			}
-			if (text.length() > 0) {
+			if ( !textSupplier.isEmpty()) {
 				int ofsx = 0;
 				Image image = cell.getIcon();
 				Rectangle imageBounds = null;
@@ -787,6 +788,8 @@ public class TableRowPainted
 				cellBounds.y += 2;
 				cellBounds.height -= 4;
 				if (!cellBounds.isEmpty()) {
+					
+					String text = textSupplier.get();
 					
 					int singleLineHeight = GCStringPrinter.stringExtent( gc, text ).y;
 										
@@ -827,7 +830,7 @@ public class TableRowPainted
 						cell.setDefaultToolTip(null);
 					} else {
 
-						cell.setDefaultToolTip(text);
+						cell.setDefaultToolTip(textSupplier);
 					}
 
 					Point psize = sp.getCalculatedPreferredSize();
