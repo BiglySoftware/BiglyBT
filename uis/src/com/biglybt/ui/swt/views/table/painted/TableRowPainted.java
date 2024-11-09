@@ -76,8 +76,8 @@ public class TableRowPainted
 
 	private Object			colorLock = new Object();
 	
-	private CopyOnWriteList<Object[]>	FGRequesters = new CopyOnWriteList<>(1);
-	private CopyOnWriteList<Object[]>	BGRequesters = new CopyOnWriteList<>(1);
+	private CopyOnWriteList<Object[]>	FGRequesters;
+	private CopyOnWriteList<Object[]>	BGRequesters;
 	
 	public TableRowPainted(TableRowCore parentRow, TableViewPainted tv,
 			Object dataSource, boolean triggerHeightChange) {
@@ -1373,6 +1373,11 @@ public class TableRowPainted
 			return( colorFG );
 		}
 		
+		if ( FGRequesters == null ){
+			
+			return( null );
+		}
+		
 		List<Object[]> list = FGRequesters.getList();
 		
 		if ( !list.isEmpty()){
@@ -1387,6 +1392,11 @@ public class TableRowPainted
 	public Color 
 	getBackground() 
 	{
+		if ( BGRequesters == null ){
+			
+			return( null );
+		}
+
 		List<Object[]> list = BGRequesters.getList();
 		
 		if ( !list.isEmpty()){
@@ -1403,6 +1413,14 @@ public class TableRowPainted
 		ColorRequester 	requester,
 		Color			color )
 	{
+		synchronized( colorLock ){
+			
+			if ( FGRequesters == null ){
+				
+				FGRequesters = new CopyOnWriteList<>(1);
+			}
+		}
+		
 		requestColor( FGRequesters, requester, color );
 	}
 	
@@ -1412,6 +1430,14 @@ public class TableRowPainted
 		ColorRequester	requester,
 		Color			color )
 	{
+		synchronized( colorLock ){
+			
+			if ( BGRequesters == null ){
+				
+				BGRequesters = new CopyOnWriteList<>(1);
+			}
+		}
+		
 		requestColor( BGRequesters, requester, color );
 	}
 	
@@ -1672,7 +1698,10 @@ public class TableRowPainted
 	}
 	
 	@Override
-	public boolean sortSubRows(TableColumnCore col){
+	public boolean 
+	sortSubRows(
+		List<TableColumnCore> cols)
+	{
 		synchronized (subRows_sync) {
 			if ( subRows == null ){
 				return( false );
@@ -1689,16 +1718,21 @@ public class TableRowPainted
 					
 					if ( prev != null ){
 					
-						if ( col.compare( prev,  r ) > 0 ){
+						for ( TableColumnCore col: cols ){
 							
-							sorted = false;
+							if ( col.compare( prev,  r ) > 0 ){
+								
+								sorted = false;
+								
+								break;
+							}
 						}
 					}
 					
 					prev = r;
 				}
 				
-				if ( r.sortSubRows(col)){
+				if ( r.sortSubRows(cols)){
 					
 					changed = true;
 				}
@@ -1706,7 +1740,24 @@ public class TableRowPainted
 			
 			if ( !sorted ){
 			
-				Arrays.sort( subRows, col );
+				if ( cols.size() == 1 ){
+				
+					Arrays.sort( subRows, cols.get(0));
+					
+				}else{
+					
+					Arrays.sort(
+						subRows,
+						(o1, o2) -> {
+							for (TableColumnCore sortColumn : cols) {
+								int compare = sortColumn.compare(o1, o2);
+								if (compare != 0) {
+									return compare;
+								}
+							}
+							return 0;
+						});
+				}		
 				
 				for ( int i=0; i<subRows.length;i++){
 					subRows[i].setTableItem(i);

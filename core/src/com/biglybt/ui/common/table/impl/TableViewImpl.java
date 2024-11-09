@@ -1499,7 +1499,9 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		synchronized (rows_sync) {
 
 			itemsToRemove = new ArrayList<>(mapDataSourceToRow.values());
-			mapDataSourceToRow.clear();
+			
+			mapDataSourceToRow = new IdentityHashMap<>();	// better than .clear() as it "trimsToSize"
+			
 			sortedRows.clear();
 
 			dataSourcesToAdd.clear();
@@ -1731,7 +1733,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					
 					for ( TableRowCore r: sortedRows ){
 						// TODO: Change to sortColumn list
-						if ( r.sortSubRows(sortColumns.get(0) )){
+						if ( r.sortSubRows( sortColumns )){
 							needsUpdate = true;
 							orderChanged = true;
 						}
@@ -1790,6 +1792,14 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	public abstract void visibleRowsChanged();
 
+	private final AtomicInteger	visibleRowChangeDisabled = new AtomicInteger();
+	
+	public boolean
+	visibleRowChangeDisabled()
+	{
+		return( visibleRowChangeDisabled.get() > 0 );
+	}
+	
 	public abstract void uiRemoveRows(TableRowCore[] rows, Integer[] rowIndexes);
 
 	public abstract int uiGuessMaxVisibleRows();
@@ -1827,134 +1837,251 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		TableRowCore[] selectedRows = getSelectedRows();
 
-		boolean bWas0Rows = getRowCount() == 0;
-		try {
-
-			if (DEBUGADDREMOVE) {
-				debug("--" + " Add " + dataSources.length + " rows to SWT");
-			}
-
-			long lStartTime = SystemTime.getCurrentTime();
-
-			final List<TableRowCore> rowsAdded = new ArrayList<>();
-
-			// add to sortedRows list in best position.
-			// We need to be in the SWT thread because the rowSorter may end up
-			// calling SWT objects.
-			for (int i = 0; i < dataSources.length; i++) {
-				Object dataSource = dataSources[i];
-				if (dataSource == null) {
-					continue;
+		try{
+				// we need to suspend visible row changes otherwise other parallel activities
+				// can trigger it during the process below and cause an unsorted view to 
+				// appears before a subsequent resort which makes the code below pointless
+			
+			visibleRowChangeDisabled.incrementAndGet();
+			
+			try {
+	
+				if (DEBUGADDREMOVE) {
+					debug("--" + " Add " + dataSources.length + " rows to SWT");
 				}
-
-				TableRowCore row;
-				synchronized (rows_sync) {
-					row = mapDataSourceToRow.get(dataSource);
-				}
-				//if ((row == null) || row.isRowDisposed() || sortedRows.indexOf(row) >= 0) {
-				if (row == null || row.isRowDisposed()) {
-					continue;
-				}
-				if (!sortColumns.isEmpty()) {
-					TableCellCore[] cells = row.getSortColumnCells(null);
-					for (TableCellCore cell : cells) {
-						try {
-							cell.invalidate();
-							// refresh could have caused a thread lock if we were
-							// synchronized by rows_sync
-							cell.refresh(true);
-						} catch (Exception e) {
-							Logger.log(new LogEvent(LOGID,
-									"Minor error adding a row to table " + getTableID(), e));
-						}
-					}
-				}
-
-				synchronized (rows_sync) {
-						// check that the row item hasn't been removed in the meantime while lock 
-						// not held
+	
+				long lStartTime = SystemTime.getCurrentTime();
+	
+				final List<TableRowCore> rowsAdded = new ArrayList<>(dataSources.length);
+	
+					// algorithm below sucks for large additions
+				
+				if ( dataSources.length < 100 ){
 					
-					if (row ==  mapDataSourceToRow.get( dataSource )){
-						try {
-							int index = 0;
-							if (sortedRows.size() > 0) {
-								// If we are >= to the last item, then just add it to the end
-								// instead of relying on binarySearch, which may return an item
-								// in the middle that also is equal.
-								TableRowCore lastRow = sortedRows.get(sortedRows.size() - 1);
-								// todo: use multi-sort
-								if (sortColumns.isEmpty() || sortColumns.get(0).compare(row, lastRow) >= 0) {
-									index = sortedRows.size();
-									sortedRows.add(row);
-									if (DEBUGADDREMOVE) {
-										debug("Adding new row to bottom");
-									}
-								} else {
-									index = Collections.binarySearch(sortedRows, row, sortColumns.get(0));
-									if (index < 0) {
-										index = -1 * index - 1; // best guess
-									}
-	
-									if (index > sortedRows.size()) {
+					// add to sortedRows list in best position.
+					// We need to be in the SWT thread because the rowSorter may end up
+					// calling SWT objects.
+					
+					for (int i = 0; i < dataSources.length; i++) {
+						Object dataSource = dataSources[i];
+						if (dataSource == null) {
+							continue;
+						}
+		
+						TableRowCore row;
+						synchronized (rows_sync) {
+							row = mapDataSourceToRow.get(dataSource);
+						}
+						//if ((row == null) || row.isRowDisposed() || sortedRows.indexOf(row) >= 0) {
+						if (row == null || row.isRowDisposed()) {
+							continue;
+						}
+						if (!sortColumns.isEmpty()) {
+							TableCellCore[] cells = row.getSortColumnCells(null);
+							for (TableCellCore cell : cells) {
+								try {
+									cell.invalidate();
+									// refresh could have caused a thread lock if we were
+									// synchronized by rows_sync
+									cell.refresh(true);
+								} catch (Exception e) {
+									Logger.log(new LogEvent(LOGID,
+											"Minor error adding a row to table " + getTableID(), e));
+								}
+							}
+						}
+		
+						synchronized (rows_sync) {
+								// check that the row item hasn't been removed in the meantime while lock 
+								// not held
+							
+							if (row ==  mapDataSourceToRow.get( dataSource )){
+								try {
+									int index = 0;
+									if (sortedRows.size() > 0) {
+										// If we are >= to the last item, then just add it to the end
+										// instead of relying on binarySearch, which may return an item
+										// in the middle that also is equal.
+										TableRowCore lastRow = sortedRows.get(sortedRows.size() - 1);
+										// todo: use multi-sort
+										if (sortColumns.isEmpty() || sortColumns.get(0).compare(row, lastRow) >= 0) {
+											index = sortedRows.size();
+											sortedRows.add(row);
+											if (DEBUGADDREMOVE) {
+												debug("Adding new row to bottom");
+											}
+										} else {
+											index = Collections.binarySearch(sortedRows, row, sortColumns.get(0));
+											if (index < 0) {
+												index = -1 * index - 1; // best guess
+											}
+			
+											if (index > sortedRows.size()) {
+												index = sortedRows.size();
+											}
+			
+											if (DEBUGADDREMOVE) {
+												debug("Adding new row at position " + index + " of "
+														+ (sortedRows.size() - 1));
+											}
+											sortedRows.add(index, row);
+										}
+									} else {
+										if (DEBUGADDREMOVE) {
+											debug("Adding new row to bottom (1st Entry)");
+										}
 										index = sortedRows.size();
+										sortedRows.add(row);
 									}
+			
+									rowsAdded.add(row);
+			
+									// XXX Don't set table item here, it will mess up selected rows
+									//     handling (which is handled in fillRowGaps called later on)
+									//row.setTableItem(index);
+			
+			
+									//row.setIconSize(ptIconSize);
+								} catch (Exception e) {
+									e.printStackTrace();
+									Logger.log(new LogEvent(LOGID, "Error adding a row to table "
+											+ getTableID(), e));
+									try {
+										if (!sortedRows.contains(row)) {
+											sortedRows.add(row);
+										}
+									} catch (Exception e2) {
+										Debug.out(e2);
+									}
+								}
+							}
+						}
+					} // for dataSources
+				}else{
+					
+						// lots added, just add to bottom and then do a full sort
+					
+					synchronized( rows_sync ){
+						
+						List<TableRowCore> newSortedRows = new ArrayList<>( sortedRows.size() + dataSources.length );
+						
+						newSortedRows.addAll( sortedRows );
+						
+						sortedRows = newSortedRows;
+					}
+					
+					int numSortCols = sortColumns.size();
 	
-									if (DEBUGADDREMOVE) {
-										debug("Adding new row at position " + index + " of "
-												+ (sortedRows.size() - 1));
+					for ( int i = 0; i < dataSources.length; i++){
+						
+						Object dataSource = dataSources[i];
+						
+						if ( dataSource == null ){
+							
+							continue;
+						}
+		
+						TableRowCore row;
+						
+						synchronized( rows_sync ){
+							
+							row = mapDataSourceToRow.get(dataSource);
+						}
+						
+						if ( row == null || row.isRowDisposed()){
+								
+							continue;
+						}
+											
+						if ( numSortCols > 0 ){
+							
+							for (TableColumnCore sortColumn : sortColumns) {
+								String sColumnID = sortColumn.getName();
+								TableCellCore[] cells = row.getSortColumnCells(sColumnID);
+								for (TableCellCore cell : cells) {
+									try{
+										cell.invalidate();
+									
+										cell.refresh(true);
+									}catch( Throwable e ){
+										
 									}
-									sortedRows.add(index, row);
 								}
-							} else {
-								if (DEBUGADDREMOVE) {
-									debug("Adding new row to bottom (1st Entry)");
+								TableRowCore[] subs = row.getSubRowsRecursive(true);
+	
+								for (TableRowCore sr : subs) {
+									cells = sr.getSortColumnCells(sColumnID);
+									for (TableCellCore cell : cells) {
+										try{
+											cell.invalidate();
+										
+											cell.refresh(true);
+										}catch( Throwable e ){
+											
+										}
+									}
 								}
-								index = sortedRows.size();
+							}
+						}
+	
+						synchronized( rows_sync ){
+							
+							if ( row ==  mapDataSourceToRow.get( dataSource )){
+							
 								sortedRows.add(row);
 							}
-	
+						
 							rowsAdded.add(row);
-	
-							// XXX Don't set table item here, it will mess up selected rows
-							//     handling (which is handled in fillRowGaps called later on)
-							//row.setTableItem(index);
-	
-	
-							//row.setIconSize(ptIconSize);
-						} catch (Exception e) {
-							e.printStackTrace();
-							Logger.log(new LogEvent(LOGID, "Error adding a row to table "
-									+ getTableID(), e));
-							try {
-								if (!sortedRows.contains(row)) {
-									sortedRows.add(row);
-								}
-							} catch (Exception e2) {
-								Debug.out(e2);
+						}
+					}
+					
+					if ( numSortCols > 0 ){
+						
+						synchronized( rows_sync ){
+								
+							if ( numSortCols == 1 ){
+		
+								sortedRows.sort(sortColumns.get(0));
+							
+							}else{
+								
+								sortedRows.sort((o1, o2) -> {
+									for (TableColumnCore sortColumn : sortColumns) {
+										int compare = sortColumn.compare(o1, o2);
+										if (compare != 0) {
+											return compare;
+										}
+									}
+									return 0;
+								});
 							}
 						}
 					}
 				}
-			} // for dataSources
-
-			// NOTE: if the listener tries to do something like setSelected,
-			// it will fail because we aren't done adding.
-			// we should trigger after fillRowGaps()
-			triggerListenerRowAdded(rowsAdded.toArray(new TableRowCore[0]));
-
-
-			if (DEBUGADDREMOVE) {
-				debug("Adding took " + (SystemTime.getCurrentTime() - lStartTime)
-						+ "ms");
+				// NOTE: if the listener tries to do something like setSelected,
+				// it will fail because we aren't done adding.
+				// we should trigger after fillRowGaps()
+				triggerListenerRowAdded(rowsAdded.toArray(new TableRowCore[0]));
+	
+	
+				if (DEBUGADDREMOVE) {
+					debug("Adding took " + (SystemTime.getCurrentTime() - lStartTime)
+							+ "ms");
+				}
+	
+			} catch (Exception e) {
+				Logger.log(new LogEvent(LOGID, "Error while adding row to Table "
+						+ getTableID(), e));
 			}
-
-		} catch (Exception e) {
-			Logger.log(new LogEvent(LOGID, "Error while adding row to Table "
-					+ getTableID(), e));
+			refreshenProcessDataSourcesTimer();
+			
+		}finally{
+			
+			visibleRowChangeDisabled.decrementAndGet();
 		}
-		refreshenProcessDataSourcesTimer();
-
+		
 		visibleRowsChanged();
+		
 		fillRowGaps(false);
 
 		if (selectedRows.length > 0) {

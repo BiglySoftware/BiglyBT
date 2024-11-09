@@ -209,7 +209,7 @@ public interface TableRowCore extends TableRow
 
 	public boolean
 	sortSubRows( 
-		TableColumnCore col );
+		List<TableColumnCore> cols );
 	
 	/**
 	 * forces the cell to be refreshed/repainted onto an off-screen area so that any side-effects of the process

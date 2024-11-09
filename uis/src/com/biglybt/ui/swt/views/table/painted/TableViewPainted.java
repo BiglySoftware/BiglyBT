@@ -2287,7 +2287,10 @@ public class TableViewPainted
 		if (Utils.isDisplayDisposed()) {
 			return;
 		}
-		Utils.execSWTThread( this::swt_visibleRowsChanged );
+		if ( !visibleRowChangeDisabled()){
+		
+			Utils.execSWTThread( this::swt_visibleRowsChanged );
+		}
 	}
 
 	private void swt_visibleRowsChanged() {
