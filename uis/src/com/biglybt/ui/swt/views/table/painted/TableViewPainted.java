@@ -1591,9 +1591,16 @@ public class TableViewPainted
 					}else{
 						//redrawTable();
 						TableRowCore[] rows = getSelectedRows();
-						for (TableRowCore row : rows) {
-							row.invalidate();
-							redrawRow((TableRowPainted) row, false);
+						if ( rows.length > 100 ){
+							for (TableRowCore row : rows) {
+								row.invalidate();
+							}							
+							redrawTable();
+						}else{
+							for (TableRowCore row : rows) {
+								row.invalidate();
+								redrawRow((TableRowPainted) row, false);
+							}
 						}
 					}
 				}
