@@ -812,7 +812,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	
 					dataSourcesAdd = dataSourcesToAdd.keySet().toArray();
 	
-					dataSourcesToAdd.clear();
+					dataSourcesToAdd = new IdentityHashMap<>();	// release space, .clear() sucks
 				}
 	
 				if (dataSourcesToRemove.size() > 0) {
@@ -820,7 +820,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					if (DEBUGADDREMOVE && dataSourcesRemove.length > 1) {
 						debug("Streamlining removing " + dataSourcesRemove.length + " rows");
 					}
-					dataSourcesToRemove.clear();
+					dataSourcesToRemove = new IdentityHashMap<>(); // release space, .clear() sucks
 				}
 			}
 	
