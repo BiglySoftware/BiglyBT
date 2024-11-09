@@ -7854,16 +7854,4 @@ DownloadManagerImpl
 	{
 		globalManager.fireGlobalManagerEvent( eventType, this, eventData );
 	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.download.DownloadManager#setFilePriorities(com.biglybt.core.disk.DiskManagerFileInfo[], int)
-	 */
-	@Override
-	public void setFilePriorities(DiskManagerFileInfo[] fileInfos, int priority) {
-		// TODO: Insted of looping, which fires off a lot of events,
-		//       do it more directly, and fire needed events once, at end
-		for (DiskManagerFileInfo fileInfo : fileInfos) {
-			fileInfo.setPriority(priority);
-		}
-	}
 }

@@ -214,26 +214,39 @@ public class SBC_LibraryView
 					}
 				}
 						
+				Set<DiskManagerFileInfo>	processedFiles	= new IdentityHashSet<>();
+				Set<DownloadManager>		processedDMs	= new IdentityHashSet<>();
+				
 				for (ISelectedContent sc : currentContent) {
 
 					DownloadManager dm = sc.getDownloadManager();
 
-					if (dm != null) {
+					if ( dm != null ){
 
 						dms.add(dm);
 
 						int file_index = sc.getFileIndex();
 
-						if (file_index == -1) {
+						if ( file_index == -1 ){
 								
-							DiskManagerFileInfo[] file_infos = dm.getDiskManagerFileInfoSet().getFiles();
-
-							for (DiskManagerFileInfo file_info : file_infos) {
-
-								if (!file_info.isSkipped()) {
-
-									total_size += file_info.getLength();
-									total_done += file_info.getDownloaded();
+							if ( !processedDMs.contains( dm )){
+								
+								processedDMs.add( dm );
+								
+								DiskManagerFileInfo[] file_infos = dm.getDiskManagerFileInfoSet().getFiles();
+	
+								for (DiskManagerFileInfo file_info : file_infos) {
+	
+									if ( !processedFiles.contains( file_info )){
+										
+										processedFiles.add( file_info );
+										
+										if ( !file_info.isSkipped()){
+		
+											total_size += file_info.getLength();
+											total_done += file_info.getDownloaded();
+										}
+									}
 								}
 							}
 						} else {
@@ -242,10 +255,15 @@ public class SBC_LibraryView
 								
 								DiskManagerFileInfo file_info = dm.getDiskManagerFileInfoSet().getFiles()[file_index];
 	
-								if (!file_info.isSkipped()) {
-	
-									total_size += file_info.getLength();
-									total_done += file_info.getDownloaded();
+								if ( !processedFiles.contains( file_info )){
+									
+									processedFiles.add( file_info );
+									
+									if (!file_info.isSkipped()) {
+		
+										total_size += file_info.getLength();
+										total_done += file_info.getDownloaded();
+									}
 								}
 							}
 						}

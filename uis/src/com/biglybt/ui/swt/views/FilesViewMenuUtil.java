@@ -41,6 +41,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
@@ -1617,11 +1618,16 @@ public class FilesViewMenuUtil
 			return;
 		}
 
-		if (type == PRIORITY_NUMERIC) {
+		if ( type == PRIORITY_NUMERIC ){
+			
 			changePriorityManual(file_list);
+			
 			return;
-		}else if (type == PRIORITY_NUMERIC_AUTO ) {
+			
+		}else if (type == PRIORITY_NUMERIC_AUTO ){
+			
 			changePriorityAuto(file_list);
+			
 			return;
 		}
 
@@ -1639,25 +1645,32 @@ public class FilesViewMenuUtil
 		}
 		boolean skipped = (type == PRIORITY_SKIPPED || type == PRIORITY_DELETE);
 		boolean delete_action = (type == PRIORITY_DELETE);
+		
+		int newPriority = Integer.MIN_VALUE;
+		
+		if ( type == PRIORITY_NORMAL ){
+
+			newPriority = 0;
+
+		}else if (type == PRIORITY_HIGH ){
+
+			newPriority = 1;
+			
+		}else if (type == PRIORITY_LOW ){
+
+			newPriority = -1;
+		}
+		
 		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-
-			if ( type == PRIORITY_NORMAL ){
-
-				dm.setFilePriorities(fileInfos, 0);
-
-			}else if (type == PRIORITY_HIGH ){
-
-				dm.setFilePriorities(fileInfos, 1);
-
-			}else if (type == PRIORITY_LOW ){
-
-				dm.setFilePriorities(fileInfos, -1);
+						
+			if ( newPriority != Integer.MIN_VALUE ){
+				
+				setPriorities( dm, fileInfos, newPriority );
 			}
 
 			setSkipped(dm, fileInfos, skipped, delete_action?1:0, prompt );
-
 		}
 	}
 
@@ -1728,13 +1741,14 @@ public class FilesViewMenuUtil
 						mapDMtoDMFI.put(dm, listFileInfos);
 					}
 					listFileInfos.add(file);
-
-					file.setPriority(priority);
 				}
 
 				for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 					ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 					DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
+					
+					setPriorities( dm, fileInfos, priority );
+					
 					setSkipped(dm, fileInfos, false, 0, true);
 				}
 			}
@@ -1749,6 +1763,8 @@ public class FilesViewMenuUtil
 
 		Map<DownloadManager, ArrayList<DiskManagerFileInfo>> mapDMtoDMFI = new IdentityHashMap<>();
 
+		Map<DiskManagerFileInfo,Integer>		priorityMap = new IdentityHashMap<>();
+		
 		for ( DiskManagerFileInfo file: file_list ){
 			DownloadManager dm = file.getDownloadManager();
 
@@ -1759,7 +1775,7 @@ public class FilesViewMenuUtil
 			}
 			listFileInfos.add(file);
 
-			file.setPriority(priority++);
+			priorityMap.put( file, priority++ );
 		}
 
 		for ( Map.Entry<DownloadManager,ArrayList<DiskManagerFileInfo>> entry: mapDMtoDMFI.entrySet()){
@@ -1792,13 +1808,16 @@ public class FilesViewMenuUtil
 
 			for ( DiskManagerFileInfo file: files ){
 
-				file.setPriority( --next_priority );
+				priorityMap.put( file, --next_priority );
 			}
 		}
 
 		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
+			
+			setPriorities(dm, fileInfos, priorityMap);
+			
 			setSkipped(dm, fileInfos, false, 0, true);
 		}
 	}
@@ -2337,6 +2356,68 @@ public class FilesViewMenuUtil
 			if ( done != null ){
 				done.run();
 			}
+		}
+	}
+	
+	private static void
+	setPriorities(
+		DownloadManager			manager,
+		DiskManagerFileInfo[]	fileInfos, 
+		int						newPriority )
+	{
+		DiskManagerFileInfoSet set = manager.getDiskManagerFileInfoSet();
+
+		int[]	priorities = new int[set.nbFiles()];
+		
+		DiskManagerFileInfo[] allFiles = set.getFiles();
+		
+		for ( DiskManagerFileInfo file: allFiles ){
+			
+			priorities[file.getIndex()] = file.getPriority();
+		}
+		
+		for ( DiskManagerFileInfo file: fileInfos ){
+			
+			priorities[file.getIndex()] = newPriority;
+		}
+		
+		set.setPriority( priorities );
+	}
+	
+	private static void
+	setPriorities(
+		DownloadManager						manager,
+		DiskManagerFileInfo[]				fileInfos, 
+		Map<DiskManagerFileInfo,Integer>	priorityMap )
+	{
+		DiskManagerFileInfoSet set = manager.getDiskManagerFileInfoSet();
+
+		int[]	priorities = new int[set.nbFiles()];
+		
+		DiskManagerFileInfo[] allFiles = set.getFiles();
+		
+		for ( DiskManagerFileInfo file: allFiles ){
+			
+			priorities[file.getIndex()] = file.getPriority();
+		}
+		
+		boolean changed = false;
+		
+		for ( DiskManagerFileInfo file: fileInfos ){
+			
+			Integer p = priorityMap.get( file );
+			
+			if ( p != null ){
+			
+				priorities[file.getIndex()] = p;
+				
+				changed = true;
+			}
+		}
+		
+		if ( changed ){
+		
+			set.setPriority( priorities );
 		}
 	}
 	
