@@ -3071,13 +3071,27 @@ public class TableViewPainted
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				for (TableRowCore row : deselectedRows) {
-					row.invalidate();
-					redrawRow((TableRowPainted) row, false);
+				if ( deselectedRows.length > 100 ){
+					for (TableRowCore row : deselectedRows) {
+						row.invalidate();
+					}
+					redrawTable();
+				}else{
+					for (TableRowCore row : deselectedRows) {
+						row.invalidate();
+						redrawRow((TableRowPainted) row, false);
+					}
 				}
-				for (TableRowCore row : newlySelectedRows) {
-					row.invalidate();
-					redrawRow((TableRowPainted) row, false);
+				if ( newlySelectedRows.length > 100 ){
+					for (TableRowCore row : newlySelectedRows) {
+						row.invalidate();
+					}
+					redrawTable();
+				}else{
+					for (TableRowCore row : newlySelectedRows) {
+						row.invalidate();
+						redrawRow((TableRowPainted) row, false);
+					}
 				}
 			}
 		});
