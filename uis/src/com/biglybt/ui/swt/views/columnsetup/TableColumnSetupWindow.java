@@ -68,6 +68,9 @@ import com.biglybt.pif.ui.tables.TableRow;
 public class TableColumnSetupWindow
 	implements UIUpdatable
 {
+	private static final int RESULT_AREA_WIDTH	= Constants.isWindows?250:280;
+	private static final int SHELL_WIDTH		= RESULT_AREA_WIDTH + 600;
+	
 	private static final String TABLEID_AVAIL = "ColumnSetupAvail";
 
 	private static final String TABLEID_CHOSEN = "ColumnSetupChosen";
@@ -238,8 +241,9 @@ public class TableColumnSetupWindow
 			tableName
 		}));
 		shell.setLayout(formLayout);
-		shell.setSize(780, 550);
-
+		shell.setSize(SHELL_WIDTH, 550);
+		Utils.linkShellMetricsToConfig(shell, "tablecolsetup");
+		
 		shell.addTraverseListener(new TraverseListener() {
 			@Override
 			public void keyTraversed(TraverseEvent e) {
@@ -935,7 +939,7 @@ public class TableColumnSetupWindow
 		fd.top = new FormAttachment(topInfo, 5);
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(btnOk, -5);
-		fd.width = Constants.isWindows?200:230;
+		fd.width = RESULT_AREA_WIDTH;
 		cResultArea.setLayoutData(fd);
 
 		fd = new FormData();
@@ -1126,6 +1130,8 @@ public class TableColumnSetupWindow
 		fillAvail();
 
 		UIUpdaterSWT.getInstance().addUpdater(this);
+		
+		shell.open();
 	}
 
 	private void
@@ -1378,7 +1384,7 @@ public class TableColumnSetupWindow
 			TableColumnCore column = columnTVChosen[i];
 			if (column.getName().equals(ColumnTC_ChosenColumn.COLUMN_ID)) {
 				column.setVisible(true);
-				column.setWidth(175);
+				column.setWidth(RESULT_AREA_WIDTH-30);
 				column.setSortAscending(true);
 			} else {
 				column.setVisible(false);
@@ -1589,10 +1595,6 @@ public class TableColumnSetupWindow
 		});
 
 		return tvAvail;
-	}
-
-	public void open() {
-		shell.open();
 	}
 
 	// @see UIUpdatable#getUpdateUIName()

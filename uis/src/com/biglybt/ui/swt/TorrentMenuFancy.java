@@ -2111,7 +2111,7 @@ public class TorrentMenuFancy
 				}
 				String tableID = tv.getTableID();
 				new TableColumnSetupWindow(tv.getDataSourceType(), tableID, column, focusedRow,
-						TableStructureEventDispatcher.getInstance(tableID)).open();
+						TableStructureEventDispatcher.getInstance(tableID));
 			}
 		});
 	}
