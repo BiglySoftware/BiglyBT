@@ -404,7 +404,7 @@ FMFileAccessController
 			int	file_index = tf.getIndex();
 
 			control_dir 	= owner.getOwner().getControlFileDir( );
-			controlFileName =  StringInterner.intern("fmfile" + file_index + ".dat");
+			controlFileName = "fmfile" + file_index + ".dat";
 		}
 	}
 

@@ -50,7 +50,7 @@ implements TableCellRefreshListener, TableColumnExtraInfoListener
   		return;
   	}
   	TorrentOpenFileOptions tfi = (TorrentOpenFileOptions) ds;
-  	String s = tfi.getDestPathName();
+  	String s = tfi.getDestPathName().toString();
   	String parentDir = tfi.getTorrentOptions().getParentDir();
 
 	if ( 	s.startsWith(parentDir+File.separator) &&
@@ -59,8 +59,8 @@ implements TableCellRefreshListener, TableColumnExtraInfoListener
 
   		s = s.substring(parentDir.length()+1);
   	}
-	s = StringInterner.intern(s);
-  	cell.setText(s);
+	
+  	cell.setText(new StringInterner.DirKey(s));
   }
 
 }

@@ -678,7 +678,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 		}
 
 		public boolean checkDefaultDir(File location, File[] default_dirs) {
-			location = FileUtil.canonise(location);
+			location = FileUtil.getCanonicalFile(location);
 			boolean subdir = this.getBoolean("default subdir", false);
 			for (int i=0; i<default_dirs.length; i++) {
 				if (subdir) {

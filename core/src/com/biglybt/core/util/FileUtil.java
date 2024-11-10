@@ -193,11 +193,136 @@ public class FileUtil {
   	return fileHandling.isAncestorOf(_parent, _child);
   }
 
-  public static File canonise(File file) {
-	  try {return file.getCanonicalFile();}
-	  catch (IOException ioe) {return file;}
+  public static File 
+  getCanonicalFile(
+		File file) 
+  {
+	  try{
+		  return file.getCanonicalFile();
+		  
+	  }catch (IOException ioe){
+		  
+		  return file;
+	  }
   }
 
+  
+	final static Map<String,String>	clax_cache =
+			new LinkedHashMap<String,String>(16,0.75f,true)
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+			   		Map.Entry<String,String> eldest)
+				{
+					return size() > 16;
+				}
+			};
+			
+  /**
+   * If lax then the parent folder's canonical form is cached and checked, the file name itself
+   * isn't canonicalised via the file system
+   * @param file
+   * @param lax
+   * @return
+   * @throws IOException
+   */
+  
+  public static String 
+  getCanonicalPath(
+	File	file,
+	boolean	lax )
+  
+  	throws IOException
+  {
+	  if ( lax ){
+		  
+		 File parent = file.getParentFile();
+		 
+		 if ( parent == null || parent.getParentFile() == null ){
+			 
+			 return file.getCanonicalPath();
+		 }
+		 
+		 String key = parent.getAbsolutePath();
+		 
+		 String cano;
+		 
+		 synchronized( clax_cache ){
+			  
+			  cano = clax_cache.get( key );
+			  
+			  if ( cano != null ){
+				  
+				  return( cano + File.separator + file.getName());
+			  }
+		 }
+		 
+		 cano = parent.getCanonicalPath();
+		 
+		 synchronized( clax_cache ){
+			 
+			 clax_cache.put( key, cano );
+		 }
+		 
+		 return( cano + File.separator + file.getName());
+		 
+	  }else{
+	  
+		  return file.getCanonicalPath();
+	  }
+  }
+  
+	final static Map<String,Long>	exists_cache =
+			new LinkedHashMap<String,Long>(16,0.75f,true)
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+			   		Map.Entry<String,Long> eldest)
+				{
+					return size() > 16;
+				}
+			};
+			
+  
+  	/**
+  	 * caches positive existence checks for a short time, therefore may answer incorrectly... 
+  	 * @param file
+  	 * @return
+  	 */
+  
+  public static boolean
+  existsWithCache(
+	 File		file )
+  {
+	  long now = SystemTime.getMonotonousTime();
+	  
+	  String key = file.getAbsolutePath();
+	  
+	  synchronized( exists_cache ){
+		  
+		  Long t = exists_cache.get( key );
+		  
+		  if ( t != null && now - t < 5000 ){
+			  
+			  return( true );
+		  }
+	  }
+	  
+	  boolean res = file.exists();
+	  
+	  if ( res ){
+		 
+		  synchronized( exists_cache ){
+			  
+			  exists_cache.put( key,  now );
+		  }
+	  }
+	  
+	  return( res );
+  }
+  
   public static String getCanonicalFileName(String filename) {
     // Sometimes Windows use filename in 8.3 form and cannot
     // match .torrent extension. To solve this, canonical path
@@ -354,14 +479,29 @@ public class FileUtil {
 		  
 		  String moveToDir 		= ConfigUtils.getDefaultMoveOnCompleteFolder( true );
 
+		  File defSaveDirFile;
+		  File moveToDirFile;
+		  
 		  if ( defSaveDir.trim().length() > 0 ){
 
-			  defSaveDir = newFile(defSaveDir).getCanonicalPath();
+			  defSaveDirFile = newFile(defSaveDir);
+			  
+			  defSaveDir = defSaveDirFile.getCanonicalPath();
+			  
+		  }else{
+			  
+			  defSaveDirFile = null;
 		  }
 
 		  if ( moveToDir.trim().length() > 0 ){
 
-			  moveToDir = newFile(moveToDir).getCanonicalPath();
+			  moveToDirFile = newFile(moveToDir);
+			  
+			  moveToDir = moveToDirFile.getCanonicalPath();
+			  
+		  }else{
+			  
+			  moveToDirFile = null;
 		  }
 
 		  if ( f.isDirectory()){
@@ -401,7 +541,8 @@ public class FileUtil {
 				  }
 			  }
 
-			  if (f.getCanonicalPath().equals(moveToDir)) {
+			  if ( 	moveToDirFile != null && 
+					( areFilePathsIdentical( f.getAbsoluteFile(), moveToDirFile) || f.getCanonicalPath().equals(moveToDir))){
 
 				  if ( log_warnings ){
 					  Debug.out("Empty folder delete:  not allowed to delete the MoveTo dir !");
@@ -410,7 +551,8 @@ public class FileUtil {
 				  return;
 			  }
 
-			  if (f.getCanonicalPath().equals(defSaveDir)) {
+			  if (	defSaveDirFile != null &&
+					( areFilePathsIdentical( f.getAbsoluteFile(), defSaveDirFile) ||f.getCanonicalPath().equals(defSaveDir))){
 
 				  if ( log_warnings ){
 					  Debug.out("Empty folder delete:  not allowed to delete the default data dir !");

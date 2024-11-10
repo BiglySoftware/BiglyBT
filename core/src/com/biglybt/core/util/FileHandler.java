@@ -178,13 +178,32 @@ public class FileHandler
 		// could use 
 		// return getRelativePath(_parent, _child) != null;
 		// except instead of canonise(..), it uses getCanonicalPathSafe(..)
-		File parent = FileUtil.canonise(_parent);
-		File child = FileUtil.canonise(_child);
+		
+		// canonicalising files is expensive as it hits the file system. so do an initial test
+		// on absolute paths - if this works then it is good enough, otherwise revert to more expensive test
+		
+		File parent = _parent.getAbsoluteFile();
+		File child = _child.getAbsoluteFile();
 		if (parent.equals(child)) {
 			return (FileUtil.areFilePathsIdentical(_parent, _child));
 		}
 		String parent_s = parent.getPath();
 		String child_s = child.getPath();
+		if (parent_s.charAt(parent_s.length() - 1) != File.separatorChar) {
+			parent_s += File.separatorChar;
+		}
+		if ( child_s.startsWith(parent_s)){
+			
+			return( true );
+		}
+		
+		parent = FileUtil.getCanonicalFile(_parent);
+		child = FileUtil.getCanonicalFile(_child);
+		if (parent.equals(child)) {
+			return (FileUtil.areFilePathsIdentical(_parent, _child));
+		}
+		parent_s = parent.getPath();
+		child_s = child.getPath();
 		if (parent_s.charAt(parent_s.length() - 1) != File.separatorChar) {
 			parent_s += File.separatorChar;
 		}

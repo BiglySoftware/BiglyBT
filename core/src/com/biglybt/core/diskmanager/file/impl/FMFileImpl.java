@@ -134,7 +134,7 @@ FMFileImpl
 			String linked_path = lf.getPath();
 			try {
 
-				String cp = lf.getCanonicalPath();
+				String cp = FileUtil.getCanonicalPath( lf, true );
 				
 				if ( cp.equals(linked_path)){
 					
@@ -1223,7 +1223,7 @@ FMFileImpl
 
 		File	parent = target.getParentFile();
 
-		if ( !parent.exists()){
+		if ( !FileUtil.existsWithCache( parent )){
 
 			List<File>	new_dirs = new ArrayList<>();
 

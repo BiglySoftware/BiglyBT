@@ -2810,18 +2810,20 @@ public class OpenTorrentOptionsWindow
 						pos = p+1;
 					}
 
+					boolean isLeaf = p == -1 || pos == len;
+							
 					TreeNode n = node.getChild( bit );
 
 					if ( n == null ){
 
-						n = new TreeNode( node, bit );
+						n = new TreeNode( node, isLeaf?bit:StringInterner.intern(bit));
 
 						node.addChild( n );
 					}
 
 					node = n;
 
-					if ( p == -1 || pos == len) {
+					if ( isLeaf ) {
 
 						node.setFile( file );
 
