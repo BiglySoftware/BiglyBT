@@ -3782,9 +3782,16 @@ public class MyTorrentsView
 				&& !dm.getTorrent().isSimpleTorrent() && rowCore.isVisible()
 				&& dm.getNumFileInfos() > 0) {
 			
-			DiskManagerFileInfo[] files = getVisibleFiles( dm );
-			if ( files != null ){			
-				rowCore.setSubItems(files);
+			Long lastSet = (Long)row.getData( "mtv:rowsubsset" );
+			
+			if ( lastSet == null ){
+				
+				row.setData( "mtv:rowsubsset", SystemTime.getMonotonousTime());
+				
+				DiskManagerFileInfo[] files = getVisibleFiles( dm );
+				if ( files != null ){			
+					rowCore.setSubItems(files);
+				}
 			}
 		}
 	}

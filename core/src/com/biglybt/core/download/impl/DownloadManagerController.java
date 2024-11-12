@@ -187,7 +187,8 @@ DownloadManagerController
 	private DiskManagerListener				disk_manager_listener_use_accessors;
 
 	private Object							disk_manager_pieces_snapshot_lock = new Object();
-	private volatile DiskManagerPiece[]		disk_manager_pieces_snapshot;
+	
+	private volatile WeakReference<DiskManagerPiece[]>		disk_manager_pieces_snapshot;
 	
 	final FileInfoFacadeSet		fileFacadeSet = new FileInfoFacadeSet();
 	boolean					files_facade_destroyed;
@@ -2414,13 +2415,15 @@ DownloadManagerController
 	{
 		synchronized( disk_manager_pieces_snapshot_lock ){
 		
-			if ( disk_manager_pieces_snapshot == null ){
+			WeakReference<DiskManagerPiece[]> snap = disk_manager_pieces_snapshot;
+			
+			if ( snap == null || snap.get() == null ){
 				
-				disk_manager_pieces_snapshot = 
-					DiskManagerUtil.getDiskManagerPiecesSnapshot( download_manager, getDiskManagerFileInfoSet());			
+				disk_manager_pieces_snapshot = snap = 
+					new WeakReference<>( DiskManagerUtil.getDiskManagerPiecesSnapshot( download_manager, getDiskManagerFileInfoSet()));			
 			}
 			
-			return( disk_manager_pieces_snapshot );
+			return( snap.get() );
 		}
 	}
 
