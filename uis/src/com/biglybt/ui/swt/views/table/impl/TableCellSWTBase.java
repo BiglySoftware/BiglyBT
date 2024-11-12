@@ -1472,6 +1472,9 @@ public abstract class TableCellSWTBase
   	if (isInvisibleAndCanRefresh())
   		return false;
 
+  	if ( icon == img && graphic == null ){
+  		return( true );
+  	}
   	icon = img;
 
     graphic = null;
