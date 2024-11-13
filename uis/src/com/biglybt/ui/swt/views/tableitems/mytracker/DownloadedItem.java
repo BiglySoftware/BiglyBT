@@ -44,9 +44,7 @@ public class DownloadedItem
     TRHostTorrent item = (TRHostTorrent)cell.getDataSource();
     long value = 0;
     if (item != null) {
-      Long longObject = (Long)item.getData("GUI_Downloaded");
-      if (longObject != null)
-        value = longObject.longValue();
+      value = item.getTotalDownloaded();
      }
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {

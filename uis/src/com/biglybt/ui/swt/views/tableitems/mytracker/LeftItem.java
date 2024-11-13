@@ -43,10 +43,8 @@ public class LeftItem
     TRHostTorrent item = (TRHostTorrent)cell.getDataSource();
     long value = 0;
     if (item != null) {
-      Long longObject = (Long)item.getData("GUI_Left");
-      if (longObject != null)
-        value = longObject.longValue();
-     }
+      value = item.getTotalLeft();
+    }
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {
       return;

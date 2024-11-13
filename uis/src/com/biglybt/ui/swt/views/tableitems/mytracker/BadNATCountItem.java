@@ -48,11 +48,9 @@ BadNATCountItem
 	refresh(TableCell cell)
 	{
 		TRHostTorrent item = (TRHostTorrent)cell.getDataSource();
-		long value = 0;
+		int value = 0;
 		if (item != null) {
-			Long longObject = (Long)item.getData("GUI_BadNATCount");
-			if (longObject != null)
-				value = longObject.longValue();
+			value = item.getBadNATCount();
 		}
 
 		if( !cell.setSortValue( value ) && cell.isValid() ) {
