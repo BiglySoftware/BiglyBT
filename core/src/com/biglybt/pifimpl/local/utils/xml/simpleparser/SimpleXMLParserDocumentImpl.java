@@ -48,7 +48,8 @@ SimpleXMLParserDocumentImpl
 {
 	private static DocumentBuilderFactory 		dbf_singleton;
 
-	private URL			source_url;
+	private final String	title_debug;
+	private URL				source_url;
 
 	private Document						document;
 	private SimpleXMLParserDocumentNodeImpl	root_node;
@@ -60,6 +61,8 @@ SimpleXMLParserDocumentImpl
 
 		throws SimpleXMLParserDocumentException
 	{
+		title_debug = file.getAbsolutePath();
+		
 		try{
 
 			create( FileUtil.newFileInputStream( file ));
@@ -76,7 +79,8 @@ SimpleXMLParserDocumentImpl
 
 		throws SimpleXMLParserDocumentException
 	{
-
+		title_debug = "data...";
+		
 		create(new ByteArrayInputStream(data.getBytes(Constants.DEFAULT_ENCODING_CHARSET)));
 	}
 
@@ -89,6 +93,8 @@ SimpleXMLParserDocumentImpl
 	{
 		source_url		= _source_url;
 
+		title_debug = source_url.toExternalForm();
+		
 		create( _input_stream );
 	}
 
@@ -195,7 +201,7 @@ SimpleXMLParserDocumentImpl
 
 					String stuff = FileUtil.readInputStreamAsStringWithTruncation( _input_stream, 2014 );
 
-					Debug.out( "RSS parsing failed for '" + stuff + "': " + Debug.getExceptionMessage( error ));
+					Debug.out( "RSS parsing of '" + title_debug + "' failed for '" + stuff + "': " + Debug.getExceptionMessage( error ));
 
 				}catch( Throwable e ){
 				}
