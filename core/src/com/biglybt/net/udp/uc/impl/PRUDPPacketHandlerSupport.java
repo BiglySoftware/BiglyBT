@@ -42,6 +42,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.gudy.bouncycastle.util.encoders.Base64;
 
@@ -186,11 +187,7 @@ PRUDPPacketHandlerSupport
 
 	private PRUDPRequestHandler request_handler;
 
-
-	private Map<Integer,PRUDPPacketHandlerRequestImpl>			requests = new LightHashMap<>();
-	
-	private AEMonitor	requests_mon	= new AEMonitor( "PRUDPPH:req" );
-
+	private Map<Integer,PRUDPPacketHandlerRequestImpl>			requests = new ConcurrentHashMap<>();	
 
 	private AEMonitor		send_queue_mon	= new AEMonitor( "PRUDPPH:sd", true );
 	private long			send_queue_data_size;
@@ -1016,37 +1013,28 @@ PRUDPPacketHandlerSupport
 	{
 		long	now = SystemTime.getCurrentTime();
 
-		List	timed_out = new ArrayList();
+		List<PRUDPPacketHandlerRequestImpl>	timed_out = new ArrayList<>();
 
-		boolean result;
+		boolean result = destroyed;
 		
-		try{
-			requests_mon.enter();
+		Iterator<PRUDPPacketHandlerRequestImpl> it = requests.values().iterator();
 
-			result = destroyed;
-			
-			Iterator it = requests.values().iterator();
+		while( it.hasNext()){
 
-			while( it.hasNext()){
+			PRUDPPacketHandlerRequestImpl	request = (PRUDPPacketHandlerRequestImpl)it.next();
 
-				PRUDPPacketHandlerRequestImpl	request = (PRUDPPacketHandlerRequestImpl)it.next();
+			long	sent_time = request.getSendTime();
 
-				long	sent_time = request.getSendTime();
+			if ( 	destroyed ||	// never going to get processed, treat as timeout
+					(	sent_time != 0 &&
+						now - sent_time >= request.getTimeout())){
 
-				if ( 	destroyed ||	// never going to get processed, treat as timeout
-						(	sent_time != 0 &&
-							now - sent_time >= request.getTimeout())){
+				it.remove();
 
-					it.remove();
+				stats.requestTimedOut();
 
-					stats.requestTimedOut();
-
-					timed_out.add( request );
-				}
+				timed_out.add( request );
 			}
-		}finally{
-
-			requests_mon.exit();
 		}
 
 		for (int i=0;i<timed_out.size();i++){
@@ -1329,23 +1317,15 @@ PRUDPPacketHandlerSupport
 
 				PRUDPPacketHandlerRequestImpl	request;
 
-				try{
-					requests_mon.enter();
+				if ( packet.hasContinuation()){
 
-					if ( packet.hasContinuation()){
+						// don't remove the request if there are more replies to come
 
-							// don't remove the request if there are more replies to come
+					request = (PRUDPPacketHandlerRequestImpl)requests.get(new Integer(packet.getTransactionId()));
 
-						request = (PRUDPPacketHandlerRequestImpl)requests.get(new Integer(packet.getTransactionId()));
+				}else{
 
-					}else{
-
-						request = (PRUDPPacketHandlerRequestImpl)requests.remove(new Integer(packet.getTransactionId()));
-					}
-
-				}finally{
-
-					requests_mon.exit();
+					request = (PRUDPPacketHandlerRequestImpl)requests.remove(new Integer(packet.getTransactionId()));
 				}
 
 				if ( request == null ){
@@ -1546,22 +1526,14 @@ PRUDPPacketHandlerSupport
 			
 			PRUDPPacketHandlerRequestImpl	request = new PRUDPPacketHandlerRequestImpl( receiver, timeout );
 
-			try{
-				requests_mon.enter();
-
-				if ( destroyed ){
-					
-					throw( new PRUDPPacketHandlerException( "Handler destroyed" ));
-				}
+			if ( destroyed ){
 				
-				if ( requests.put( new Integer( request_packet.getTransactionId()), request ) != null ){
-					
-					Debug.out( "Duplicate request transaction id!!!!" );
-				}
-
-			}finally{
-
-				requests_mon.exit();
+				throw( new PRUDPPacketHandlerException( "Handler destroyed" ));
+			}
+			
+			if ( requests.put( new Integer( request_packet.getTransactionId()), request ) != null ){
+				
+				Debug.out( "Duplicate request transaction id!!!!" );
 			}
 
 			try{
@@ -1782,15 +1754,7 @@ PRUDPPacketHandlerSupport
 
 					// never got sent, remove it immediately
 
-				try{
-					requests_mon.enter();
-
-					requests.remove( new Integer( request_packet.getTransactionId()));
-
-				}finally{
-
-					requests_mon.exit();
-				}
+				requests.remove( new Integer( request_packet.getTransactionId()));
 
 				throw( e );
 			}
