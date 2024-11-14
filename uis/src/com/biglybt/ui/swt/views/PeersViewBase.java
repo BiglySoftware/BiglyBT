@@ -635,21 +635,21 @@ PeersViewBase
 	
 	public static void
 	fillMenu(
-		Menu				menu,
-		PEPeer				peer,
-		DownloadManager 	download_specific )
+		Menu					menu,
+		PEPeer					peer,
+		List<DownloadManager> 	download_specific )
 	{
 		PEPeer[] peers = {peer};
 
 		fillMenu( menu, peers, menu.getShell(), download_specific );
 	}
-
+	
 	public static void
 	fillMenu(
-		Menu 				menu,
-		TableView<PEPeer> 	tv,
-		Shell 				shell,
-		DownloadManager		 download_specific )
+		Menu 					menu,
+		TableView<PEPeer> 		tv,
+		Shell 					shell,
+		List<DownloadManager>	download_specific )
 	{
 		List<PEPeer>	o_peers = (List<PEPeer>)(Object)tv.getSelectedDataSources();
 
@@ -664,7 +664,7 @@ PeersViewBase
 		final Menu 				menu,
 		final PEPeer[]			peers,
 		final Shell 			shell,
-		DownloadManager 		download_specific )
+		List<DownloadManager>	download_specific )
 	{
 		boolean hasSelection = (peers.length > 0);
 
@@ -1150,7 +1150,7 @@ PeersViewBase
 	
 	private static String
 	getMyPeerDetails(
-		DownloadManager		dm )
+		List<DownloadManager>		dms )
 	{
 		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
 
@@ -1158,13 +1158,13 @@ PeersViewBase
 		
 		int port;
 		
-		if ( dm == null ){
+		if ( dms.isEmpty()){
 			
 			port = TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber();
 			
 		}else{
 			
-			port = dm.getTCPListeningPortNumber();
+			port = dms.get(0).getTCPListeningPortNumber();
 		}
 		
 		String	str = "";
@@ -1187,10 +1187,10 @@ PeersViewBase
 	
 	protected static boolean
 	addPeersMenu(
-		DownloadManager 	man,
-		String				column_name,
-		Menu				menu,
-		PEPeer[]			peers )
+		List<DownloadManager> 	managers,
+		String					column_name,
+		Menu					menu,
+		PEPeer[]				peers )
 	{
 		MenuBuildUtils.addSeparator( menu );
 		
@@ -1207,7 +1207,7 @@ PeersViewBase
 				handleEvent(
 						Event event)
 				{
-					String str = getMyPeerDetails( man );
+					String str = getMyPeerDetails( managers );
 					
 					if ( str.isEmpty()){
 						
@@ -1218,11 +1218,20 @@ PeersViewBase
 				}
 			});	
 		
-		if ( man != null && !TorrentUtils.isReallyPrivate(man.getTorrent())){
-
-			PEPeerManager pm = man.getPeerManager();
-
-			if ( pm != null ){
+		List<DownloadManager> publicdms = new ArrayList<>();
+		
+		for ( DownloadManager dm: managers ){
+			
+			if ( !TorrentUtils.isReallyPrivate(dm.getTorrent())){
+				
+				if ( dm.getPeerManager() != null ){
+				
+					publicdms.add( dm );
+				}
+			}
+		}
+		
+		if ( !publicdms.isEmpty()){
 		
 			MenuItem copy_all_peers= new MenuItem( menu, SWT.PUSH );
 	
@@ -1235,27 +1244,36 @@ PeersViewBase
 					@Override
 					public void
 					handleEvent(
-							Event event)
+						Event event)
 					{
-						List<PEPeer> peers = pm.getPeers();
-						
-						String str = getMyPeerDetails( man );
-						
-						for ( PEPeer peer: peers ){
+						String str = getMyPeerDetails( managers );
+
+						for ( DownloadManager dm: publicdms ){
 							
-							int port = peer.getTCPListenPort();
+							PEPeerManager pm = dm.getPeerManager();
 							
-							if ( port > 0 ){
+							if ( pm == null ){
 								
-								String address = peer.getIp() + ":" + port;
-								
-								str += (str.isEmpty()?"":",") + address;
+								continue;
 							}
-						}
-						
-						if ( str.isEmpty()){
 							
-							str = "<no usable peers>";
+							for ( PEPeer peer: pm.getPeers()){
+								
+								int port = peer.getTCPListenPort();
+								
+								if ( port > 0 ){
+									
+									String address = peer.getIp() + ":" + port;
+									
+									str += (str.isEmpty()?"":",") + address;
+								}
+							}
+							
+							if ( str.isEmpty()){
+								
+								str = "<no usable peers>";
+							}
+							
 						}
 						
 						ClipboardCopy.copyToClipBoard( str );
@@ -1335,59 +1353,61 @@ PeersViewBase
 	
 											COConfigurationManager.setParameter( "add.peers.default", sReturn );
 	
-											PEPeerManager pm = man.getPeerManager();
-	
-											if ( pm == null ){
-	
-												return;
-											}
-	
-											Utils.getOffOfSWTThread(
-												new AERunnable(){
+											for ( DownloadManager dm: publicdms ){
+												
+												PEPeerManager pm = dm.getPeerManager();
+												
+												if ( pm == null ){
 													
-													@Override
-													public void runSupport()
-													{
-														String[] bits = sReturn.replace(';', ',' ).split( "," );
-				
-														for  ( String bit: bits ){
-				
-															bit = bit.trim();
-				
-															if ( bit.isEmpty()){
-																
-																continue;
-															}
-															
-															int	pos = bit.lastIndexOf( ':' );
-
-															try{
-
-																if ( pos != -1 ){
-				
-																	String host = bit.substring( 0, pos ).trim();
-																	String port = bit.substring( pos+1 ).trim();
-				
-																	int	i_port = Integer.parseInt( port );
-				
-																	pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-				
-																}else{
-				
-																	pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+													continue;
+												}
+	
+												Utils.getOffOfSWTThread(
+													new AERunnable(){
+														
+														@Override
+														public void runSupport()
+														{
+															String[] bits = sReturn.replace(';', ',' ).split( "," );
+					
+															for  ( String bit: bits ){
+					
+																bit = bit.trim();
+					
+																if ( bit.isEmpty()){
+																	
+																	continue;
 																}
-															}catch( Throwable e ){
-															
-																Debug.out( e );
+																
+																int	pos = bit.lastIndexOf( ':' );
+	
+																try{
+	
+																	if ( pos != -1 ){
+					
+																		String host = bit.substring( 0, pos ).trim();
+																		String port = bit.substring( pos+1 ).trim();
+					
+																		int	i_port = Integer.parseInt( port );
+					
+																		pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+					
+																	}else{
+					
+																		pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+																	}
+																}catch( Throwable e ){
+																
+																	Debug.out( e );
+																}
 															}
 														}
-													}
-												});
+													});
+											}
 										}
 									});
 						}
 					});
-			}
 		}
 		
 		addPeerSetMenu( menu, peers );
@@ -1512,7 +1532,7 @@ PeersViewBase
 		String 	sColumnName, 
 		Menu 	menuThisColumn)
 	{
-		if ( addPeersMenu( null, sColumnName, menuThisColumn, new PEPeer[0] )){
+		if ( addPeersMenu( new ArrayList<>(), sColumnName, menuThisColumn, new PEPeer[0] )){
 
 			new MenuItem( menuThisColumn, SWT.SEPARATOR );
 		}

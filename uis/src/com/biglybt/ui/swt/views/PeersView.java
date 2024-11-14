@@ -67,7 +67,7 @@ public class PeersView
 {
 	public static final String MSGID_PREFIX = "PeersView";
 
-	private DownloadManager manager;
+	private final List<DownloadManager> managers = new ArrayList<>();
 
 	private List<Reference<PEPeer>> select_peers_pending = new ArrayList<>();
 	
@@ -85,7 +85,7 @@ public class PeersView
 	{
 		// Clear manager that was set by parentDataSourceChanged (for title ui)
 		// no need to removeListeners, as they weren't added
-		manager = null;
+		managers.clear();
 	
 		tv = initYourTableView( TableManager.TABLE_TORRENT_PEERS);
 
@@ -97,22 +97,10 @@ public class PeersView
 
 
 
-	@Override
-	public void parentDataSourceChanged(Object newParentDataSource) {
-		super.parentDataSourceChanged(newParentDataSource);
 
-		if (tv != null && !tv.isDisposed()) {
-			return;
-		}
-		DownloadManager newManager = DataSourceUtils.getDM(newParentDataSource);
-		if (newManager != manager) {
-			manager = newManager;
-			buildTitleInfoTimer();
-		}
-	}
 	
 	private void buildTitleInfoTimer() {
-		if (manager == null) {
+		if (managers.isEmpty()) {
 			if (timerPeerCountUI != null) {
 				timerPeerCountUI.cancel();
 				timerPeerCountUI = null;
@@ -129,12 +117,22 @@ public class PeersView
 		}
 	}
 
-	private void updateTitle( boolean force ) {
+	private void 
+	updateTitle( 
+		boolean force ) 
+	{
 		int count = 0;
-		if (manager != null) {
-			PEPeerManager peerManager = manager.getPeerManager();
-			if (peerManager != null) {
-				count = peerManager.getNbPeers() + peerManager.getNbSeeds();
+		
+		if ( !managers.isEmpty()) {
+			
+			for ( DownloadManager manager: managers ){
+				
+				PEPeerManager peerManager = manager.getPeerManager();
+				
+				if ( peerManager != null ){
+					
+					count += peerManager.getNbPeers() + peerManager.getNbSeeds();
+				}
 			}
 		}
 		
@@ -173,31 +171,61 @@ public class PeersView
 	}
 
 	@Override
-	public void tableDataSourceChanged(Object newDataSource) {
-		DownloadManager newManager = DataSourceUtils.getDM(newDataSource);
+	public void 
+	parentDataSourceChanged(
+		Object newParentDataSource) 
+	{
+		super.parentDataSourceChanged(newParentDataSource);
+		
+		tableDataSourceChanged( newParentDataSource );
+	}
+	
+	@Override
+	public void 
+	tableDataSourceChanged(
+		Object newDataSource) 
+	{
+		DownloadManager[] newManagers = DataSourceUtils.getDMs(newDataSource);
 
-		if (newManager == manager) {
-			return;
+		synchronized( managers ){
+
+			if ( newManagers.length == 0 &&  managers.size() == 0 ){
+				
+				return;
+				
+			}else if ( newManagers.length == 1 &&  managers.size() == 1 && newManagers[0] == managers.get(0)){
+				
+				return;
+			}
+
+			for ( DownloadManager manager: managers ){
+				
+				manager.removePeerListener(this);
+			}
+			
+			managers.clear();
+			
+			for ( DownloadManager manager: newManagers ){
+			
+				managers.add( manager );
+			}
 		}
-
-		if (manager != null) {
-			manager.removePeerListener(this);
-		}
-
-		manager = newManager;
 
 		buildTitleInfoTimer();
 
-		if (tv == null || tv.isDisposed()) {
+		if ( tv == null || tv.isDisposed()){
+			
 			return;
 		}
 
 		tv.removeAllTableRows();
 
-		if (manager != null ){
+		for ( DownloadManager manager: managers ){
+			
 			manager.addPeerListener(this, false);
-			addExistingDatasources();
 		}
+		
+		addExistingDatasources();
 	}
 
 
@@ -211,7 +239,7 @@ public class PeersView
 		
 		switch (eventType) {
 		case EVENT_TABLELIFECYCLE_INITIALIZED:
-			if (manager != null) {
+			for ( DownloadManager manager: managers ){
 				manager.removePeerListener(this);
 				manager.addPeerListener(this, false);
 			}
@@ -219,11 +247,13 @@ public class PeersView
 			break;
 
 			case EVENT_TABLELIFECYCLE_DESTROYED: {
-				if (manager != null) {
+				for ( DownloadManager manager: managers ){
 					manager.removePeerListener(this);
-					// don't clear manager, we still use it for title
-					buildTitleInfoTimer();
 				}
+				
+				// don't clear managers, we still use for title
+				
+				buildTitleInfoTimer();
 
 				Object[] selected = tv.getSelectedDataSources( true );
 					
@@ -250,7 +280,7 @@ public class PeersView
 	fillMenu(
 		String sColumnName, Menu menu) 
 	{
-		fillMenu(menu, tv, shell, manager);
+		fillMenu(menu, tv, shell, managers );
 		
 		new MenuItem (menu, SWT.SEPARATOR);
 	}
@@ -258,7 +288,7 @@ public class PeersView
 	@Override
 	public void addThisColumnSubMenu(String columnName, Menu menuThisColumn) {
 		
-		if ( addPeersMenu( manager, columnName, menuThisColumn, new PEPeer[0] )){
+		if ( addPeersMenu( managers, columnName, menuThisColumn, new PEPeer[0] )){
 
 			new MenuItem( menuThisColumn, SWT.SEPARATOR );
 		}
@@ -384,7 +414,7 @@ public class PeersView
 	@Override
 	public void peerManagerAdded(PEPeerManager manager)
 	{
-		if ( getShowLocalPeer()){
+		if ( getShowLocalPeer() && managers.size() == 1 ){
 		
 			tv.addDataSource( manager.getMyPeer());
 		}
@@ -393,7 +423,7 @@ public class PeersView
 	public void 
 	peerManagerRemoved(PEPeerManager manager) 
 	{
-		tv.removeAllTableRows();
+		tv.removeDataSource( manager.getMyPeer());
 	}
 	
 	@Override
@@ -403,12 +433,12 @@ public class PeersView
 	{	
 		super.setShowLocalPeer(b);
 		
-		if (manager == null || tv == null || tv.isDisposed()) {
+		if (managers.size() != 1 || tv == null || tv.isDisposed()) {
 			
 			return;
 		}
 		
-		PEPeerManager pm = manager.getPeerManager();
+		PEPeerManager pm = managers.get(0).getPeerManager();
 		
 		if ( pm != null ){
 			
@@ -429,24 +459,27 @@ public class PeersView
 	 * Faster than allowing addListener to call us one datasource at a time.
 	 */
 	private void addExistingDatasources() {
-		if (manager == null || tv == null || tv.isDisposed()) {
+		if (managers.isEmpty() || tv == null || tv.isDisposed()) {
 			return;
 		}
-
-		PEPeer[] dataSources = manager.getCurrentPeers();
 		
-		if ( dataSources != null && dataSources.length > 0) {
-			
-			tv.addDataSources(dataSources);
-		}
+		for ( DownloadManager manager: managers ){
 
-		if ( getShowLocalPeer()){
+			PEPeer[] dataSources = manager.getCurrentPeers();
 			
-			PEPeerManager pm = manager.getPeerManager();
-			
-			if ( pm != null ){
-			
-				tv.addDataSource( pm.getMyPeer());
+			if ( dataSources != null && dataSources.length > 0) {
+				
+				tv.addDataSources(dataSources);
+			}
+	
+			if ( managers.size() == 1 && getShowLocalPeer()){
+				
+				PEPeerManager pm = manager.getPeerManager();
+				
+				if ( pm != null ){
+				
+					tv.addDataSource( pm.getMyPeer());
+				}
 			}
 		}
 		
@@ -483,16 +516,23 @@ public class PeersView
 			
 			String id = "DMDetails_Peers";
 	
-			if (manager != null) {
-				if (manager.getTorrent() != null) {
-					id += "." + manager.getInternalName();
-				} else {
-					id += ":" + manager.getSize();
+			if (!managers.isEmpty()){
+				if ( managers.size() == 1 ){
+					if (managers.get(0).getTorrent() != null) {
+						id += "." + managers.get(0).getInternalName();
+					} else {
+						id += ":" + managers.get(0).getSize();
+					}
+				}else{
+					id += ":" + "multi";
 				}
-				SelectedContentManager.changeCurrentlySelectedContent(id,
-						new SelectedContent[] {
-								new SelectedContent(manager)
-				});
+				
+				SelectedContent[] sc = new SelectedContent[managers.size()];
+				for ( int i=0;i<sc.length;i++){
+					sc[i] = new SelectedContent( managers.get(i));
+				}
+				SelectedContentManager.changeCurrentlySelectedContent(id,sc );
+						
 			} else {
 				SelectedContentManager.changeCurrentlySelectedContent(id, null);
 			}
