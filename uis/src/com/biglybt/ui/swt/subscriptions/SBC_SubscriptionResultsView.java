@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.subscriptions;
 
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
@@ -187,7 +188,9 @@ SBC_SubscriptionResultsView
 				}
 			}
 		}
-				
+			
+		SWTSkinObjectText info;
+		
 		if ( ds != null ){
 
 			if (( ds.getViewOptions() & Subscription.VO_HIDE_HEADER) != 0 ){
@@ -231,6 +234,12 @@ SBC_SubscriptionResultsView
 						}
 					});
 			}
+			
+			info = (SWTSkinObjectText) getSkinObject("topinfo");
+			
+		}else{
+			
+			info = null;
 		}
 
 		final SWTSkinObject soFilterArea = getSkinObject("filterarea");
@@ -310,6 +319,23 @@ SBC_SubscriptionResultsView
 								return;
 							}
 							
+							if ( info != null ){
+								
+								SimpleDateFormat df = new SimpleDateFormat();
+								
+								info.setText( 
+										MessageText.getString( "Trackers.column.last_update" ) + ": "  + df.format(new Date( ds.getHistory().getLastScanTime())) + ", " +
+										MessageText.getString( "subscriptions.column.next-update" ) + ": " + df.format(new Date( ds.getHistory().getNextScanTime())));
+								
+								String error = ds.getHistory().getLastError();
+								
+								if ( error == null || error.isEmpty()){
+									
+									error = MessageText.getString( "label.none" );
+								}
+								
+								Utils.setTT( info.getControl(), MessageText.getString( "subs.prop.last_error" ) + ": " + error );
+							}
 							List<Subscription> deps = ds_filter.getDependsOn();
 							
 							if ( deps != null && !deps.isEmpty()){
