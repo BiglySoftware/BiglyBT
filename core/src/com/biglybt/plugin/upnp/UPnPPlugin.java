@@ -804,7 +804,7 @@ UPnPPlugin
 
 					if ( !include ){
 
-						logNoRepeat( USN, "Device '" + location + "' is being ignored as excluded in address list", "" );
+						logNoRepeat( USN, location, "Device '" + location + "' is being ignored as excluded in address list", "" );
 
 						return( false );
 					}
@@ -822,7 +822,7 @@ UPnPPlugin
 					// if all exclude then we let others through
 				}else{
 
-					logNoRepeat( USN, "Device '" + location + "' is being ignored as not in address list", "" );
+					logNoRepeat( USN, location, "Device '" + location + "' is being ignored as not in address list", "" );
 
 					return( false );
 				}
@@ -847,12 +847,12 @@ UPnPPlugin
 
 		if ( !ok ){
 
-			logNoRepeat( USN, "Device '" + location + "' is being ignored: ", stats );
+			logNoRepeat( USN, location, "Device '" + location + "' is being ignored: ", stats );
 
 		}else{
 
 
-			logNoRepeat( USN, "Device '" + location +"' is ok: ", stats );
+			logNoRepeat( USN, location, "Device '" + location +"' is ok: ", stats );
 		}
 
 		return( ok );
@@ -861,19 +861,22 @@ UPnPPlugin
 	protected void
 	logNoRepeat(
 		String	usn,
+		URL		location,
 		String	msg,
 		String 	suffix )
 	{
+		String key = usn + ":" + location.getHost();
+		
 		synchronized( log_no_repeat_map ){
 
-			String	last = (String)log_no_repeat_map.get( usn );
+			String	last = (String)log_no_repeat_map.get( key );
 
 			if ( last != null && last.equals( msg )){
 
 				return;
 			}
 
-			log_no_repeat_map.put( usn, msg );
+			log_no_repeat_map.put( key, msg );
 		}
 
 		log.log( msg + suffix );
