@@ -59,7 +59,7 @@ SubscriptionDownloader
 
 		throws SubscriptionException
 	{
-		log( "Downloading" );
+		log( "Downloading '" + subs.getName() + "'" );
 
 		Map map = JSONUtils.decodeJSON( subs.getJSON());
 

@@ -1204,7 +1204,7 @@ SBC_SubscriptionResultsView
 		Subscription		subs,
 		int					reason )
 	{
-		if ( reason == CR_RESULTS){
+		if ( reason == CR_RESULTS ){
 
 			TableViewSWT<SubscriptionResultFilterable> tv = tv_subs_results;
 					
@@ -1220,7 +1220,10 @@ SBC_SubscriptionResultsView
 						}
 					});
 			}
-		}else if ( reason == CR_METADATA ){
+		}
+		
+		
+		if ( reason == CR_METADATA || reason == CR_RESULTS ){
 			
 			if ( pFilterUpdater != null ){
 				
@@ -1229,7 +1232,6 @@ SBC_SubscriptionResultsView
 					pFilterUpdater.run();
 				});
 			}
-
 		}
 	}
 
