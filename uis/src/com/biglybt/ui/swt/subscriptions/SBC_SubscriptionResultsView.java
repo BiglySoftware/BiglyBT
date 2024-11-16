@@ -38,6 +38,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionDownloadListener;
 import com.biglybt.core.subs.SubscriptionException;
+import com.biglybt.core.subs.SubscriptionHistory;
 import com.biglybt.core.subs.SubscriptionListener;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
@@ -323,19 +324,44 @@ SBC_SubscriptionResultsView
 								
 								SimpleDateFormat df = new SimpleDateFormat();
 								
+								SubscriptionHistory history = ds.getHistory();
+								
+								String error = history.getLastError();
+
+								boolean isError = error != null && !error.isEmpty();
+											
+								String lastUpdate;
+								
+								if ( isError ){
+									
+									lastUpdate = MessageText.getString( "ManagerItem.error" ) + " (" + df.format(new Date( ds.getHistory().getLastErrorTime())) + ")";
+								}else{
+									
+									lastUpdate = df.format(new Date( history.getLastScanTime()));
+								}
+								
+								long next = history.getNextScanTime();
+								
+								long nextScheduled = history.getNextScheduledUpdate();
+								
+								if ( nextScheduled > 0 ){
+									
+									next = nextScheduled;
+								}
+								
 								info.setText( 
-										MessageText.getString( "Trackers.column.last_update" ) + ": "  + df.format(new Date( ds.getHistory().getLastScanTime())) + ", " +
-										MessageText.getString( "subscriptions.column.next-update" ) + ": " + df.format(new Date( ds.getHistory().getNextScanTime())));
+										MessageText.getString( "Trackers.column.last_update" ) + ": " + lastUpdate + ", " +
+										MessageText.getString( "Button.next" ) + ": " + df.format(new Date( next )));
 								
-								String error = ds.getHistory().getLastError();
 								
-								if ( error == null || error.isEmpty()){
+								if ( !isError ){
 									
 									error = MessageText.getString( "label.none" );
 								}
 								
 								Utils.setTT( info.getControl(), MessageText.getString( "subs.prop.last_error" ) + ": " + error );
 							}
+							
 							List<Subscription> deps = ds_filter.getDependsOn();
 							
 							if ( deps != null && !deps.isEmpty()){

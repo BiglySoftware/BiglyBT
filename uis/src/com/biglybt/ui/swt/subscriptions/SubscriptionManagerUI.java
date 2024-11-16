@@ -3063,7 +3063,14 @@ SubscriptionManagerUI
 		int	 check_freq			= history.getCheckFrequencyMins();
 		long last_new_result 	= history.getLastNewResultTime();
 		long next_scan 			= history.getNextScanTime();
-
+		
+		long next_sched = history.getNextScheduledUpdate();
+		
+		if ( next_sched> 0 ){
+			
+			next_scan = next_sched;
+		}
+		
 		int max_results = history.getMaxNonDeletedResults();
 
 		if ( max_results < 0 ){
@@ -3085,7 +3092,7 @@ SubscriptionManagerUI
 				df.format(new Date( history.getLastScanTime())),
 				( last_new_result==0?"":df.format(new Date( last_new_result ))),
 				( next_scan == Long.MAX_VALUE?"":df.format(new Date( next_scan ))),
-				(last_error.length()==0?MessageText.getString("label.none"):last_error),
+				(last_error.length()==0?MessageText.getString("label.none"):( df.format(new Date(history.getLastErrorTime()))+ ": " +last_error)),
 				String.valueOf( history.getNumRead()),
 				String.valueOf( history.getNumUnread()),
 				max_results_str,

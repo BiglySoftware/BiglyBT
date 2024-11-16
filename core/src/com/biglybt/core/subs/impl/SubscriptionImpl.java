@@ -2411,12 +2411,23 @@ SubscriptionImpl
 	fireChanged(
 		int		reason )
 	{
+		fireChanged( reason, true );
+	}
+	
+	protected void
+	fireChanged(
+		int			reason,
+		boolean		persistent )
+	{
 		if ( reason == SubscriptionListener.CR_METADATA ){
 			
 			md_mutator.incrementAndGet();
 		}
 		
-		manager.configDirty( this, reason );
+		if ( persistent ){
+		
+			manager.configDirty( this, reason );
+		}
 
 		listeners.dispatch( LT_SUBSCRIPTION_CHANGED, new Object[]{ this, reason });
 	}

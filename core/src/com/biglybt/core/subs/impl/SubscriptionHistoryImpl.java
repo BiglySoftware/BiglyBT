@@ -56,7 +56,11 @@ SubscriptionHistoryImpl
 	
 	private long		max_age_secs	= -1;
 	
+	private long			next_scheduled;
+	
 	private String			last_error;
+	private long			last_error_time;
+	
 	private boolean			auth_failed;
 	private int				consec_fails;
 
@@ -547,6 +551,26 @@ SubscriptionHistoryImpl
 		return( last_new_result );
 	}
 
+	@Override
+	public void 
+	setNextScheduledUpdate(
+		long when )
+	{
+		if ( next_scheduled != when ){
+		
+			next_scheduled = when;
+		
+			subs.fireChanged( SubscriptionListener.CR_METADATA, false );
+		}
+	}
+	
+	@Override
+	public long 
+	getNextScheduledUpdate()
+	{
+		return( next_scheduled );
+	}
+	
 	@Override
 	public long
 	getNextScanTime()
@@ -1246,7 +1270,10 @@ SubscriptionHistoryImpl
 		String		_error )
 	{
 		last_error		= _error;
+		last_error_time	= SystemTime.getCurrentTime();
 		consec_fails	= 1024;
+		
+		subs.fireChanged( SubscriptionListener.CR_METADATA );
 	}
 
 	protected void
@@ -1264,6 +1291,8 @@ SubscriptionHistoryImpl
 		}else{
 
 			consec_fails++;
+			
+			last_error_time	= SystemTime.getCurrentTime();
 		}
 
 		subs.fireChanged( SubscriptionListener.CR_METADATA );
@@ -1276,6 +1305,13 @@ SubscriptionHistoryImpl
 		return( last_error );
 	}
 
+	@Override
+	public long 
+	getLastErrorTime()
+	{
+		return( last_error_time );
+	}
+	
 	@Override
 	public boolean
 	isAuthFail()

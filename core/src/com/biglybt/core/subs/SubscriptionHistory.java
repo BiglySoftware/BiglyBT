@@ -104,6 +104,16 @@ SubscriptionHistory
 	public String
 	getLastError();
 
+	public long
+	getLastErrorTime();
+	
+	public void
+	setNextScheduledUpdate(
+		long		when );
+	
+	public long
+	getNextScheduledUpdate();
+	
 	public boolean
 	isAuthFail();
 
