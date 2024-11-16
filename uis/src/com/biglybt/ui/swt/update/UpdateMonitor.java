@@ -535,7 +535,7 @@ public class UpdateMonitor
 
 		UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 		if (uiFunctions != null) {
-			uiFunctions.setStatusText("MainWindow.status.checking");
+			uiFunctions.setStatusText("ManagerItem.checking");
 		}
 
 		// take this off this GUI thread in case it blocks for a while
