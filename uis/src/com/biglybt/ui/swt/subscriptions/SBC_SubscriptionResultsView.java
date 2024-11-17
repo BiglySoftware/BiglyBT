@@ -1334,6 +1334,14 @@ SBC_SubscriptionResultsView
 
 			initTable((Composite) so_list.getControl());
 		}
+		
+		if ( pFilterUpdater != null ){
+			
+			Utils.execSWTThread(()->{
+				
+				pFilterUpdater.run();
+			});
+		}
 	}
 
 	private void
