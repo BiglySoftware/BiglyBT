@@ -41,8 +41,11 @@ public class
 CryptoManagerImpl
 	implements CryptoManager
 {
-	private static final int 	PBE_ITERATIONS	= 100;
-	private static final String	PBE_ALG			= "PBEWithMD5AndDES";
+	private static final int 	PBE_ITERATIONS_V1	= 100;
+	private static final int 	PBE_ITERATIONS_V2	= 1000;
+	
+	private static final String	PBE_ALG_V1		= "PBEWithMD5AndDES";
+	private static final String	PBE_ALG_V2		= "PBEWithMD5AndTripleDES";
 
 	private static CryptoManagerImpl		singleton;
 
@@ -244,29 +247,36 @@ CryptoManagerImpl
 		throws CryptoManagerException
 	{
 		try{
-			byte[]	salt = new byte[8];
+			final int version		= 2;
+			final String algorithm	= PBE_ALG_V2;
+			
+			byte[]	prefix	= new byte[]{ 0, 0, 0, 0, 0, 0, 0, version };	// version 2 (no prefix in version 1)
+				
+			byte[]	salt 	= new byte[8];
 
 			RandomUtils.SECURE_RANDOM.nextBytes( salt );
 
 			PBEKeySpec keySpec = new PBEKeySpec(password);
 
-			SecretKeyFactory keyFactory = SecretKeyFactory.getInstance( PBE_ALG );
+			SecretKeyFactory keyFactory = SecretKeyFactory.getInstance( algorithm );
 
 			SecretKey key = keyFactory.generateSecret(keySpec);
 
-			PBEParameterSpec paramSpec = new PBEParameterSpec( salt, PBE_ITERATIONS );
+			PBEParameterSpec paramSpec = new PBEParameterSpec( salt, PBE_ITERATIONS_V2 );
 
-			Cipher cipher = Cipher.getInstance( PBE_ALG );
+			Cipher cipher = Cipher.getInstance( algorithm );
 
 			cipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
 
 			byte[]	enc = cipher.doFinal( data );
 
-			byte[]	res = new byte[salt.length + enc.length];
+			byte[]	res = new byte[prefix.length + salt.length + enc.length];
 
-			System.arraycopy( salt, 0, res, 0, salt.length );
+			System.arraycopy( prefix, 0, res, 0, prefix.length );
+			
+			System.arraycopy( salt, 0, res, prefix.length, salt.length );
 
-			System.arraycopy( enc, 0, res, salt.length, enc.length );
+			System.arraycopy( enc, 0, res, prefix.length + salt.length, enc.length );
 
 			return( res );
 
@@ -286,25 +296,47 @@ CryptoManagerImpl
 		boolean fail_is_pw_error = false;
 
 		try{
+			final int version;
+			
+			byte[] prefix;
+			
+			if ( 	data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 0 && 
+					data[4] == 0 && data[5] == 0 && data[6] == 0 ){
+				
+				version = 2;
+				
+				prefix = new byte[8];
+				
+				System.arraycopy( data, 0, prefix, 0, prefix.length );
+				
+			}else{
+				
+				version = 1;
+				
+				prefix = new byte[0];
+			}
+			
+			String algorithm = version==1?PBE_ALG_V1:PBE_ALG_V2;
+				
 			byte[]	salt = new byte[8];
 
-			System.arraycopy( data, 0, salt, 0, 8 );
+			System.arraycopy( data, prefix.length, salt, 0, salt.length );
 
 			PBEKeySpec keySpec = new PBEKeySpec(password);
 
-			SecretKeyFactory keyFactory = SecretKeyFactory.getInstance( PBE_ALG );
+			SecretKeyFactory keyFactory = SecretKeyFactory.getInstance( algorithm );
 
 			SecretKey key = keyFactory.generateSecret(keySpec);
 
-			PBEParameterSpec paramSpec = new PBEParameterSpec(salt, PBE_ITERATIONS);
+			PBEParameterSpec paramSpec = new PBEParameterSpec(salt, prefix.length==0?PBE_ITERATIONS_V1:PBE_ITERATIONS_V2);
 
-			Cipher cipher = Cipher.getInstance( PBE_ALG );
+			Cipher cipher = Cipher.getInstance( algorithm );
 
 			cipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
 
 			fail_is_pw_error = true;
 
-			return( cipher.doFinal( data, 8, data.length-8 ));
+			return( cipher.doFinal( data, prefix.length + salt.length, data.length-prefix.length-salt.length ));
 
 		}catch( Throwable e ){
 
