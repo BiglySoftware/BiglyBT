@@ -26,6 +26,7 @@ import java.util.Map;
 import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.FileUtil;
 
@@ -37,6 +38,7 @@ FMFileAccessCompact
 
 	protected static boolean
 	isCompact(
+		FMFileImpl		file,
 		TOTorrentFile	torrent_file,
 		File			control_dir,
 		String			control_file_name,
@@ -65,6 +67,42 @@ FMFileAccessCompact
 				
 				return( true );
 			}
+			
+			File state_file = FileUtil.newFile( control_dir, control_file_name );
+			
+			if ( state_file.exists()){
+				
+				return( true );
+			}
+			
+			long last_piece_length	= ( file_length - piece_offset ) % piece_size;
+
+			long length = file.getFile().length();
+			
+			if ( length == first_piece_length + last_piece_length ){
+				
+					// looks like a completed compact file, lash up config
+				
+				try{
+					Map<String, Long>	data = new HashMap<>();
+	
+					data.put( "version", version );
+	
+					data.put( "length", file_length );
+	
+					FileUtil.mkdirs( control_dir );
+					
+					FileUtil.writeResilientFile( control_dir, control_file_name, data, false );
+	
+					return( true );
+					
+				}catch( Throwable e ){
+	
+					Debug.out( "Failed to write recovered state file" );
+				}
+			}
+			
+			return( false );
 		}
 	
 		return( FileUtil.newFile( control_dir, control_file_name ).exists());

@@ -33,7 +33,6 @@ import java.util.Set;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
-import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 
@@ -110,6 +109,7 @@ FMFileAccessController
 		}else{
 
 			if ( FMFileAccessCompact.isCompact(
+					owner,
 					owner.getOwner().getTorrentFile(),
 					control_dir, controlFileName,
 					_target_type )){

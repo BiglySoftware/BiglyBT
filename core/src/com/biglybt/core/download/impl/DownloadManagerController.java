@@ -3871,9 +3871,9 @@ DownloadManagerController
 
 						if ( completed < 1000 ){
 
-							if ( open_for_seeding ){
+							if ( open_for_seeding && stats.getRemainingExcludingDND() > 0 ){
 
-								setFailed( "File check failed" );
+								setFailed( "File check failed for seeding, download is incomplete" );
 
 								download_manager_state.clearResumeData();
 

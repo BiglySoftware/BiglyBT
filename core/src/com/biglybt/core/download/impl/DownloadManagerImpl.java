@@ -1413,7 +1413,7 @@ DownloadManagerImpl
 
 				 		// set up the dnd-subfolder status on addition
 
-				 	if ( persistent && !for_seeding && !torrent.isSimpleTorrent()){
+				 	if ( persistent && !torrent.isSimpleTorrent()){
 
 				 		String dnd_sf = dnd_subfolder;
 

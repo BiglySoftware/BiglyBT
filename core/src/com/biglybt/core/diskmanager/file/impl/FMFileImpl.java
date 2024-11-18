@@ -245,6 +245,12 @@ FMFileImpl
 		return( lf.exists());
 	}
 
+	protected File
+	getFile()
+	{
+		return( linked_file.getFile());
+	}
+	
 	@Override
 	public FMFileOwner
 	getOwner()
