@@ -247,8 +247,9 @@ CryptoManagerImpl
 		throws CryptoManagerException
 	{
 		try{
-			final int version		= 2;
-			final String algorithm	= PBE_ALG_V2;
+			final int		version		= 2;
+			final String	algorithm	= PBE_ALG_V2;
+			final int		iterations	= PBE_ITERATIONS_V2;
 			
 			byte[]	prefix	= new byte[]{ 0, 0, 0, 0, 0, 0, 0, version };	// version 2 (no prefix in version 1)
 				
@@ -262,7 +263,7 @@ CryptoManagerImpl
 
 			SecretKey key = keyFactory.generateSecret(keySpec);
 
-			PBEParameterSpec paramSpec = new PBEParameterSpec( salt, PBE_ITERATIONS_V2 );
+			PBEParameterSpec paramSpec = new PBEParameterSpec( salt, iterations );
 
 			Cipher cipher = Cipher.getInstance( algorithm );
 
@@ -316,8 +317,9 @@ CryptoManagerImpl
 				prefix = new byte[0];
 			}
 			
-			String algorithm = version==1?PBE_ALG_V1:PBE_ALG_V2;
-				
+			String 	algorithm 	= version==1?PBE_ALG_V1:PBE_ALG_V2;
+			int		iterations	= version==1?PBE_ITERATIONS_V1:PBE_ITERATIONS_V2;
+			
 			byte[]	salt = new byte[8];
 
 			System.arraycopy( data, prefix.length, salt, 0, salt.length );
@@ -328,7 +330,7 @@ CryptoManagerImpl
 
 			SecretKey key = keyFactory.generateSecret(keySpec);
 
-			PBEParameterSpec paramSpec = new PBEParameterSpec(salt, prefix.length==0?PBE_ITERATIONS_V1:PBE_ITERATIONS_V2);
+			PBEParameterSpec paramSpec = new PBEParameterSpec(salt, iterations);
 
 			Cipher cipher = Cipher.getInstance( algorithm );
 
