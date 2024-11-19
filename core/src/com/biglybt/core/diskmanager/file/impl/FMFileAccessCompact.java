@@ -48,7 +48,7 @@ FMFileAccessCompact
 			
 			int piece_size = (int) torrent_file.getTorrent().getPieceLength();
 	
-			long	file_length	= torrent_file.getLength();
+			long	torrent_file_length	= torrent_file.getLength();
 	
 			long	file_offset_in_torrent = torrent_file.getOffsetInTorrent();
 	
@@ -61,7 +61,7 @@ FMFileAccessCompact
 	
 			long first_piece_length	= piece_offset;
 	
-			if ( first_piece_length >= file_length && target_type == FMFile.FT_COMPACT ){
+			if ( first_piece_length >= torrent_file_length && target_type == FMFile.FT_COMPACT ){
 				
 					// first piece takes up all the file, optimise to avoid state file
 				
@@ -75,30 +75,40 @@ FMFileAccessCompact
 				return( true );
 			}
 			
-			long last_piece_length	= ( file_length - piece_offset ) % piece_size;
+			long last_piece_length	= ( torrent_file_length - piece_offset ) % piece_size;
 
-			long length = file.getFile().length();
+			long actual_file_length = file.getFile().length();
 			
-			if ( length == first_piece_length + last_piece_length ){
+			if ( actual_file_length > 0 ){
 				
-					// looks like a completed compact file, lash up config
+					// there are 3 cases
+					// 		file contains just the first piece		- file length = first piece
+					//		file contains just the second piece		- file length = (blank) first piece + second piece 
+					//		file contains both pieces				- file length = first_piece + second piece
+					// so this boils down to two possibilities
 				
-				try{
-					Map<String, Long>	data = new HashMap<>();
-	
-					data.put( "version", version );
-	
-					data.put( "length", file_length );
-	
-					FileUtil.mkdirs( control_dir );
+				if ( 	actual_file_length == first_piece_length || 
+						actual_file_length == first_piece_length + last_piece_length ){
 					
-					FileUtil.writeResilientFile( control_dir, control_file_name, data, false );
-	
-					return( true );
+						// looks like a completed compact file, lash up config
 					
-				}catch( Throwable e ){
-	
-					Debug.out( "Failed to write recovered state file" );
+					try{
+						Map<String, Long>	data = new HashMap<>();
+		
+						data.put( "version", version );
+		
+						data.put( "length", actual_file_length==first_piece_length + last_piece_length?torrent_file_length:actual_file_length );
+		
+						FileUtil.mkdirs( control_dir );
+						
+						FileUtil.writeResilientFile( control_dir, control_file_name, data, false );
+		
+						return( true );
+						
+					}catch( Throwable e ){
+		
+						Debug.out( "Failed to write recovered state file" );
+					}
 				}
 			}
 			

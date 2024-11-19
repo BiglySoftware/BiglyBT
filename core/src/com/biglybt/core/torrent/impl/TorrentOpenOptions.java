@@ -2112,6 +2112,10 @@ public class TorrentOpenOptions
 							updateLinks = true;
 						}
 						
+						boolean forSeeding = startMode == TorrentOpenOptions.STARTMODE_SEEDING;
+							
+						long pieceSize = torrent.getPieceLength();
+						
 						try {
 							dms.suppressStateSave(true);
 
@@ -2175,8 +2179,17 @@ public class TorrentOpenOptions
 									}else{
 										toSkip[iIndex] = true;
 
-										if (!fDest.exists()) {
+										if (fDest.exists()) {
 
+											if ( forSeeding && fDest.length() < 2*pieceSize ){
+												
+													// lazy check for potential compact file
+												
+												toCompact[iIndex] = true;
+
+												comp_num++;
+											}
+										}else{
 											if (reorder_mode
 												&& (fileInfo.getLength() / (1024 * 1024)) >= reorder_mode_min_mb) {
 
