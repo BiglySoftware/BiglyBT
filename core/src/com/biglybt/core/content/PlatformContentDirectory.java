@@ -20,13 +20,11 @@
 
 package com.biglybt.core.content;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -160,7 +158,7 @@ PlatformContentDirectory
 	{
 		private final Download	download;
 		
-		private final Map<Integer, ContentFile>	cfs = new HashMap<>();	                                       	                     
+		private final Map<Integer, ContentFile>	cfs = new ConcurrentHashMap<>();	                                       	                     
 		
 		private
 		ContentFileHandler(
@@ -178,7 +176,7 @@ PlatformContentDirectory
 							TorrentAttribute 	attribute,
 							int 				eventType )
 						{
-							fireCatsChanged( cfs.values());
+							fireCatsChanged();
 						}
 					},
 					ta_category,
@@ -217,7 +215,7 @@ PlatformContentDirectory
 						update(
 							Taggable	tagged )
 						{
-							fireTagsChanged( cfs.values());
+							fireTagsChanged();
 						}
 					});
 		}
@@ -315,6 +313,30 @@ PlatformContentDirectory
 
 			return( acf );
 		}
+		
+		private void
+		fireCatsChanged()
+		{
+			for ( ContentDirectoryListener l: listeners ){
+
+				for ( ContentFile cf: cfs.values()){
+					
+					l.contentChanged( cf, ContentFile.PT_CATEGORIES );
+				}
+			}
+		}
+
+		private void
+		fireTagsChanged()
+		{
+			for ( ContentDirectoryListener l: listeners ){
+
+				for ( ContentFile cf: cfs.values()){
+				
+					l.contentChanged( cf, ContentFile.PT_TAGS );
+				}
+			}
+		}
 	}
 	
 
@@ -346,32 +368,6 @@ PlatformContentDirectory
 		}catch( Throwable e ){
 
 			return( Long.MAX_VALUE );
-		}
-	}
-
-	private static void
-	fireCatsChanged(
-		Collection<ContentFile> cfs )
-	{
-		for ( ContentDirectoryListener l: listeners ){
-
-			for ( ContentFile cf: cfs ){
-				
-				l.contentChanged( cf, ContentFile.PT_CATEGORIES );
-			}
-		}
-	}
-
-	private static void
-	fireTagsChanged(
-		Collection<ContentFile> cfs )
-	{
-		for ( ContentDirectoryListener l: listeners ){
-
-			for ( ContentFile cf: cfs ){
-			
-				l.contentChanged( cf, ContentFile.PT_TAGS );
-			}
 		}
 	}
 
