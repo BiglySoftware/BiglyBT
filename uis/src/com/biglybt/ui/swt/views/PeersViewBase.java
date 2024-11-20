@@ -1521,7 +1521,7 @@ PeersViewBase
 		String 		sColumnName,
 		Menu 		menu )
 	{
-		fillMenu( menu, tv, shell, null );
+		fillMenu( menu, tv, shell, Collections.emptyList());
 		
 		new MenuItem (menu, SWT.SEPARATOR);
 	}
