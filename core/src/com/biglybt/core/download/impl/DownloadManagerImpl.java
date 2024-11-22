@@ -404,10 +404,16 @@ DownloadManagerImpl
 	static final Object TPS_Key = new Object();
 
 	public static volatile String	dnd_subfolder;
+	public static volatile String	dnd_alt_loc;
 
 	static{
 		COConfigurationManager.addAndFireParameterListeners(
-			new String[]{ "Enable Subfolder for DND Files", "Subfolder for DND Files" },
+			new String[]{ 
+				"Enable Subfolder for DND Files", 
+				"Subfolder for DND Files",
+				ConfigKeys.File.BCFG_ENABLE_ALT_LOC_FOR_DND_FILES,
+				ConfigKeys.File.SCFG_ALT_LOC_FOR_DND_FILES
+			},
 			new ParameterListener()
 			{
 				@Override
@@ -415,9 +421,9 @@ DownloadManagerImpl
 				parameterChanged(
 					String parameterName)
 				{
-					boolean enable  = COConfigurationManager.getBooleanParameter( "Enable Subfolder for DND Files" );
+					boolean sf_enable  = COConfigurationManager.getBooleanParameter( "Enable Subfolder for DND Files" );
 
-					if ( enable ){
+					if ( sf_enable ){
 
 						String folder = COConfigurationManager.getStringParameter( "Subfolder for DND Files" ).trim();
 
@@ -437,6 +443,24 @@ DownloadManagerImpl
 					}else{
 
 						dnd_subfolder = null;
+					}
+					boolean al_enable  = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_ENABLE_ALT_LOC_FOR_DND_FILES );
+
+					if ( al_enable ){
+
+						String folder = COConfigurationManager.getStringParameter( ConfigKeys.File.SCFG_ALT_LOC_FOR_DND_FILES ).trim();
+
+						if ( folder.length() > 0 ){
+
+							dnd_alt_loc = folder;
+
+						}else{
+
+							dnd_alt_loc = null;
+						}
+					}else{
+
+						dnd_alt_loc = null;
 					}
 				}
 			});
@@ -1437,6 +1461,21 @@ DownloadManagerImpl
 					 					download_manager_state.setAttribute( DownloadManagerState.AT_DND_PREFIX, prefix );
 					 				}
 								}
+            				}
+            			}
+				 		
+				 		String dnd_al = dnd_alt_loc;
+
+				 		if ( dnd_al != null ){
+
+				 			if ( torrent.getFiles().length <= DownloadManagerStateFactory.MAX_FILES_FOR_INCOMPLETE_AND_DND_LINKAGE ){
+
+				 				if ( download_manager_state.getAttribute( DownloadManagerState.AT_DND_ALT_LOC ) == null ){
+
+				 					dnd_al = dnd_al + File.separator + ByteFormatter.encodeString(hash) + File.separator + "dnd";
+				 					
+				 					download_manager_state.setAttribute( DownloadManagerState.AT_DND_ALT_LOC, dnd_al );
+				 				}
             				}
             			}
             		}
@@ -5137,6 +5176,8 @@ DownloadManagerImpl
 			( 	state.getFlag( DownloadManagerState.FLAG_LOW_NOISE ) ||
 				state.getFlag( DownloadManagerState.FLAG_FORCE_DIRECT_DELETE )));
 
+		deleteDNDAltLoc();
+		
 		// Attempted fix for bug 1572356 - apparently sometimes when we perform removal of a download's data files,
 		// it still somehow gets processed by the move-on-removal rules. I'm making the assumption that this method
 		// is only called when a download is about to be removed.
@@ -5215,8 +5256,40 @@ DownloadManagerImpl
 				}
 			}
 		}
+		
+		deleteDNDAltLoc();
 	}
 
+	private void
+	deleteDNDAltLoc()
+	{
+		String dnd_al = getDownloadState().getAttribute( DownloadManagerState.AT_DND_ALT_LOC );	
+		
+		if ( dnd_al != null ){
+			
+			File dnd_file = new File( dnd_al );	// loc/hash/dnd
+			
+				// sanity check as we are deleting stuff
+			
+			if ( dnd_file.getName().equals( "dnd" )){
+				
+				File hash_file = dnd_file.getParentFile();
+			
+				if ( hash_file.getName().length() == 40 ){
+					
+					FileUtil.recursiveDelete( dnd_file );
+					
+					File[] rem = hash_file.listFiles();
+					
+					if ( rem != null && rem.length == 0 ){
+						
+						hash_file.delete();
+					}
+				}		
+			}
+		}
+	}
+	
 	protected void
 	deleteTorrentFile()
 	{

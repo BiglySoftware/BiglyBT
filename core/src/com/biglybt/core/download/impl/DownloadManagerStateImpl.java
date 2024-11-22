@@ -284,7 +284,7 @@ DownloadManagerStateImpl
 	private DownloadManagerImpl			download_manager;
 
 	private final TorrentUtils.ExtendedTorrent	torrent;
-	private final File							state_file;
+	private final File							state_dir;
 	
 	private boolean						write_required_soon;
 	private long						write_required_sometime = -1;
@@ -876,19 +876,19 @@ DownloadManagerStateImpl
 		download_manager	= _download_manager;
 		torrent				= _torrent;
 
-		File	_state_file;
+		File	_state_dir;
 		
 		try{
-			_state_file = FileUtil.newFile( ACTIVE_DIR, ByteFormatter.encodeString( torrent.getHash()));
+			_state_dir = FileUtil.newFile( ACTIVE_DIR, ByteFormatter.encodeString( torrent.getHash()));
 
 		}catch( Throwable e ){
 
 			Debug.printStackTrace(e);
 
-			_state_file = null;
+			_state_dir = null;
 		}
 		
-		state_file = _state_file;
+		state_dir = _state_dir;
 		
 		attributes = torrent.getAdditionalMapProperty( ATTRIBUTE_KEY );
 
@@ -984,9 +984,9 @@ DownloadManagerStateImpl
 
 	@Override
 	public File
-	getStateFile( )
+	getStateDir( )
 	{
-		return( state_file );
+		return( state_dir );
 	}
 
 	private void
@@ -3418,7 +3418,7 @@ DownloadManagerStateImpl
 
 		@Override
 		public File
-		getStateFile( )
+		getStateDir()
 		{
 			return( null );
 		}

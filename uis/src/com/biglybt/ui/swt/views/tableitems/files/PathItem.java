@@ -25,6 +25,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.StringInterner;
 import com.biglybt.pif.ui.tables.TableCell;
@@ -125,8 +126,18 @@ public class PathItem
    	 * download save path.
    	 */
    	//
+   	
+   	String dnd_al = null;
    	if (has_link && !show_full_path) {
-   		show_full_path = !file.getAbsolutePath().startsWith(dl_save_path);
+   		String abs_path = file.getAbsolutePath();
+   		show_full_path = !abs_path.startsWith(dl_save_path);
+   		
+   		if ( show_full_path ){
+   			dnd_al = dm.getDownloadState().getAttribute( DownloadManagerState.AT_DND_ALT_LOC );
+   			if ( dnd_al != null && abs_path.startsWith(dnd_al)){
+   				show_full_path = false;
+   			}
+   		}
    	}
    	String path = "";
 
@@ -148,30 +159,35 @@ public class PathItem
 		      }
     	}
     }else{
-    	String apath = file.getAbsolutePath();
-    	
-    	if ( !apath.startsWith( dl_save_path )){
-    		path = apath;
+    	if ( dnd_al != null ){
+    		
+    		path = "dnd" + File.separator + fileInfo.getFile( false ).getAbsolutePath().substring( dl_save_path.length());
     	}else{
-	    	path = apath.substring(dl_save_path.length());
-	    	if (path.length() == 0) {
-	    		path = File.separator;
-	    	}else{
-	    		if (path.charAt(0) == File.separatorChar){
-	    			path = path.substring(1);
-	    		}
-	    		int	pos = path.lastIndexOf(File.separator);
-	
-	    		if (pos > 0 ) {
-	    			path = File.separator + path.substring( 0, pos );
-	    		}
-	    		else {
-	    			path = File.separator;
-	    		}
-	    	}
-	    		// relative to save root
+	    	String apath = file.getAbsolutePath();
 	    	
-	    	path = "." + path;
+	    	if ( !apath.startsWith( dl_save_path )){
+	    		path = apath;
+	    	}else{
+		    	path = apath.substring(dl_save_path.length());
+		    	if (path.length() == 0) {
+		    		path = File.separator;
+		    	}else{
+		    		if (path.charAt(0) == File.separatorChar){
+		    			path = path.substring(1);
+		    		}
+		    		int	pos = path.lastIndexOf(File.separator);
+		
+		    		if (pos > 0 ) {
+		    			path = File.separator + path.substring( 0, pos );
+		    		}
+		    		else {
+		    			path = File.separator;
+		    		}
+		    	}
+		    		// relative to save root
+		    	
+		    	path = "." + path;
+	    	}
       }
     }
 

@@ -465,7 +465,7 @@ public class ConfigSectionFile
 		pgExtRename.setNumberOfColumns(2);
 		add("pgExtRename", pgExtRename, listExt);
 
-		// put 'dnd' files in subdir
+			// put 'dnd' files in subdir
 
 		BooleanParameterImpl enable_subfolder = new BooleanParameterImpl(
 				BCFG_ENABLE_SUBFOLDER_FOR_DND_FILES,
@@ -483,17 +483,72 @@ public class ConfigSectionFile
 		pgExtSubFolder.setNumberOfColumns(2);
 		add("pgExtSubFolder", pgExtSubFolder, listExt);
 
-		// dnd prefix
+			// put 'dnd' files in alternative location
+	
+		BooleanParameterImpl enable_dndaltloc = new BooleanParameterImpl(
+				BCFG_ENABLE_ALT_LOC_FOR_DND_FILES,
+				"ConfigView.section.file.altloc.dnd");
+		add(enable_dndaltloc, Parameter.MODE_INTERMEDIATE);
+	
+		DirectoryParameterImpl dndaltloc_name = new DirectoryParameterImpl(
+				SCFG_ALT_LOC_FOR_DND_FILES, null);
+		add(dndaltloc_name, Parameter.MODE_INTERMEDIATE);
+	
+		enable_dndaltloc.addEnabledOnSelection(dndaltloc_name);
+		
+		ParameterListener dnd_fol_listener = (n)->{
+			boolean sub = enable_subfolder.getValue();
+			boolean loc = enable_dndaltloc.getValue();
+			
+			if ( sub && loc ){
+			
+				if ( n == null ){
+					
+					enable_dndaltloc.setValue( false );
+					
+				}else if ( n == enable_subfolder ){
+					
+					enable_dndaltloc.setValue( false );
+				}else{
+					
+					enable_subfolder.setValue( false );
+				}
+			}
+		};
+		
+		enable_subfolder.addListener( dnd_fol_listener );
+		enable_dndaltloc.addAndFireListener( dnd_fol_listener );
+	
+		ParameterGroupImpl pgDndAltLoc = new ParameterGroupImpl(null,
+				enable_dndaltloc, dndaltloc_name);
+		pgDndAltLoc.setNumberOfColumns(2);
+		add("pgDndAltLoc", pgDndAltLoc, listExt);
+	
+			// dnd prefix
 
 		BooleanParameterImpl enable_dndprefix = new BooleanParameterImpl(
 				BCFG_USE_INCOMPLETE_FILE_PREFIX,
 				"ConfigView.section.file.dnd.prefix.enable");
 		add(enable_dndprefix, Parameter.MODE_INTERMEDIATE, listExt);
 
-		ParameterListener prefixListener = param -> enable_dndprefix.setEnabled(
-				enable_subfolder.getValue() || rename_incomplete.getValue());
+		ParameterListener prefixListener = 
+			param ->{
+				boolean enabled = enable_subfolder.getValue() || enable_dndaltloc.getValue() ||
+									rename_incomplete.getValue();
+			
+				if ( !enabled ){
+					
+					enable_dndprefix.setValue( false );
+				}
+				
+				enable_dndprefix.setEnabled( enabled );
+			};
+			
+				
+			
 		enable_subfolder.addListener(prefixListener);
 		rename_incomplete.addListener(prefixListener);
+		enable_dndaltloc.addListener(prefixListener);
 		prefixListener.parameterChanged(null);
 
 		ParameterGroupImpl pgFileExt = new ParameterGroupImpl(

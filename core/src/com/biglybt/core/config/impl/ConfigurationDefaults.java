@@ -252,6 +252,10 @@ public class ConfigurationDefaults {
 
     def.put("Enable Subfolder for DND Files", FALSE );
     def.put("Subfolder for DND Files", ".dnd_az!" );
+    
+    def.put(ConfigKeys.File.BCFG_ENABLE_ALT_LOC_FOR_DND_FILES, FALSE );
+    def.put(ConfigKeys.File.SCFG_ALT_LOC_FOR_DND_FILES, FileUtil.getUserFile( "active" ).getAbsolutePath());
+
     def.put("Max File Links Supported", 2048 );
 
     def.put("Ip Filter Enabled", TRUE);

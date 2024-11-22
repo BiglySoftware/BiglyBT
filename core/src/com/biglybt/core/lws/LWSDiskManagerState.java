@@ -30,7 +30,6 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
-import com.biglybt.core.download.DownloadManagerState.ResumeHistory;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.LinkFileMap;
@@ -68,7 +67,7 @@ LWSDiskManagerState
 
 	@Override
 	public File
-	getStateFile()
+	getStateDir()
 	{
 		return null;
 	}

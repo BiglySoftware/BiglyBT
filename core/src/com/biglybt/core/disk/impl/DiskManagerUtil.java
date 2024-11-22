@@ -703,7 +703,7 @@ DiskManagerUtil
 													public File
 													getCacheFileControlFileDir()
 													{
-														return( download_manager.getDownloadState().getStateFile( ));
+														return( download_manager.getDownloadState().getStateDir());
 													}
 													@Override
 													public int
@@ -985,144 +985,13 @@ DiskManagerUtil
 		            			// returns the file to link to if linkage is required
 
 		            		synchronized( DiskManagerUtil.skip_lock ){
+		            			
 			            		skipped_internal = _skipped;
 	
 		    					if ( !download_manager.isDestroyed()){
 	
-		    						DownloadManagerState dm_state = download_manager.getDownloadState();
-	
-				            		String dnd_sf = dm_state.getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
-	
-				            		if ( dnd_sf != null ){
-	
-				            			File	link = getLink();
-	
-				        				File 	file = getFile( false );
-	
-					            		if ( _skipped ){
-	
-					            			if ( link == null || link.equals( file )){
-	
-				            					File parent = file.getParentFile();
-	
-				            					if ( parent != null ){
-	
-		    										String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
-	
-		    										String file_name = file.getName();
-	
-		    										if ( prefix != null && !file_name.startsWith( prefix )){
-	
-		    											file_name = prefix + file_name;
-		    										}
-	
-				            						File new_parent = FileUtil.newFile( parent, dnd_sf );
-	
-				            						File new_file = FileUtil.newFile( new_parent, file_name );
-	
-				            						if ( !new_file.exists()){
-	
-					            						if ( !new_parent.exists()){
-	
-					            							new_parent.mkdirs();
-					            						}
-	
-					            						if ( new_parent.canWrite()){
-	
-						            						boolean ok;
-	
-						            						if ( file.exists()){
-	
-						            							ok = FileUtil.renameFile( file, new_file );
-	
-						            						}else{
-	
-						            							ok = true;
-						            						}
-	
-						            						if ( ok ){
-	
-						            							return( new_file );
-						            						}
-					            						}
-				            						}
-				            					}
-					            			}
-					            		}else{
-	
-					            			if ( link != null && !file.exists()){
-	
-				            					File parent = file.getParentFile();
-	
-				            					if ( parent != null && parent.canWrite()){
-	
-				            						File new_parent = parent.getName().equals( dnd_sf )?parent:FileUtil.newFile( parent, dnd_sf );
-	
-				            							// use link name to handle incomplete file suffix if set
-	
-				            						File new_file = FileUtil.newFile( new_parent, link.getName());
-	
-				            						if ( new_file.equals( link )){
-	
-				            							boolean	ok;
-	
-				            							String incomp_ext = dm_state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
-	
-				    									String file_name = file.getName();
-	
-				    									String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
-	
-				    									boolean prefix_removed = false;
-	
-				    									if ( prefix != null && file_name.startsWith(prefix)){
-	
-				    										file_name = file_name.substring( prefix.length());
-	
-				    										prefix_removed = true;
-				    									}
-	
-				    									if  ( 	incomp_ext != null && incomp_ext.length() > 0 &&
-				    											getDownloaded() != getLength()){
-	
-																// retain the prefix if enabled and we have a suffix
-	
-				    										if ( prefix == null ){
-	
-				    											prefix = "";
-				    										}
-	
-				    										file = FileUtil.newFile( file.getParentFile(), prefix + file_name + incomp_ext );
-	
-				    									}else if ( prefix_removed ){
-	
-				    										file = FileUtil.newFile( file.getParentFile(), file_name);
-				    									}
-	
-				            							if ( new_file.exists()){
-	
-				            								ok = FileUtil.renameFile( new_file, file );
-	
-				            							}else{
-	
-				            								ok = true;
-				            							}
-	
-				            							if ( ok ){
-	
-				            								File[] files = new_parent.listFiles();
-	
-				            								if ( files != null && files.length == 0 ){
-	
-				            									new_parent.delete();
-				            								}
-	
-				            								return( file );
-				            							}
-				            						}
-				            					}
-					            			}
-					            		}
-				            		}
+		    						return( setSkippedInternalSupport( download_manager, this, null, _skipped ));
+				            		
 		    					}
 	
 		    					return( null );
@@ -1334,7 +1203,7 @@ DiskManagerUtil
 									                public File
 	                								getCacheFileControlFileDir()
 	                								{
-	                									return( download_manager.getDownloadState().getStateFile( ));
+	                									return( download_manager.getDownloadState().getStateDir());
 	                								}
 	                								@Override
 									                public int
@@ -2554,5 +2423,421 @@ DiskManagerUtil
 		public void
 		setMoveState(
 			int	state );
+	}
+	
+	
+	protected static File
+	setSkippedInternalSupport(
+		DownloadManager			dm,
+		DiskManagerFileInfo		dm_file,
+		CacheFile				cache_file,
+		boolean					skipped )
+	{
+		DownloadManagerState	dm_state = dm.getDownloadState();
+		
+		int file_index = dm_file.getIndex();
+				
+		String dnd_sf = dm_state.getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
+
+ 		if ( dnd_sf != null ){
+
+			File	link = dm_file.getLink();				// where the file currently is, null if not amended at all
+
+			File 	base_file = dm_file.getFile( false );	// where the file should be without any renaming/moving
+
+    		if ( skipped ){
+
+				File	base_parent = base_file.getParentFile();
+				
+				boolean file_ok = base_parent != null;
+				
+				if ( file_ok ){	
+					
+	    				// if the file isn't pretty much where we expect it to be then we don't touch it
+	    			
+	    			file_ok = link == null || link.equals( base_file );
+	    			
+	    			if ( !file_ok ){
+	    				
+	    					// not identical but might still be good enough
+	    				
+	    				if ( base_parent != null && base_parent.equals( link.getParentFile())){
+	    					
+	    						// that'll do, we don't really care about the name to move it
+	    					
+	    					file_ok = true;
+	    				}
+	    			}
+				}
+				
+    			if ( file_ok ){
+
+					String new_name = link==null?base_file.getName():link.getName();
+
+						// just in case add in any expected stuff
+					
+					String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
+
+					String incomp_ext = dm_state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+
+					boolean incomplete = dm_file.getDownloaded() != dm_file.getLength();
+					
+					if ( prefix != null && incomplete && !new_name.startsWith( prefix )){
+
+						new_name = prefix + new_name;
+					}
+
+					if ( incomp_ext != null && incomplete && !new_name.endsWith( incomp_ext )){
+												
+						new_name = new_name + incomp_ext;
+					}
+					
+					File new_parent = FileUtil.newFile( base_parent, dnd_sf );
+
+					File new_file = FileUtil.newFile( new_parent, new_name );
+
+					if ( !new_file.exists()){
+
+						if ( !new_parent.exists()){
+
+							new_parent.mkdirs();
+						}
+
+						if ( new_parent.canWrite()){
+
+							if ( cache_file == null ){
+								
+								boolean ok;
+								
+		   						File source = link==null?base_file:link;
+	    						
+	    						if ( source.exists()){
+
+	    							ok = FileUtil.renameFile( source, new_file );
+
+	    						}else{
+
+	    								// might not be allocated yet
+	    							
+	    							ok = true;
+	    							
+	    							File[] files = new_parent.listFiles();
+									
+									if ( files != null && files.length == 0 ){
+
+										new_parent.delete();
+									}
+	    						}
+
+	    						if ( ok ){
+
+	    							return( new_file );
+	    						}
+							}else{
+	    						boolean ok;
+	
+								try{
+									dm_state.setFileLink( file_index, base_file, new_file );
+	
+									cache_file.moveFile( new_file, null );
+	
+									ok = true;
+	
+								}catch( Throwable e ){
+	
+									ok = false;
+	
+									Debug.out( e );
+								}
+	
+	    						if ( !ok ){
+	
+	    							dm_state.setFileLink( file_index, base_file, link );
+	    						}
+							}
+						}
+					}
+    			}
+    		}else{
+
+ 					// here we are removing the added folder so there must be a link
+    			
+    			if ( link != null ){
+
+					File link_parent = link.getParentFile();
+
+					if ( link_parent != null && link_parent.getName().equals( dnd_sf )){
+
+						File new_parent = link_parent.getParentFile();
+
+						if ( new_parent != null ){
+									
+							File new_file = FileUtil.newFile( new_parent, link.getName());
+							
+							if ( cache_file == null ){
+								
+									// inactive case
+								
+								File result = null;
+								
+								if ( link.exists()){
+									
+									if ( FileUtil.renameFile( link, new_file )){
+		
+										result = new_file;
+									}
+								}else{
+									
+										// file might not be allocated yet
+									
+									result = new_file;
+								}
+								
+								if ( link_parent.exists()){
+									
+									File[] files = link_parent.listFiles();
+									
+									if ( files != null && files.length == 0 ){
+
+										link_parent.delete();
+									}
+								}
+								
+								return( result );
+								
+							}else{
+					
+									// active case
+								
+								boolean	ok;
+	
+								try{
+	
+									dm_state.setFileLink( file_index, base_file, new_file );
+	
+									cache_file.moveFile( new_file, null );
+									
+									File[] files = link_parent.listFiles();
+	
+									if ( files != null && files.length == 0 ){
+	
+										link_parent.delete();
+									}
+	
+									ok = true;
+	
+								}catch( Throwable e ){
+	
+									ok = false;
+	
+									Debug.out( e );
+								}
+	
+								if ( !ok ){
+	
+									dm_state.setFileLink( file_index, base_file, link );
+	    						}
+							}
+						}
+					}
+    			}
+    		}
+    		
+    		return( null );
+		}
+	
+		String dnd_al = dm_state.getAttribute( DownloadManagerState.AT_DND_ALT_LOC );
+
+ 		if ( dnd_al != null ){
+
+ 			File dnd_root	= FileUtil.newFile( dnd_al );
+ 			 			
+ 			String save_location_path = dm.getSaveLocation().getAbsolutePath();
+ 			
+			File	link = dm_file.getLink();				// where the file currently is, null if not amended at all
+
+			File 	base_file = dm_file.getFile( false );	// where the file should be without any renaming/moving
+
+    		if ( skipped ){ 
+   			
+				File	base_parent = base_file.getParentFile();
+				
+				boolean file_ok = base_parent != null && base_file.getAbsolutePath().startsWith( save_location_path );
+				
+				if ( file_ok ){	
+					
+	    				// if the file isn't pretty much where we expect it to be then we don't touch it
+	    			
+	    			file_ok = link == null || link.equals( base_file );
+	    			
+	    			if ( !file_ok ){
+	    				
+	    					// not identical but might still be good enough
+	    				
+	    				if ( base_parent != null && base_parent.equals( link.getParentFile())){
+	    					
+	    						// that'll do, we don't really care about the name to move it
+	    					
+	    					file_ok = true;
+	    				}
+	    			}
+				}
+				
+    			if ( file_ok ){
+
+					String new_name = link==null?base_file.getName():link.getName();
+
+						// just in case add in any expected stuff
+					
+					String prefix = dm_state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
+
+					String incomp_ext = dm_state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+
+					boolean incomplete = dm_file.getDownloaded() != dm_file.getLength();
+					
+					if ( prefix != null && incomplete && !new_name.startsWith( prefix )){
+
+						new_name = prefix + new_name;
+					}
+
+					if ( incomp_ext != null && incomplete && !new_name.endsWith( incomp_ext )){
+												
+						new_name = new_name + incomp_ext;
+					}
+					
+					File new_parent = FileUtil.newFile( dnd_root, base_parent.getAbsolutePath().substring( save_location_path.length()));
+
+					File new_file = FileUtil.newFile( new_parent, new_name );
+
+					if ( !new_file.exists()){
+
+						if ( !new_parent.exists()){
+
+							new_parent.mkdirs();
+						}
+
+						if ( new_parent.canWrite()){
+
+							if ( cache_file == null ){
+								
+								boolean ok;
+								
+		   						File source = link==null?base_file:link;
+	    						
+	    						if ( source.exists()){
+
+	    							ok = FileUtil.renameFile( source, new_file );
+
+	    						}else{
+
+	    								// might not be allocated yet
+	    							
+	    							ok = true;
+	    							
+	    							File[] files = new_parent.listFiles();
+									
+									if ( files != null && files.length == 0 ){
+
+										new_parent.delete();
+									}
+	    						}
+
+	    						if ( ok ){
+
+	    							return( new_file );
+	    						}
+							}else{
+	    						boolean ok;
+	
+								try{
+									dm_state.setFileLink( file_index, base_file, new_file );
+	
+									cache_file.moveFile( new_file, null );
+	
+									ok = true;
+	
+								}catch( Throwable e ){
+	
+									ok = false;
+	
+									Debug.out( e );
+								}
+	
+	    						if ( !ok ){
+	
+	    							dm_state.setFileLink( file_index, base_file, link );
+	    						}
+							}
+						}
+					}
+    			}
+    		}else{
+
+ 					// here we are removing the added folder so there must be a link
+    			
+    			if ( link != null ){
+
+					if ( link.getAbsolutePath().startsWith( dnd_root.getAbsolutePath())){
+
+						File new_parent = base_file.getParentFile();
+
+						if ( new_parent != null ){
+									
+							File new_file = FileUtil.newFile( new_parent, link.getName());
+							
+							if ( cache_file == null ){
+								
+									// inactive case
+								
+								File result = null;
+								
+								if ( link.exists()){
+									
+									if ( FileUtil.renameFile( link, new_file )){
+		
+										result = new_file;
+									}
+								}else{
+									
+										// file might not be allocated yet
+									
+									result = new_file;
+								}
+								
+								return( result );
+								
+							}else{
+					
+									// active case
+								
+								boolean	ok;
+	
+								try{
+	
+									dm_state.setFileLink( file_index, base_file, new_file );
+	
+									cache_file.moveFile( new_file, null );
+	
+									ok = true;
+	
+								}catch( Throwable e ){
+	
+									ok = false;
+	
+									Debug.out( e );
+								}
+	
+								if ( !ok ){
+	
+									dm_state.setFileLink( file_index, base_file, link );
+	    						}
+							}
+						}
+					}
+    			}
+    		}
+		}
+ 		
+ 		return( null );
 	}
 }
