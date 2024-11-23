@@ -1994,7 +1994,8 @@ DownloadManagerImpl
 
 	private void
 	updateFileLinks(
-		File old_save_path, File new_save_path)
+		File old_save_path, 
+		File new_save_path)
 	{
 		old_save_path = FileUtil.getCanonicalFileSafe( old_save_path );
 		
@@ -2006,10 +2007,12 @@ DownloadManagerImpl
 
 		Iterator<LinkFileMap.Entry> it = links.entryIterator();
 
-		List<Integer>	from_indexes 	= new ArrayList<>();
-		List<File>		from_links 		= new ArrayList<>();
-		List<File>		to_links		= new ArrayList<>();
+		List<Integer>	from_indexes 				= new ArrayList<>();
+		List<File>		from_links_may_have_nulls 	= new ArrayList<>();
+		List<File>		to_links					= new ArrayList<>();
 
+		DiskManagerFileInfo[] dm_files = getDiskManagerFileInfoSet().getFiles();
+		
 		while(it.hasNext()){
 
 			LinkFileMap.Entry entry = it.next();
@@ -2029,12 +2032,26 @@ DownloadManagerImpl
 
 				int		file_index 	= entry.getIndex();
 				
-				StringInterner.FileKey	from_fk 		= entry.getFromFile();
+					// preparation for future removal of the "from-file"
+				
+				File from_maybe_null;
+				
+				StringInterner.FileKey	from_fk_maybe_null 		= entry.getFromFileMaybeNull();
 
-				File from = FileUtil.getCanonicalFileSafe( from_fk.getFile());
+				if ( from_fk_maybe_null == null ){
+					
+					from_maybe_null = null;
+					
+				}else{
+					
+					from_maybe_null = FileUtil.getCanonicalFileSafe( from_fk_maybe_null.getFile());
+				}
 
-				updateFileLink( file_index, old_save_path, new_save_path, from, to, 
-					from_indexes, from_links, to_links );
+				updateFileLink( 
+					file_index, 
+					old_save_path, new_save_path, 
+					from_maybe_null, to, 
+					from_indexes, from_links_may_have_nulls, to_links );
 
 			}catch( Exception e ){
 
@@ -2042,9 +2059,9 @@ DownloadManagerImpl
 			}
 		}
 
-		if ( from_links.size() > 0 ){
+		if ( from_links_may_have_nulls.size() > 0 ){
 
-			download_manager_state.setFileLinks( from_indexes, from_links, to_links );
+			download_manager_state.setFileLinks( from_indexes, from_links_may_have_nulls, to_links );
 		}
 	}
 
@@ -2061,7 +2078,7 @@ DownloadManagerImpl
 		int				file_index,
 		File 			old_path,
 		File 			new_path,
-		File 			from_loc,
+		File 			from_loc_maybe_null,
 		File 			to_loc,
 		List<Integer>	from_indexes,
 		List<File> 		from_links,
@@ -2074,9 +2091,9 @@ DownloadManagerImpl
 
 		if ( torrent.isSimpleTorrent()){
 
-			if (!FileUtil.areFilePathsIdentical(old_path, from_loc)) {
+			if (from_loc_maybe_null != null && !FileUtil.areFilePathsIdentical(old_path, from_loc_maybe_null)) {
 
-				throw new RuntimeException("assert failure: old_path=" + old_path + ", from_loc=" + from_loc);
+				throw new RuntimeException("assert failure: old_path=" + old_path + ", from_loc=" + from_loc_maybe_null);
 			}
 
 			//System.out.println( "   adding " + old_path + " -> null" );
@@ -2112,13 +2129,9 @@ DownloadManagerImpl
 
 		}else{
 
-			String from_loc_to_use = FileUtil.translateMoveFilePath( old_path_str, 
-				new_path_str, from_loc.getAbsolutePath() );
-
-			if ( from_loc_to_use == null ){
-
-				return;
-			}
+			String from_loc_to_use_maybe_null = 
+				from_loc_maybe_null==null?null:FileUtil.translateMoveFilePath( old_path_str, 
+						new_path_str, from_loc_maybe_null.getAbsolutePath() );
 
 			String to_loc_to_use = FileUtil.translateMoveFilePath( old_path_str, 
 				new_path_str, to_loc.getAbsolutePath() );
@@ -2126,13 +2139,13 @@ DownloadManagerImpl
 				// delete old
 
 			from_indexes.add( file_index );
-			from_links.add( from_loc );
+			from_links.add( from_loc_maybe_null );
 			to_links.add( null );
 
 				// add new
 
 			from_indexes.add( file_index );
-			from_links.add( FileUtil.newFile(from_loc_to_use));
+			from_links.add( from_loc_to_use_maybe_null==null?null:FileUtil.newFile(from_loc_to_use_maybe_null));
 			to_links.add( to_loc_to_use == null ? to_loc : FileUtil.newFile(to_loc_to_use));
 		}
 	}

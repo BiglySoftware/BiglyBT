@@ -483,7 +483,7 @@ LWSDiskManagerState
     public void
 	setFileLinks(
 		List<Integer>	source_indexes,
-		List<File>		link_sources,
+		List<File>		link_sources_may_have_nulls,
 		List<File>		link_destinations )
     {
     }

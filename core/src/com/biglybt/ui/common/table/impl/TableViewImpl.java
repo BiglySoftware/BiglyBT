@@ -2681,70 +2681,74 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		System.out.println(" via " + Debug.getCompressedStackTrace(4));
 		/**/
 
-		final List<TableRowCore> oldSelectionList = new ArrayList<>();
-
-		LinkedHashSet<TableRowCore> listNewlySelected;
+		Set<TableRowCore>	oldSelectionSet		= new LinkedHashSet<>();
+		Set<TableRowCore>	newlySelectedSet	= new LinkedHashSet<>();
+		
 		boolean somethingChanged;
+		
 		synchronized (rows_sync) {
 			if (selectedRows.size() == 0 && newSelectionArray.length == 0) {
 				return;
 			}
 
-			oldSelectionList.addAll(selectedRows);
+			oldSelectionSet.addAll(selectedRows);
+			
 			listSelectedCoreDataSources = null;
+			
 			selectedRows.clear();
-
-			listNewlySelected = new LinkedHashSet<>();
 
 			// We'll remove items still selected from oldSelectionLeft, leaving
 			// it with a list of items that need to fire the deselection event.
+			
 			for (TableRowCore row : newSelectionArray) {
+				
 				if (row == null || row.isRowDisposed()) {
 					continue;
 				}
 
-				boolean existed = false;
-				for (TableRowCore oldRow : oldSelectionList) {
-					if (oldRow == row) {
-						existed = true;
-						if (!selectedRows.contains(row)) {
-							selectedRows.add(row);
-						}
-						oldSelectionList.remove(row);
-						break;
-					}
-				}
-				if (!existed) {
-					if (!selectedRows.contains(row)) {
+				if ( oldSelectionSet.contains( row )){
+					
+					if (!selectedRows.contains(row)){
+						
 						selectedRows.add(row);
 					}
-					if (!listNewlySelected.contains(row)) {
-						listNewlySelected.add(row);
+					
+					oldSelectionSet.remove(row);
+					
+				}else{
+				
+					if (!selectedRows.contains(row)){
+						
+						selectedRows.add(row);
+					}
+					
+					if (!newlySelectedSet.contains(row)) {
+						
+						newlySelectedSet.add(row);
 					}
 				}
 			}
 
-			somethingChanged = listNewlySelected.size() > 0
-					|| oldSelectionList.size() > 0;
+			somethingChanged = newlySelectedSet.size() > 0 || oldSelectionSet.size() > 0;
 					
 			if ( somethingChanged && updateHistory ){
 				
 				addHistory( 
 					new HistorySelection( 
-						oldSelectionList.toArray( new TableRowCore[ oldSelectionList.size()]), 
+							oldSelectionSet.toArray( new TableRowCore[ oldSelectionSet.size()]), 
 						selectedRows.toArray( new TableRowCore[ selectedRows.size()])));
 			}
 			
 			if (DEBUG_SELECTION) {
 				System.out.println(somethingChanged + "] +"
-						+ listNewlySelected.size() + "/-" + oldSelectionList.size()
+						+ newlySelectedSet.size() + "/-" + oldSelectionSet.size()
 						+ ";  UpdateSelectedRows via " + Debug.getCompressedStackTrace());
 			}
 		}
 
 		if (somethingChanged) {
-			TableRowCore[] selected 	= listNewlySelected.toArray(new TableRowCore[0]);
-			TableRowCore[] deselected	= oldSelectionList.toArray(new TableRowCore[0]);
+			TableRowCore[] selected 	= newlySelectedSet.toArray(new TableRowCore[0]);
+			TableRowCore[] deselected	= oldSelectionSet.toArray(new TableRowCore[0]);
 			
 			uiSelectionChanged( selected, deselected );
 			
@@ -2754,11 +2758,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		if (trigger && somethingChanged) {
-			if (listNewlySelected.size() > 0) {
-				triggerSelectionListeners(listNewlySelected.toArray(new TableRowCore[0]));
+			if (newlySelectedSet.size() > 0) {
+				triggerSelectionListeners(newlySelectedSet.toArray(new TableRowCore[0]));
 			}
-			if (oldSelectionList.size() > 0) {
-				triggerDeselectionListeners(oldSelectionList.toArray(new TableRowCore[0]));
+			if (oldSelectionSet.size() > 0) {
+				triggerDeselectionListeners(oldSelectionSet.toArray(new TableRowCore[0]));
 			}
 
 			triggerTabViewsDataSourceChanged();

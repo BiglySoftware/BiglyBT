@@ -468,6 +468,16 @@ public class FileUtil {
 	Set<String>		ignore_set,
 	boolean			log_warnings )
   {
+	  recursiveEmptyDirDelete( f, ignore_set, 1, log_warnings );
+  }
+  
+  private static void
+  recursiveEmptyDirDelete(
+	File			f,
+	Set<String>		ignore_set,
+	int				level,
+	boolean			log_warnings )
+  {
 	  if ( f == null ){
 
 		  return;
@@ -511,7 +521,7 @@ public class FileUtil {
 			  if ( files == null ){
 
 				  if (log_warnings ){
-					  Debug.out("Empty folder delete:  failed to list contents of directory " + f );
+					  Debug.out("Empty folder delete:  failed to list contents of directory '" + f + "'");
 				  }
 
 				  return;
@@ -519,13 +529,16 @@ public class FileUtil {
 
 			  boolean hasIgnoreSet = ignore_set.size() > 0;
 
+			  List<File>	sub_dirs		= new ArrayList<>();
+			  List<File>	files_inside	= new ArrayList<>();
+			  
 			  for (int i = 0; i < files.length; i++) {
 
 				  File	x = files[i];
 
 				  if ( x.isDirectory()){
 
-					  recursiveEmptyDirDelete(files[i],ignore_set,log_warnings);
+					  sub_dirs.add( x );
 
 				  }else{
 
@@ -533,52 +546,75 @@ public class FileUtil {
 
 						  if ( !x.delete()){
 
+							  files_inside.add( x );
+							  
 							  if ( log_warnings ){
-								  Debug.out("Empty folder delete: failed to delete file " + x );
+								  
+								  Debug.out("Empty folder delete: failed to delete file '" + x + "'");
 							  }
 						  }
+					  }else{
+						  
+						  files_inside.add( x );
 					  }
 				  }
 			  }
+			  
+			  if ( level == 1 && !files_inside.isEmpty()){
+				  
+				  if ( log_warnings ){
+					  Debug.out( "Empty folder delete: abandoning as top level folder '" + f + "' isn't empty" );
+				  }
+				  
+				  return;
+			  }
+			  
+			  for ( File dir: sub_dirs ){
+				  
+				  recursiveEmptyDirDelete(dir,ignore_set,level+1,log_warnings);
+			  }
 
-			  if ( 	moveToDirFile != null && 
-					( areFilePathsIdentical( f.getAbsoluteFile(), moveToDirFile) || f.getCanonicalPath().equals(moveToDir))){
+			  if ( 	moveToDirFile != null && ( areFilePathsIdentical( f.getAbsoluteFile(), moveToDirFile) || f.getCanonicalPath().equals(moveToDir))){
 
 				  if ( log_warnings ){
-					  Debug.out("Empty folder delete:  not allowed to delete the MoveTo dir !");
+					  Debug.out("Empty folder delete: not allowed to delete the Move-To dir!");
 				  }
 
 				  return;
 			  }
 
-			  if (	defSaveDirFile != null &&
-					( areFilePathsIdentical( f.getAbsoluteFile(), defSaveDirFile) ||f.getCanonicalPath().equals(defSaveDir))){
+			  if (	defSaveDirFile != null && ( areFilePathsIdentical( f.getAbsoluteFile(), defSaveDirFile) ||f.getCanonicalPath().equals(defSaveDir))){
 
 				  if ( log_warnings ){
-					  Debug.out("Empty folder delete:  not allowed to delete the default data dir !");
+					  Debug.out("Empty folder delete: not allowed to delete the Default Data dir!");
 				  }
 
 				  return;
 			  }
 
-			  File[] files_inside = f.listFiles();
+			  files = f.listFiles();
 
-			  if ( files_inside == null ){
+			  if ( files == null ){
 
 				  if (log_warnings ){
-					  Debug.out("Empty folder delete:  failed to list contents of directory " + files_inside );
+					  Debug.out("Empty folder delete: failed to list contents of directory '" + f + "'" );
 				  }
-			  }else if ( files_inside.length == 0 ){
+
+				  return;
+			  }
+			  
+			  if ( files.length == 0 ){
 
 				  if ( !f.delete()){
 
 					  if ( log_warnings ){
-						  Debug.out("Empty folder delete:  failed to delete directory " + f );
+						  Debug.out("Empty folder delete: failed to delete directory '" + f + "'");
 					  }
 				  }
 			  }else{
+				  
 				  if ( log_warnings ){
-					  Debug.out("Empty folder delete:  " + files_inside.length + " file(s)/folder(s) still in \"" + f + "\" - first listed item is \"" + files_inside[0].getName() + "\". Not removing.");
+					  Debug.out("Empty folder delete:  " + files.length + " file(s)/folder(s) still in '" + f + "' - first listed item is '" + files[0].getName() + "'. Not removing.");
 				  }
 			  }
 		  }

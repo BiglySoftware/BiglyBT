@@ -397,8 +397,6 @@ DiskManagerUtil
 
 	    state.setFileLink( file_info.getIndex(), from_file, to_link );
 
-	    state.save(false);
-
 	    return( null );
 	}
 

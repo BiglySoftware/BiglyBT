@@ -25,7 +25,6 @@ package com.biglybt.core.diskmanager.file.impl;
  *
  */
 
-import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
@@ -65,20 +64,20 @@ FMFileManagerImpl
 		}
 	}
 
-	protected final LinkedHashMap		map;
+	protected final LinkedHashMap<FMFileLimited,FMFileLimited>		map;
 	protected final AEMonitor			map_mon	= new AEMonitor( "FMFileManager:Map");
 
-	protected final HashMap<Object,LinkFileMap>			links		= new HashMap<>();
+	protected final HashMap<HashWrapper,LinkFileMap>			links		= new HashMap<>();
 	protected final AEMonitor			links_mon	= new AEMonitor( "FMFileManager:Links");
 
 	protected final boolean			limited;
 	protected final int				limit_size;
 
-	protected AESemaphore		close_queue_sem;
-	protected List				close_queue;
-	protected final AEMonitor			close_queue_mon	= new AEMonitor( "FMFileManager:CQ");
+	protected AESemaphore			close_queue_sem;
+	protected List<FMFileLimited>	close_queue;
+	protected final AEMonitor		close_queue_mon	= new AEMonitor( "FMFileManager:CQ");
 
-	protected List				files;
+	protected List<FMFile>				files;
 	protected final AEMonitor			files_mon		= new AEMonitor( "FMFileManager:File");
 
 	protected
@@ -92,30 +91,26 @@ FMFileManagerImpl
 
 			System.out.println( "FMFileManager::init: limit = " + limit_size );
 
-			files = new ArrayList();
+			files = new ArrayList<>();
 		}
 
-		map	= new LinkedHashMap( limit_size, (float)0.75, true );	// ACCESS order selected - this means oldest
+		map	= new LinkedHashMap<>( limit_size, (float)0.75, true );	// ACCESS order selected - this means oldest
 
 		if ( limited ){
 
 			close_queue_sem	= new AESemaphore("FMFileManager::closeqsem");
 
-			close_queue		= new LinkedList();
+			close_queue		= new LinkedList<>();
 
-			Thread	t = new AEThread("FMFileManager::closeQueueDispatcher")
+			new AEThread2("FMFileManager::closeQueueDispatcher")
 				{
 					@Override
 					public void
-					runSupport()
+					run()
 					{
 						closeQueueDispatch();
 					}
-				};
-
-			t.setDaemon(true);
-
-			t.start();
+				}.start();
 		}
 	}
 
@@ -123,17 +118,16 @@ FMFileManagerImpl
 	getLinksEntry(
 		TOTorrent	torrent )
 	{
-		Object	links_key;
+		HashWrapper	links_key;
 
 		try{
-
 			links_key = torrent.getHashWrapper();
 
 		}catch( Throwable e ){
 
 			Debug.printStackTrace(e);
 
-			links_key	= "";
+			links_key	= new HashWrapper( new byte[0]);
 		}
 
 		LinkFileMap	links_entry = links.get( links_key );
@@ -157,35 +151,14 @@ FMFileManagerImpl
 		try{
 			links_mon.enter();
 
-			LinkFileMap	links_entry = getLinksEntry( torrent );
+			try{
+				HashWrapper links_key = torrent.getHashWrapper();
 
-			Iterator<LinkFileMap.Entry>	it = new_links.entryIterator();
+				links.put( links_key, new_links );
+				
+			}catch( Throwable e ){
 
-			while( it.hasNext()){
-
-				LinkFileMap.Entry	entry = it.next();
-
-				int		index	= entry.getIndex();
-
-				StringInterner.FileKey	source 	= entry.getFromFile();
-				StringInterner.FileKey	target	= entry.getToFile();
-
-				// System.out.println( "setLink:" + source + " -> " + target );
-
-				if ( target != null && !FileUtil.areFilePathsIdentical( source.getFile(), target.getFile() )){
-
-					if ( index >= 0 ){
-
-						links_entry.put( index, source, target );
-
-					}else{
-
-						links_entry.putMigration( source, target );
-					}
-				}else{
-
-					links_entry.remove( index, source );
-				}
+				Debug.printStackTrace(e);
 			}
 		}finally{
 
@@ -200,23 +173,25 @@ FMFileManagerImpl
 		int						file_index,
 		StringInterner.FileKey	file )
 	{
-			// this function works on the currently defined links and will only accept
-			// them as valid if their 'from' location matches the 'file' being queried.
-			// if not the original file is returned, NOT null
+			// Reworked as of 3701 to NOT rely on the crap below...
+		
+			// x this function works on the currently defined links and will only accept
+			// x them as valid if their 'from' location matches the 'file' being queried.
+			// x if not the original file is returned, NOT null
 
-			// These semantics are important during file-move operations as the move-file
-			// logic does not update links until AFTER the move is complete. If we don't
-			// verify the 'from' path in this case then the old existing linkage overrides
-			// the new destination during the move process and causes it to fail with
-			// 'file already exists'. There is possibly an argument that we shouldn't
-			// take links into account when moving
+			// x These semantics are important during file-move operations as the move-file
+			// x logic does not update links until AFTER the move is complete. If we don't
+			// x verify the 'from' path in this case then the old existing linkage overrides
+			// x the new destination during the move process and causes it to fail with
+			// x 'file already exists'. There is possibly an argument that we shouldn't
+			// x take links into account when moving
 
 		try{
 			links_mon.enter();
 
 			LinkFileMap	links_entry = getLinksEntry( torrent );
 
-			LinkFileMap.Entry	entry = links_entry.getEntry( file_index, file.getFile());
+			LinkFileMap.Entry	entry = links_entry.getEntry( file_index );
 
 			StringInterner.FileKey res = null;
 
@@ -226,14 +201,22 @@ FMFileManagerImpl
 
 			}else{
 
+				res = entry.getToFile();
+
+				/*
 				if ( file.equals( entry.getFromFile())){
 
 					res = entry.getToFile();
 
+					if ( res == null ){
+						
+						res = file;
+					}
 				}else{
 
 					res = file;
 				}
+				*/
 			}
 
 			// System.out.println( "getLink:" + file + " -> " + res );
@@ -247,8 +230,11 @@ FMFileManagerImpl
 	}
 
 	@Override
-	public boolean hasLinks(TOTorrent torrent) {
-		return getLinksEntry(torrent).hasLinks();
+	public boolean 
+	hasLinks(
+		TOTorrent torrent) 
+	{
+		return( getLinksEntry(torrent).size() > 0 );
 	}
 
 	@Override
@@ -565,13 +551,9 @@ FMFileManagerImpl
 
 						int		index	= entry.getIndex();
 
-						StringInterner.FileKey	source 	= entry.getFromFile();
 						StringInterner.FileKey	target	= entry.getToFile();
-						
-						if ( target != null && !FileUtil.areFilePathsIdentical( source.getFile(), target.getFile())){
-						
-							writer.println( index + ": " + source + " -> " + target );
-						}
+												
+						writer.println( index + ": -> " + target );
 					}
 	
 				}finally{

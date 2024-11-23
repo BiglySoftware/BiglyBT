@@ -719,7 +719,7 @@ public class TorrentUtil
 					
 					if ( torrent != null && !torrent.isSimpleTorrent()){
 						
-						if ( dm_state.getFileLinks().hasLinks()){
+						if ( dm_state.getFileLinks().size() > 0){
 
 							hasClearableLinks = true;
 						}
@@ -1183,7 +1183,7 @@ public class TorrentUtil
 			@Override
 			public void run(DownloadManager dm)
 			{
-				if ( ManagerUtils.isStopped(dm) && dm.getDownloadState().getFileLinks().hasLinks()){
+				if ( ManagerUtils.isStopped(dm) && dm.getDownloadState().getFileLinks().size()>0){
 
 					DiskManagerFileInfoSet fis = dm.getDiskManagerFileInfoSet();
 

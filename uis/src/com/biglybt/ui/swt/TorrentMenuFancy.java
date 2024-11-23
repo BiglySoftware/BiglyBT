@@ -1308,7 +1308,7 @@ public class TorrentMenuFancy
 								if ( stopped && !hasClearableLinks ){
 									TOTorrent torrent = dm.getTorrent();
 									if ( torrent != null && !torrent.isSimpleTorrent()){
-										if ( dms.getFileLinks().hasLinks()){
+										if ( dms.getFileLinks().size() > 0){
 											hasClearableLinks = true;
 										}
 									}
@@ -1399,7 +1399,7 @@ public class TorrentMenuFancy
 								public void run(DownloadManager dm)
 								{
 									if ( 	ManagerUtils.isStopped(dm) &&
-											dm.getDownloadState().getFileLinks().hasLinks()){
+											dm.getDownloadState().getFileLinks().size() > 0){
 
 										DiskManagerFileInfoSet fis = dm.getDiskManagerFileInfoSet();
 

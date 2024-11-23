@@ -2342,7 +2342,7 @@ DownloadManagerStateImpl
 	{
 		LinkFileMap	links = getFileLinks();
 
-		File	existing = (File)links.get( source_index, link_source);
+		File	existing = (File)links.get( source_index );
 
 		if ( link_destination == null ){
 
@@ -2350,7 +2350,7 @@ DownloadManagerStateImpl
 
 				return;
 			}
-		}else if ( existing != null && existing.getAbsolutePath().equals( link_destination.getAbsolutePath())){
+		}else if ( existing != null && FileUtil.areFilePathsIdentical( existing, link_destination )){
 			
 			return;
 		}
@@ -2373,20 +2373,20 @@ DownloadManagerStateImpl
 	public void
 	setFileLinks(
 		List<Integer>	source_indexes,
-		List<File>		link_sources,
+		List<File>		link_sources_may_have_nulls,
 		List<File>		link_destinations )
 	{
 		LinkFileMap	links = getFileLinks();
 
 		boolean changed = false;
 
-		for ( int i=0;i<link_sources.size();i++){
+		for ( int i=0;i<link_sources_may_have_nulls.size();i++){
 
-			int		source_index		= source_indexes.get( i );
-			File	link_source 		= link_sources.get(i);
-			File	link_destination 	= link_destinations.get(i);
+			int		source_index			= source_indexes.get( i );
+			File	link_source_maybe_null 	= link_sources_may_have_nulls.get(i);
+			File	link_destination 		= link_destinations.get(i);
 
-			File	existing = links.get( source_index, link_source);
+			File	existing = links.get( source_index );
 
 			if ( link_destination == null ){
 
@@ -2394,12 +2394,15 @@ DownloadManagerStateImpl
 
 					continue;
 				}
-			}else if ( existing != null && existing.getAbsolutePath().equals( link_destination.getAbsolutePath())){
+			}else if ( existing != null && FileUtil.areFilePathsIdentical( existing, link_destination )){
 
 				continue;
 			}
 
-			links.put( source_index, new StringInterner.FileKey( link_source ), link_destination==null?null:new StringInterner.FileKey( link_destination ));
+			links.put( 
+				source_index, 
+				link_source_maybe_null==null?null:new StringInterner.FileKey( link_source_maybe_null ),
+				link_destination==null?null:new StringInterner.FileKey( link_destination ));
 
 			changed = true;
 		}
@@ -2425,26 +2428,10 @@ DownloadManagerStateImpl
 	{
 		LinkFileMap	links = getFileLinks();
 
-		Iterator<LinkFileMap.Entry>	it = links.entryIterator();
+		if ( links.size() > 0 ){
 
-		boolean	changed = false;
-
-		while( it.hasNext()){
-
-			LinkFileMap.Entry	entry = it.next();
+			links.clear();
 			
-			StringInterner.FileKey	target 	= entry.getToFile();
-
-			if ( target != null ){
-
-				links.put( entry.getIndex(), entry.getFromFile(), null );
-				
-				changed = true;
-			}
-		}
-
-		if ( changed ){
-
 			synchronized( this ){
 
 				file_link_cache = new WeakReference<>( links );
@@ -2481,7 +2468,7 @@ DownloadManagerStateImpl
 			}
 		}
 
-		File res = map.get( source_index, link_source );
+		File res = map.get( source_index );
 
 		//System.out.println( "getFileLink: " + link_source + " -> " + res );
 
@@ -2531,35 +2518,11 @@ DownloadManagerStateImpl
 		if ( new_values.size() > 0 ){
 
 			res.fromBencodeObject( new_values );
-			
-		}else{
-			
-			List<String>	old_values = getListAttributeSupport( AT_FILE_LINKS_DEPRECATED, false );
-
-			for (int i=0;i<old_values.size();i++){
-
-				String	entry = old_values.get(i);
-
-				int	sep = entry.indexOf( "\n" );
-
-				if ( sep != -1 ){
-
-					StringInterner.FileKey target = (sep == entry.length()-1)?null:new StringInterner.FileKey( entry.substring( sep+1 ));
-
-					res.putMigration( new StringInterner.FileKey( entry.substring(0,sep)), target );
-				}
-			}
 		}
 
 		//System.out.println( "getFileLinks: " + res.getString());
-		
-		if ( !res.isEmpty()){
-			
-				// we want to hold the decoded file links in memory, not the
-				// original String version
-			
-			setBEncodableAttribute( AT_FILE_LINKS2, res, true );
-		}
+					
+		setBEncodableAttribute( AT_FILE_LINKS2, res, true );
 		
 		return( res );
 	}
@@ -3801,7 +3764,7 @@ DownloadManagerStateImpl
 	    public void
 		setFileLinks(
 			List<Integer>	source_indexes,
-			List<File>		link_sources,
+			List<File>		link_sources_may_have_nulls,
 			List<File>		link_destinations )
 	    {
 	    }

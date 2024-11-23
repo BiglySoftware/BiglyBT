@@ -48,7 +48,7 @@ DownloadManagerState
 	public static final String AT_PEER_SOURCES				= "peersources";
 	public static final String AT_PEER_SOURCES_DENIED		= "peersourcesdenied";
 	public static final String AT_TRACKER_CLIENT_EXTENSIONS	= "trackerclientextensions";
-	public static final String AT_FILE_LINKS_DEPRECATED		= "filelinks";
+	//public static final String AT_FILE_LINKS_DEPRECATED		= "filelinks";
 	public static final String AT_FILE_LINKS2				= "filelinks2";
 	public static final String AT_FILE_ALLOC_REQUEST		= "allocreq";		// Map
 	public static final String AT_FILE_STORE_TYPES			= "storetypes";
@@ -379,7 +379,7 @@ DownloadManagerState
 	public void
 	setFileLinks(
 		List<Integer>	source_indexes,
-		List<File>		link_sources,
+		List<File>		link_sources_may_have_nulls,
 		List<File>		link_destinations );
 
 	public void

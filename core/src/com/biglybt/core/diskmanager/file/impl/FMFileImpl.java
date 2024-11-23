@@ -330,7 +330,7 @@ FMFileImpl
 	@Override
 	public void
 	moveFile(
-		File						new_unlinked_file,
+		File						new_linked_file,
 		FileUtil.ProgressListener	pl )
 
 		throws FMFileManagerException
@@ -343,11 +343,11 @@ FMFileImpl
 			
 			length_cache = getLength();
 			
-			TOTorrentFile tf = owner.getTorrentFile();
-
 			String	new_canonical_path;
-
-			File	new_linked_file	= manager.getFileLink( tf.getTorrent(), tf.getIndex(), new StringInterner.FileKey( new_unlinked_file )).getFile();
+				
+				// 3701 - switched the passed file to always be the actual destination regardless of any links, these are set up separately as required by callers
+				// TOTorrentFile tf = owner.getTorrentFile();
+				// File	new_linked_file	= manager.getFileLink( tf.getTorrent(), tf.getIndex(), new StringInterner.FileKey( new_unlinked_file )).getFile();
 
 			try{
 
