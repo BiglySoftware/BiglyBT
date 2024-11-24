@@ -55,11 +55,10 @@ StringInterner
 	private static final int SCHEDULED_AGING_THRESHOLD = 750;
 
 	private static final LightHashSet managedInterningSet = new LightHashSet(800);
-	private static final LightHashSet unmanagedInterningSet = new LightHashSet();
+
 	static final ReadWriteLock managedSetLock = new ReentrantReadWriteLock();
 
 	private final static ReferenceQueue managedRefQueue = new ReferenceQueue();
-	private final static ReferenceQueue unmanagedRefQueue = new ReferenceQueue();
 
 	private static final String[] COMMON_KEYS = {
 		"src","port","prot","ip","udpport","azver","httpport","downloaded",
@@ -110,9 +109,6 @@ StringInterner
 						} finally {
 							managedSetLock.writeLock().unlock();
 						}
-
-
-						sanitizeLight();
 					}
 				});
 			}
@@ -134,48 +130,6 @@ StringInterner
 	}
 	*/
 	
-	/**
-	 * A generic interning facility for heavyweight or frequently duplicated
-	 * Objects that have a reasonable <code>equals()</code> implementation.<br>
-	 * <br>
-	 * Important: The objects should have a limited lifespan, the interning set
-	 * used by this method is unmanaged, i.e. does not clean out old entries!
-	 * Entries without strong references are still removed.
-	 *
-	 */
-	public static Object internObject(Object toIntern)
-	{
-		if ( DISABLE_INTERNING ){
-			return( toIntern );
-		}
-
-		if(toIntern == null)
-			return null;
-
-		Object internedItem;
-
-		WeakEntry checkEntry = new WeakEntry(toIntern,unmanagedRefQueue);
-
-		synchronized( unmanagedInterningSet ){
-
-			WeakEntry internedEntry = (WeakEntry) unmanagedInterningSet.get(checkEntry);
-
-			if (internedEntry == null || (internedItem = (internedEntry.get())) == null)
-			{
-				internedItem = toIntern;
-				if(!unmanagedInterningSet.add(checkEntry))
-					System.out.println("unexpected modification"); // should not happen
-			}
-
-			sanitizeLight();
-		}
-
-		// should not happen
-		if(!toIntern.equals(internedItem))
-			System.err.println("mismatch");
-
-		return internedItem;
-	}
 
 	public static String intern(String toIntern) {
 
@@ -503,18 +457,6 @@ StringInterner
 				return w1.hits * w1.size - w2.hits * w2.size;
 			}
 		};
-
-	private static void sanitizeLight()
-	{
-		synchronized (unmanagedInterningSet)
-		{
-			WeakEntry ref;
-			while((ref = (WeakEntry)(unmanagedRefQueue.poll())) != null)
-				unmanagedInterningSet.remove(ref);
-
-			unmanagedInterningSet.compactify(-1f);
-		}
-	}
 
 	private static void sanitize(boolean scheduled)
 	{
@@ -1022,7 +964,6 @@ StringInterner
 						writer.indent();
 						
 						writer.println( "Managed: " + managedInterningSet.size());
-						writer.println( "Unmanaged: " + unmanagedInterningSet.size());
 						
 						if ( TRACK_FILE_KEYS ){
 							

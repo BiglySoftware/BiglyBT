@@ -77,7 +77,7 @@ public class PeerItemFactory {
 	int		up_speed )
 
   {
-    return (PeerItem)StringInterner.internObject( new PeerItem( address, tcp_port, source, handshake_type, udp_port, crypto_level, up_speed ) );
+    return( new PeerItem( address, tcp_port, source, handshake_type, udp_port, crypto_level, up_speed ));
   }
 
   /**
@@ -87,7 +87,7 @@ public class PeerItemFactory {
    * @return peer
    */
   public static PeerItem createPeerItem( byte[] serialization, byte source, byte handshake_type, int udp_port, String network ) throws Exception {
-    return (PeerItem)StringInterner.internObject( new PeerItem( serialization, source, handshake_type, udp_port, network ) );
+    return( new PeerItem( serialization, source, handshake_type, udp_port, network ));
   }
 
 
