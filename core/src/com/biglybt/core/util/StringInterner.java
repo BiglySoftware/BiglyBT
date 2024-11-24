@@ -26,6 +26,7 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
@@ -964,6 +965,118 @@ StringInterner
 		}
 	}
 	
+	
+	
+	
+	
+	private final static boolean TRACK_FILE_KEYS = Constants.IS_CVS_VERSION;
+	
+	private final static ReferenceQueue<FileKey>			file_key_ref_queue;
+	private final static Map<WeakReference<FileKey>,String>	file_key_map;
+	
+	static{
+		if ( TRACK_FILE_KEYS ){
+			
+			file_key_ref_queue	= new ReferenceQueue<>();
+			file_key_map		= new ConcurrentHashMap<>();
+
+			new AEThread2( "StringInterner:FileKey" )
+			{
+				@Override
+				public void 
+				run()
+				{
+					while( true ){
+						
+						try{
+							WeakReference<FileKey> next = (WeakReference<FileKey>)file_key_ref_queue.remove( 0 );
+							
+							file_key_map.remove( next );
+														
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+			}.start();
+		}else{
+			
+			file_key_ref_queue	= null;
+			file_key_map		= null;
+		}
+	}
+	
+	static{
+		AEDiagnostics.addEvidenceGenerator(
+			new AEDiagnosticsEvidenceGenerator()
+			{
+				@Override
+				public void
+				generate(
+					IndentWriter writer)
+				{
+					writer.println( "String Interner" );
+
+					try{
+						writer.indent();
+						
+						writer.println( "Managed: " + managedInterningSet.size());
+						writer.println( "Unmanaged: " + unmanagedInterningSet.size());
+						
+						if ( TRACK_FILE_KEYS ){
+							
+							int	fk_count	= 0;
+							long fk_total	= 0;
+							long fk_actual	= 0;							
+								
+							Iterator<WeakReference<FileKey>> it = file_key_map.keySet().iterator();
+							
+							Set<String> strings = new IdentityHashSet<>();
+							
+							while( it.hasNext()){
+								
+								FileKey fk = it.next().get();
+								
+								if ( fk != null ){
+									
+									fk_count++;
+									
+									String[] comps = fk.comps;
+									
+									int comp_num = fk.comps.length;
+									
+									for ( int i=fk.isFile()?1:0; i<comp_num; i++ ){
+										
+										String str = comps[i];
+										
+										int len = str.length();
+										
+										fk_total += len;
+										
+										if ( !strings.contains( str )){
+																					
+											strings.add( str );
+											
+											fk_actual += len;
+										}
+									}
+								}
+							}
+							
+							writer.println( 
+									"File Keys: num=" + fk_count + 
+									", total=" + DisplayFormatters.formatByteCountToKiBEtc( fk_total ) +
+									", actual=" + DisplayFormatters.formatByteCountToKiBEtc( fk_actual ));
+						}
+					}finally{
+						
+						writer.exdent();
+					}
+				}
+			});
+	}
+	
 	public static class
 	FileKey
 		implements StringSupplier
@@ -1026,6 +1139,11 @@ StringInterner
 			String	tail,
 			boolean	is_dir )
 		{
+			if ( TRACK_FILE_KEYS ){
+				
+				file_key_map.put( new WeakReference<FileKey>( this, file_key_ref_queue ), "" );
+			}
+			
 			List<String> l = null;
 		
 			int hc = 0;
@@ -1228,6 +1346,12 @@ StringInterner
 		{
 			return( get().compareTo(o.get()));
 		}
+		
+		public boolean
+		isFile()
+		{
+			return( true );
+		}
 	}
 	
 	public static class
@@ -1256,6 +1380,13 @@ StringInterner
 			String	str )
 		{
 			super( dir, str, true );
+		}
+		
+		@Override
+		public boolean
+		isFile()
+		{
+			return( false );
 		}
 	}
 }
