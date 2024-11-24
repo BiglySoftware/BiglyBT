@@ -58,6 +58,7 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerDataProvider;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.core.util.bloom.BloomFilter;
 import com.biglybt.core.util.bloom.BloomFilterFactory;
 import com.biglybt.pif.PluginInterface;
@@ -3642,6 +3643,28 @@ DownloadManagerController
 						File f = file.getFile( true );
 								
 						writer.println( file.getIndex() + ": " + f + ", exists=" + f.exists());
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+				
+				writer.println( "Links" );
+				
+				try{
+					writer.indent();
+					
+					LinkFileMap links = download_manager_state.getFileLinks();
+					
+					Iterator<LinkFileMap.Entry> it = links.entryIterator();
+						
+					while( it.hasNext()){
+						
+						LinkFileMap.Entry entry = it.next();
+														
+						FileKey from = entry.getFromFileMaybeNull();
+						
+						writer.println( entry.getIndex() + ": " + (from==null?"":(from.get()+" ")) + "-> " + entry.getToFile().get());
 					}
 				}finally{
 					
