@@ -1676,8 +1676,6 @@ SubscriptionManagerUI
 	{
 		if (!subs.isSubscribed()){
 
-				// user may have deleted subscrtipion, but our register is staill there
-
 			return null;
 		}
 
@@ -1706,7 +1704,7 @@ SubscriptionManagerUI
 		name_map.put( subs_name, key );
 
 		MdiEntry[] existing = mdi.getEntries();
-
+		
 		for ( MdiEntry e: existing ){
 
 			String id = e.getViewID();
@@ -1828,12 +1826,14 @@ SubscriptionManagerUI
 							null,
 							parent_name,
 							parent, null, false, parent_prev_id );
+					
+					parent_views.put( parent_name, parent_entry );
 				}
 			}
 
 			entry = mdi.createEntry(new UISWTViewBuilderCore(key, null,
 					SubscriptionView.class).setParentEntryID(
-							parent_entry.getViewID()).setInitialDatasource(subs),
+							parent_entry.getViewID()).setInitialDatasource(subs).setPreferredAfterID(prev_id),
 					true);
 		}
 
