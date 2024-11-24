@@ -19,8 +19,6 @@
 
 package com.biglybt.core.diskmanager.cache;
 
-import com.biglybt.core.torrent.TOTorrent;
-import com.biglybt.core.util.LinkFileMap;
 import com.biglybt.core.util.StringInterner;
 
 
@@ -43,9 +41,4 @@ CacheFileManager
 
 	public CacheFileManagerStats
 	getStats();
-
-	public void
-	setFileLinks(
-		TOTorrent				torrent,
-		LinkFileMap				links );
 }

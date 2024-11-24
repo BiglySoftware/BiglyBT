@@ -563,7 +563,7 @@ public class FilesViewMenuUtil
 					}
 				}
 
-				File target = dm_state.getFileLink( file_info.getIndex(), file_nolink );
+				File target = dm_state.getFileLink( file_info.getIndex());
 
 			   	if ( target != null ){
 
@@ -2705,7 +2705,7 @@ public class FilesViewMenuUtil
 
 				DownloadManager manager = file_info.getDownloadManager();
 
-				File source = file_info.getDownloadManager().getDownloadState().getFileLink( file_info.getIndex(), target );
+				File source = file_info.getDownloadManager().getDownloadState().getFileLink( file_info.getIndex());
 
 			   	if ( source != null ){
 

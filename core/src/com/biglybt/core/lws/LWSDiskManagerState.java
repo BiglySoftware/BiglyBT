@@ -33,6 +33,7 @@ import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.LinkFileMap;
+import com.biglybt.core.util.StringInterner.FileKey;
 
 public class
 LWSDiskManagerState
@@ -513,12 +514,20 @@ LWSDiskManagerState
 	@Override
 	public File
 	getFileLink(
-		int		source_index,
-		File	link_source )
+		int		source_index )
 	{
 		return( null );
 	}
 
+	@Override
+	public FileKey
+	getFileLink(
+		int			source_index,
+		FileKey		def )
+	{
+		return( def );
+	}
+	
 	@Override
 	public LinkFileMap
 	getFileLinks()

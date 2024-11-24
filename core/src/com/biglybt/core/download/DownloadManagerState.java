@@ -28,6 +28,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.LinkFileMap;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.download.Download;
 
 /**
@@ -387,9 +388,20 @@ DownloadManagerState
 
 	public File
 	getFileLink(
-		int		source_index,
-		File	link_source );
-
+		int		source_index );
+	
+		/**
+		 * Returns file link if it exists, def if not
+		 * @param source_index
+		 * @param def
+		 * @return
+		 */
+	
+	public FileKey
+	getFileLink(
+		int			source_index,
+		FileKey		def );
+	
 		/**
 		 * returns a File -> File map of the defined links (empty if no links)
 		 * @return

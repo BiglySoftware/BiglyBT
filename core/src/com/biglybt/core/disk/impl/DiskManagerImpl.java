@@ -962,7 +962,7 @@ DiskManagerImpl
 
 				File target_file = FileUtil.newFile( root_dir, relative_file.toString());
 
-        		File actual_file = state.getFileLink( file_index, target_file );
+        		File actual_file = state.getFileLink( file_index );
 
         		if ( actual_file == null ){
 
@@ -1888,7 +1888,7 @@ DiskManagerImpl
 	
 		                    			int	file_index = this_file.getIndex();
 	
-		                    			File link = state.getFileLink( file_index, base_file );
+		                    			File link = state.getFileLink( file_index );
 	
 		                    			if ( link != null ){
 	
@@ -3025,6 +3025,8 @@ DiskManagerImpl
 			  
 			  reader.setSuspended( true );
 			  
+			  DownloadManagerState dms = download_manager.getDownloadState();
+			  
 			  boolean simple_torrent = download_manager.getTorrent().isSimpleTorrent();
 	
 			  // absolute save location does not follow links
@@ -3050,7 +3052,7 @@ DiskManagerImpl
 	
 				  File old_file = files[i].getFile(false);
 	
-				  File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, new StringInterner.FileKey( old_file )).getFile();
+				  File linked_file = dms.getFileLink( i, new StringInterner.FileKey( old_file )).getFile();
 	
 				  if ( !linked_file.equals(old_file)){
 	
@@ -3738,10 +3740,11 @@ DiskManagerImpl
 
     public static void
     deleteDataFiles(
-        TOTorrent   torrent,
-        String      torrent_save_dir,       // enclosing dir, not for deletion
-        String      torrent_save_file, 		// file or dir for torrent
-        boolean		force_no_recycle )
+    	DownloadManager	dm,
+        TOTorrent   	torrent,
+        String      	torrent_save_dir,       // enclosing dir, not for deletion
+        String      	torrent_save_file, 		// file or dir for torrent
+        boolean			force_no_recycle )
     {
         if (torrent == null || torrent_save_file == null ){
 
@@ -3751,9 +3754,11 @@ DiskManagerImpl
         try{
             if (torrent.isSimpleTorrent()){
 
+            	DownloadManagerState	dms = dm.getDownloadState();
+
                 File    target = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 
-                target = FMFileManagerFactory.getSingleton().getFileLink( torrent, 0, new StringInterner.FileKey( target.getCanonicalFile())).getFile();
+                target = dms.getFileLink( 0, new StringInterner.FileKey( target.getCanonicalFile())).getFile();
 
                 FileUtil.deleteWithRecycle( target, force_no_recycle );
 
@@ -3777,7 +3782,7 @@ DiskManagerImpl
 
         				// only delete the dir if there's only this torrent's files in it!
 
-        			int numDataFiles = countDataFiles( torrent, torrent_save_dir, torrent_save_file );
+        			int numDataFiles = countDataFiles( dm, torrent, torrent_save_dir, torrent_save_file );
         			
         			if ( countFiles( FileUtil.newFile(dir), numDataFiles) == numDataFiles){
 
@@ -3790,7 +3795,7 @@ DiskManagerImpl
             	
     			if ( !deleted ){
     					
-    				deleteDataFileContents( torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
+    				deleteDataFileContents( dm, torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
     			}
             }
         }catch( Throwable e ){
@@ -3834,15 +3839,18 @@ DiskManagerImpl
 	 */
     private static int
     countDataFiles(
-        TOTorrent torrent,
-        String torrent_save_dir,
-        String torrent_save_file )
+    	DownloadManager	dm,
+        TOTorrent		torrent,
+        String			torrent_save_dir,
+        String			torrent_save_file )
     {
         try{
             int res = 0;
 
             LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
 
+            DownloadManagerState dms = dm.getDownloadState();
+            
             TOTorrentFile[] files = torrent.getFiles();
 
             for (int i=0;i<files.length;i++){
@@ -3862,7 +3870,7 @@ DiskManagerImpl
 
                 file = file.getCanonicalFile();
 
-                File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, new StringInterner.FileKey( file )).getFile();
+                File linked_file = dms.getFileLink( i, new StringInterner.FileKey( file )).getFile();
 
                 boolean skip = false;
 
@@ -3892,21 +3900,23 @@ DiskManagerImpl
 
     private static void
     deleteDataFileContents(
-        TOTorrent torrent,
-        String torrent_save_dir,
+    	DownloadManager	dm,
+        TOTorrent 	torrent,
+        String 		torrent_save_dir,
         String 		torrent_save_file,
         boolean		force_no_recycle )
 
             throws TOTorrentException, UnsupportedEncodingException, LocaleUtilEncodingException
     {
+    	DownloadManagerState	dms = dm.getDownloadState();
+    	    	
     	LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
 
     	TOTorrentFile[] files = torrent.getFiles();
 
     	File root_path_file = FileUtil.newFile( torrent_save_dir, torrent_save_file );
-
-    	FMFileManager fm_factory = FMFileManagerFactory.getSingleton();
-    	boolean has_links = fm_factory.hasLinks(torrent);
+    	
+    	boolean has_links = dms.getFileLinks().size() > 0;
 
     	if (!has_links) {
     		if	(!root_path_file.isDirectory()) {
@@ -3948,7 +3958,7 @@ DiskManagerImpl
             boolean delete;
 
             if (has_links) {
-            	File linked_file = fm_factory.getFileLink( torrent, i, new StringInterner.FileKey( file )).getFile();
+            	File linked_file = dms.getFileLink( i, new StringInterner.FileKey( file )).getFile();
 
             	if ( linked_file == file ){
 
@@ -4208,20 +4218,6 @@ DiskManagerImpl
         }
 
         return( getStorageTypes( download_manager )[fileIndex]);
-    }
-
-    public static void
-    setFileLinks(
-        DownloadManager         download_manager,
-        LinkFileMap    			links )
-    {
-        try{
-            CacheFileManagerFactory.getSingleton().setFileLinks( download_manager.getTorrent(), links );
-
-        }catch( Throwable e ){
-
-            Debug.printStackTrace(e);
-        }
     }
 
     /* (non-Javadoc)

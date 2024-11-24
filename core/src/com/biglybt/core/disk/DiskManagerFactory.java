@@ -133,12 +133,13 @@ DiskManagerFactory
 
 	public static void
 	deleteDataFiles(
-		TOTorrent 	torrent,
-		String		torrent_save_dir,
-		String		torrent_save_file,
-		boolean		force_no_recycle )
+		DownloadManager	dm,
+		TOTorrent 		torrent,
+		String			torrent_save_dir,
+		String			torrent_save_file,
+		boolean			force_no_recycle )
 	{
-	  DiskManagerImpl.deleteDataFiles(torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
+	  DiskManagerImpl.deleteDataFiles( dm, torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
 	}
 
 	public static DiskManagerFileInfoSet
@@ -147,14 +148,6 @@ DiskManagerFactory
 		DiskManagerListener		listener )
 	{
 		return( DiskManagerUtil.getFileInfoSkeleton( download_manager, listener ));
-	}
-
-	public static void
-	setFileLinks(
-		DownloadManager			download_manager,
-		LinkFileMap				links )
-	{
-		DiskManagerImpl.setFileLinks( download_manager, links );
 	}
 
 	public static void

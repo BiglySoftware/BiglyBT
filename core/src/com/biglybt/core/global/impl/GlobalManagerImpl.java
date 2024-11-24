@@ -4736,7 +4736,7 @@ public class GlobalManagerImpl
 
 											File base_file = fileInfo.getFile( false );
 
-											File existing_link = state.getFileLink( i, base_file );
+											File existing_link = state.getFileLink( i );
 
 											if ( existing_link == null && base_file.exists()){
 
@@ -4809,7 +4809,7 @@ public class GlobalManagerImpl
 
 				File base_file = fileInfo.getFile(false);
 
-				File existing_link = state.getFileLink( i, base_file);
+				File existing_link = state.getFileLink( i );
 
 				if (existing_link == null && !base_file.exists()) {
 

@@ -28,7 +28,6 @@ package com.biglybt.core.diskmanager.file;
 
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.IndentWriter;
-import com.biglybt.core.util.LinkFileMap;
 import com.biglybt.core.util.StringInterner;
 
 public interface
@@ -42,21 +41,6 @@ FMFileManager
 		boolean					force )
 
 		throws FMFileManagerException;
-
-	public void
-	setFileLinks(
-		TOTorrent			torrent,
-		LinkFileMap			links );
-
-	public StringInterner.FileKey
-	getFileLink(
-		TOTorrent					torrent,
-		int							from_index,
-		StringInterner.FileKey		from_file );
-
-	public boolean
-	hasLinks(
-		TOTorrent			torrent	);
 	
 	public void
 	generateEvidence(

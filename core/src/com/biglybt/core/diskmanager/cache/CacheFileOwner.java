@@ -27,6 +27,7 @@ package com.biglybt.core.diskmanager.cache;
 import java.io.File;
 
 import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.util.StringInterner;
 
 public interface
 CacheFileOwner
@@ -46,4 +47,8 @@ CacheFileOwner
 
 	public int
 	getCacheMode();
+	
+	public StringInterner.FileKey
+	getCacheFileLink(
+		StringInterner.FileKey	file );
 }

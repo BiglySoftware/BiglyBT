@@ -36,6 +36,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.AverageFactory.LazyMovingImmediateAverageAdapter;
 import com.biglybt.core.util.average.AverageFactory.LazyMovingImmediateAverageState;
@@ -136,6 +137,14 @@ DiskManagerFileInfoImpl
 	getCacheMode()
 	{
 		return( diskManager.getCacheMode());
+	}
+	
+	@Override
+	public FileKey 
+	getCacheFileLink(
+		FileKey file )
+	{
+		return( diskManager.getDownloadState().getFileLink( file_index, file ));
 	}
 
   @Override
@@ -241,7 +250,7 @@ DiskManagerFileInfoImpl
 		}
 
 		// Same as getLink(), except saves redundant getFile(false) call
-		File	res = diskManager.getDownloadState().getFileLink(file_index, file);
+		File	res = diskManager.getDownloadState().getFileLink(file_index);
 		
 		return res == null ? file : res;
 	}
@@ -302,7 +311,7 @@ DiskManagerFileInfoImpl
 	public File
 	getLink()
 	{
-		return( diskManager.getDownloadState().getFileLink( file_index, getFile( false )));
+		return( diskManager.getDownloadState().getFileLink( file_index));
 	}
 
 	@Override

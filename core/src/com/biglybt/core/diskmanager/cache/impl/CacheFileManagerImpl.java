@@ -36,6 +36,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 
 public class
 CacheFileManagerImpl
@@ -268,6 +269,13 @@ CacheFileManagerImpl
 						getControlFileDir( )
 						{
 							return( owner.getCacheFileControlFileDir( ));
+						}
+						@Override
+						public FileKey 
+						getFileLink(
+							FileKey file )
+						{
+							return( owner.getCacheFileLink(file));
 						}
 					}, file, fm_type, force );
 
@@ -1036,14 +1044,5 @@ CacheFileManagerImpl
 
 			writer.exdent();
 		}
-	}
-
-	@Override
-	public void
-	setFileLinks(
-		TOTorrent		torrent,
-		LinkFileMap		links )
-	{
-		file_manager.setFileLinks( torrent, links );
 	}
 }

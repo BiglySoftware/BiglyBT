@@ -120,9 +120,7 @@ FMFileImpl
 		owner			= _owner;
 		manager			= _manager;
 
-		TOTorrentFile tf = owner.getTorrentFile();
-
-		linked_file		= manager.getFileLink( tf.getTorrent(), tf.getIndex(), _file );
+		linked_file		= owner.getFileLink( _file ); //  manager.getFileLink( tf.getTorrent(), tf.getIndex(), _file );
 
 		boolean	file_was_created	= false;
 		boolean	file_reserved		= false;

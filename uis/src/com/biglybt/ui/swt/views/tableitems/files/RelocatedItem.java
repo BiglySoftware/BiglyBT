@@ -64,7 +64,7 @@ public class RelocatedItem
     		
         	File source = fileInfo.getFile( false );
 
-	    	File target = fileInfo.getDownloadManager().getDownloadState().getFileLink( index, source );
+	    	File target = fileInfo.getDownloadManager().getDownloadState().getFileLink( index );
 	
 	    	if ( target == null ){
 	

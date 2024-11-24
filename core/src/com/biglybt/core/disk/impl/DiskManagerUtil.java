@@ -44,6 +44,7 @@ import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.FileUtil.ProgressListener;
+import com.biglybt.core.util.StringInterner.FileKey;
 
 import java.io.File;
 import java.io.IOException;
@@ -709,6 +710,14 @@ DiskManagerUtil
 													{
 														return( CacheFileOwner.CACHE_MODE_NORMAL );
 													}
+													
+													@Override
+													public FileKey 
+													getCacheFileLink(
+														FileKey file )
+													{
+														return( download_manager.getDownloadState().getFileLink( idx, file ));
+													}
 												},
 												new StringInterner.FileKey( target_file ),
 												DiskManagerUtil.convertDMStorageTypeToCache( newStorageType ), force );
@@ -1138,7 +1147,7 @@ DiskManagerUtil
 		                public File
 	                	getLink()
 	                	{
-	                		return( download_manager.getDownloadState().getFileLink( file_index, lazyGetFile() ));
+	                		return( download_manager.getDownloadState().getFileLink( file_index));
 	                	}
 
 	                	@Override
@@ -1209,6 +1218,13 @@ DiskManagerUtil
 	                								{
 	                									return( CacheFileOwner.CACHE_MODE_NORMAL );
 	                								}
+	                								@Override
+													public FileKey 
+													getCacheFileLink(
+														FileKey file )
+													{
+														return( download_manager.getDownloadState().getFileLink( file_index, file ));
+													}
 	                							},
 	                							new StringInterner.FileKey( getFile( true )),
 	                							convertDMStorageTypeToCache( type ), false );

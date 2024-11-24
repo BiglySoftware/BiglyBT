@@ -67,9 +67,6 @@ FMFileManagerImpl
 	protected final LinkedHashMap<FMFileLimited,FMFileLimited>		map;
 	protected final AEMonitor			map_mon	= new AEMonitor( "FMFileManager:Map");
 
-	protected final HashMap<HashWrapper,LinkFileMap>			links		= new HashMap<>();
-	protected final AEMonitor			links_mon	= new AEMonitor( "FMFileManager:Links");
-
 	protected final boolean			limited;
 	protected final int				limit_size;
 
@@ -112,129 +109,6 @@ FMFileManagerImpl
 					}
 				}.start();
 		}
-	}
-
-	protected LinkFileMap
-	getLinksEntry(
-		TOTorrent	torrent )
-	{
-		HashWrapper	links_key;
-
-		try{
-			links_key = torrent.getHashWrapper();
-
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
-
-			links_key	= new HashWrapper( new byte[0]);
-		}
-
-		LinkFileMap	links_entry = links.get( links_key );
-
-		if ( links_entry == null ){
-
-			links_entry	= new LinkFileMap();
-
-			links.put( links_key, links_entry );
-		}
-
-		return( links_entry );
-	}
-
-	@Override
-	public void
-	setFileLinks(
-		TOTorrent 		torrent,
-		LinkFileMap		new_links )
-	{
-		try{
-			links_mon.enter();
-
-			try{
-				HashWrapper links_key = torrent.getHashWrapper();
-
-				links.put( links_key, new_links );
-				
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
-		}finally{
-
-			links_mon.exit();
-		}
-	}
-
-	@Override
-	public StringInterner.FileKey
-	getFileLink(
-		TOTorrent				torrent,
-		int						file_index,
-		StringInterner.FileKey	file )
-	{
-			// Reworked as of 3701 to NOT rely on the crap below...
-		
-			// x this function works on the currently defined links and will only accept
-			// x them as valid if their 'from' location matches the 'file' being queried.
-			// x if not the original file is returned, NOT null
-
-			// x These semantics are important during file-move operations as the move-file
-			// x logic does not update links until AFTER the move is complete. If we don't
-			// x verify the 'from' path in this case then the old existing linkage overrides
-			// x the new destination during the move process and causes it to fail with
-			// x 'file already exists'. There is possibly an argument that we shouldn't
-			// x take links into account when moving
-
-		try{
-			links_mon.enter();
-
-			LinkFileMap	links_entry = getLinksEntry( torrent );
-
-			LinkFileMap.Entry	entry = links_entry.getEntry( file_index );
-
-			StringInterner.FileKey res = null;
-
-			if ( entry == null ){
-
-				res = file;
-
-			}else{
-
-				res = entry.getToFile();
-
-				/*
-				if ( file.equals( entry.getFromFile())){
-
-					res = entry.getToFile();
-
-					if ( res == null ){
-						
-						res = file;
-					}
-				}else{
-
-					res = file;
-				}
-				*/
-			}
-
-			// System.out.println( "getLink:" + file + " -> " + res );
-
-			return( res );
-
-		}finally{
-
-			links_mon.exit();
-		}
-	}
-
-	@Override
-	public boolean 
-	hasLinks(
-		TOTorrent torrent) 
-	{
-		return( getLinksEntry(torrent).size() > 0 );
 	}
 
 	@Override
@@ -285,7 +159,6 @@ FMFileManagerImpl
 
 		return( res );
 	}
-
 
 	protected void
 	getSlot(
@@ -531,44 +404,6 @@ FMFileManagerImpl
 			
 			Debug.out( e );
 		}
-		
-		writer.println( "FMFileManager links" );
-
-		try{			
-			try{
-				writer.indent();
-	
-				try{
-					links_mon.enter();
-	
-					LinkFileMap	links_entry = getLinksEntry( torrent );
-
-					Iterator<LinkFileMap.Entry>	it = links_entry.entryIterator();
-
-					while( it.hasNext()){
-
-						LinkFileMap.Entry	entry = it.next();
-
-						int		index	= entry.getIndex();
-
-						StringInterner.FileKey	target	= entry.getToFile();
-												
-						writer.println( index + ": -> " + target );
-					}
-	
-				}finally{
-	
-					links_mon.exit();
-				}
-			}finally{
-	
-				writer.exdent();
-			}
-		}catch( Throwable e ){
-			
-			Debug.out( e );
-		}
-		
 	}
 	
 	protected static void

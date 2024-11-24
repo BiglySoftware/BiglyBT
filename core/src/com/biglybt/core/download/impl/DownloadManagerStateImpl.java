@@ -45,6 +45,7 @@ import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 
 /**
  * @author parg
@@ -2446,8 +2447,7 @@ DownloadManagerStateImpl
 	@Override
 	public File
 	getFileLink(
-		int		source_index,
-		File	link_source )
+		int		source_index )
 	{
 		LinkFileMap map = null;
 
@@ -2474,6 +2474,44 @@ DownloadManagerStateImpl
 
 		return( res );
 	}
+	
+	@Override
+	public FileKey
+	getFileLink(
+		int			source_index,
+		FileKey		def )
+	{
+		LinkFileMap map = null;
+
+		WeakReference<LinkFileMap> ref = file_link_cache;
+
+		if ( ref != null ){
+
+			map = ref.get();
+		}
+
+		if ( map == null ){
+
+			map = getFileLinks();
+
+			synchronized( this ){
+
+				file_link_cache = new WeakReference<>(map);
+			}
+		}
+
+		LinkFileMap.Entry entry = map.getEntry( source_index );
+		
+		if ( entry == null ){
+			
+			return( def );
+			
+		}else{
+			
+			return( entry.getToFile());
+		}
+	}
+	
 
 	@Override
 	public LinkFileMap
@@ -3778,12 +3816,20 @@ DownloadManagerStateImpl
 		@Override
 		public File
 		getFileLink(
-			int		source_index,
-			File	link_source )
+			int		source_index )
 		{
 			return( null );
 		}
 
+		@Override
+		public FileKey
+		getFileLink(
+			int			source_index,
+			FileKey		def )
+		{
+			return( def );
+		}
+		
 		@Override
 		public LinkFileMap
 		getFileLinks()

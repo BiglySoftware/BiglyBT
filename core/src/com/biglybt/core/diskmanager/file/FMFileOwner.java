@@ -23,6 +23,7 @@ package com.biglybt.core.diskmanager.file;
 import java.io.File;
 
 import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.util.StringInterner;
 
 /**
  * @author parg
@@ -39,4 +40,8 @@ FMFileOwner
 
 	public File
 	getControlFileDir( );
+	
+	public StringInterner.FileKey
+	getFileLink(
+		StringInterner.FileKey		file );
 }

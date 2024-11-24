@@ -1143,7 +1143,7 @@ DownloadManagerImpl
 
 					 			try{
 
-					 				setFileLinks();
+					 				fileLinksUpdated();
 
 					 			}finally{
 
@@ -1177,8 +1177,6 @@ DownloadManagerImpl
 
 				 all_trackers.registerTorrent( torrent );
 				 
-				 setFileLinks();
-
 				 	// We can't have the identity of this download changing as this will screw up
 				 	// anyone who tries to maintain a unique set of downloads (e.g. the GlobalManager)
 				 	//
@@ -1975,13 +1973,11 @@ DownloadManagerImpl
 	}
 
 	protected void
-	setFileLinks()
+	fileLinksUpdated()
 	{
 			// invalidate the cache info in case its now wrong
 
 		cached_save_location	= null;
-
-		DiskManagerFactory.setFileLinks( this, download_manager_state.getFileLinks());
 
 		controller.fileInfoChanged();
 	}
@@ -3625,7 +3621,7 @@ DownloadManagerImpl
 
  		if ( torrent == null || torrent.isSimpleTorrent()){
 
- 			res = download_manager_state.getFileLink( 0, save_location );
+ 			res = download_manager_state.getFileLink( 0 );
 
  		}else{
 
@@ -5183,6 +5179,7 @@ DownloadManagerImpl
 		DownloadManagerState state = getDownloadState();
 
 		DiskManagerFactory.deleteDataFiles(
+			this,
 			torrent,
 			torrent_save_location.getParent(),
 			torrent_save_location.getName(),
