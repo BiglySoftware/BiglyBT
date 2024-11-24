@@ -326,37 +326,42 @@ public class ConfigSectionLogging
 		add(generate_stats_button);
 
 		generate_stats_button.addListener(param -> {
-			Set<String> types = new HashSet<>();
-
-			types.add(CoreStats.ST_ALL);
-
-			Map<String, Object> reply = CoreStats.getStats(types);
-
-			reply = new TreeMap<>( reply );
-			
-			Iterator<Entry<String, Object>> it = reply.entrySet().iterator();
-
-			StringBuilder buffer = new StringBuilder(16000);
-
-			while (it.hasNext()) {
-
-				Entry<String, Object> entry = it.next();
-
-				if (entry == null) {
-					continue;
+			try{
+				generate_stats_button.setEnabled( false );
+				Set<String> types = new HashSet<>();
+	
+				types.add(CoreStats.ST_ALL);
+	
+				Map<String, Object> reply = CoreStats.getStats(types);
+	
+				reply = new TreeMap<>( reply );
+				
+				Iterator<Entry<String, Object>> it = reply.entrySet().iterator();
+	
+				StringBuilder buffer = new StringBuilder(16000);
+	
+				while (it.hasNext()) {
+	
+					Entry<String, Object> entry = it.next();
+	
+					if (entry == null) {
+						continue;
+					}
+	
+					buffer.append(entry.getKey()).append(" -> ").append(
+							entry.getValue()).append("\r\n");
 				}
-
-				buffer.append(entry.getKey()).append(" -> ").append(
-						entry.getValue()).append("\r\n");
-			}
-
-			String str = buffer.toString();
-
-			Logger.log(new LogEvent(LOGID, "Stats Info:\n" + str));
-
-			UIFunctions uif = UIFunctionsManager.getUIFunctions();
-			if (uif != null) {
-				uif.copyToClipboard(str);
+	
+				String str = buffer.toString();
+	
+				Logger.log(new LogEvent(LOGID, "Stats Info:\n" + str));
+	
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+				if (uif != null) {
+					uif.copyToClipboard(str);
+				}
+			}finally{
+				generate_stats_button.setEnabled( true );
 			}
 		});
 
@@ -368,21 +373,27 @@ public class ConfigSectionLogging
 		add(generate_button);
 
 		generate_button.addListener(param -> {
-			StringWriter sw = new StringWriter();
-
-			PrintWriter pw = new PrintWriter(sw);
-
-			AEDiagnostics.generateEvidence(pw);
-
-			pw.close();
-
-			String evidence = sw.toString();
-
-			Logger.log(new LogEvent(LOGID, "Evidence Generation:\n" + evidence));
-
-			UIFunctions uif = UIFunctionsManager.getUIFunctions();
-			if (uif != null) {
-				uif.copyToClipboard(evidence);
+			try{
+				generate_button.setEnabled( false );
+				
+				StringWriter sw = new StringWriter();
+	
+				PrintWriter pw = new PrintWriter(sw);
+	
+				AEDiagnostics.generateEvidence(pw);
+	
+				pw.close();
+	
+				String evidence = sw.toString();
+	
+				Logger.log(new LogEvent(LOGID, "Evidence Generation:\n" + evidence));
+	
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+				if (uif != null) {
+					uif.copyToClipboard(evidence);
+				}
+			}finally{
+				generate_button.setEnabled( true );
 			}
 		});
 
