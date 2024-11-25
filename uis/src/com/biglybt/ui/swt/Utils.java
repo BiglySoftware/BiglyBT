@@ -7144,7 +7144,10 @@ public class Utils
 		String		path )
 	{
 		try{
-			path = FileUtil.getCanonicalPathWithTimeout( FileUtil.newFile( path ), 20*1000 );
+			if ( path != null ){
+			
+				path = FileUtil.getCanonicalPathWithTimeout( FileUtil.newFile( path ), 20*1000 );
+			}
 			
 			dialog.setFilterPath( path );
 			
@@ -7160,7 +7163,10 @@ public class Utils
 		String			path )
 	{
 		try{
-			path = FileUtil.getCanonicalPathWithTimeout( FileUtil.newFile( path ), 20*1000 );
+			if ( path != null ){
+			
+				path = FileUtil.getCanonicalPathWithTimeout( FileUtil.newFile( path ), 20*1000 );
+			}
 			
 			dialog.setFilterPath( path );
 			
