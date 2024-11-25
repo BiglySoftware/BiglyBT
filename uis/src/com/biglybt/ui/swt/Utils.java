@@ -7138,6 +7138,39 @@ public class Utils
 		terminated();
 	}
 	
+	public static void
+	setFilterPathWithTimeout(
+		FileDialog	dialog,
+		String		path )
+	{
+		try{
+			path = FileUtil.getCanonicalPathWithTimeout( FileUtil.newFile( path ), 20*1000 );
+			
+			dialog.setFilterPath( path );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( "Failed to set filter path '" + path + "'" );
+		}
+	}
+	
+	public static void
+	setFilterPathWithTimeout(
+		DirectoryDialog	dialog,
+		String			path )
+	{
+		try{
+			path = FileUtil.getCanonicalPathWithTimeout( FileUtil.newFile( path ), 20*1000 );
+			
+			dialog.setFilterPath( path );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( "Failed to set filter path '" + path + "'" );
+		}
+	}
+	
+	
 	public static boolean
 	fileExistsWithTimeout(
 		String		path )

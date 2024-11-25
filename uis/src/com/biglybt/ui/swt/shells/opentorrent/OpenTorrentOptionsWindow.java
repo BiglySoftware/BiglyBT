@@ -5147,7 +5147,9 @@ public class OpenTorrentOptionsWindow
 
 					DirectoryDialog dDialog = new DirectoryDialog(cmbDataDir.getShell(),
 							SWT.SYSTEM_MODAL);
-					dDialog.setFilterPath(f.getAbsolutePath());
+					
+					Utils.setFilterPathWithTimeout( dDialog, f.getAbsolutePath() );
+					
 					dDialog.setMessage(MessageText.getString("MainWindow.dialog.choose.savepath_forallfiles"));
 					sSavePath = dDialog.open();
 
@@ -5447,7 +5449,7 @@ public class OpenTorrentOptionsWindow
 
 								String filter_path = TorrentOpener.getFilterPathData();
 
-								dd.setFilterPath(filter_path);
+								Utils.setFilterPathWithTimeout( dd, filter_path );
 
 								dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
 
@@ -6948,7 +6950,9 @@ public class OpenTorrentOptionsWindow
 				if ( !filterPath.exists()){
 					filterPath = filterPath.getParentFile();
 				}
-				dDialog.setFilterPath( filterPath.getAbsolutePath());
+				
+				Utils.setFilterPathWithTimeout( dDialog, filterPath.getAbsolutePath() );
+				
 				dDialog.setMessage(MessageText.getString("MainWindow.dialog.choose.savepath")
 						+ " (" + torrentOptions.getTorrentName() + ")");
 				String sNewDir = dDialog.open();
@@ -7142,7 +7146,7 @@ public class OpenTorrentOptionsWindow
 
 				if ( current_parent.length() > 0 ){
 
-					dDialog.setFilterPath( current_parent );
+					Utils.setFilterPathWithTimeout( dDialog, current_parent );
 				}
 
 				dDialog.setMessage(MessageText.getString("MainWindow.dialog.choose.savepath_forallfiles"));
@@ -7218,8 +7222,9 @@ public class OpenTorrentOptionsWindow
 						}
 					}
 
-					if (sFilterPath != null){
-						fDialog.setFilterPath(sFilterPath);
+					if ( sFilterPath != null ){
+						
+						Utils.setFilterPathWithTimeout( fDialog, sFilterPath );
 					}
 
 					fDialog.setFileName(sFileName);
