@@ -777,7 +777,8 @@ PeersViewBase
 		}
 		
 
-		if (download_specific != null) {
+		if (!download_specific.isEmpty()){
+			
 			final MenuItem block_item = new MenuItem(menu, SWT.CHECK);
 			PEPeer peer = peers.length==0?null:peers[0];
 
@@ -1556,7 +1557,25 @@ PeersViewBase
 	}
 	
 	@Override
-	public void defaultSelected(TableRowCore[] rows, int stateMask){
+	public void 
+	defaultSelected(
+		TableRowCore[] rows, int stateMask)
+	{
+		if ( rows.length == 1 ){
+			
+			PEPeer peer = (PEPeer)rows[0].getDataSource( true );
+			
+			DownloadManager dm = peer.getManager().getDiskManager().getDownload();
+						
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			
+			if ( uiFunctions != null ){
+				
+				uiFunctions.getMDI().showEntryByID(
+						MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS,
+						dm);
+			}
+		}
 	}
 	
 	@Override
