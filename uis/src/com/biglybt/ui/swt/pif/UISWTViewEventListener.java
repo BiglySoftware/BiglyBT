@@ -47,4 +47,10 @@ public interface UISWTViewEventListener {
 	{
 		return( false );
 	}
+	
+	public default boolean
+	builderNotRequired()
+	{
+		return( false );
+	}
 }

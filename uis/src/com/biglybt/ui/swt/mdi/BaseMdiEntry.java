@@ -584,14 +584,16 @@ public abstract class BaseMdiEntry
 			ViewTitleInfoManager.addListener(this);
 
 			if (getEventListener() == null && (viewTitleInfo instanceof UISWTViewEventListener)) {
-				if (getSkinRef() == null) {
-					// TODO Remove this debug
-					System.out.println(
+				UISWTViewEventListener listener = (UISWTViewEventListener) viewTitleInfo;
+				
+				if (getSkinRef() == null && !listener.builderNotRequired()){
+					
+					Debug.out(
 							"Setting event listener because viewTitleInfo instance of UISWTViewEventListener.  Might lose builder info. "
 									+ getViewID() + " via " + Debug.getCompressedStackTrace());
 				}
 				try {
-					setEventListener((UISWTViewEventListener) viewTitleInfo, null, true);
+					setEventListener(listener, null, true);
 				} catch (UISWTViewEventCancelledException ignore) {
 				}
 			}

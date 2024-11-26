@@ -3568,6 +3568,13 @@ SubscriptionManagerUI
 			title = _title;
 		}
 
+		@Override
+		public boolean 
+		builderNotRequired()
+		{
+			return( true );	// suppress warning about builder possibly being lost
+		}
+		
 		public String
 		getTitle()
 		{
