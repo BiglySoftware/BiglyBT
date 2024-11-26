@@ -2547,6 +2547,8 @@ DownloadManagerStateImpl
 		for ( DiskManagerFileInfo fi: download_manager.getDiskManagerFileInfoSet().getFiles()){
 			
 			if ( fi.getFile( false ).getAbsolutePath().equals( file )){
+			
+				setDirty( false );
 				
 				return( fi.getIndex());
 			}
