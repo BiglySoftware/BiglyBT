@@ -729,7 +729,7 @@ MagnetPlugin
 
 					}catch( DownloadException e ){
 
-						throw( new MagnetURIHandlerException( "Operation failed", e ));
+						throw( new MagnetURIHandlerException( "Operation failed", false, e ));
 					}
 				}
 
@@ -1127,7 +1127,10 @@ MagnetPlugin
 										failed(
 											MagnetURIHandlerException error )
 										{
-											Debug.out( error );
+											if ( !error.isManuallyCancelled()){
+											
+												Debug.out( error );
+											}
 										}
 										
 										@Override
@@ -1558,7 +1561,7 @@ MagnetPlugin
 		}catch( Throwable e ) {
 			
 			try{
-				_dl_listener.failed( new MagnetURIHandlerException( "Magnet download failed", e ));
+				_dl_listener.failed( new MagnetURIHandlerException( "Magnet download failed", false, e ));
 				
 			}finally{
 			
@@ -2223,7 +2226,7 @@ MagnetPlugin
 
 				}else{
 
-					error = new MagnetURIHandlerException( "Download failed", _error );
+					error = new MagnetURIHandlerException( "Download failed", false, _error );
 				}
 				
 				to_do = listeners;
@@ -3224,7 +3227,9 @@ MagnetPlugin
 						
 														done = true;
 														
-														result_listener.failed( new MagnetURIHandlerException( "MagnetURIHandler failed", result_error[0] ));
+														boolean mc = manually_cancelled[0];
+														
+														result_listener.failed( new MagnetURIHandlerException( "MagnetURIHandler failed", mc, result_error[0] ));
 													}
 												}
 												
@@ -3277,13 +3282,19 @@ MagnetPlugin
 
 			}catch( Throwable e ){
 
-				Debug.printStackTrace(e);
-
+				synchronized( md_downloader ){
+					
+					if ( !manually_cancelled[0]){
+						
+						Debug.printStackTrace(e);
+					}
+				}
+				
 				if ( listener != null ){
 					listener.reportActivity( getMessageText( "report.error", Debug.getNestedExceptionMessage(e)));
 				}
 
-				result_listener.failed( new MagnetURIHandlerException( "MagnetURIHandler failed", e ));
+				result_listener.failed( new MagnetURIHandlerException( "MagnetURIHandler failed", false, e ));
 				
 				return;
 			}

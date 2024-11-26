@@ -28,11 +28,22 @@ public class
 MagnetURIHandlerException
 	extends Exception
 {
+	private boolean manually_cancelled;
+	
 	public
 	MagnetURIHandlerException(
-		String		str,
-		Throwable 	cause )
+		String		_str,
+		boolean		_manually_cancelled,
+		Throwable 	_cause )
 	{
-		super( str, cause );
+		super( _str, _cause );
+		
+		manually_cancelled = _manually_cancelled;
+	}
+	
+	public boolean
+	isManuallyCancelled()
+	{
+		return( manually_cancelled );
 	}
 }
