@@ -3069,7 +3069,12 @@ DownloadManagerImpl
 			
 		} finally {
 
-			download_manager_state.setActive(false);
+			if ( state_after_stopping != STATE_CLOSED ){
+			
+					// closing down, don't bother with this as it can cause the state to be written again
+				
+				download_manager_state.setActive(false);
+			}
 		}
 	}
 

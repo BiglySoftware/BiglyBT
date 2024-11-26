@@ -744,18 +744,30 @@ DiskManagerImpl
             }
         }
 
-        if ( getState() == DiskManager.READY || ( getState() == DiskManager.FAULTY && errorType == ET_STOP_DURING_INIT )){
-
-            try{
-
-                saveResumeData( false );
-
-            }catch( Exception e ){
-
-                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e, switched_to_upload_only );
-            }
+        DownloadManagerState state = download_manager.getDownloadState();
+        
+        try{
+        		// saving resume data might well save the state, however we're going to
+        		// save the state below anyway 
+        	
+        	state.suppressStateSave( true );
+        
+	        if ( getState() == DiskManager.READY || ( getState() == DiskManager.FAULTY && errorType == ET_STOP_DURING_INIT )){
+	
+	            try{
+	
+	                saveResumeData( false );
+	
+	            }catch( Exception e ){
+	
+	                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e, switched_to_upload_only );
+	            }
+	        }
+        }finally{
+        	
+        	state.suppressStateSave( false );
         }
-
+        
         saveState( false );
 
         // can't be used after a stop so we might as well clear down the listeners

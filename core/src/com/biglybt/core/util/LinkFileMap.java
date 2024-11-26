@@ -55,8 +55,17 @@ LinkFileMap
 	
 	private static final boolean	STORE_FROM_KEY = true;	// can set false from 3801+ and users can still revert to 3800 if wanted (but not earlier...)
 	
+	private final IndexResolver	resolver;
+	
 	private final Map<Integer,Entry>	index_map 	= new ConcurrentHashMap<>();
 
+	public
+	LinkFileMap(
+		IndexResolver	_resolver )
+	{
+		resolver = _resolver;
+	}
+	
 	public File
 	get(
 		int			index )
@@ -213,13 +222,28 @@ LinkFileMap
 						target	= new StringInterner.FileKey( to_str );
 					}
 
-					if( index >= 0 ){
+					if ( index >= 0 ){
 
 						put( index, source_maybe_null, target );
 
 					}else{
 						
-						Debug.out( "unexpected index" );
+							// partially migrated entry, try and resolve the from file to an index
+						
+						if ( resolver != null ){
+						
+							index = resolver.resolveFile(from_str);
+							
+							if ( index >= 0 ){
+								
+								put( index, source_maybe_null, target );
+							}
+						}
+						
+						if ( index < 0 ){
+						
+							Debug.out( "unexpected index" );
+						}
 					}
 				}catch( Throwable e ){
 
@@ -290,5 +314,13 @@ LinkFileMap
 		{
 			return( index + ": " + from_file_maybe_null + " -> " + to_file );
 		}
+	}
+	
+	public interface
+	IndexResolver
+	{
+		public int
+		resolveFile(
+			String	file );
 	}
 }

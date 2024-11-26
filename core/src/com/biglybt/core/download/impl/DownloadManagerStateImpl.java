@@ -56,7 +56,7 @@ import com.biglybt.core.util.StringInterner.FileKey;
 
 public class
 DownloadManagerStateImpl
-	implements DownloadManagerState, ParameterListener
+	implements DownloadManagerState, ParameterListener, LinkFileMap.IndexResolver
 {
 	private static final int	VER_INCOMING_PEER_SOURCE	= 1;
 	private static final int	VER_HOLE_PUNCH_PEER_SOURCE	= 2;
@@ -2539,6 +2539,22 @@ DownloadManagerStateImpl
 		return( map );
 	}
 
+	@Override
+	public int 
+	resolveFile(
+		String file)
+	{
+		for ( DiskManagerFileInfo fi: download_manager.getDiskManagerFileInfoSet().getFiles()){
+			
+			if ( fi.getFile( false ).getAbsolutePath().equals( file )){
+				
+				return( fi.getIndex());
+			}
+		}
+		
+		return( -1 );
+	}
+	
 	private LinkFileMap
 	getFileLinksSupport()
 	{
@@ -2549,7 +2565,7 @@ DownloadManagerStateImpl
 			return((LinkFileMap)obj);
 		}
 		
-		LinkFileMap	res = new LinkFileMap();
+		LinkFileMap	res = new LinkFileMap( this );
 
 		List<String>	new_values = getListAttributeSupport( AT_FILE_LINKS2, false );
 
@@ -3834,7 +3850,7 @@ DownloadManagerStateImpl
 		public LinkFileMap
 		getFileLinks()
 		{
-			return( new LinkFileMap());
+			return( new LinkFileMap( null ));
 		}
 
 		@Override

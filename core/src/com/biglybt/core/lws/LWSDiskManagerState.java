@@ -532,7 +532,7 @@ LWSDiskManagerState
 	public LinkFileMap
 	getFileLinks()
 	{
-		return( new LinkFileMap());
+		return( new LinkFileMap( null ));
 	}
 
 	@Override
