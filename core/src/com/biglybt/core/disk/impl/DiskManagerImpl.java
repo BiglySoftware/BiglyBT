@@ -4074,22 +4074,27 @@ DiskManagerImpl
   {
       DownloadManagerState  state = download_manager.getDownloadState();
 
-      Map   details = new HashMap();
+      Map   new_map = new HashMap();
 
       List  downloaded = new ArrayList();
 
-      details.put( "downloaded", downloaded );
+      new_map.put( "downloaded", downloaded );
 
       for (int i=0;i<files.length;i++){
 
           downloaded.add( new Long( files[i].getDownloaded()));
       }
 
-      state.setMapAttribute( DownloadManagerState.AT_FILE_DOWNLOADED, details );
+      Map old_map = state.getMapAttribute( DownloadManagerState.AT_FILE_DOWNLOADED );
 
-      if ( persist ){
-
-    	  state.save( interim );
+      if ( !BEncoder.mapsAreIdentical(new_map, old_map)){
+    	  
+	      state.setMapAttribute( DownloadManagerState.AT_FILE_DOWNLOADED, new_map );
+	
+	      if ( persist ){
+	
+	    	  state.save( interim );
+	      }
       }
   }
 
