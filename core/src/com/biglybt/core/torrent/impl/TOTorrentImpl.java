@@ -99,7 +99,7 @@ TOTorrentImpl
 	private int								torrent_type;
 	
 	private byte[]							torrent_name;
-	private byte[]							torrent_name_utf8;
+	private String							torrent_name_utf8;
 
 	private byte[]							comment;
 	private URL								announce_url;
@@ -164,7 +164,8 @@ TOTorrentImpl
 		created	= true;
 
 		torrent_name = _torrent_name.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
-		torrent_name_utf8 = torrent_name;
+		
+		torrent_name_utf8 = _torrent_name;
 
 		setAnnounceURL(_announce_url);
 		
@@ -581,7 +582,7 @@ TOTorrentImpl
 
 		if ( torrent_name_utf8 != null ){
 
-			info.put( TK_NAME_UTF8, torrent_name_utf8 );
+			info.put( TK_NAME_UTF8, torrent_name_utf8.getBytes( Constants.UTF_8 ));
 		}
 
 		if ( torrent_hash_override != null ){
@@ -724,19 +725,17 @@ TOTorrentImpl
 	public String
 	getUTF8Name()
 	{
-		try {
-			return torrent_name_utf8 == null ? null : new String(torrent_name_utf8,
-					"utf8");
-		} catch (UnsupportedEncodingException e) {
-			return null;
-		}
+		return( torrent_name_utf8 );
 	}
 
 	protected void
 	setNameUTF8(
-		byte[]	_name )
+		byte[]	name )
 	{
-		torrent_name_utf8	= _name;
+		if ( name != null ){ 
+		
+			torrent_name_utf8 = new String ( name, Constants.UTF_8 );
+		}
 	}
 
 	@Override

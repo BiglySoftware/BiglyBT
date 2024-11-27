@@ -693,8 +693,10 @@ TOTorrentDeserialiseImpl
 
 				total_length = simple_file_length.longValue();
 
-				if (hasUTF8Keys) {
+				if ( hasUTF8Keys ){
+					
 					setNameUTF8((byte[])info.get( TK_NAME_UTF8 ));
+					
 					setAdditionalStringProperty("encoding", ENCODING_ACTUALLY_UTF8_KEYS);
 				}
 
