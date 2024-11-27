@@ -67,33 +67,6 @@ LWSTorrent
            	{
            		sets	= _sets;
            	}
-
-           	@Override
-            public TOTorrentAnnounceURLSet
-           	createAnnounceURLSet(
-           		final URL[]	_urls )
-           	{
-           		return(
-           			new TOTorrentAnnounceURLSet()
-           			{
-           				private URL[] urls = _urls;
-
-           				@Override
-			            public URL[]
-           				getAnnounceURLs()
-           				{
-           					return( urls );
-           				}
-
-           				@Override
-			            public void
-           				setAnnounceURLs(
-           					URL[]		_urls )
-           				{
-           					urls = _urls;
-           				}
-           			});
-           	}
 		};
 
 	private static void

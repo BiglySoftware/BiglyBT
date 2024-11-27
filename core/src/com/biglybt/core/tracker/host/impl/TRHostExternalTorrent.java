@@ -214,29 +214,6 @@ TRHostExternalTorrent
                		TOTorrentAnnounceURLSet[]	sets )
 				{
 				}
-
-               	@Override
-                public TOTorrentAnnounceURLSet
-               	createAnnounceURLSet(
-               		URL[]	urls )
-				{
-					return( new TOTorrentAnnounceURLSet()
-							{
-								@Override
-								public URL[]
-						       	getAnnounceURLs()
-								{
-									return( new URL[0]);
-								}
-
-						       	@Override
-						        public void
-						       	setAnnounceURLs(
-						       		URL[]		urls )
-								{
-								}
-							});
-				}
 			});
 	}
 

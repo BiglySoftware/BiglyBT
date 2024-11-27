@@ -61,8 +61,9 @@ DownloadManagerState
 	public static final String AT_RELATIVE_SAVE_PATH        = "relativepath";
 	public static final String AT_SECRETS				 	= "secrets";
 	public static final String AT_RESUME_STATE		 		= "resumecomplete";
-	public static final String AT_PRIMARY_FILE		 		= "primaryfile";
+	//public static final String AT_PRIMARY_FILE		 		= "primaryfile";
 	public static final String AT_PRIMARY_FILE_IDX		 	= "primaryfileidx";
+	public static final String AT_PRIMARY_FILE_PATH		 	= "primaryfilepath";
 	public static final String AT_TIME_SINCE_DOWNLOAD		= "timesincedl";
 	public static final String AT_TIME_SINCE_UPLOAD			= "timesinceul";
 	public static final String AT_AVAIL_BAD_TIME			= "badavail";
@@ -100,6 +101,8 @@ DownloadManagerState
 	public static final String AT_PO_ENABLE_ANNOUNCE		= "enableannounce";		// boolean, def=true
 	public static final String AT_SET_FILE_PRIORITY_REM_PIECE	= "sfp.rp";		// int
 	public static final String AT_LAST_SCRAPE_TIME			= "lastscrape";		// long
+	public static final String AT_SKIPPED_FILESET_SIZE		= "skipfss";		// long
+	public static final String AT_SKIPPED_BUT_DOWNLOADED	= "skipbdl";		// long
 
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 	public static final String AT_TRANSIENT_TAG_SORT		= "t_tagsort";
@@ -116,6 +119,7 @@ DownloadManagerState
 		{ AT_SHARE_RATIO_PROGRESS,					new Long( 0 )},
 		{ AT_FILE_ALLOC_STRATEGY,					new Long( FAS_DEFAULT )},
 		{ AT_FILE_ALLOC_ORDER,						new Long( -1 )},
+		{ AT_SKIPPED_FILESET_SIZE,					new Long( -1 )},
 	};
 
 	public static final long FLAG_ONLY_EVER_SEEDED						= Download.FLAG_ONLY_EVER_SEEDED;
@@ -318,9 +322,10 @@ DownloadManagerState
 
 	public String getRelativeSavePath();
 
-	public void setPrimaryFile(DiskManagerFileInfo dmfi);
 	public DiskManagerFileInfo getPrimaryFile();
 
+	public String getPrimaryFilePath();
+	
 	public String
 	getTrackerClientExtensions();
 

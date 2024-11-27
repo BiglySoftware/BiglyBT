@@ -379,19 +379,19 @@ LWSDiskManagerState
 	}
 
 	@Override
-	public void
-	setPrimaryFile(
-		DiskManagerFileInfo dmfi)
-	{
-	}
-
-	@Override
 	public DiskManagerFileInfo
 	getPrimaryFile()
 	{
 		return null;
 	}
 
+	@Override
+	public String 
+	getPrimaryFilePath()
+	{
+		return null;
+	}
+	
 	@Override
 	public String[]
 	getNetworks()

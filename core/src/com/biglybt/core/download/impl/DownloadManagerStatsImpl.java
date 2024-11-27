@@ -1555,22 +1555,39 @@ DownloadManagerStatsImpl
 		}
 		*/
 		
+		saved_skipped_file_set_size = state.getLongAttribute( DownloadManagerState.AT_SKIPPED_FILESET_SIZE );
+		saved_skipped_but_downloaded = state.getLongAttribute( DownloadManagerState.AT_SKIPPED_BUT_DOWNLOADED );
+		
 		loadTrackerStats();
 	}
 
 	public void
 	setSkippedFileStats(
-			long skipped_file_set_size,
-			long skipped_but_downloaded
-			)
+		long skipped_file_set_size,
+		long skipped_but_downloaded )
 	{
-		this.saved_skipped_file_set_size = skipped_file_set_size;
-		this.saved_skipped_but_downloaded = skipped_but_downloaded;
+		DownloadManagerState state = download_manager.getDownloadState();
+
+		if ( saved_skipped_file_set_size != skipped_file_set_size){
+			
+			saved_skipped_file_set_size = skipped_file_set_size;
+
+			state.setLongAttribute( DownloadManagerState.AT_SKIPPED_FILESET_SIZE, skipped_file_set_size );
+		}
+		
+		if ( saved_skipped_but_downloaded != skipped_but_downloaded){
+			
+			saved_skipped_but_downloaded = skipped_but_downloaded;
+
+			state.setLongAttribute( DownloadManagerState.AT_SKIPPED_BUT_DOWNLOADED, skipped_but_downloaded );
+		}
 	}
 
 	private long
-	getSkippedFileSetSize() {
-		if (saved_skipped_file_set_size < 0) {
+	getSkippedFileSetSize() 
+	{
+		if ( saved_skipped_file_set_size < 0 ){
+			
 			DiskManagerFileInfo[] files = download_manager.getDiskManagerFileInfoSet().getFiles();
 
 			long skipped_file_set_size = 0;
@@ -1585,8 +1602,10 @@ DownloadManagerStatsImpl
 					skipped_but_downloaded  += file.getDownloaded();
 				}
 			}
+			
 			setSkippedFileStats(skipped_file_set_size, skipped_but_downloaded);
 		}
+		
 		return saved_skipped_file_set_size;
 	}
 

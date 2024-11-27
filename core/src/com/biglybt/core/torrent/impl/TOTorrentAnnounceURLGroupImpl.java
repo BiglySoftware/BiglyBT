@@ -91,14 +91,4 @@ TOTorrentAnnounceURLGroupImpl
 		
 		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS, new Object[]{ old, sets });
 	}
-
-
-	@Override
-	public TOTorrentAnnounceURLSet
-	createAnnounceURLSet(
-		URL[]	urls )
-	{
-		return( new TOTorrentAnnounceURLSetImpl( torrent, urls ));
-	}
-
 }

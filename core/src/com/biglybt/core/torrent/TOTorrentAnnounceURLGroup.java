@@ -53,7 +53,39 @@ TOTorrentAnnounceURLGroup
 		 * @return	the newly created set
 		 */
 
-	public TOTorrentAnnounceURLSet
+	public default TOTorrentAnnounceURLSet
 	createAnnounceURLSet(
-		URL[]	urls );
+		URL[]	urls )
+	{
+		return( new TOTorrentAnnounceURLSetImpl( urls ));
+	}
+	
+	public static class
+	TOTorrentAnnounceURLSetImpl
+		implements TOTorrentAnnounceURLSet
+	{
+		private URL[] urls;
+
+		private
+		TOTorrentAnnounceURLSetImpl(
+			URL[]		_urls )
+		{
+			urls	= _urls;
+		}
+
+		@Override
+		public URL[]
+		getAnnounceURLs()
+		{
+			return( urls );
+		}
+
+		@Override
+		public void
+		setAnnounceURLs(
+			URL[]		_urls )
+		{
+			urls = _urls;
+		}
+	}
 }

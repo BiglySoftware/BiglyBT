@@ -2020,9 +2020,13 @@ DownloadManagerStateImpl
     }
 
 	@Override
-	public DiskManagerFileInfo getPrimaryFile() {
+	public DiskManagerFileInfo 
+	getPrimaryFile() 
+	{	
 		int primaryIndex = -1;
+		
 		DiskManagerFileInfo[] fileInfo = download_manager.getDiskManagerFileInfoSet().getFiles();
+		
 		if (hasAttribute(AT_PRIMARY_FILE_IDX)) {
 			primaryIndex = getIntAttribute(AT_PRIMARY_FILE_IDX);
 		}
@@ -2047,24 +2051,40 @@ DownloadManagerStateImpl
 				}
 			}
 			if (primaryIndex >= 0) {
-				setPrimaryFile(fileInfo[primaryIndex]);
+				setIntAttribute(AT_PRIMARY_FILE_IDX, primaryIndex );
 			}
 		}
 
-		if (primaryIndex >= 0) {
-			return fileInfo[primaryIndex];
+		if ( primaryIndex >= 0 ){
+			
+			DiskManagerFileInfo res = fileInfo[primaryIndex];
+			
+			if (!hasAttribute( AT_PRIMARY_FILE_PATH )){
+				
+				setAttribute( AT_PRIMARY_FILE_PATH, res.getFile( true ).getAbsolutePath());
+			}
+			
+			return( res );
 		}
 		return null;
 	}
 
-	/**
-	 * @param dmfi
-	 */
 	@Override
-	public void setPrimaryFile(DiskManagerFileInfo dmfi) {
-		setIntAttribute(AT_PRIMARY_FILE_IDX, dmfi.getIndex());
+	public String 
+	getPrimaryFilePath()
+	{
+		String path = getAttribute( AT_PRIMARY_FILE_PATH );
+		
+		if ( path == null ){
+			
+			getPrimaryFile();
+				
+			path = getAttribute( AT_PRIMARY_FILE_PATH );
+		}
+		
+		return( path );
 	}
-
+	
 	@Override
 	public String[]
 	getNetworks()
@@ -2355,7 +2375,14 @@ DownloadManagerStateImpl
 			
 			return;
 		}
-
+ 
+		int pi = getIntAttribute( AT_PRIMARY_FILE_IDX );
+		
+		if ( pi == source_index ){
+			
+			setAttribute( AT_PRIMARY_FILE_PATH, null );
+		}
+		
 		links.put( source_index, new StringInterner.FileKey( link_source), link_destination==null?null:new StringInterner.FileKey( link_destination ));
 
 		//System.out.println( "setFileLink: " + link_source + " -> " + link_destination );
@@ -2381,6 +2408,8 @@ DownloadManagerStateImpl
 
 		boolean changed = false;
 
+		int pi = getIntAttribute( AT_PRIMARY_FILE_IDX );
+
 		for ( int i=0;i<link_sources_may_have_nulls.size();i++){
 
 			int		source_index			= source_indexes.get( i );
@@ -2400,6 +2429,11 @@ DownloadManagerStateImpl
 				continue;
 			}
 
+			if ( pi == source_index ){
+				
+				setAttribute( AT_PRIMARY_FILE_PATH, null );
+			}
+			
 			links.put( 
 				source_index, 
 				link_source_maybe_null==null?null:new StringInterner.FileKey( link_source_maybe_null ),
@@ -2432,6 +2466,8 @@ DownloadManagerStateImpl
 		if ( links.size() > 0 ){
 
 			links.clear();
+			
+			setAttribute( AT_PRIMARY_FILE_PATH, null );
 			
 			synchronized( this ){
 
@@ -2719,6 +2755,11 @@ DownloadManagerStateImpl
 		if ( changed ){
 
 			informWritten( attribute_name );
+			
+			if ( attribute_name.equals( AT_CANONICAL_SD_DMAP )){
+			
+				setAttribute( AT_PRIMARY_FILE_PATH, null );
+			}
 		}
 	}
 
@@ -3940,18 +3981,16 @@ DownloadManagerStateImpl
 			return false;
 		}
 
-		// @see com.biglybt.core.download.DownloadManagerState#getPrimaryFile()
 		@Override
 		public DiskManagerFileInfo getPrimaryFile() {
-			// TODO Auto-generated method stub
+		
 			return null;
 		}
-
-		// @see com.biglybt.core.download.DownloadManagerState#setPrimaryFile(com.biglybt.core.disk.DiskManagerFileInfo)
+		
 		@Override
-		public void setPrimaryFile(DiskManagerFileInfo dmfi) {
-			// TODO Auto-generated method stub
-
+		public String getPrimaryFilePath(){
+		
+			return null;
 		}
 	}
 
@@ -3977,6 +4016,8 @@ DownloadManagerStateImpl
 
 		Integer		torrent_type;
 		Boolean		simple_torrent;
+		byte[]		torrent_name;
+		String		torrent_utf8_name;
 		long		size;
 		Boolean		is_private;
 		int			file_count;
@@ -4328,19 +4369,6 @@ DownloadManagerStateImpl
     			}
            	}
 
-           	@Override
-            public TOTorrentAnnounceURLSet
-           	createAnnounceURLSet(
-           		URL[]	urls )
-           	{
-           		if ( fixup()){
-
-    				return( delegate.getAnnounceURLGroup().createAnnounceURLSet( urls ));
-    			}
-
-           		return( null );
-           	}
-
            	protected class
            	cacheSet
            		implements TOTorrentAnnounceURLSet
@@ -4406,7 +4434,7 @@ DownloadManagerStateImpl
 
 								throw( fixup_failure );
 							}
-
+							
 							delegate = loadRealState();
 
 							if ( discard_fluff ){
@@ -4568,19 +4596,30 @@ DownloadManagerStateImpl
 		public byte[]
     	getName()
 		{
+			if ( torrent_name != null ){
+				
+				return( torrent_name );
+			}
+			
 			Map	c = cache;
 
 			if ( c != null ){
 
 				byte[] name = (byte[])c.get( "name" );
-				if (name != null) {
+				
+				if ( name != null){
+					
+					torrent_name = name;
+					
 					return name;
 				}
 			}
 
 	   		if ( fixup()){
 
-				return( delegate.getName());
+	   			torrent_name = delegate.getName();
+	   			
+	   			return( torrent_name );
 			}
 
 	   		// Does grabbing the nested exception message always give us something useful?
@@ -4589,7 +4628,21 @@ DownloadManagerStateImpl
     	}
 
 		@Override
-		public String getUTF8Name() {
+		public String 
+		getUTF8Name() 
+		{
+			if ( torrent_utf8_name != null ){
+				
+				if ( torrent_utf8_name.isEmpty()){
+					
+					return( null );
+					
+				}else{
+					
+					return( torrent_utf8_name );
+				}
+			}
+			
 			Map	c = cache;
 
 			if ( c != null ){
@@ -4605,12 +4658,21 @@ DownloadManagerStateImpl
 					if (utf8name.length() == 0) {
 						return null;
 					}
+					
+					torrent_utf8_name = utf8name;
+					
 					return utf8name;
 				}
 			}
 
 			if (fixup()) {
-				return delegate.getUTF8Name();
+				String res = delegate.getUTF8Name();
+				if ( res == null ){
+					torrent_utf8_name = "";
+				}else{
+					torrent_utf8_name = res;
+				}
+				return( res );
 			}
 			return null;
 		}

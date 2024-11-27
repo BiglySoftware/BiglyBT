@@ -782,7 +782,7 @@ TOTorrentImpl
 	setAnnounceURL(
 		URL		url )
 	{
-		URL newURL = anonymityTransform( url );
+		URL newURL = url;
 		String s0 = (newURL == null) ? "" : newURL.toString();
 		String s1 = (announce_url == null) ? "" : announce_url.toString();
 		if (s0.equals(s1))
@@ -1273,7 +1273,7 @@ TOTorrentImpl
 	addTorrentAnnounceURLSet(
 		URL[]		urls )
 	{
-		announce_group.addSet( new TOTorrentAnnounceURLSetImpl( this, urls ));
+		announce_group.addSet( announce_group.createAnnounceURLSet( urls ));
 	}
 
 	@Override
@@ -1599,42 +1599,6 @@ TOTorrentImpl
 
 	protected byte[] writeStringToMetaData(String value) {
 		return value.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
-	}
-
-	protected URL
-	anonymityTransform(
-		URL		url )
-	{
-		/*
-		 * 	hmm, doing this is harder than it looks as we have issues hosting
-		 *  (both starting tracker instances and also short-cut loopback for seeding
-		 *  leave as is for the moment
-		if ( HostNameToIPResolver.isNonDNSName( url.getHost())){
-
-			// remove the port as it is uninteresting and could leak information about the
-			// tracker
-
-			String	url_string = url.toString();
-
-			String	port_string = ":" + (url.getPort()==-1?url.getDefaultPort():url.getPort());
-
-			int	port_pos = url_string.indexOf( ":" + url.getPort());
-
-			if ( port_pos != -1 ){
-
-				try{
-
-					return( new URL( url_string.substring(0,port_pos) + url_string.substring(port_pos+port_string.length())));
-
-				}catch( MalformedURLException e){
-
-					Debug.printStackTrace(e);
-				}
-			}
-		}
-		*/
-
-		return( url );
 	}
 
 	@Override

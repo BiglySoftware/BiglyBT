@@ -102,7 +102,9 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 	@Override
 	public Control[] getControls() {
 		List<Control> list = new ArrayList<>();
-		list.add(mainControl);
+		if ( mainControl != null ){
+			list.add(mainControl);
+		}
 		if (relatedControl != null && relatedControl != mainControl) {
 			list.add(relatedControl);
 		}
@@ -292,6 +294,10 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 		Utils.execSWTThread(() -> {
 			for (Control c : getControls()) {
 
+				if ( c == null ){
+					getControls();
+				}
+				
 				if (!c.isDisposed()) {
 					c.setEnabled(enabled);
 					//noinspection ConstantConditions

@@ -399,8 +399,9 @@ public class TorrentUIUtilsV3
 					path = files[0].getRelativePath();
 				}
 			} else {
-				DiskManagerFileInfo primaryFile = dm.getDownloadState().getPrimaryFile();
-				path = primaryFile == null ? null : primaryFile.getFile(true).getName();
+				path = dm.getDownloadState().getPrimaryFilePath();
+				//DiskManagerFileInfo primaryFile = dm.getDownloadState().getPrimaryFile();
+				//path = primaryFile == null ? null : primaryFile.getFile(true).getName();
 				if ( path == null ){
 					path = dm.getSaveLocation().getAbsolutePath();
 				}

@@ -2006,8 +2006,6 @@ DownloadManagerImpl
 		List<Integer>	from_indexes 				= new ArrayList<>();
 		List<File>		from_links_may_have_nulls 	= new ArrayList<>();
 		List<File>		to_links					= new ArrayList<>();
-
-		DiskManagerFileInfo[] dm_files = getDiskManagerFileInfoSet().getFiles();
 		
 		while(it.hasNext()){
 

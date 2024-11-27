@@ -243,6 +243,8 @@ public class TorrentOpener {
 	  return( opened );
   }
   
+  private static final ThreadPool<AERunnable> async_open_pool = new ThreadPool<>( "AsyncOpener", 64, true );
+  
   public static void openDroppedTorrents(DropTargetEvent event, boolean deprecated_sharing_param ){
 	  	Object data = event.data;
 
@@ -291,11 +293,9 @@ public class TorrentOpener {
 						// go async as vuze file handling can require UI access which then blocks
 						// if this is happening during init
 
-					new AEThread2( "asyncOpen", true )
-					{
-						@Override
-						public void
-						run()
+						// thread pool in case someone dumps a load of torrents onto app
+					
+					async_open_pool.run(AERunnable.create(()->
 						{
 							String filename = source.getAbsolutePath();
 
@@ -306,15 +306,13 @@ public class TorrentOpener {
 								return;
 							}
 
-
 							UIFunctionsSWT uif = UIFunctionsManagerSWT.getUIFunctionsSWT();
 							if (uif != null) {
 								uif.openTorrentOpenOptions(null, null, new String[] { filename },
 										false, false);
 							}
 
-						}
-					}.start();
+						}));
 
 				} else if (source.isDirectory()) {
 

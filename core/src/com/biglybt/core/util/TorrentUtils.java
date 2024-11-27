@@ -5600,14 +5600,6 @@ TorrentUtils
        		delegate.setAnnounceURLSets(_sets );
        	}
 
-       	@Override
-        public TOTorrentAnnounceURLSet
-       	createAnnounceURLSet(
-       		URL[]	urls )
-       	{
-       		return( delegate.createAnnounceURLSet( urls ));
-       	}
-
        	protected boolean
        	hasBeenModified()
        	{
