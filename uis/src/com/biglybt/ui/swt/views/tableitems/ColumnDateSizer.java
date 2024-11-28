@@ -61,44 +61,43 @@ public abstract class ColumnDateSizer
 	stringExtent(
 		String	str )
 	{
-		synchronized( extent_max ){
+		if ( gc_singleton == null ){
 			
-			if ( gc_singleton == null ){
+			gc_singleton = new GC(Display.getDefault());
+			
+			gc_singleton.setFont(FontUtils.getAnyFontBold(gc_singleton));
+			
+			MessageText.addListener((l1,l2)->{
 				
-				gc_singleton = new GC(Display.getDefault());
-				
-				gc_singleton.setFont(FontUtils.getAnyFontBold(gc_singleton));
-				
-				MessageText.addListener((l1,l2)->{
-					
-					synchronized( extent_max ){
+				synchronized( extent_max ){
+					Utils.execSWTThread(()->{
 						Arrays.fill( extent_max, 0 );
 						Arrays.fill( extent_hits, 0 );
-					}
-				});
-			}
-			
-			int len = str.length();
-			
-			if ( len >= extent_max.length ){
-				
-				return( gc_singleton.stringExtent(str).x );
-			}
-			
-			int hits = extent_hits[len];
-			
-			if ( hits >= 100 ){
-				
-				return( extent_max[ len ] );
-			}
-			
-			int result = gc_singleton.stringExtent(str).x;
-			
-			extent_max[ len ]	= Math.max( extent_max[ len ], result );
-			extent_hits[len]	= hits+1;
-			
-			return( result );
+					});
+				}
+			});
 		}
+		
+		int len = str.length();
+		
+		if ( len >= extent_max.length ){
+			
+			return( gc_singleton.stringExtent(str).x );
+		}
+		
+		int hits = extent_hits[len];
+		
+		if ( hits >= 100 ){
+			
+			return( extent_max[ len ] );
+		}
+		
+		int result = gc_singleton.stringExtent(str).x;
+		
+		extent_max[ len ]	= Math.max( extent_max[ len ], result );
+		extent_hits[len]	= hits+1;
+		
+		return( result );
 	}
 	
 	private ParameterListener configDateFormatListener;

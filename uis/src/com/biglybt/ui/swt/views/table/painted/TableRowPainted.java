@@ -577,50 +577,43 @@ public class TableRowPainted
 	getFakeImageGC(
 		Rectangle	bounds  )
 	{
-		synchronized( fake_images ){
+		int height = bounds.height;
+		
+		Object[] existing = fake_images.get( height );
+		
+		if ( existing != null ){
 			
-			int height = bounds.height;
+			return((GC)existing[0]);
+		}
+		
+		Image image = new Image(Utils.getDisplay(), bounds.width, height);
+		
+		GC gc = new GC(image);
+		
+		fake_images.put( height, new Object[]{ gc, image });
+		
+		SimpleTimer.addEvent(
+			"FakeImageDisposer", 
+			SystemTime.getOffsetTime(30*1000), 
+			(ev)->{					
+				Utils.execSWTThread(()->{
 			
-			Object[] existing = fake_images.get( height );
-			
-			if ( existing != null ){
-				
-				return((GC)existing[0]);
-			}
-			
-			Image image = new Image(Utils.getDisplay(), bounds.width, height);
-			
-			GC gc = new GC(image);
-			
-			fake_images.put( height, new Object[]{ gc, image });
-			
-			SimpleTimer.addEvent(
-				"FakeImageDisposer", 
-				SystemTime.getOffsetTime(30*1000), 
-				(ev)->{
-				
-					synchronized( fake_images ){
+					Object[] entry = fake_images.remove( height );
 					
-						Object[] entry = fake_images.remove( height );
+					if ( entry == null ){
 						
-						if ( entry == null ){
-							
-							Debug.out( "eh?" );
-							
-						}else{
-							
-							Utils.execSWTThread(()->{
-								
-									((GC)entry[0]).dispose();
-							
-									((Image)entry[1]).dispose();
-								});
-						}
+						Debug.out( "eh?" );
+						
+					}else{
+						
+						((GC)entry[0]).dispose();
+				
+						((Image)entry[1]).dispose();
 					}
 				});
+			});
 			
-			return( gc );
-		}
+		return( gc );
 	}
 	
 	private void swt_fakeRedraw( String col_name ) {
@@ -639,23 +632,20 @@ public class TableRowPainted
 			}
 			
 			cell.refresh( true, true, true );
-			
-			synchronized( fake_images ){
-				
-				GC gc = getFakeImageGC( bounds );
-			
-				swt_paintCell( gc, bounds, (TableCellSWTBase)cell, null, false, false, false );
-			
-				if ( isExpanded()){
-					
-					synchronized (subRows_sync) {
-						
-						if (subRows != null) {
 							
-							for ( TableRowPainted subrow : subRows) {
-															
-								subrow.swt_fakeRedraw( col_name );
-							}
+			GC gc = getFakeImageGC( bounds );
+		
+			swt_paintCell( gc, bounds, (TableCellSWTBase)cell, null, false, false, false );
+		
+			if ( isExpanded()){
+				
+				synchronized (subRows_sync) {
+					
+					if (subRows != null) {
+						
+						for ( TableRowPainted subrow : subRows) {
+														
+							subrow.swt_fakeRedraw( col_name );
 						}
 					}
 				}
