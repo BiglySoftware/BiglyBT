@@ -571,6 +571,58 @@ public class TableRowPainted
 		}
 	}
 	
+	private static final Map<Integer,Object[]> fake_images = new HashMap<>();
+	
+	private static GC
+	getFakeImageGC(
+		Rectangle	bounds  )
+	{
+		synchronized( fake_images ){
+			
+			int height = bounds.height;
+			
+			Object[] existing = fake_images.get( height );
+			
+			if ( existing != null ){
+				
+				return((GC)existing[0]);
+			}
+			
+			Image image = new Image(Utils.getDisplay(), bounds.width, height);
+			
+			GC gc = new GC(image);
+			
+			fake_images.put( height, new Object[]{ gc, image });
+			
+			SimpleTimer.addEvent(
+				"FakeImageDisposer", 
+				SystemTime.getOffsetTime(30*1000), 
+				(ev)->{
+				
+					synchronized( fake_images ){
+					
+						Object[] entry = fake_images.remove( height );
+						
+						if ( entry == null ){
+							
+							Debug.out( "eh?" );
+							
+						}else{
+							
+							Utils.execSWTThread(()->{
+								
+									((GC)entry[0]).dispose();
+							
+									((Image)entry[1]).dispose();
+								});
+						}
+					}
+				});
+			
+			return( gc );
+		}
+	}
+	
 	private void swt_fakeRedraw( String col_name ) {
 		
 		setShown( true, true );
@@ -578,19 +630,21 @@ public class TableRowPainted
 		TableCellPainted cell = (TableCellPainted)getTableCellCore( col_name  );
 
 		if ( cell != null ){
+			
+			Rectangle bounds = new Rectangle( 0, 0, 1000, getHeight());
+			
 			if ( cell.getBoundsRaw() == null ){
 				
-				cell.setBoundsRaw( new Rectangle( 0, 0, 1000, getHeight() ));
+				cell.setBoundsRaw( bounds );
 			}
 			
 			cell.refresh( true, true, true );
 			
-			Image image = new Image(Utils.getDisplay(), 1000, getHeight());
+			synchronized( fake_images ){
+				
+				GC gc = getFakeImageGC( bounds );
 			
-			GC gc = new GC(image);
-			
-			try{
-				swt_paintCell( gc, image.getBounds(), (TableCellSWTBase)cell, null, false, false, false );
+				swt_paintCell( gc, bounds, (TableCellSWTBase)cell, null, false, false, false );
 			
 				if ( isExpanded()){
 					
@@ -605,11 +659,6 @@ public class TableRowPainted
 						}
 					}
 				}
-			}finally{
-				
-				gc.dispose();
-			
-				image.dispose();
 			}
 		}
 	}
