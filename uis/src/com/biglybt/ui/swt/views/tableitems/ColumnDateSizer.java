@@ -278,49 +278,62 @@ public abstract class ColumnDateSizer
 			}
 		}
 
-		Utils.execSWTThread(new AERunnable() {
-
-			@Override
-			public void runSupport() {
-				Date date = new Date(timestamp);
-
-				if (curFormat >= 0) {
-					
-					if (multiline && cell.getHeight() < 20) {
-						multiline = false;
-					}
-					String suffix = showTime && !multiline ? " hh:mm a" : "";
-
-					if ( sortChanging.get() == 0 ){
-							// quite expensive to recalculate the width - if we are changing sort order this will affect all
-							// cells so as changing sort doesn't affect column width avoid a pointless cost
-						
-						int newWidth = calcWidth(date, TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix, prefix );
-	
-						//SimpleDateFormat temp2 = new SimpleDateFormat(TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix + (showTime && multiline ? "\nh:mm a" : ""));
-						//System.out.println(curFormat + ":newWidth=" +  newWidth + ":max=" + maxWidthUsed[curFormat] + ":cell=" + cell.getWidth() + "::" + temp2.format(date));
-						if (newWidth > cell.getWidth() - PADDING) {
-							if (newWidth > maxWidthUsed[curFormat]) {
-								maxWidthUsed[curFormat] = newWidth;
-								maxWidthDate[curFormat] = date;
-							}
-							recalcWidth(date, prefix);
-						}
-					}
-					
-					String s = TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix;
-					SimpleDateFormat temp = new SimpleDateFormat(s
-							+ (showTime && multiline ? "\nh:mm a" : ""));
-					String date_str = temp.format(date);
-					if ( prefix != null ){
-						date_str = prefix + date_str;
-					}
-					cell.setText(date_str);
-				}
+		if ( curFormat >= 0 ){
+			
+			if ( Utils.isSWTThread()){
+				
+				refreshDynamic( cell, timestamp, prefix );
+				
+			}else{
+			
+				Utils.execSWTThread(()->refreshDynamic(cell, timestamp, prefix));
 			}
-		});
+		}
 	}
 
+	private void 
+	refreshDynamic(
+		TableCell	cell,
+		long		timestamp,
+		String		prefix )
+	{
+		Date date = new Date(timestamp);
+
+		if (multiline && cell.getHeight() < 20) {
+			multiline = false;
+		}
+		String suffix = showTime && !multiline ? " hh:mm a" : "";
+
+		if ( sortChanging.get() == 0 ){
+			// quite expensive to recalculate the width - if we are changing sort order this will affect all
+			// cells so as changing sort doesn't affect column width avoid a pointless cost
+
+			int newWidth = calcWidth(date, TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix, prefix );
+
+			//SimpleDateFormat temp2 = new SimpleDateFormat(TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix + (showTime && multiline ? "\nh:mm a" : ""));
+			//System.out.println(curFormat + ":newWidth=" +  newWidth + ":max=" + maxWidthUsed[curFormat] + ":cell=" + cell.getWidth() + "::" + temp2.format(date));
+			if (newWidth > cell.getWidth() - PADDING) {
+				if (newWidth > maxWidthUsed[curFormat]) {
+					maxWidthUsed[curFormat] = newWidth;
+					maxWidthDate[curFormat] = date;
+				}
+				recalcWidth(date, prefix);
+			}
+		}
+
+		String s = TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix;
+		SimpleDateFormat temp = new SimpleDateFormat(s
+				+ (showTime && multiline ? "\nh:mm a" : ""));
+		String date_str = temp.format(date);
+		if ( prefix != null ){
+			date_str = prefix + date_str;
+		}
+		String existing = cell.getText();
+		if ( !date_str.equals(existing)){	
+			cell.setText(date_str);
+		}
+	}
+		
 	// @see TableColumnImpl#setWidth(int)
 	@Override
 	public void setWidthPX(int width) {
