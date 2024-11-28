@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.views.tableitems;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -53,40 +54,51 @@ public abstract class ColumnDateSizer
 	
 	static GC	gc_singleton;
 	
-	static short[]	extent_max	= new short[64];
-	static short[]	extent_hits	= new short[64];
+	static final int[]	extent_max	= new int[64];
+	static final int[]	extent_hits	= new int[64];
 	
-	static synchronized int
+	static int
 	stringExtent(
 		String	str )
 	{
-		if ( gc_singleton == null ){
+		synchronized( extent_max ){
 			
-			gc_singleton = new GC(Display.getDefault());
+			if ( gc_singleton == null ){
+				
+				gc_singleton = new GC(Display.getDefault());
+				
+				gc_singleton.setFont(FontUtils.getAnyFontBold(gc_singleton));
+				
+				MessageText.addListener((l1,l2)->{
+					
+					synchronized( extent_max ){
+						Arrays.fill( extent_max, 0 );
+						Arrays.fill( extent_hits, 0 );
+					}
+				});
+			}
 			
-			gc_singleton.setFont(FontUtils.getAnyFontBold(gc_singleton));
+			int len = str.length();
+			
+			if ( len >= extent_max.length ){
+				
+				return( gc_singleton.stringExtent(str).x );
+			}
+			
+			int hits = extent_hits[len];
+			
+			if ( hits >= 100 ){
+				
+				return( extent_max[ len ] );
+			}
+			
+			int result = gc_singleton.stringExtent(str).x;
+			
+			extent_max[ len ]	= Math.max( extent_max[ len ], result );
+			extent_hits[len]	= hits+1;
+			
+			return( result );
 		}
-		
-		int len = str.length();
-		
-		if ( len >= extent_max.length ){
-			
-			return( gc_singleton.stringExtent(str).x );
-		}
-		
-		int hits = extent_hits[len];
-		
-		if ( hits >= 100 ){
-			
-			return( extent_max[ len ] );
-		}
-		
-		int result = gc_singleton.stringExtent(str).x;
-		
-		extent_max[ len ]	= (short)Math.max( extent_max[ len ], result );
-		extent_hits[len]	= (short)(hits+1);
-		
-		return( result );
 	}
 	
 	private ParameterListener configDateFormatListener;
