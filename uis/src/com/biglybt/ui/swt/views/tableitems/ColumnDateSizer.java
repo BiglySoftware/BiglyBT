@@ -68,13 +68,11 @@ public abstract class ColumnDateSizer
 			gc_singleton.setFont(FontUtils.getAnyFontBold(gc_singleton));
 			
 			MessageText.addListener((l1,l2)->{
-				
-				synchronized( extent_max ){
-					Utils.execSWTThread(()->{
-						Arrays.fill( extent_max, 0 );
-						Arrays.fill( extent_hits, 0 );
-					});
-				}
+			
+				Utils.execSWTThread(()->{
+					Arrays.fill( extent_max, 0 );
+					Arrays.fill( extent_hits, 0 );
+				});
 			});
 		}
 		
