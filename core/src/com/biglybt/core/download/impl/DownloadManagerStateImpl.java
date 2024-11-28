@@ -683,6 +683,8 @@ DownloadManagerStateImpl
 		try{
 			class_mon.enter();
 
+			SUPPRESS_FIXUP_ERRORS = true;	// closing
+			
 			Map	map = new HashMap();
 
 			List	cache = new ArrayList();
