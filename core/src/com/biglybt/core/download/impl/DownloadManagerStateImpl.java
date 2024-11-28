@@ -4021,6 +4021,7 @@ DownloadManagerStateImpl
 		long		size;
 		Boolean		is_private;
 		int			file_count;
+		Long		creation_date;
 
 		URL								announce_url;
 		cacheGroup						announce_group;
@@ -4095,6 +4096,8 @@ DownloadManagerStateImpl
 				is_private = l_priv.longValue() != 0;
 			}
 			
+			creation_date = (Long)cache.get( "cd" );
+			
 			byte[]	au = (byte[])cache.get( "au" );
 
 			if ( au != null ){
@@ -4137,6 +4140,7 @@ DownloadManagerStateImpl
 			cache.put( "createdby", state.getCreatedBy());
 			cache.put( "size", new Long( state.getSize()));
 			cache.put( "priv", new Long( state.getPrivate()?1:0));
+			cache.put( "cd", state.getCreationDate());
 			
 			cache.put( "encoding", state.getAdditionalStringProperty( "encoding" ));
 			cache.put( "torrent filename", state.getAdditionalStringProperty( "torrent filename" ));
@@ -4778,9 +4782,16 @@ DownloadManagerStateImpl
 	    public long
     	getCreationDate()
        	{
-	   		if ( fixup()){
+    		if ( creation_date != null ){
+    			
+    			return( creation_date );
+    		}
+	   		
+    		if ( fixup()){
 
-				return( delegate.getCreationDate());
+    			creation_date = delegate.getCreationDate();
+    			
+    			return( creation_date );
 			}
 
 	   		return( 0 );
@@ -4791,6 +4802,8 @@ DownloadManagerStateImpl
     	setCreationDate(
     		long		date )
        	{
+    		creation_date = date;
+    		
 	   		if ( fixup()){
 
 				delegate.setCreationDate( date );
@@ -4825,18 +4838,6 @@ DownloadManagerStateImpl
 
 				delegate.setCreatedBy( cb );
 			}
-    	}
-
-    	@Override
-	    public boolean
-    	isCreated()
-       	{
-	   		if ( fixup()){
-
-				return( delegate.isCreated());
-			}
-
-	   		return( false );
     	}
 
     	@Override

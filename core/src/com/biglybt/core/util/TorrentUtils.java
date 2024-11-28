@@ -44,6 +44,7 @@ import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogRelation;
+import com.biglybt.core.lws.LWSTorrent;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.torrent.*;
@@ -3609,19 +3610,12 @@ TorrentUtils
 		}
 
 	 	@Override
-	  public void
+	 	public void
 		setCreatedBy(
 			byte[]		cb )
 	   	{
 	  		delegate.setCreatedBy( cb );
 	   	}
-
-		@Override
-		public boolean
-		isCreated()
-		{
-			return( delegate.isCreated());
-		}
 
 		@Override
 		public boolean
@@ -4825,11 +4819,9 @@ TorrentUtils
 
 				boolean	res = created_torrents_set.contains( hw );
 
-					// if we don't have a persistent record of creation, check the non-persisted version
-
 				if ( !res ){
 
-					res = torrent.isCreated();
+					res = torrent instanceof LWSTorrent;
 				}
 
 				// System.out.println( "isCreated:" + new String(torrent.getName()) + "/" + ByteFormatter.encodeString( hw.getBytes()) + " -> " + res );

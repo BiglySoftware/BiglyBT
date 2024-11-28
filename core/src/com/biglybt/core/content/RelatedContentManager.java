@@ -4180,6 +4180,8 @@ RelatedContentManager
 
 				Set<String>	ws_domains = new HashSet<>();
 
+				/*
+				 * never really used these so let's stop wasting time getting them
 				List getright = BDecoder.decodeStrings( getURLList( to_torrent, "url-list" ));
 				List webseeds = BDecoder.decodeStrings( getURLList( to_torrent, "httpseeds" ));
 
@@ -4198,7 +4200,8 @@ RelatedContentManager
 						}
 					}
 				}
-
+				*/
+				
 				ws_keys = domainsToArray( ws_domains, 3 );
 			}
 		}catch( Throwable e ){

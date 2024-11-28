@@ -725,7 +725,8 @@ DownloadManagerImpl
 	@Override
 	public Download
 	getDownload(
-		byte[]	hash )
+		byte[]	hash,
+		boolean	check_truncated )
 	{
 		DownloadManager manager = global_manager.getDownloadManager(new HashWrapper(hash));
 		if (manager != null) {
@@ -753,19 +754,24 @@ DownloadManagerImpl
 						return( getDownload( torrent ));
 					}
 					
-						// support looking up by truncated v2 hash so that magnet downloads for hybrid torrents using just
-						// the btmh urn at least find content in our library
+						// the v2 hash details aren't currently cached so this will result in the
+						// download torrent state being loaded - avoid if possible
 					
-					byte[] v2_trunc = torrent.getTruncatedHash( TOTorrent.TT_V2 );
+					if ( check_truncated ){
 					
-					if ( v2_trunc != null ){
-												
-						if ( Arrays.equals( v2_trunc, hash )){
-
-							return( getDownload( torrent ));
+							// support looking up by truncated v2 hash so that magnet downloads for hybrid torrents using just
+							// the btmh urn at least find content in our library
+						
+						byte[] v2_trunc = torrent.getTruncatedHash( TOTorrent.TT_V2 );
+						
+						if ( v2_trunc != null ){
+													
+							if ( Arrays.equals( v2_trunc, hash )){
+	
+								return( getDownload( torrent ));
+							}
 						}
 					}
-					
 				}catch( DownloadException e ){
 
 						// not found

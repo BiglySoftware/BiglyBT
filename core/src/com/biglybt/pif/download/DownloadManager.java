@@ -226,12 +226,22 @@ DownloadManager
 	 * @since 2.3.0.7
 	 */
 
-	public Download
+	public default Download
 	getDownload(
 		byte[]		hash )
 
-		throws DownloadException;
+		throws DownloadException
+	{
+		return( getDownload( hash, true ));
+	}
 
+	public Download
+	getDownload(
+		byte[]		hash,
+		boolean		check_truncated_hash )
+
+		throws DownloadException;
+	
 	/**
 	 * Gets all the downloads. Returned in Download "index" order
 	 * @return

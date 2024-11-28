@@ -178,19 +178,12 @@ LWSTorrent
 	}
 
   	@Override
-	  public void
+	public void
 	setCreatedBy(
 		byte[]		cb )
    	{
   		getDelegate().setCreatedBy( cb );
    	}
-
-	@Override
-	public boolean
-	isCreated()
-	{
-		return( true );
-	}
 
 	@Override
 	public URL

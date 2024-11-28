@@ -5775,7 +5775,7 @@ SubscriptionManagerImpl
 					runSupport()
 					{
 						try{
-							Download download = core.getPluginManager().getDefaultPluginInterface().getDownloadManager().getDownload( assoc.getHash());
+							Download download = core.getPluginManager().getDefaultPluginInterface().getDownloadManager().getDownload( assoc.getHash(), false );
 
 							if ( download != null ){
 

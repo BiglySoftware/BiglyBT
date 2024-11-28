@@ -158,13 +158,6 @@ TRHostExternalTorrent
 
 	@Override
 	public boolean
-	isCreated()
-	{
-		return( false );
-	}
-
-	@Override
-	public boolean
 	isDecentralised()
 	{
 		return( TorrentUtils.isDecentralised( getAnnounceURL()));

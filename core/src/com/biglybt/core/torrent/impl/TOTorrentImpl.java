@@ -193,11 +193,17 @@ TOTorrentImpl
 									
 				// defer until needed
 				// TOTorrentCreateV2Impl.setV2FileHashes( this );
-			}
-				
+			}	
 		}finally{
 		
 			constructing = false;
+		}
+		
+		if ( created ){
+
+				// register here, may change later but it will be re-registered then
+			
+			TorrentUtils.addCreatedTorrent( this );
 		}
 	}
 	
@@ -852,13 +858,6 @@ TOTorrentImpl
 	getCreatedBy()
 	{
 		return( created_by );
-	}
-
-	@Override
-	public boolean
-	isCreated()
-	{
-		return( created );
 	}
 
 	@Override

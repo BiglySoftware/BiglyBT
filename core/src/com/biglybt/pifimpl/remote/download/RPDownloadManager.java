@@ -366,7 +366,8 @@ RPDownloadManager
 	@Override
 	public Download
 	getDownload(
-		byte[]		hash )
+		byte[]		hash,
+		boolean		check_truncated )
 	{
 		notSupported();
 
