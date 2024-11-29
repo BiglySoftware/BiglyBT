@@ -87,8 +87,7 @@ public class TableViewPainted
 
 	private static final boolean DEBUG_WITH_SHELL = false;
 
-	public static final boolean DIRECT_DRAW = (Constants.isOSX
-			|| Constants.isUnix) && Utils.getDeviceZoom() != 100;
+	public static final boolean DIRECT_DRAW = (Constants.isOSX || Constants.isUnix) && Utils.getDeviceZoom() != 100;
 
 	private static final boolean DEBUG_REDRAW_CLIP = false;
 
@@ -139,8 +138,9 @@ public class TableViewPainted
 
 	private Color colorLine;
 
-	private Image canvasImage;
-
+	private Image	canvasImage;
+	private GC		canvasImageGC;
+	
 	private final String sDefaultSortOn;
 
 	private TableViewSWT_Common tvSWTCommon;
@@ -242,9 +242,13 @@ public class TableViewPainted
 							cTable.redraw();
 						}
 					} else {
-						if (canvasImage != null && !canvasImage.isDisposed()) {
+						if (canvasImage != null ) {
 							canvasImage.dispose();
 							canvasImage = null;
+						} 
+						if ( canvasImageGC != null ){
+							canvasImageGC.dispose();
+							canvasImageGC = null;
 						}
 						swt_calculateClientArea();
 					}
@@ -1615,6 +1619,10 @@ public class TableViewPainted
 					canvasImage.dispose();
 					canvasImage = null;
 				}
+				if ( canvasImageGC != null ){
+					canvasImageGC.dispose();
+					canvasImageGC = null;
+				}
 				SelectedContentManager.removeCurrentlySelectedContentListener( selectedContentListener );
 			}
 		});
@@ -2565,45 +2573,41 @@ public class TableViewPainted
 							boolean wasIn = in_swt_updateCanvasImage;
 							in_swt_updateCanvasImage = true;
 							try{
-								GC gc = new GC(canvasImage);
-								try{
-									if ( vBarVisible ){
-										Rectangle bounds = canvasImage.getBounds();
-										//System.out.println("moving y " + yDiff + ";cah=" + clientArea.height);
-										if (yDiff > 0) {
-											// User Scrolled up, Move Image Down
-											if (Utils.isGTK3) {
-												// Can't copyArea(x, y, w, h, dx, dy, paint) or drawImage(Image, x, y) downward without cheese
-												gc.copyArea(canvasImage, 0, -yDiff);
-											} else {
-												gc.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
-											}
-											swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, yDiff));
-											Utils.setClipping(gc, (Rectangle) null);
+								if ( vBarVisible ){
+									Rectangle bounds = canvasImage.getBounds();
+									//System.out.println("moving y " + yDiff + ";cah=" + clientArea.height);
+									if (yDiff > 0) {
+										// User Scrolled up, Move Image Down
+										if (Utils.isGTK3) {
+											// Can't copyArea(x, y, w, h, dx, dy, paint) or drawImage(Image, x, y) downward without cheese
+											canvasImageGC.copyArea(canvasImage, 0, -yDiff);
 										} else {
-											// User scrolled down, move image up
-											if (Utils.isGTK3) {
-												//copyArea cheese on GTK3 SWT 4528/4608
-												gc.drawImage(canvasImage, 0, yDiff);
-											} else {
-												gc.copyArea(0, -yDiff, bounds.width, bounds.height , 0, 0, false);
-											}
-											int h = -yDiff;
-											TableRowPainted row = getLastVisibleRow();
-											if (row != null) {
-												//row.invalidate();
-												h += row.getHeight();
-											}
-											swt_paintCanvasImage(gc, new Rectangle(0, bounds.height - h, 9999, h));
-											Utils.setClipping(gc, (Rectangle) null);
+											canvasImageGC.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
 										}
-									}else{
-										swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, 9999));
-										Utils.setClipping(gc, (Rectangle) null);
+										swt_paintCanvasImage(canvasImageGC, new Rectangle(0, 0, 9999, yDiff));
+										Utils.setClipping(canvasImageGC, (Rectangle) null);
+									} else {
+										// User scrolled down, move image up
+										if (Utils.isGTK3) {
+											//copyArea cheese on GTK3 SWT 4528/4608
+											canvasImageGC.drawImage(canvasImage, 0, yDiff);
+										} else {
+											canvasImageGC.copyArea(0, -yDiff, bounds.width, bounds.height , 0, 0, false);
+										}
+										int h = -yDiff;
+										TableRowPainted row = getLastVisibleRow();
+										if (row != null) {
+											//row.invalidate();
+											h += row.getHeight();
+										}
+										swt_paintCanvasImage(canvasImageGC, new Rectangle(0, bounds.height - h, 9999, h));
+										Utils.setClipping(canvasImageGC, (Rectangle) null);
 									}
-								}finally{
-									gc.dispose();
+								}else{
+									swt_paintCanvasImage(canvasImageGC, new Rectangle(0, 0, 9999, 9999));
+									Utils.setClipping(canvasImageGC, (Rectangle) null);
 								}
+
 					  		if ( DEBUG_WITH_SHELL ){
 					  			forceDebugShellRefresh(null);
 					  		}
@@ -2639,75 +2643,115 @@ public class TableViewPainted
 		}
 
 		if (!DIRECT_DRAW) {
-  		Image newImage = canvasImage;
+	
+	  		//List<TableRowSWT> visibleRows = getVisibleRows();
+	  		int h = 0;
+	  		synchronized (visibleRows_sync) {
+	  			TableRowPainted lastRow = getLastVisibleRow();
+	  			if (lastRow != null) {
+	  				h = lastRow.getDrawOffset().y - clientArea.y + lastRow.getHeight();
+	  				if (h < clientArea.height && lastRow.isExpanded()) {
+	  					TableRowCore[] subRows = lastRow.getSubRowsWithNull();
+	  					for (TableRowCore subRow : subRows) {
+	  						if (subRow == null) {
+	  							continue;
+	  						}
+	  						TableRowPainted subRowP = (TableRowPainted) subRow;
+	
+	  						h += subRowP.getFullHeight();
+	  						if (h >= clientArea.height) {
+	  							break;
+	  						}
+	  					}
+	  				}
+	  			}
+	  		}
+	  		
+	  		if (h < clientArea.height) {
+	  			h = clientArea.height;
+	  		}
+	  		
+	  		int oldH;
+	  		int oldW;
+	  				
+	  		if ( canvasImage == null || canvasImage.isDisposed()){
+	  			
+	  			canvasImage = null;
+	  			
+	  			oldH = 0;
+	  			oldW = 0;
+	  			
+	  		}else{
+	  			
+	  	  		Rectangle bounds = canvasImage.getBounds();
+	  	  		
+	  			oldH = bounds.height;
+	  			oldW = bounds.width;
+	  		}
+	
+	  		Image newImage;
 
-  		//List<TableRowSWT> visibleRows = getVisibleRows();
-  		int h = 0;
-  		synchronized (visibleRows_sync) {
-  			TableRowPainted lastRow = getLastVisibleRow();
-  			if (lastRow != null) {
-  				h = lastRow.getDrawOffset().y - clientArea.y + lastRow.getHeight();
-  				if (h < clientArea.height && lastRow.isExpanded()) {
-  					TableRowCore[] subRows = lastRow.getSubRowsWithNull();
-  					for (TableRowCore subRow : subRows) {
-  						if (subRow == null) {
-  							continue;
-  						}
-  						TableRowPainted subRowP = (TableRowPainted) subRow;
-
-  						h += subRowP.getFullHeight();
-  						if (h >= clientArea.height) {
-  							break;
-  						}
-  					}
-  				}
-  			}
-  		}
-  		if (h < clientArea.height) {
-  			h = clientArea.height;
-  		}
-
-  		int oldH = canvasImage == null || canvasImage.isDisposed() ? 0
-  				: canvasImage.getBounds().height;
-  		int oldW = canvasImage == null || canvasImage.isDisposed() ? 0
-  				: canvasImage.getBounds().width;
-
-  		if (canvasImage == null || oldW != w || h > oldH) {
-  			//System.out.println("oldW=" + oldW + ";" + w+ ";h=" + h + ";" + oldH);
-  			if (h <= 0 || clientArea.width <= 0) {
-  				if (newImage != null) {
-  					newImage.dispose();
-				  }
-  				newImage = null;
-  			} else {
-  				newImage = new Image(shell.getDisplay(), w, h);
-  			}
-  		}
-  		boolean canvasChanged = (canvasImage != newImage);
-  		if (canvasChanged) {
-  			Image oldImage = canvasImage;
-  			canvasImage = newImage;
-
-  			if (oldImage != null && !oldImage.isDisposed()) {
-  				oldImage.dispose();
-  			}
-  		}
-
-
-
-  		// paint event will handle any changedX or changedW
-  		if (changedH || canvasChanged || refreshTable) {
-  			//System.out.println(changedX + ";cY=" + changedY + ";cH=" + changedH + ";cC=" + canvasChanged + ";rT=" + refreshTable);
-  			//System.out.println("Redraw " + Debug.getCompressedStackTrace());
-
-  			// run refreshTable on SWT (this) thread to ensure rows have been
-  			// refreshed for the updateCanvasImage call immediately after it
-  			__refreshTable(false);
-  			// refreshtable will call swt_updateCanvasImage for each visible row
-  			if (canvasChanged) {
-  				swt_updateCanvasImage(false);
-  			}
-  		}
+	  		if ( canvasImage == null || oldW != w || h > oldH) {
+	  			
+	  				//System.out.println("oldW=" + oldW + ";" + w+ ";h=" + h + ";" + oldH);
+	  			
+	  			if ( h <= 0 || clientArea.width <= 0 ){
+	  				
+	  				newImage = null;
+	  				
+	  			}else{
+	  				
+	  				newImage = new Image(shell.getDisplay(), w, h);
+	  			}
+	  		}else{
+	  			
+	  			newImage = canvasImage;
+	  		}
+	  		
+	  		boolean canvasChanged = canvasImage != newImage;
+	  		
+	  		if ( canvasChanged ){
+	  			
+	  			Image	oldImage	= canvasImage;
+	  			GC		oldGC		= canvasImageGC;
+	  			
+	  			canvasImage		= newImage;
+	  			
+	  			if ( canvasImage!= null ){
+	  			
+	  				canvasImageGC	= new GC( canvasImage );
+	  				
+	  			}else{
+	  				
+	  				canvasImageGC = null;
+	  			}
+	
+	  			if ( oldImage != null ){
+	  				
+	  				oldImage.dispose();
+	  			}
+	  			
+	  			if ( oldGC != null ){
+	  				
+	  				oldGC.dispose();
+	  			}
+	  		}
+	
+	
+	
+	  		// paint event will handle any changedX or changedW
+	  		if (changedH || canvasChanged || refreshTable) {
+	  			//System.out.println(changedX + ";cY=" + changedY + ";cH=" + changedH + ";cC=" + canvasChanged + ";rT=" + refreshTable);
+	  			//System.out.println("Redraw " + Debug.getCompressedStackTrace());
+	
+	  			// run refreshTable on SWT (this) thread to ensure rows have been
+	  			// refreshed for the updateCanvasImage call immediately after it
+	  			__refreshTable(false);
+	  			// refreshtable will call swt_updateCanvasImage for each visible row
+	  			if (canvasChanged) {
+	  				swt_updateCanvasImage(false);
+	  			}
+	  		}
 		}
 
 		//		System.out.println("imgBounds = " + canvasImage.getBounds() + ";ca="
@@ -2728,8 +2772,10 @@ public class TableViewPainted
 			sCanvasImage.getShell().setSize(0, 0);
 			return;
 		}
-		Point size = sCanvasImage.getShell().computeSize(
-			canvasImage.getBounds().width, canvasImage.getBounds().height);
+		
+		Rectangle canvasBounds = canvasImage.getBounds();
+		
+		Point size = sCanvasImage.getShell().computeSize( canvasBounds.width, canvasBounds.height);
 		sCanvasImage.getShell().setSize(size);
 		if (bounds == null) {
 			sCanvasImage.redraw();
@@ -2772,9 +2818,8 @@ public class TableViewPainted
 					return;
 				}
 				//System.out.println("UpdateCanvasImage " + bounds + "; via " + Debug.getCompressedStackTrace());
-				GC gc = new GC(canvasImage);
-				swt_paintCanvasImage(gc, bounds);
-				gc.dispose();
+				
+				swt_paintCanvasImage(canvasImageGC, bounds);
 
 				if (DEBUG_WITH_SHELL) {
 					forceDebugShellRefresh(bounds);
