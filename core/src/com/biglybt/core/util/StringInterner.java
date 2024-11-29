@@ -805,6 +805,13 @@ StringInterner
 		}
 		
 		@Override
+		public int 
+		hashCode()
+		{
+			return( get().hashCode());
+		}
+		
+		@Override
 		public boolean 
 		equals(
 			Object obj)
@@ -860,6 +867,13 @@ StringInterner
 		isEmpty()
 		{
 			return( false );		// assume always something to avoid unnecessary gets...
+		}
+		
+		@Override
+		public int 
+		hashCode()
+		{
+			return( get().hashCode());
 		}
 		
 		@Override
