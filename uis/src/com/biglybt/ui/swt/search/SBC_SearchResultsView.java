@@ -1185,6 +1185,8 @@ SBC_SearchResultsView
 			}
 		}
 
+		col_filter_helper = null;
+		
 		MetaSearchManagerFactory.getSingleton().getMetaSearch().removeListener( this );
 
 		Utils.disposeSWTObjects(new Object[] {

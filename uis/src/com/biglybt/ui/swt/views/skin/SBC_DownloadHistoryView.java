@@ -244,6 +244,8 @@ public class SBC_DownloadHistoryView
 			tv = null;
 		}
 
+		col_filter_helper = null;
+		
 		Utils.disposeSWTObjects(new Object[] {
 			table_parent,
 		});

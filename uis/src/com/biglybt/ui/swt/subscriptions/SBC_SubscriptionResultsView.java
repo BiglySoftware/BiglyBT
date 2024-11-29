@@ -1360,6 +1360,8 @@ SBC_SubscriptionResultsView
 			}
 		}
 
+		col_filter_helper = null;
+		
 		Utils.disposeSWTObjects(new Object[] {
 			table_parent,
 		});
