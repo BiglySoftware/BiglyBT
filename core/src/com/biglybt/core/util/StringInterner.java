@@ -970,17 +970,19 @@ StringInterner
 							int	fk_count	= 0;
 							long fk_total	= 0;
 							long fk_actual	= 0;							
-								
+							long fk_dups	= 0;
+							
 							Iterator<WeakReference<FileKey>> it = file_key_map.keySet().iterator();
 							
 							Set<String> strings = new IdentityHashSet<>();
+							Set<String> strings2 = new HashSet<>();
 							
 							while( it.hasNext()){
 								
 								FileKey fk = it.next().get();
 								
 								if ( fk != null ){
-									
+																		
 									fk_count++;
 									
 									String[] comps = fk.comps;
@@ -1000,6 +1002,15 @@ StringInterner
 											strings.add( str );
 											
 											fk_actual += len;
+										
+											if ( !strings2.contains( str )){
+											
+												strings2.add( str );
+											
+											}else{
+												
+												fk_dups += len;
+											}
 										}
 									}
 								}
@@ -1008,6 +1019,7 @@ StringInterner
 							writer.println( 
 									"File Keys: num=" + fk_count + 
 									", total=" + DisplayFormatters.formatByteCountToKiBEtc( fk_total ) +
+									", dups=" + DisplayFormatters.formatByteCountToKiBEtc( fk_dups ) +
 									", actual=" + DisplayFormatters.formatByteCountToKiBEtc( fk_actual ));
 						}
 					}finally{
