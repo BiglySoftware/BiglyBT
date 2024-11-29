@@ -1510,11 +1510,22 @@ public class FilesView
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		boolean b = super.eventOccurred(event);
-		if (event.getType() == UISWTViewEvent.TYPE_FOCUSGAINED) {
-	    updateSelectedContent();
-		} else if (event.getType() == UISWTViewEvent.TYPE_FOCUSLOST) {
+		
+		int type = event.getType();
+		
+		if ( type == UISWTViewEvent.TYPE_SHOWN) {
+	    
+			updateSelectedContent();
+			
+		} else if ( type == UISWTViewEvent.TYPE_HIDDEN) {
+			
 			SelectedContentManager.clearCurrentlySelectedContent();
+			
+		}else if ( type == UISWTViewEvent.TYPE_DESTROY ){
+			
+			col_filter_helper = null;
 		}
+		
 		return b;
 	}
 
