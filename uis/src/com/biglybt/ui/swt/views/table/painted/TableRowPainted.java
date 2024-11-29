@@ -616,15 +616,17 @@ public class TableRowPainted
 		return( gc );
 	}
 	
-	private void swt_fakeRedraw( String col_name ) {
-		
+	private void 
+	swt_fakeRedraw( 
+		String col_name ) 
+	{
 		setShown( true, true );
 		
 		TableCellPainted cell = (TableCellPainted)getTableCellCore( col_name  );
 
 		if ( cell != null ){
 			
-			Rectangle bounds = new Rectangle( 0, 0, 1000, getHeight());
+			Rectangle bounds = new Rectangle( 0, 0, 9999, getHeight());
 			
 			if ( cell.getBoundsRaw() == null ){
 				

@@ -1228,6 +1228,10 @@ public abstract class TableViewSWT_Common
 
 					column.setWidth( pref );
 				}
+				
+					// we need this to avoid scroll bars getting confused for some reason...
+				
+				TableStructureEventDispatcher.getInstance(tv.getTableID()).tableStructureChanged(false, null);
 			}));
 
 			new MenuItem(menu, SWT.SEPARATOR);
