@@ -680,7 +680,15 @@ DisplayFormatters
     }
 
     private static final SimpleDateFormat abs_df = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
+    private static final SimpleDateFormat ydmhm_df = new SimpleDateFormat( "yyyy/MM/dd HH:mm" );
 
+    public static String
+    formatDateYMDHM(
+    	long		time )
+    {
+    	return( ydmhm_df.format(new Date(time)));
+    }
+    
     public static String
     formatETA(long eta,boolean abs )
     {

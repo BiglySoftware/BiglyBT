@@ -639,7 +639,7 @@ SubscriptionSchedulerImpl
 
 											long	time_found = result.getTimeFound();
 
-											// log( "found=" + new SimpleDateFormat().format(new Date( time_found)) + ", ago=" + ((SystemTime.getCurrentTime()-time_found )) + ", rad=" + rad_millis );
+											// log( "found=" + DisplayFormatters.formatDateYMDHM( time_found)) + ", ago=" + ((SystemTime.getCurrentTime()-time_found )) + ", rad=" + rad_millis );
 
 											if ( time_found > 0 && time_found + rad_millis < SystemTime.getCurrentTime()){
 
@@ -759,8 +759,8 @@ SubscriptionSchedulerImpl
 
 				String sched_str =
 						"Calculate : " +
-						"old_time=" + (old_when==0?"none":new SimpleDateFormat().format(new Date(old_when))) +
-						", new_time=" + new SimpleDateFormat().format(new Date(next_ready_time)) +
+						"old_time=" + (old_when==0?"none":DisplayFormatters.formatDateYMDHM(old_when)) +
+						", new_time=" + DisplayFormatters.formatDateYMDHM(next_ready_time) +
 						", next_sub=" + next_ready_subs.getName();
 
 				if ( last_sched_str == null || !sched_str.equals( last_sched_str )){

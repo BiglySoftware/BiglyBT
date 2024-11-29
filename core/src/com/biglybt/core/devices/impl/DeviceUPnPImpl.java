@@ -34,6 +34,7 @@ import com.biglybt.core.devices.*;
 import com.biglybt.core.devices.DeviceManager.UnassociatedDevice;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.UUIDGenerator;
 import com.biglybt.net.upnp.UPnPDevice;
@@ -1218,7 +1219,7 @@ DeviceUPnPImpl
 
 			addDP( dp, "azbuddy.ui.table.online",  isAlive() );
 
-			addDP( dp, "device.lastseen", getLastSeen()==0?"":new SimpleDateFormat().format(new Date( getLastSeen() )));
+			addDP( dp, "device.lastseen", getLastSeen()==0?"":DisplayFormatters.formatDateYMDHM( getLastSeen()));
 		}
 	}
 

@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 
 public class DateParserRegex extends DateParser {
@@ -265,7 +266,7 @@ public class DateParserRegex extends DateParser {
 					try {
 						int intValue = Integer.parseInt(matcher.group(1));
 						adjustDate(calendar, unit, intValue, intValue, false);
-						//System.out.println("found " + unit + ";" + intValue + ";" + new SimpleDateFormat().format(calendar.getTime()));
+						//System.out.println("found " + unit + ";" + intValue + ";" + DisplayFormatters.formatDateYMDHM(calendar.getTime()));
 						return calendar.getTime();
 					} catch (Throwable t) {
 						t.printStackTrace();

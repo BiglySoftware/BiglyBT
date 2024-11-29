@@ -26,6 +26,7 @@ import java.util.List;
 import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -248,7 +249,7 @@ public class ProgressReporter
 		
 		addToMessageHistory( 
 			MessageText.getString( "OpenTorrentWindow.startMode.started" ) + " " +  
-			new SimpleDateFormat().format(SystemTime.getCurrentTime()),
+			DisplayFormatters.formatDateYMDHM(SystemTime.getCurrentTime()),
 			MSG_TYPE_INFO);
 	}
 	

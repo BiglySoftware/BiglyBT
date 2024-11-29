@@ -996,7 +996,7 @@ public class TransferStatsView
     if (totalStats != null) {
       long mark = totalStats.getMarkTime();
       if ( mark > 0 ){
-    	  Messages.setLanguageText(totalLabel.getWidget(),"SpeedView.stats.total.since", new String[]{ new SimpleDateFormat().format( new Date( mark )) });
+    	  Messages.setLanguageText(totalLabel.getWidget(),"SpeedView.stats.total.since", new String[]{ DisplayFormatters.formatDateYMDHM( mark )});
       }else{
     	  Messages.setLanguageText(totalLabel.getWidget(),"SpeedView.stats.total");
       }
@@ -2556,10 +2556,8 @@ public class TransferStatsView
 		}
 		
 		int	entries = (int)( span / period );
-					
-		SimpleDateFormat sdf = new SimpleDateFormat();
 		
-		history_span.setText( sdf.format( new Date( start_time )) + " - " + sdf.format( new Date( end_time-1 )));
+		history_span.setText( DisplayFormatters.formatDateYMDHM( start_time ) + " - " + DisplayFormatters.formatDateYMDHM( end_time-1 ));
 		
 		long[] overall_stats = getTotalUsageInPeriod( lt_stats, start_time, end_time );
 

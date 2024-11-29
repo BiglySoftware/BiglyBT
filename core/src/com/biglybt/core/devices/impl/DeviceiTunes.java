@@ -759,7 +759,7 @@ DeviceiTunes
 			writer.indent();
 
 			writer.println( "itunes=" + itunes + ", installed=" + is_installed + ", running=" + is_running + ", auto_start=" + getAutoStartDevice());
-			writer.println( "copy_os=" + copy_outstanding + ", last_fail=" + new SimpleDateFormat().format( new Date( last_update_fail )));
+			writer.println( "copy_os=" + copy_outstanding + ", last_fail=" + DisplayFormatters.formatDateYMDHM( last_update_fail ));
 
 		}finally{
 

@@ -1449,7 +1449,7 @@ public class UIFunctionsImpl
 										MessageText.getString(
 											"OpenTorrentWindow.mb.inHistory.text", new String[] {
 												torrentOptions.getTorrentName(),
-												new SimpleDateFormat().format( new Date( existing[0] ))
+												DisplayFormatters.formatDateYMDHM( existing[0] )
 											}), null, new Object[0], -1);
 
 								}

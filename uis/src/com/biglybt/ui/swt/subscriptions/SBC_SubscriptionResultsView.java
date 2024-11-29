@@ -321,9 +321,7 @@ SBC_SubscriptionResultsView
 							}
 							
 							if ( info != null ){
-								
-								SimpleDateFormat df = new SimpleDateFormat();
-								
+																
 								SubscriptionHistory history = ds.getHistory();
 								
 								String error = history.getLastError();
@@ -334,10 +332,10 @@ SBC_SubscriptionResultsView
 								
 								if ( isError ){
 									
-									lastUpdate = MessageText.getString( "ManagerItem.error" ) + " (" + df.format(new Date( ds.getHistory().getLastErrorTime())) + ")";
+									lastUpdate = MessageText.getString( "ManagerItem.error" ) + " (" + DisplayFormatters.formatDateYMDHM( ds.getHistory().getLastErrorTime()) + ")";
 								}else{
 									
-									lastUpdate = df.format(new Date( history.getLastScanTime()));
+									lastUpdate = DisplayFormatters.formatDateYMDHM( history.getLastScanTime());
 								}
 								
 								long next = history.getNextScanTime();
@@ -351,7 +349,7 @@ SBC_SubscriptionResultsView
 								
 								info.setText( 
 										MessageText.getString( "Trackers.column.last_update" ) + ": " + lastUpdate + ", " +
-										MessageText.getString( "Button.next" ) + ": " + df.format(new Date( next )));
+										MessageText.getString( "Button.next" ) + ": " + DisplayFormatters.formatDateYMDHM( next ));
 								
 								
 								if ( !isError ){

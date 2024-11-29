@@ -2018,11 +2018,11 @@ BuddyPluginViewInstance
 
 					long lo = buddy.getLastTimeOnline();
 
-					item.setText(2, lo==0?"":new SimpleDateFormat().format(new Date( lo )));
+					item.setText(2, lo==0?"":DisplayFormatters.formatDateYMDHM( lo ));
 
 					long	last_ygm = buddy.getLastMessagePending();
 
-					item.setText(3, last_ygm==0?"":new SimpleDateFormat().format(new Date( last_ygm )));
+					item.setText(3, last_ygm==0?"":DisplayFormatters.formatDateYMDHM( last_ygm ));
 
 					String	lm = buddy.getLastMessageReceived();
 

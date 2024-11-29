@@ -1733,7 +1733,7 @@ PairingManagerImpl
 					setStatus(
 						MessageText.getString(
 							"pairing.status.registered",
-							new String[]{ new SimpleDateFormat().format(new Date( SystemTime.getCurrentTime() ))}));
+							new String[]{ DisplayFormatters.formatDateYMDHM( SystemTime.getCurrentTime())}));
 				}
 			}
 		}catch( Throwable e ){
@@ -1811,7 +1811,7 @@ PairingManagerImpl
 		setStatus(
 				MessageText.getString(
 					"pairing.status.pending",
-					new String[]{ new SimpleDateFormat().format(new Date( target ))}));
+					new String[]{ DisplayFormatters.formatDateYMDHM( target )}));
 
 		COConfigurationManager.setParameter( "pairing.updateoutstanding", true );
 	}

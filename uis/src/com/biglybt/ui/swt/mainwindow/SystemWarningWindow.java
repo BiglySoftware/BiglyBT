@@ -35,6 +35,7 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Alerts;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -218,7 +219,7 @@ public class SystemWarningWindow
 					"" + getWarningCount()
 				});
 		
-		sCountAndTime += " " + new SimpleDateFormat().format( new Date( logAlert.when ));
+		sCountAndTime += " " + DisplayFormatters.formatDateYMDHM( logAlert.when );
 		
 		spCount = new GCStringPrinter(gc, sCountAndTime, printArea, true, false, SWT.WRAP);
 		spCount.calculateMetrics();
@@ -339,7 +340,7 @@ public class SystemWarningWindow
 							"" + getWarningCount()
 						});
 				
-				sCountAndTime += " " + new SimpleDateFormat().format( new Date( logAlert.when ));
+				sCountAndTime += " " + DisplayFormatters.formatDateYMDHM( logAlert.when );
 
 				e.gc.setAlpha(180);
 				Font lastFont = e.gc.getFont();

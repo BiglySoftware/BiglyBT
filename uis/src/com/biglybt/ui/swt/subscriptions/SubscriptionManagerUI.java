@@ -2984,8 +2984,6 @@ SubscriptionManagerUI
 	{
 		SubscriptionHistory history = subs.getHistory();
 
-		SimpleDateFormat df = new SimpleDateFormat();
-
 		String last_error = history.getLastError();
 
 		if ( last_error == null ){
@@ -3089,10 +3087,10 @@ SubscriptionManagerUI
 				String.valueOf( subs.isAutoDownloadSupported()),
 				String.valueOf( history.getDownloadNetworks() != null ),
 				(check_freq==Integer.MAX_VALUE?"":(String.valueOf( history.getCheckFrequencyMins() + " " + MessageText.getString( "ConfigView.text.minutes")))),
-				df.format(new Date( history.getLastScanTime())),
-				( last_new_result==0?"":df.format(new Date( last_new_result ))),
-				( next_scan == Long.MAX_VALUE?"":df.format(new Date( next_scan ))),
-				(last_error.length()==0?MessageText.getString("label.none"):( df.format(new Date(history.getLastErrorTime()))+ ": " +last_error)),
+				DisplayFormatters.formatDateYMDHM( history.getLastScanTime()),
+				( last_new_result==0?"":DisplayFormatters.formatDateYMDHM( last_new_result )),
+				( next_scan == Long.MAX_VALUE?"":DisplayFormatters.formatDateYMDHM( next_scan )),
+				(last_error.length()==0?MessageText.getString("label.none"):( DisplayFormatters.formatDateYMDHM(history.getLastErrorTime())+ ": " +last_error)),
 				String.valueOf( history.getNumRead()),
 				String.valueOf( history.getNumUnread()),
 				max_results_str,

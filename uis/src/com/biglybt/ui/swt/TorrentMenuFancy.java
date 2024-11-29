@@ -1506,7 +1506,7 @@ public class TorrentMenuFancy
 								
 									for ( DownloadManagerState.ResumeHistory h: history ){
 										MenuItem itemHistory = new MenuItem(restore_menu, SWT.PUSH);
-										itemHistory.setText( new SimpleDateFormat().format( new Date(h.getDate())));
+										itemHistory.setText( DisplayFormatters.formatDateYMDHM(h.getDate()));
 										
 										itemHistory.addListener(SWT.Selection,(ev)->{
 											dmState.restoreResumeData( h );;
