@@ -628,6 +628,13 @@ public class TableRowPainted
 			
 			Rectangle bounds = new Rectangle( 0, 0, 9999, getHeight());
 			
+			if ( bounds.height <= 0 ){
+				
+					// hidden, probably due to filter
+				
+				return;
+			}
+			
 			if ( cell.getBoundsRaw() == null ){
 				
 				cell.setBoundsRaw( bounds );
