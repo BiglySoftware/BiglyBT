@@ -635,28 +635,40 @@ public class TableRowPainted
 				return;
 			}
 			
+			boolean boundsSet = false;
+			
 			if ( cell.getBoundsRaw() == null ){
 				
 				cell.setBoundsRaw( bounds );
+				
+				boundsSet = true;
 			}
 			
-			cell.refresh( true, true, true );
-							
-			GC gc = getFakeImageGC( bounds );
-		
-			swt_paintCell( gc, bounds, (TableCellSWTBase)cell, null, false, false, false );
-		
-			if ( isExpanded()){
-				
-				synchronized (subRows_sync) {
+			try{
+				cell.refresh( true, true, true );
+								
+				GC gc = getFakeImageGC( bounds );
+			
+				swt_paintCell( gc, bounds, (TableCellSWTBase)cell, null, false, false, false );
+			
+				if ( isExpanded()){
 					
-					if (subRows != null) {
+					synchronized (subRows_sync) {
 						
-						for ( TableRowPainted subrow : subRows) {
-														
-							subrow.swt_fakeRedraw( col_name );
+						if (subRows != null) {
+							
+							for ( TableRowPainted subrow : subRows) {
+															
+								subrow.swt_fakeRedraw( col_name );
+							}
 						}
 					}
+				}
+			}finally{
+				
+				if ( boundsSet ){
+					
+					cell.setBoundsRaw( null );
 				}
 			}
 		}
