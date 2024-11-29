@@ -675,6 +675,18 @@ public class OpenTorrentOptionsWindow
 
 			}
 
+			if ( active_windows.size() >= 64 ){
+				
+					// if we have too many then we run out of handles as each instance uses a bunch even
+					// though not visible in a non-separate dialog case...
+				
+				Debug.out( "Too many open-torrent windows, ignoring " + torrentOptions.getDisplayName());
+				
+				torrentOptions.cancel();
+				
+				return;
+			}
+			
 			TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
 
 			if ( !separate_dialogs ){
