@@ -36,6 +36,7 @@ import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.widgets.LabelWithMinMaxWidth;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
@@ -221,7 +222,7 @@ public class IntSwtParameter
 		}
 
 		if (suffixLabelKey != null) {
-			lblSuffix = new Label(parent, SWT.WRAP);
+			lblSuffix = new LabelWithMinMaxWidth(parent, SWT.WRAP,100,500);
 			Messages.setLanguageText(lblSuffix, suffixLabelKey);
 			GridData gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
 			gridData.widthHint = SWT.DEFAULT;	// without this the suffix is invisible :(
