@@ -225,20 +225,15 @@ DiskManagerChannelImpl
 
 		TOTorrentFile	tf = core_file.getTorrentFile();
 
+		file_offset_in_torrent = tf.getOffsetInTorrent();
+		
 		TOTorrent 	torrent = tf.getTorrent();
-
-		TOTorrentFile[]	tfs = torrent.getFiles();
 
 		rtas	= new long[torrent.getNumberOfPieces()];
 
-		core_download.addPeerListener( this );
-
-		for (int i=0;i<core_file.getIndex();i++){
-
-			file_offset_in_torrent += tfs[i].getLength();
-		}
-
 		piece_size	= tf.getTorrent().getPieceLength();
+
+		core_download.addPeerListener( this );
 
 		core_file.addListener( this );
 

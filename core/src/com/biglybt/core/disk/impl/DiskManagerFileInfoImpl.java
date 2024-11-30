@@ -747,14 +747,7 @@ DiskManagerFileInfoImpl
 			public void
 			run()
 			{
-				TOTorrentFile[]	tfs = torrent_file.getTorrent().getFiles();
-
-				long	torrent_offset = 0;
-
-				for (int i=0;i<file_index;i++){
-
-					torrent_offset += tfs[i].getLength();
-				}
+				long	torrent_offset = torrent_file.getOffsetInTorrent();
 
 				file_start 	= torrent_offset;
 				file_end	= file_start + torrent_file.getLength();

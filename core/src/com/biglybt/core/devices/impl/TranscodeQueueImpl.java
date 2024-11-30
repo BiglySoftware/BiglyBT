@@ -370,19 +370,7 @@ TranscodeQueueImpl
 
 											TOTorrent	torrent = torrent_file.getTorrent();
 
-											TOTorrentFile[]	torrent_files = torrent.getFiles();
-
-											long	byte_start = 0;
-
-											for ( TOTorrentFile tf: torrent_files ){
-
-												if ( tf == torrent_file ){
-
-													break;
-												}
-
-												byte_start += tf.getLength();
-											}
+											long	byte_start = torrent_file.getOffsetInTorrent();
 
 											DiskManager dm = download.getDiskManager();
 

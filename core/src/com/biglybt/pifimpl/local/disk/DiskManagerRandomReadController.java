@@ -247,16 +247,7 @@ DiskManagerRandomReadController
 
 			TOTorrentFile	tf = core_file.getTorrentFile();
 
-			TOTorrent 	torrent = tf.getTorrent();
-
-			TOTorrentFile[]	tfs = torrent.getFiles();
-
-			long	core_file_start_byte = 0;
-
-			for (int i=0;i<core_file.getIndex();i++){
-
-				core_file_start_byte += tfs[i].getLength();
-			}
+			long	core_file_start_byte = tf.getOffsetInTorrent();
 
 			long download_byte_start 	= core_file_start_byte + request.getOffset();
 			long download_byte_end		= download_byte_start + request.getLength();

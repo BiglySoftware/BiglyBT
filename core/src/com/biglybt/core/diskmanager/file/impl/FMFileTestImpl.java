@@ -54,19 +54,7 @@ FMFileTestImpl
 
 		TOTorrentFile	torrent_file = getOwner().getTorrentFile();
 
-		TOTorrent	torrent = torrent_file.getTorrent();
-
-		for (int i=0;i<torrent.getFiles().length;i++){
-
-			TOTorrentFile	f = torrent.getFiles()[i];
-
-			if ( f == torrent_file ){
-
-				break;
-			}
-
-			file_offset_in_torrent	+= f.getLength();
-		}
+		file_offset_in_torrent = torrent_file.getOffsetInTorrent();
 	}
 
 	@Override

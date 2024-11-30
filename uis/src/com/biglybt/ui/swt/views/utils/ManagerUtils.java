@@ -4131,17 +4131,7 @@ public class ManagerUtils {
 
 											TOTorrentFile to_file = file.getTorrentFile();
 
-											long	offset = 0;
-
-											for ( TOTorrentFile tf: to_files ){
-
-												if ( tf == to_file ){
-
-													break;
-												}
-
-												offset += tf.getLength();
-											}
+											long	offset = to_file.getOffsetInTorrent();
 
 											int	to_piece_number = to_file.getFirstPieceNumber();
 

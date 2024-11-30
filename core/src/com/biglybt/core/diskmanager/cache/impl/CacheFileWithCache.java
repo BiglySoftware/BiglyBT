@@ -149,17 +149,7 @@ CacheFileWithCache
 
 			piece_size	= (int)torrent.getPieceLength();
 
-			for (int i=0;i<torrent.getFiles().length;i++){
-
-				TOTorrentFile	f = torrent.getFiles()[i];
-
-				if ( f == torrent_file ){
-
-					break;
-				}
-
-				file_offset_in_torrent	+= f.getLength();
-			}
+			file_offset_in_torrent = torrent_file.getOffsetInTorrent();
 
 			piece_offset	= piece_size - (int)( file_offset_in_torrent % piece_size );
 

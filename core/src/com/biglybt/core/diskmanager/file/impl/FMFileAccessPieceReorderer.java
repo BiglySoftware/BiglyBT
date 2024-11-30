@@ -133,25 +133,9 @@ FMFileAccessPieceReorderer
 
 				piece_size = (int)_torrent_file.getTorrent().getPieceLength();
 
-				TOTorrent	torrent = _torrent_file.getTorrent();
-
 				long	file_length	= _torrent_file.getLength();
 
-				long	file_offset_in_torrent = 0;
-
-				TOTorrentFile[] files = torrent.getFiles();
-
-				for (int i=0;i<files.length;i++){
-
-					TOTorrentFile	f = files[i];
-
-					if ( f == _torrent_file ){
-
-						break;
-					}
-
-					file_offset_in_torrent	+= f.getLength();
-				}
+				long	file_offset_in_torrent = _torrent_file.getOffsetInTorrent();
 
 				int first_piece_offset 	= (int)( file_offset_in_torrent % piece_size );
 
@@ -159,14 +143,12 @@ FMFileAccessPieceReorderer
 
 				long	file_end = file_offset_in_torrent + file_length;
 
-
 				last_piece_length = (int)( file_end - (( file_end / piece_size ) * piece_size ));
 
 				if ( last_piece_length == 0 ){
 
 					last_piece_length = piece_size;
 				}
-
 			}
 
 			dirt_state = FileUtil.newFile( control_dir, control_file ).exists()?DIRT_CLEAN:DIRT_NEVER_WRITTEN;
