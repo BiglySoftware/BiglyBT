@@ -1,16 +1,15 @@
 # BiglyBT
 
-Source for BiglyBT, a feature filled, open source, ad-free, bittorrent client.  BiglyBT is forked from the original project and is being maintained by two of the original developers as well as members of the community.  With over 15 years of development, there's a good chance we have the features you are looking for, as well as the decade old bugs you aren't looking for :)
+Source for BiglyBT, a feature-filled, open-source, ad-free, BitTorrent client. BiglyBT is forked from the original project and is maintained by two of the original developers and members of the community. With over 15 years of development, there’s a good chance we have the features you are looking for, as well as the decade-old bugs you aren’t looking for. :)
 
-* [Official BiglyBT site](https://www.biglybt.com)
-* [Ways to Contribute](CONTRIBUTING.md)
-* [Translation Information](TRANSLATE.md)
-* [Feature Voting Page](https://vote.biglybt.com)
-* [Coding Guidelines](CODING_GUIDELINES.md)
-* [Beta Program Changelog](https://biglybt.tumblr.com/)
+- [Official BiglyBT site](https://www.biglybt.com)
+- [Ways to Contribute](CONTRIBUTING.md)
+- [Translation Information](TRANSLATE.md)
+- [Feature Voting Page](https://vote.biglybt.com)
+- [Coding Guidelines](CODING_GUIDELINES.md)
+- [Beta Program Changelog](https://biglybt.tumblr.com/)
 
 ## Donations
-
 
 | Method | Address |
 |:--|:--|
@@ -23,48 +22,58 @@ Source for BiglyBT, a feature filled, open source, ad-free, bittorrent client.  
 | TRX/BTT | TAbsb7pjEEWNpXFvPf49rfVhFSB2e3dAM7 |
 | XRP | rPFKfbx2tuzMMaz7Zy99M6CquHKgp9srSb |
 
-## Setting up Dev Environment
+## Prerequisites
 
-Getting the basics to compile from source is pretty straightforward:
+Ensure you have the following installed before proceeding:
 
-1. Clone the repo into your favorite IDE
-1. Mark `core/src` and `uis/src` as project roots (source modules)
-1. To the uis module, add `core/lib/*` and one of the swt.jars at `/uis/lib/`:<br>
-  `swt-win64.jar` on Windows<br>
-  `swt-cocoa-64.jar` on OSX<br>
-  `swt-linux-64.jar` on Linux (GTK)
-1. To the core module, add `core/lib/*`
-1. Make `uis` module depend on `core`.  `Core` should not depend on `uis`
+- IntelliJ IDEA (or your favorite IDE)
+- Required dependencies: `core/lib/*`, one of the `swt.jars` based on your operating system:
+  - `swt-win64.jar` for Windows
+  - `swt-cocoa-64.jar` for macOS
+  - `swt-linux-64.jar` for Linux (GTK)
 
-IntelliJ IDEA will do all these steps for you with its wizard.
+## Installation Steps
+
+### Manual Installation
+
+1. Clone the repository into your favorite IDE.
+2. Mark `core/src` and `uis/src` as project roots (source modules).
+3. Add required dependencies:
+   - For the `uis` module: `core/lib/*` and one of the `swt.jars` at `/uis/lib/`.
+   - For the `core` module: `core/lib/*`.
+4. Make the `uis` module depend on `core`. Note that `core` should not depend on `uis`.
+
+### Running in Development Environment
+
+1. Main class is `com.biglybt.ui.Main` in module `uis`.
+2. Set the working directory to a new folder (the app will write files there). Place the [`aereg.dll`](core/lib/libWIN32Access/README.md) or `libOSXAccess.jnilib` in the working directory.
+3. If you want a separate config directory from the default, use the VM option:
+   ```
+   -Dazureus.config.path=<some config path>
+   ```
+4. Run the application.
 
 ### External Annotations
 
-If you wish IntelliJ IDEA to show MessageBundle strings instead of keys, as well as reduce the number of NPE warnings, you can attach the external annotations either by:
-* Project Settings->Modules->Paths->External Annotations
-*  in `<module>/<module>.iml` add to component:
-    ```
-    <annotation-paths>
-      <root url="file://$MODULE_DIR$/../external-annotations" />
-    </annotation-paths>
-    ```
-External Annotations definitions are a WIP and not complete list of definitions.
+To improve IntelliJ IDEA's handling of MessageBundle strings and reduce warnings:
+- Use Project Settings > Modules > Paths > External Annotations.
+- Alternatively, modify `<module>/<module>.iml`:
+  ```xml
+  <annotation-paths>
+    <root url="file://$MODULE_DIR$/../external-annotations" />
+  </annotation-paths>
+  ```
 
-## Running in Dev Environment
-
-Running is only few more steps:
-
-* Main class is `com.biglybt.ui.Main` in module `uis`
-* Working Directory should be a new folder, since the app will write things to it. Put the [`aereg.dll`](core/lib/libWIN32Access/README.md) or `libOSXAccess.jnilib` in there.
-  
-  When a normal user is running the app, the working directory is where the jar, executable, and libraries (dll, so, jnilib) are.
-* If you want a separate config dir from the default one, use VM Option `-Dazureus.config.path=<some config path>`
-* Run it
+Note: External Annotations definitions are a work in progress.
 
 ## Release Installer Notes
 
-We build our installers using [Install4j, multi-platform installer builder](https://www.ej-technologies.com/products/install4j/overview.html)
+We build our installers using [Install4j, a multi-platform installer builder](https://www.ej-technologies.com/products/install4j/overview.html).
 
 ![Install4j Logo](https://www.ej-technologies.com/images/product_banners/install4j_large.png)
 
-Our binaries and installers up to and including v3.4 are signed with a digital signature of "Bigly Software". Releases after v3.4 will use an individual signing certificate and will bear the name "Arron Mogge (Open Source Developer)" denoting the identity of our team member responsible for signing.
+Our binaries and installers up to and including v3.4 are signed with the digital signature "Bigly Software." Releases after v3.4 will use an individual signing certificate, signed by "Arron Mogge (Open Source Developer)," denoting the team member responsible for signing.
+
+## Help and Support
+
+For FAQs and commonly encountered errors, please refer to the repository issue thread.
