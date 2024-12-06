@@ -231,19 +231,19 @@ public interface TableView<DATASOURCETYPE>
 	 *
 	 * @param runner Code to run for each row/datasource
 	 */
-	void runForAllRows(TableGroupRowRunner runner);
+	int runForAllRows(TableGroupRowRunner runner);
 
 	/** For every row source, run the code provided by the specified
 	 * parameter.
 	 *
 	 * @param runner Code to run for each row/datasource
 	 */
-	void runForAllRows(TableGroupRowVisibilityRunner runner);
+	int runForAllRows(TableGroupRowVisibilityRunner runner);
 
 	/**
 	 * @param runner
 	 */
-	void runForSelectedRows(TableGroupRowRunner runner);
+	int runForSelectedRows(TableGroupRowRunner runner);
 
 	/**
 	 * Does not fire off selection events

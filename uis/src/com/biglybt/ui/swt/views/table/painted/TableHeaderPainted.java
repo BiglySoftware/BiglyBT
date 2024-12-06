@@ -295,6 +295,9 @@ public class TableHeaderPainted
 			int style = SWT.WRAP | SWT.CENTER;
 			Image image = null;
 			String imageID = null;
+			
+			int contentWidth = 0;
+			
 			if ( showIcon ){
 				imageID = column.getIconReference();
 				if (imageID != null) {
@@ -306,6 +309,9 @@ public class TableHeaderPainted
 							e.gc.drawImage(image,
 									(int) (x + (w / 2.0) - (imageBounds.width / 2.0) + 0.5),
 									(headerHeight / 2) - (imageBounds.height / 2));
+							
+							contentWidth = imageBounds.width;
+							
 						} else {
 							text = "%0 " + text;
 						}
@@ -314,7 +320,7 @@ public class TableHeaderPainted
 					}
 				}
 			}
-			
+		
 			if (text != null) {
 				sp = new GCStringPrinter(e.gc, text,
 						new Rectangle(xOfs, yOfs - 1, wText - 4, headerHeight - yOfs + 2),
@@ -325,6 +331,9 @@ public class TableHeaderPainted
 					});
 				}
 				sp.calculateMetrics();
+				
+				contentWidth = sp.getCalculatedPreferredSize().x;
+				
 				if (sp.isWordCut() || sp.isCutoff()) {
 					Font font = e.gc.getFont();
 					e.gc.setFont(fontHeaderSmall);
@@ -339,6 +348,8 @@ public class TableHeaderPainted
 				ImageLoader.getInstance().releaseImage(imageID);
 			}
 
+			column.setPreferredHeaderWidth( contentWidth + 10 );
+			
 			x += w;
 		}
 
@@ -476,15 +487,25 @@ public class TableHeaderPainted
 							
 							column.setPreferredWidth(-1);
 
-							tv.runForAllRows(new TableGroupRowRunner() {
-								@Override
-								public void run(TableRowCore row) {
-									row.fakeRedraw( column.getName());
-								}
-							});
+							int done = 
+								tv.runForAllRows(new TableGroupRowRunner() {
+									@Override
+									public void run(TableRowCore row) {
+										row.fakeRedraw( column.getName());
+									}
+								});
 
-							int pref = column.getPreferredWidth();
+							int pref;
 
+							if ( done == 0 ){
+								
+								pref = Math.max( column.getMinWidth(), column.getPreferredHeaderWidth());
+								
+							}else{
+								
+								pref = column.getPreferredWidth();
+							}
+							
 							if ( pref != -1 ){
 
 								column.setWidth( pref );

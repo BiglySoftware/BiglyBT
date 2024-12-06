@@ -173,6 +173,8 @@ public class TableColumnImpl
 
 	private int iPreferredWidthMax = -1;
 
+	private int iPreferredHeaderWidth = -1;
+	
 	private boolean auto_tooltip = false;
 
 	private Map userData;
@@ -1889,6 +1891,21 @@ public class TableColumnImpl
 		//}
 	}
 
+	@Override
+	public int
+	getPreferredHeaderWidth()
+	{
+		return( iPreferredHeaderWidth );
+	}
+	
+	@Override
+	public void
+	setPreferredHeaderWidth(
+		int		width )
+	{
+		iPreferredHeaderWidth = width;
+	}
+	
 	@Override
 	public void setAutoTooltip(boolean auto_tooltip) {
 		if (this.auto_tooltip != auto_tooltip) {

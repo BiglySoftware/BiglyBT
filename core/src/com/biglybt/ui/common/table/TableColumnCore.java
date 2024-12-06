@@ -385,5 +385,12 @@ public interface TableColumnCore
 	setBackgroundColor(
 		int[]		rgb );
 	
+	public int
+	getPreferredHeaderWidth();
+	
+	public void
+	setPreferredHeaderWidth(
+		int		width );
+	
 	boolean isDirty();
 }

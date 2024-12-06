@@ -1215,15 +1215,21 @@ public abstract class TableViewSWT_Common
 			itemPrefSize.addListener(SWT.Selection, e -> Utils.execSWTThread(() -> {
 				column.setPreferredWidth(-1);
 
-				tv.runForAllRows(new TableGroupRowRunner() {
-					@Override
-					public void run(TableRowCore row) {
-						row.fakeRedraw( column.getName());
-					}
-				});
+				int done =
+					tv.runForAllRows(new TableGroupRowRunner() {
+						@Override
+						public void run(TableRowCore row) {
+							row.fakeRedraw( column.getName());
+						}
+					});
 
 				int pref = column.getPreferredWidth();
 
+				if ( done == 0 ){
+					
+					pref = Math.max( column.getMinWidth(), column.getPreferredHeaderWidth());
+				}
+				
 				if ( pref != -1 ){
 
 					column.setWidth( pref );

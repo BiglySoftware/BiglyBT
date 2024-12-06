@@ -572,13 +572,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 
 	@Override
-	public void runForAllRows(TableGroupRowRunner runner) {
-		runForAllRows( runner, false );
+	public int runForAllRows(TableGroupRowRunner runner) {
+		return( runForAllRows( runner, false ));
 	}
 	
-	private void runForAllRows(TableGroupRowRunner runner, boolean doSubRows) {
+	private int runForAllRows(TableGroupRowRunner runner, boolean doSubRows) {
 		
 		// put to array instead of synchronised iterator, so that runner can remove
+		
+		int done = 0;
 		
 		if ( doSubRows ){
 			
@@ -590,54 +592,70 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				
 				runner.run(rows[i]);
 
+				done++;
+				
 				int numSubRows = rows[i].getSubItemCount();
 				if (numSubRows > 0) {
 					TableRowCore[] subRows = rows[i].getSubRowsRecursive(false);
 					for (TableRowCore subRow : subRows) {
 						if (subRow != null) {
 							runner.run(subRow);
+							
+							done++;
 						}
 					}
 				}
 			}
 			
+			return( done );
+					
 		}else{
 			TableRowCore[] rows = getRows();
 			
 			if (runner.run(rows)) {
-				return;
+				return( rows.length );
 			}
 	
 			for (int i = 0; i < rows.length; i++) {
 				runner.run(rows[i]);
 			}
+			
+			return( rows.length );
 		}
 	}
 
 	// see common.tableview
 	@Override
-	public void runForAllRows(TableGroupRowVisibilityRunner runner) {
+	public int runForAllRows(TableGroupRowVisibilityRunner runner) {
 		if (isDisposed()) {
-			return;
+			return( 0 );
 		}
 
 		// put to array instead of synchronised iterator, so that runner can remove
 		TableRowCore[] rows = getRows();
 
+		int done = 0;
+		
 		for (int i = 0; i < rows.length; i++) {
 			boolean isRowVisible = isRowVisible(rows[i]);
 			runner.run(rows[i], isRowVisible);
 
+			done++;
+			
 			int numSubRows = rows[i].getSubItemCount();
 			if (numSubRows > 0) {
 				TableRowCore[] subRows = rows[i].getSubRowsRecursive(false);
 				for (TableRowCore subRow : subRows) {
 					if (subRow != null) {
 						runner.run(subRow, isRowVisible(subRow));
+						
+						done++;
 					}
 				}
 			}
 		}
+		
+		return( done );
 	}
 
 
@@ -647,9 +665,9 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 * @param runner Code to run for each selected row/datasource
 	 */
 	@Override
-	public void runForSelectedRows(TableGroupRowRunner runner) {
+	public int runForSelectedRows(TableGroupRowRunner runner) {
 		if (isDisposed()) {
-			return;
+			return( 0 );
 		}
 
 		TableRowCore[] rows;
@@ -663,6 +681,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				runner.run(row);
 			}
 		}
+		
+		return( rows.length );
 	}
 
 	@Override
