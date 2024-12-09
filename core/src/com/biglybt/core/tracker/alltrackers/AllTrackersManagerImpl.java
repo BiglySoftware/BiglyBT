@@ -76,7 +76,7 @@ public class
 AllTrackersManagerImpl
 	implements AllTrackers, TOTorrentListener
 {
-	final static int	MAX_TRACKERS	= 1024;
+	final static int	MAX_TRACKERS	= 5000;
 	
 	final static int 	TICK_PERIOD	= 2500;
 	
