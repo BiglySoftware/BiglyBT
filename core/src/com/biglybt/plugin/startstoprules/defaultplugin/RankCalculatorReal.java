@@ -151,7 +151,8 @@ RankCalculatorReal
 	private static boolean bAutoStart0Peers;
 
 	private static int iTimed_MinSeedingTimeWithPeers;
-
+	private static int iTimed_MaxSeedingTimeWithPeers;
+	
 	// count x peers as a full copy, but..
 	private static int numPeersAsFullCopy;
 
@@ -350,6 +351,7 @@ RankCalculatorReal
 		iFirstPriorityIgnoreIdleMinutes = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_ignoreIdleMinutes");
 		
 		iTimed_MinSeedingTimeWithPeers = cfg.getUnsafeIntParameter("StartStopManager_iTimed_MinSeedingTimeWithPeers") * 1000;
+		iTimed_MaxSeedingTimeWithPeers = cfg.getUnsafeIntParameter("StartStopManager_iTimed_MaxSeedingTimeWithPeers") * 1000;
 	}
 
 	/** Sort first by SeedingRank Descending, then by Position Ascending.
@@ -1271,13 +1273,50 @@ RankCalculatorReal
 						lMsElapsed = (SystemTime.getCurrentTime() - stats
 								.getTimeStartedSeeding());
 						if (iTimed_MinSeedingTimeWithPeers > 0) {
-	  					PeerManager peerManager = dl.getPeerManager();
-	  					if (peerManager != null) {
-	  						int connectedLeechers = peerManager.getStats().getConnectedLeechers();
-	  						if (connectedLeechers > 0) {
-	  							lMsTimeToSeedFor = iTimed_MinSeedingTimeWithPeers;
-	  						}
-	  					}
+							
+								// THIS IS ALL IN TWO PLACES HERE
+							
+		  					PeerManager peerManager = dl.getPeerManager();
+		  					if (peerManager != null) {
+		  						int connectedLeechers = peerManager.getStats().getConnectedLeechers();
+		  						if (connectedLeechers > 0) {
+		  							lMsTimeToSeedFor = iTimed_MinSeedingTimeWithPeers;
+		  							
+		  							String trDebug = null;
+		  							
+		  							if (rules.bDebugLog){
+		  								trDebug = "  Timed Rotation: connected peers, min seeding set to " + (lMsTimeToSeedFor/1000) +"\n";
+		  							}
+		  							
+		  							if ( iTimed_MaxSeedingTimeWithPeers > iTimed_MinSeedingTimeWithPeers && lastModifiedScrapeResultPeers > 0 ){
+		  							
+		  								if ( lastModifiedScrapeResultSeeds == 0 ){
+		  									
+		  									lMsTimeToSeedFor = iTimed_MaxSeedingTimeWithPeers;
+		  									
+		  									if (rules.bDebugLog){
+				  								trDebug = "  Timed Rotation: connected peers, max seeding set and no seeds, min seeding set to " + (lMsTimeToSeedFor/1000) +"\n";
+				  							}
+		  								}else{
+		  									
+		  									float spRatio = (float)lastModifiedScrapeResultSeeds / lastModifiedScrapeResultPeers;
+		  									
+		  									if ( spRatio < 1 ){
+		  											  										
+		  										lMsTimeToSeedFor += ( iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers) * ( 1.0 - spRatio );
+		  										
+		  										if (rules.bDebugLog){
+					  								trDebug = "  Timed Rotation: connected peers, max seeding set and SP ratio of " + spRatio + ", min seeding set to " + (lMsTimeToSeedFor/1000) +"\n";
+					  							}
+		  									}
+		  								}
+		  							}
+		  							
+		  							if (rules.bDebugLog){
+		  								sExplainSR += trDebug;
+		  							}
+		  						}
+		  					}
 						}
 					}
 	
@@ -2089,13 +2128,35 @@ RankCalculatorReal
 
 						long lMsTimeToSeedFor = minTimeAlive;
 						if (iTimed_MinSeedingTimeWithPeers > 0) {
-	  					PeerManager peerManager = dl.getPeerManager();
-	  					if (peerManager != null) {
-	  						int connectedLeechers = peerManager.getStats().getConnectedLeechers();
-	  						if (connectedLeechers > 0) {
-	  							lMsTimeToSeedFor = iTimed_MinSeedingTimeWithPeers;
-	  						}
-	  					}
+							
+		  					PeerManager peerManager = dl.getPeerManager();
+		  					
+		  					if (peerManager != null) {
+		  						
+		  						int connectedLeechers = peerManager.getStats().getConnectedLeechers();
+		  						
+		  						if (connectedLeechers > 0) {
+		  							
+		  							lMsTimeToSeedFor = iTimed_MinSeedingTimeWithPeers;
+		  							
+		  							if ( iTimed_MaxSeedingTimeWithPeers > iTimed_MinSeedingTimeWithPeers && lastModifiedScrapeResultPeers > 0 ){
+			  							
+		  								if ( lastModifiedScrapeResultSeeds == 0 ){
+		  									
+		  									lMsTimeToSeedFor = iTimed_MaxSeedingTimeWithPeers;
+		  									
+		  								}else{
+		  									
+		  									float spRatio = (float) lastModifiedScrapeResultSeeds / lastModifiedScrapeResultPeers;
+		  									
+		  									if ( spRatio < 1 ){
+		  											  										
+		  										lMsTimeToSeedFor += ( iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers) * ( 1.0 - spRatio );
+		  									}
+		  								}
+		  							}
+		  						}
+		  					}
 						}
 
 						if (dl.isForceStart())

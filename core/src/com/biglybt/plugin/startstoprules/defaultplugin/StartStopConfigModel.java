@@ -354,10 +354,17 @@ public class StartStopConfigModel
 				"ConfigView.label.seeding.rankType.timed.minTimeWithPeers", 0, 0,
 				Integer.MAX_VALUE);
 
+		IntParameter paramMaxSeedingTimeWithPeers = model.addIntParameter2(
+				"StartStopManager_iTimed_MaxSeedingTimeWithPeers",
+				"ConfigView.label.seeding.rankType.timed.maxTimeWithPeers", 0, 0,
+				Integer.MAX_VALUE);
+
+		paramMaxSeedingTimeWithPeers.setIndent(1, true);
+		
 		ParameterGroup pgTimedOptions = model.createGroup(
 				"ConfigView.label.seeding.rankType.timed.options",
-				paramMinSeedingTimeWithPeers);
-
+				paramMinSeedingTimeWithPeers, paramMaxSeedingTimeWithPeers );
+		
 		ParameterGroup pgRankTypeOptions = model.createGroup(null, pgSeedOptions,
 				pgTimedOptions);
 
