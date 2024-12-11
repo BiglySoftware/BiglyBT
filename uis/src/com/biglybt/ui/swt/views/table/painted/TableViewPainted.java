@@ -1744,7 +1744,10 @@ public class TableViewPainted
 		//e.gc.drawLine(0, 0, cTable.getSize().x, canvasImage.getBounds().height);
 	}
 
-	protected void swt_paintCanvasImage(GC gc, Rectangle drawBounds) {
+	private void 
+	swt_paintCanvasImage(
+		GC gc, Rectangle drawBounds) 
+	{
 		if (cTable == null || cTable.isDisposed()) {
 			return;
 		}
@@ -1871,10 +1874,13 @@ public class TableViewPainted
 			gc.setAlpha(255);
 		}finally{
 			
+			Utils.setClipping(gc, null);
+			
 			lastMC = mut;
 		}
 	}
 
+	/*
 	private Color getColorLine() {
 		if (colorLine == null) {
 			colorLine = TablePaintedUtils.getColour(cTable.getDisplay(), SWT.COLOR_LIST_BACKGROUND);
@@ -1895,7 +1901,8 @@ public class TableViewPainted
 
 		return colorLine;
 	}
-
+	*/
+	
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.views.table.TableViewSWT#obfuscatedImage(org.eclipse.swt.graphics.Image)
 	 */
@@ -2585,7 +2592,6 @@ public class TableViewPainted
 											canvasImageGC.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
 										}
 										swt_paintCanvasImage(canvasImageGC, new Rectangle(0, 0, 9999, yDiff));
-										Utils.setClipping(canvasImageGC, (Rectangle) null);
 									} else {
 										// User scrolled down, move image up
 										if (Utils.isGTK3) {
@@ -2601,11 +2607,9 @@ public class TableViewPainted
 											h += row.getHeight();
 										}
 										swt_paintCanvasImage(canvasImageGC, new Rectangle(0, bounds.height - h, 9999, h));
-										Utils.setClipping(canvasImageGC, (Rectangle) null);
 									}
 								}else{
 									swt_paintCanvasImage(canvasImageGC, new Rectangle(0, 0, 9999, 9999));
-									Utils.setClipping(canvasImageGC, (Rectangle) null);
 								}
 
 					  		if ( DEBUG_WITH_SHELL ){
