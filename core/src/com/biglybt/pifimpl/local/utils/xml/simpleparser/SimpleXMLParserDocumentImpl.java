@@ -149,7 +149,7 @@ SimpleXMLParserDocumentImpl
 			_input_stream = new BufferedInputStream( _input_stream );
 		}
 
-		_input_stream.mark( 100*1024 );
+		_input_stream.mark( 500*1024 );
 
 			// prevent the parser from screwing with our stream by closing it
 
@@ -597,11 +597,13 @@ SimpleXMLParserDocumentImpl
     		
     		/*
     		try{
-    			FileUtil.writeBytesAsFile( "C:\\temp\\fudge.txt", FileUtil.readInputStreamAsByteArray( is, 100*1024 ));
+    			FileUtil.writeBytesAsFile( "C:\\temp\\fudge.txt", FileUtil.readInputStreamAsByteArray( is, 500*1024 ));
     			
     			is.reset();
     			
     		}catch( Throwable e ){
+    			
+    			e.printStackTrace();
     			
     		}
     		*/
