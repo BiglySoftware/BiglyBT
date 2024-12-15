@@ -7490,9 +7490,11 @@ SubscriptionManagerImpl
 	loadResults(
 		SubscriptionImpl			subs )
 	{		
-		LinkedHashMap	results;
+		LinkedHashMap<String,SubscriptionResultImpl>	results;
 		
 		boolean	check_results = false;
+		
+		long latest_unread_result = 0;
 		
 		synchronized( result_cache ){
 
@@ -7533,6 +7535,15 @@ SubscriptionManagerImpl
 
 							results.put( result.getID(), result );
 
+							if ( !( result.isDeleted() || result.getRead())){
+							
+								long time_found = result.getTimeFound();
+								
+								if ( time_found > latest_unread_result ){
+									
+									latest_unread_result = time_found;
+								}
+							}
 						}catch( Throwable e ){
 
 							log( "Failed to decode result '" + result_map + "'", e );
@@ -7566,6 +7577,8 @@ SubscriptionManagerImpl
 				result_cache.remove( oldest_sub );
 			}
 		}
+		
+		subs.setNewestUnreadResultTime( latest_unread_result );
 		
 		if ( check_results ){
 		
@@ -7774,11 +7787,13 @@ SubscriptionManagerImpl
  	{		
 		List<SubscriptionResultImpl>	saved_results = new ArrayList<>( results.length );
 		
+		long latest_unread_result = 0;
+
 		synchronized( result_cache ){
 
 			result_cache.remove( subs );
 
-			try{
+			try{				
 				List<SubscriptionResultImpl>	deleted_old_results = new ArrayList<>( results.length );
 				
 				int now_days = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
@@ -7800,6 +7815,16 @@ SubscriptionManagerImpl
 					}else{
 						
 						saved_results.add( result );
+						
+						if ( !result.getRead()){
+							
+							long time_found = result.getTimeFound();
+							
+							if ( time_found > latest_unread_result ){
+								
+								latest_unread_result = time_found;
+							}
+						}
 					}
 				}
 
@@ -7848,7 +7873,7 @@ SubscriptionManagerImpl
 			}
 		}
 		
-		subs.invalidateNewestResultTime();
+		subs.setNewestUnreadResultTime( latest_unread_result );
 		
 		if ( new_unread_results != null && !new_unread_results.isEmpty()){
 		

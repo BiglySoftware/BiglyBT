@@ -64,7 +64,7 @@ public class ColumnSubscriptionNewestDate
 			return;
 		}
 		
-		long latest = sub.getNewestResultTime();
+		long latest = sub.getNewestUnreadResultTime();
 		
 		super.refresh(cell, latest, null);
 	}

@@ -127,7 +127,7 @@ Subscription
 		List<Subscription>	subs );
 	
 	public long
-	getNewestResultTime();
+	getNewestUnreadResultTime();
 	
 	public long
 	getNextUpdateTime();

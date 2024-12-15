@@ -163,9 +163,7 @@ SubscriptionImpl
 	private List<String>	depends_on;
 	private String			exec_on_new_result;
 	
-	private AtomicLong		newest_result_time_next = new AtomicLong(1);
-	private volatile long	newest_result_time_seq;
-	private volatile long	newest_result_time;
+	private long			latest_unread_result_time = -1;
 	
 	private AtomicLong		md_mutator = new AtomicLong( RandomUtils.nextAbsoluteLong());
 
@@ -2570,47 +2568,20 @@ SubscriptionImpl
 	}
 
 	protected void
-	invalidateNewestResultTime()
+	setNewestUnreadResultTime(
+		long t )
 	{
-		newest_result_time_next.incrementAndGet();
+		latest_unread_result_time = t;
 	}
 	
 	public long
-	getNewestResultTime()
+	getNewestUnreadResultTime()
 	{
-		long latest = newest_result_time;
-		long seq	= newest_result_time_seq;
-		
-		long next = newest_result_time_next.get();
-		
-		if ( newest_result_time_seq == next ){
+		if ( latest_unread_result_time == -1 ){
 			
-			return( latest );
+			getHistory().getResults( false );
 		}
-				
-		latest = 0;
-		
-		SubscriptionResult[] results = getResults(false);
-			
-		for ( SubscriptionResult result : results ){
-			
-			if ( result.isDeleted() || result.getRead()){
-				
-				continue;
-			}
-			
-			long timeFound = result.getTimeFound();
-			
-			if ( timeFound > latest ){
-				
-				latest = timeFound;
-			}
-		}
-	
-		newest_result_time		= latest;
-		newest_result_time_seq	= next;
-		
-		return( latest );
+		return( latest_unread_result_time );
 	}
 	
 	@Override
