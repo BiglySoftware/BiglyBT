@@ -134,16 +134,15 @@ public class NatTestWindow {
     shell.setLayout(layout);
 
     Composite panel = new Composite(shell, SWT.NULL);
-    GridData gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL);
+    GridData gridData = new GridData(GridData.FILL_BOTH);
     panel.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 3;
     panel.setLayout(layout);
 
     Label label = new Label(panel, SWT.WRAP);
-    gridData = new GridData();
-    gridData.horizontalSpan = 3;
-    gridData.widthHint = 400;
+    gridData = Utils.getWrappableLabelGridData(3, GridData.FILL_HORIZONTAL);
+    //gridData.widthHint = 400;
     label.setLayoutData(gridData);
     Messages.setLanguageText(label, "configureWizard.nat.message");
 
@@ -241,11 +240,8 @@ public class NatTestWindow {
     	// results
 
     textResults = new StyledText(panel, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP );
-    gridData = new GridData();
-    gridData.widthHint = 400;
-    gridData.heightHint = 100;
-    gridData.grabExcessVerticalSpace = true;
-    gridData.verticalAlignment = SWT.FILL;
+    gridData = new GridData( GridData.FILL_BOTH );
+   
     gridData.horizontalSpan = 3;
     textResults.setLayoutData(gridData);
     
