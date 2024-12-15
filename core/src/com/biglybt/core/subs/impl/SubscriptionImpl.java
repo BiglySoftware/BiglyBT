@@ -163,7 +163,7 @@ SubscriptionImpl
 	private List<String>	depends_on;
 	private String			exec_on_new_result;
 	
-	private long			latest_unread_result_time = -1;
+	private volatile long	latest_unread_result_time = -1;
 	
 	private AtomicLong		md_mutator = new AtomicLong( RandomUtils.nextAbsoluteLong());
 
@@ -2574,13 +2574,20 @@ SubscriptionImpl
 		latest_unread_result_time = t;
 	}
 	
+	private static AsyncDispatcher disp = new AsyncDispatcher( "SubsResultLoader" );
+	
 	public long
 	getNewestUnreadResultTime()
 	{
 		if ( latest_unread_result_time == -1 ){
+	
+			latest_unread_result_time = 0;
 			
-			getHistory().getResults( false );
+			disp.dispatch(()->{
+				getHistory().getResults( false );
+			});	
 		}
+		
 		return( latest_unread_result_time );
 	}
 	
