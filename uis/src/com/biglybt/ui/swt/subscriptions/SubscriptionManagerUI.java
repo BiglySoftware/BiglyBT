@@ -3223,17 +3223,19 @@ SubscriptionManagerUI
 
 				if (!input.isEmpty()) {
 
-					try {
-						WebEngine web_engine1 = (WebEngine) sub.getEngine();
-
-						web_engine1.setSearchUrl(input);
-
-						sub.cloneWithNewEngine(web_engine1);
-
-					} catch (Throwable e) {
-
-						Debug.out(e);
-					}
+					Utils.getOffOfSWTThread(()->{
+						try {
+							WebEngine web_engine1 = (WebEngine) sub.getEngine();
+	
+							web_engine1.setSearchUrl(input);
+	
+							sub.cloneWithNewEngine(web_engine1);
+	
+						} catch (Throwable e) {
+	
+							Debug.out(e);
+						}
+					});
 				}
 			});
 		} catch (Throwable e) {
