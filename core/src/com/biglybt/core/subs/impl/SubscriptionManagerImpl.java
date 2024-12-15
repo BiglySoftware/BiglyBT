@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.KeyPair;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -69,6 +70,7 @@ import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.core.vuzefile.VuzeFileProcessor;
 import com.biglybt.net.magneturi.MagnetURIHandler;
+import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ddb.DistributedDatabase;
@@ -290,7 +292,7 @@ SubscriptionManagerImpl
 
 	private CopyOnWriteMap<String,SubscriptionImpl>		subscription_map	= new CopyOnWriteMap<>();
 
-	private boolean	config_dirty;
+	private AtomicBoolean	config_dirty = new AtomicBoolean();
 
 	private int		publish_associations_active;
 	private boolean	publish_next_asyc_pending;
@@ -954,6 +956,20 @@ SubscriptionManagerImpl
 					throws PluginException
 				{
 					throw( new PluginException( "derp" ));
+				}
+			});
+		
+		default_pi.addListener(
+			new PluginAdapter()
+			{
+				@Override
+				public void 
+				closedownComplete()
+				{
+					if ( config_dirty.get()){
+						
+						saveConfig();
+					}
 				}
 			});
 	}
@@ -8200,15 +8216,8 @@ SubscriptionManagerImpl
 	protected void
 	configDirty()
 	{
-		synchronized( this ){
-
-			if ( config_dirty ){
-
-				return;
-			}
-
-			config_dirty = true;
-
+		if ( config_dirty.compareAndSet( false, true )){
+		
 			new DelayedEvent(
 				"Subscriptions:save", 5000,
 				new AERunnable()
@@ -8219,7 +8228,7 @@ SubscriptionManagerImpl
 					{
 						synchronized( SubscriptionManagerImpl.this ){
 
-							if ( !config_dirty ){
+							if ( !config_dirty.get()){
 
 								return;
 							}
@@ -8238,7 +8247,7 @@ SubscriptionManagerImpl
 
 		synchronized( this ){
 
-			config_dirty = false;
+			config_dirty.set( false );
 
 			if ( subscription_map.isEmpty()){
 
