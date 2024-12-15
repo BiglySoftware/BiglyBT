@@ -1462,19 +1462,23 @@ public class UrlUtils
 	public static String
 	resolveIPv6Host(
 		String		url )
+	
+		throws Exception
 	{
+		String str = url;
+		
 		try{
 			DNSUtils.DNSUtilsIntf dns_utils = DNSUtils.getSingleton();
-
+	
 			URL http_server_url = new URL( url );
-
+	
+			str = http_server_url.getHost();
+			
 			return( setHost( http_server_url, "[" + dns_utils.getIPV6ByName( http_server_url.getHost()).getHostAddress() + "]").toExternalForm());
 			
 		}catch( Throwable e ){
 			
-			Debug.out( e );
-			
-			return( url );
+			throw( new Exception( "Failed to resolve IPv6 address for '" + str + "'"));
 		}
 	}
 	
