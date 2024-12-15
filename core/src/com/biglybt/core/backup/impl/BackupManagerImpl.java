@@ -40,6 +40,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.update.UpdateInstaller;
+import com.biglybt.pifimpl.PluginUtils;
 
 public class
 BackupManagerImpl
@@ -596,6 +597,81 @@ BackupManagerImpl
 		}
 	}
 
+	private File[]
+	getHighestVersions(
+		File[]		files )
+	{
+		List<File>	result = new ArrayList<>( files.length );
+		
+		Map<String,Object[]> version_map = new HashMap<>();
+		
+  		for ( File file: files ){
+
+  			String	name = file.getName().toLowerCase();
+
+  			if ( name.endsWith(".jar") || name.endsWith( ".zip" )){
+
+  				int name_len = name.length();
+  				
+  				int sep_pos = name.lastIndexOf("_");
+  				
+  				if ( 	sep_pos == -1 ||
+  						sep_pos == name_len-1 ||
+						!Character.isDigit(name.charAt(sep_pos+1))){
+
+  						// not a versioned jar
+
+  					result.add( file );
+
+  				}else{
+
+					String version = name.substring( sep_pos+1, name_len-4 );
+
+					if ( Constants.isValidVersionFormat( version )){
+						
+	  					String prefix = name.substring( 0, sep_pos );
+
+						String type = name.substring( name_len-4 );
+						
+						String key = prefix + type;
+						
+						Object[]	version_info = version_map.get( key );
+	
+						if ( version_info == null ){
+	
+							version_map.put( key, new Object[]{ version, file });
+	
+						}else{
+	
+							if ( PluginUtils.comparePluginVersions((String)version_info[0], version ) < 0 ){
+	
+								version_info[0] = version;
+								version_info[1] = file;
+							}
+						}
+					}else{
+				
+							// invalid version
+						
+						result.add( file );
+					}
+  				}
+   			}else{
+   				
+   					// not jar or zip
+   				
+   				result.add( file );
+   			}
+  		}
+  		
+  		for ( Object[] entry: version_map.values()){
+  			
+  			result.add((File)entry[1]);
+  		}
+  		
+		return( result.toArray( new File[ result.size()]));
+	}
+	
 	private long[]
  	copyFiles(
  		File		from_file,
@@ -658,6 +734,13 @@ BackupManagerImpl
 				File[] files = from_file.listFiles();
 	
 				if ( files != null ){
+					
+					boolean do_versions =  depth == 2 && parent_name.equals( "plugins" );
+						
+					if ( do_versions ){
+						
+						files = getHighestVersions( files );
+					}
 					
 					for ( File f: files ){
 		
