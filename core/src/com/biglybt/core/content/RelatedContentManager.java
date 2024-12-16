@@ -398,117 +398,121 @@ RelatedContentManager
 				public void
 				initializationComplete()
 				{
-					if ( !persist ){
-
-						deleteRelatedContent();
-					}
-
-					try{
-						PluginInterface dht_pi =
-							plugin_interface.getPluginManager().getPluginInterfaceByClass(
-										DHTPlugin.class );
-
-						if ( dht_pi != null ){
-
-							DHTPlugin dp = (DHTPlugin)dht_pi.getPlugin();
-
-							public_dht_plugin = dp;
-																												
-							RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, public_dht_plugin, true );
-													
-							searchers.add( public_searcher );
-
-							if ( dp.isEnabled()){
-								
-								public_dht_plugin_bigly = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
+					AEThread2.createAndStartDaemon( 
+						"rcm.delay.init",
+						()->{
+							try{
+								if ( !persist ){
 									
-								RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, public_dht_plugin_bigly, true );
-								
-								searchers.add( bigly_searcher );
-							}
+									deleteRelatedContent();
+								}
 
-							DownloadManager dm = plugin_interface.getDownloadManager();
-
-							Download[] downloads = dm.getDownloads();
-
-							addDownloads( downloads, true );
-
-							dm.addListener(
-								new DownloadManagerListener()
-								{
-									@Override
-									public void
-									downloadAdded(
-										Download	download )
-									{
-										addDownloads( new Download[]{ download }, false );
+								PluginInterface dht_pi =
+									plugin_interface.getPluginManager().getPluginInterfaceByClass(
+												DHTPlugin.class );
+		
+								if ( dht_pi != null ){
+		
+									DHTPlugin dp = (DHTPlugin)dht_pi.getPlugin();
+		
+									public_dht_plugin = dp;
+																														
+									RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, public_dht_plugin, true );
+															
+									searchers.add( public_searcher );
+		
+									if ( dp.isEnabled()){
+										
+										public_dht_plugin_bigly = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
+											
+										RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, public_dht_plugin_bigly, true );
+										
+										searchers.add( bigly_searcher );
 									}
-
-									@Override
-									public void
-									downloadRemoved(
-										Download	download )
-									{
-									}
-								},
-								false );
-
-							SimpleTimer.addPeriodicEvent(
-								"RCM:publisher",
-								TIMER_PERIOD,
-								new TimerEventPerformer()
-								{
-									private int	tick_count;
-
-									@Override
-									public void
-									perform(
-										TimerEvent event )
-									{
-										tick_count++;
-
-										if ( tick_count == 1 || tick_count % I2P_SEARCHER_CHECK_TICKS == 0 ){
-
-											checkI2PSearcher( false );
-										}
-
-										if ( enabled ){
-
-											if ( tick_count >= INITIAL_PUBLISH_TICKS ){
-
-												if ( tick_count % ( public_dht_plugin.isSleeping()?PUBLISH_SLEEPING_CHECK_TICKS:PUBLISH_CHECK_TICKS) == 0 ){
-
-													publish();
+		
+									DownloadManager dm = plugin_interface.getDownloadManager();
+		
+									Download[] downloads = dm.getDownloads();
+		
+									addDownloads( downloads, true );
+		
+									dm.addListener(
+										new DownloadManagerListener()
+										{
+											@Override
+											public void
+											downloadAdded(
+												Download	download )
+											{
+												addDownloads( new Download[]{ download }, false );
+											}
+		
+											@Override
+											public void
+											downloadRemoved(
+												Download	download )
+											{
+											}
+										},
+										false );
+		
+									SimpleTimer.addPeriodicEvent(
+										"RCM:publisher",
+										TIMER_PERIOD,
+										new TimerEventPerformer()
+										{
+											private int	tick_count;
+		
+											@Override
+											public void
+											perform(
+												TimerEvent event )
+											{
+												tick_count++;
+		
+												if ( tick_count == 1 || tick_count % I2P_SEARCHER_CHECK_TICKS == 0 ){
+		
+													checkI2PSearcher( false );
 												}
-
-												if ( tick_count % SECONDARY_LOOKUP_TICKS == 0 ){
-
-													secondaryLookup();
+		
+												if ( enabled ){
+		
+													if ( tick_count >= INITIAL_PUBLISH_TICKS ){
+		
+														if ( tick_count % ( public_dht_plugin.isSleeping()?PUBLISH_SLEEPING_CHECK_TICKS:PUBLISH_CHECK_TICKS) == 0 ){
+		
+															publish();
+														}
+		
+														if ( tick_count % SECONDARY_LOOKUP_TICKS == 0 ){
+		
+															secondaryLookup();
+														}
+		
+														if ( tick_count % REPUBLISH_TICKS == 0 ){
+		
+															republish();
+														}
+		
+														if ( tick_count % CONFIG_SAVE_CHECK_TICKS == 0 ){
+		
+															saveRelatedContent( tick_count, false );
+														}
+													}
 												}
-
-												if ( tick_count % REPUBLISH_TICKS == 0 ){
-
-													republish();
-												}
-
-												if ( tick_count % CONFIG_SAVE_CHECK_TICKS == 0 ){
-
-													saveRelatedContent( tick_count, false );
+		
+												for ( RelatedContentSearcher searcher: searchers ){
+		
+													searcher.timerTick( enabled, tick_count );
 												}
 											}
-										}
-
-										for ( RelatedContentSearcher searcher: searchers ){
-
-											searcher.timerTick( enabled, tick_count );
-										}
-									}
-								});
-						}
-					}finally{
-
-						initialisation_complete_sem.releaseForever();
-					}
+										});
+								}
+							}finally{
+		
+								initialisation_complete_sem.releaseForever();
+							}
+						});
 				}
 
 				@Override
