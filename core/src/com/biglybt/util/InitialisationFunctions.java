@@ -42,8 +42,22 @@ import com.biglybt.ui.UIFunctionsManager;
 
 public class InitialisationFunctions
 {
-	public static void earlyInitialisation(Core core) {
-
+	private static boolean earlyInitDone = false;
+	
+	public static void 
+	earlyInitialisation(
+		Core core) 
+	{
+		synchronized( InitialisationFunctions.class ){
+			
+			if ( earlyInitDone ){
+				
+				return;	// can happen with multiple UIs (e.g. SWT + Telnet)
+			}
+			
+			earlyInitDone = true;
+		}
+		
 		DownloadManagerEnhancer.initialise(core);
 
 		hookDownloadAddition();
