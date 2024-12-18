@@ -483,7 +483,7 @@ public class TabbedMDI
   				// ESC or CTRL+F4 closes current Tab
   				if (key == SWT.ESC
   						|| (event.keyCode == SWT.F4 && event.stateMask == SWT.CTRL)) {
-					  closeEntry(getCurrentEntry(),true);
+					  closeEntry(getSelectedEntry(),true);
   					event.doit = false;
   				} else if (event.keyCode == SWT.F6
   						|| (event.character == SWT.TAB && (event.stateMask & SWT.CTRL) != 0)) {
@@ -501,7 +501,7 @@ public class TabbedMDI
   					}
   				}else{
   					if (focus_control == tabFolder ){
-  						TabbedEntry current = getCurrentEntry();
+  						TabbedEntry current = getSelectedEntry();
   						if ( current != null ){
   							if ( current.processAccelerator( event.character, event.stateMask )){
   								event.doit = false;
@@ -1085,7 +1085,7 @@ public class TabbedMDI
 			select_history.removeFirst();
 		}
 
-		MdiEntry oldEntry = getCurrentEntry();
+		MdiEntry oldEntry = getSelectedEntry();
 		if (newEntry == oldEntry && oldEntry != null) {
 			((BaseMdiEntry) newEntry).show();
 			triggerSelectionListener(newEntry, newEntry);
@@ -1096,7 +1096,7 @@ public class TabbedMDI
 			oldEntry.hide();
 		}
 
-		setCurrentEntry((MdiEntrySWT)newEntry );
+		setSelectedEntry((MdiEntrySWT)newEntry );
 
 		if (newEntry instanceof BaseMdiEntry) {
 			((BaseMdiEntry) newEntry).show();
@@ -1318,7 +1318,7 @@ public class TabbedMDI
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				if (tabFolder.getItemCount() == 0) {
-					setCurrentEntry( null );
+					setSelectedEntry( null );
 				}
 			}
 		});
@@ -1330,7 +1330,7 @@ public class TabbedMDI
 
   			@Override
   			public void runSupport() {
-  				if (getCurrentEntry() != null || tabFolder.isDisposed()) {
+  				if (getSelectedEntry() != null || tabFolder.isDisposed()) {
   					return;
   				}
   				CTabItem selection = tabFolder.getSelection();
@@ -1390,7 +1390,7 @@ public class TabbedMDI
 	@Override
 	public String getUpdateUIName() {
 		String name = "MDI";
-		MdiEntry entry = getCurrentEntry();
+		MdiEntry entry = getSelectedEntry();
 		if (entry != null) {
 			name += "-" + entry.getViewID();
 		}
@@ -1817,14 +1817,14 @@ public class TabbedMDI
 	}
 
 	@Override
-	protected void setCurrentEntry(MdiEntrySWT entry) {
-		super.setCurrentEntry(entry);
+	protected void setSelectedEntry(MdiEntrySWT entry) {
+		super.setSelectedEntry(entry);
 
 		Utils.execSWTThread(this::swt_refreshVitality);
 	}
 
 	protected void swt_refreshVitality() {
-		TabbedEntry currentEntry = getCurrentEntry();
+		TabbedEntry currentEntry = getSelectedEntry();
 		if (currentEntry == null) {
 			return;
 		}
@@ -1899,8 +1899,8 @@ public class TabbedMDI
 	}
 
 	@Override
-	public TabbedEntry getCurrentEntry() {
-		return (TabbedEntry) super.getCurrentEntry();
+	public TabbedEntry getSelectedEntry() {
+		return (TabbedEntry) super.getSelectedEntry();
 	}
 
 	@Override

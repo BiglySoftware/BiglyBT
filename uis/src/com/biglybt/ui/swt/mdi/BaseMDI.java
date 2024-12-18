@@ -233,7 +233,7 @@ public abstract class BaseMDI
 		}
 		
 		if (currentEntry == removedItem) {
-			setCurrentEntry(null);
+			setSelectedEntry(null);
 		}
 
 		removedItem.closeView( userInitiated );
@@ -294,15 +294,20 @@ public abstract class BaseMDI
 	                                                boolean closeable, String preferedAfterID);
 
 	@Override
-	public MdiEntrySWT getCurrentEntry() {
+	public MdiEntrySWT getSelectedEntry() {
 		if (isDisposed()) {
 			return null;
 		}
 		return currentEntry;
 	}
 
+	@Override
+	public MdiEntrySWT getMenuEntry() {
+		return( getSelectedEntry());
+	}
+	
 	protected void
-	setCurrentEntry(
+	setSelectedEntry(
 		MdiEntrySWT		entry )
 	{
 		currentEntry = entry;
@@ -686,7 +691,7 @@ public abstract class BaseMDI
 
 	@Override
 	public void updateUI() {
-		MdiEntry currentEntry = getCurrentEntry();
+		MdiEntry currentEntry = getSelectedEntry();
 		if (currentEntry != null) {
 			currentEntry.updateUI( false );
 		}

@@ -54,7 +54,7 @@ public interface MultipleDocumentInterfaceSWT
 	MdiEntrySWT[] getEntries();
 
 	@Override
-	MdiEntrySWT getCurrentEntry();
+	MdiEntrySWT getSelectedEntry();
 
 	/**
 	 * @param closeableConfigFile

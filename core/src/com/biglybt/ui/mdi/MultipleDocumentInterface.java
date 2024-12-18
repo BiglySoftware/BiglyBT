@@ -153,8 +153,10 @@ public interface MultipleDocumentInterface
 			String configID, String title, ViewTitleInfo titleInfo, Object params,
 			boolean closeable, String preferedAfterID);
 
-	public MdiEntry getCurrentEntry();
+	public MdiEntry getSelectedEntry();
 
+	public MdiEntry getMenuEntry();
+	
 	public MdiEntry getEntry(String id);
 
 	public MdiEntry getEntry(String id, Object datasource );

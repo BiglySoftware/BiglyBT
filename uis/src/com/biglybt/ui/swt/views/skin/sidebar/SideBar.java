@@ -136,6 +136,8 @@ public class SideBar
 	private ParameterListener configBGColorListener;
 	private SWTViewListener swtViewListener;
 
+	private SideBarEntrySWT	menuEntry;
+	
 	public SideBar() {
 		super(null, UISWTInstance.VIEW_MAIN, null);
 		setCloseableConfigFile("sidebarauto.config");
@@ -210,7 +212,7 @@ public class SideBar
 					event.character = '\0';
 					flipSideBarVisibility();
 				}else if (event.keyCode == SWT.F4 && event.stateMask == SWT.CTRL ){
-					MdiEntry entry = getCurrentEntry();
+					MdiEntry entry = getSelectedEntry();
 
 					if ( entry instanceof SideBarEntrySWT && entry.isCloseable()){
 
@@ -270,7 +272,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = getCurrentEntry();
+						SideBarEntrySWT sbe = getMenuEntry();
 	
 						if ( sbe != null && !sbe.isCloseable()){
 							
@@ -285,7 +287,7 @@ public class SideBar
 					}
 				});
 	
-			menuItem.addListener((menu, target) -> closeEntry(getCurrentEntry(), true ));
+			menuItem.addListener((menu, target) -> closeEntry(getMenuEntry(), true ));
 		}
 		
 		{
@@ -298,7 +300,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = getCurrentEntry();
+						SideBarEntrySWT sbe = getMenuEntry();
 	
 						if ( sbe != null ){
 							String id = sbe.getId();
@@ -315,7 +317,7 @@ public class SideBar
 				});
 	
 			menuItem.addListener((menu, target) -> {
-				SideBarEntrySWT sbe = getCurrentEntry();
+				SideBarEntrySWT sbe = getMenuEntry();
 				
 				if ( sbe != null ){
 					
@@ -334,7 +336,7 @@ public class SideBar
 			
 			menuParentItem.addFillListener((menu, data) -> {
 				
-				SideBarEntrySWT entry = getCurrentEntry();
+				SideBarEntrySWT entry = getMenuEntry();
 				
 				boolean visible = 
 					entry != null && 
@@ -366,7 +368,7 @@ public class SideBar
 			menuItemDashBoard.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
+					SideBarEntrySWT sbe = getMenuEntry();
 	
 					if ( sbe != null ){
 						
@@ -380,7 +382,7 @@ public class SideBar
 			menuItemTopbar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
+					SideBarEntrySWT sbe = getMenuEntry();
 	
 					if ( sbe != null ){
 						
@@ -394,7 +396,7 @@ public class SideBar
 			menuItemSidebar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
+					SideBarEntrySWT sbe = getMenuEntry();
 	
 					if ( sbe != null ){
 						
@@ -408,7 +410,7 @@ public class SideBar
 			menuItemRightbar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
+					SideBarEntrySWT sbe = getMenuEntry();
 	
 					if ( sbe != null ){
 						
@@ -422,7 +424,7 @@ public class SideBar
 			menuItemQuickLinks.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
+					SideBarEntrySWT sbe = getMenuEntry();
 	
 					if ( sbe != null ){
 						
@@ -443,7 +445,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = getCurrentEntry();
+						SideBarEntrySWT sbe = getMenuEntry();
 	
 						menu.setVisible( sbe != null && sbe.canBuildStandAlone());
 					}
@@ -455,7 +457,7 @@ public class SideBar
 			MenuItemListener listener = new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
+					SideBarEntrySWT sbe = getMenuEntry();
 	
 					if ( sbe != null ){
 
@@ -778,7 +780,8 @@ public class SideBar
 			TreeItem lastTopItem = null;
 
 			boolean mouseDowned = false;
-
+			int		mouseDownedButton;
+			
 			Rectangle lastCloseAreaClicked = null;
 
 			private boolean wasExpanded;
@@ -817,7 +820,7 @@ public class SideBar
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 							//System.out.println("PaintItem: " + event.item + ";" + event.index + ";" + event.detail + ";" + event.getBounds() + ";" + event.gc.getClipping());
 							if (entry != null) {
-								boolean selected = getCurrentEntry() == entry;
+								boolean selected = getSelectedEntry() == entry;
 									
 								if (!selected) {
 									event.detail &= ~SWT.SELECTED;
@@ -849,7 +852,7 @@ public class SideBar
 								if (itemBounds != null && entry != null) {
 									event.item = treeItem;
 
-									boolean selected = getCurrentEntry() == entry
+									boolean selected = getSelectedEntry() == entry
 											&& entry.isSelectable();
 									event.detail = selected ? SWT.SELECTED : SWT.NONE;
 
@@ -913,15 +916,23 @@ public class SideBar
 									return;
 								}
 
-								showEntry(entry);
-							} else if (getCurrentEntry() != null) {
+								if ( mouseDowned && mouseDownedButton == 3 ){
+									
+										// if you want right-click sidebar menu to force selection of the entry before
+										// showing the menu then uncomment this
+									
+									// showEntry(entry);
+								}else{
+									showEntry(entry);
+								}
+							} else if (getSelectedEntry() != null) {
 								TreeItem topItem = tree.getTopItem();
 
 								// prevent "jumping" in the case where selection is off screen
 								// setSelection would jump the item on screen, and then
 								// showItem would jump back to where the user was.
 								tree.setRedraw(false);
-								TreeItem ti = getCurrentEntry().getTreeItem();
+								TreeItem ti = getSelectedEntry().getTreeItem();
 								if (ti != null) {
 									tree.setSelection(ti);
 								}
@@ -988,6 +999,8 @@ public class SideBar
 
 						case SWT.MouseDown: {
 							mouseDowned = true;
+							mouseDownedButton = event.button;
+							
 							lastCloseAreaClicked  = null;
 							if (tree.getItemCount() == 0 || event.button != 1) {
 								return;
@@ -1031,7 +1044,7 @@ public class SideBar
 							if (closeArea != null && closeArea.contains(event.x, event.y)) {
 								//treeItem.dispose();
 								return;
-							} else if (getCurrentEntry() != entry && Constants.isOSX) {
+							} else if (getSelectedEntry() != entry && Constants.isOSX) {
 								// showEntry(entry);  removed as we'll get a selection event if needed
 							}
 
@@ -1065,7 +1078,7 @@ public class SideBar
 										
 											// Note: On Windows, user can expand row by clicking the invisible area where the OS twisty would be
 										
-										MdiEntry currentEntry = getCurrentEntry();
+										MdiEntry currentEntry = getSelectedEntry();
 										
 										String collapsedID = entry.getViewID();
 										
@@ -1145,7 +1158,7 @@ public class SideBar
 						case SWT.Collapse: {
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 							
-							MdiEntry currentEntry = getCurrentEntry();
+							MdiEntry currentEntry = getSelectedEntry();
 							
 							String collapsedID = entry.getViewID();
 							
@@ -1167,7 +1180,7 @@ public class SideBar
 						}
 						case SWT.KeyDown:{
 						
-							MdiEntry currentEntry = getCurrentEntry();
+							MdiEntry currentEntry = getSelectedEntry();
 							
 							if ( currentEntry != null ){
 								
@@ -1328,6 +1341,19 @@ public class SideBar
 			public void menuHidden(MenuEvent e) {
 				bShown = false;
 
+				SideBarEntrySWT menuEntry = getMenuEntry();
+					
+				if ( menuEntry != null ){
+					
+					Utils.execSWTThreadLater(1,()->{
+							// needs to be cleared async so menu selection events that run after this get correct menu entry
+						
+						setMenuEntry( null );
+						
+						menuEntry.redraw();
+					});
+				}
+				
 				if (Constants.isOSX) {
 					return;
 				}
@@ -1350,13 +1376,18 @@ public class SideBar
 				Utils.disposeSWTObjects(menuTree.getItems());
 
 				bShown = true;
-
-				SideBarEntrySWT entry = (SideBarEntrySWT) tree.getData("MdiEntry");
+				
+				SideBarEntrySWT entry = (SideBarEntrySWT)menuTree.getData("MdiEntry");
 				
 				if (entry == null) {
-					entry = getCurrentEntry(); 
+					entry = getSelectedEntry();
+					if ( entry != null ){
+						entry.show();
+					}
 				}
 
+				setMenuEntry( entry );
+				
 				if ( entry != null ){
 				
 					fillMenu(menuTree, entry, "sidebar");
@@ -1476,7 +1507,7 @@ public class SideBar
 					@Override
 					public void pressed(SWTSkinButtonUtility buttonUtility,
 					                    SWTSkinObject skinObject, int stateMask) {
-						closeEntry(getCurrentEntry(),true);
+						closeEntry(getMenuEntry(),true);
 					}
 				});
 			}
@@ -1679,7 +1710,7 @@ public class SideBar
 			}
 			menuItem.setText(s + entry.getTitle() + ind);
 			menuItem.addSelectionListener(dropDownSelectionListener);
-			MdiEntry currentEntry = getCurrentEntry();
+			MdiEntry currentEntry = getMenuEntry();
 			if (currentEntry != null && currentEntry.getViewID().equals(id)) {
 				menuItem.setSelection(true);
 			}
@@ -2053,14 +2084,14 @@ public class SideBar
 	}
 
 	@Override
-	protected void setCurrentEntry(MdiEntrySWT entry){
+	protected void setSelectedEntry(MdiEntrySWT entry){
 		
 		if (entry != null && btnCloseItem != null ){
 			
 			btnCloseItem.setDisabled( !entry.isCloseable());
 		}
 		
-		super.setCurrentEntry(entry);
+		super.setSelectedEntry(entry);
 	}
 	
 	@Override
@@ -2073,7 +2104,7 @@ public class SideBar
 			return;
 		}
 
-		final SideBarEntrySWT oldEntry = getCurrentEntry();
+		final SideBarEntrySWT oldEntry = getSelectedEntry();
 
 		//System.out.println("showEntry " + newEntry.getId() + "; was " + (oldEntry == null ? "null" : oldEntry.getId()) + " via " + Debug.getCompressedStackTrace());
 		if (oldEntry == newEntry) {
@@ -2082,7 +2113,7 @@ public class SideBar
 		}
 
 		// show new
-		setCurrentEntry((MdiEntrySWT)newEntry );
+		setSelectedEntry((MdiEntrySWT)newEntry );
 
 		if (oldEntry != null && oldEntry != newEntry) {
 			oldEntry.redraw();
@@ -2107,7 +2138,7 @@ public class SideBar
 			if (entry == null) {
 				continue;
 			}
-			if ( entry != getCurrentEntry()){
+			if ( entry != getSelectedEntry()){
 
 				SWTSkinObject obj = ((SideBarEntrySWT)entry).getSkinObjectMaster();
 
@@ -2386,7 +2417,7 @@ public class SideBar
 
 	@Override
 	public BaseMdiEntry closeEntryByID(String id, boolean user_initiated ) {
-		MdiEntry currentBeforeClose = getCurrentEntry();
+		MdiEntry currentBeforeClose = getSelectedEntry();
 
 		BaseMdiEntry entry = super.closeEntryByID(id, user_initiated);
 		if (entry == null || Utils.isDisplayDisposed()) {
@@ -2454,7 +2485,7 @@ public class SideBar
 	private void
 	showNext()
 	{
-		MdiEntry current = getCurrentEntry();
+		MdiEntry current = getSelectedEntry();
 
 		String next = null;
 		
@@ -2489,7 +2520,7 @@ public class SideBar
 	private void
 	showPrevious()
 	{
-		MdiEntry current = getCurrentEntry();
+		MdiEntry current = getSelectedEntry();
 		
 		String next = null;
 
@@ -2593,8 +2624,25 @@ public class SideBar
 	}
 
 	@Override
-	public SideBarEntrySWT getCurrentEntry() {
-		return (SideBarEntrySWT) super.getCurrentEntry();
+	public SideBarEntrySWT getSelectedEntry() {
+		return (SideBarEntrySWT) super.getSelectedEntry();
+	}
+	
+	private void
+	setMenuEntry(
+		SideBarEntrySWT		me )
+	{
+		menuEntry = me;
+	}
+	
+	@Override
+	public SideBarEntrySWT 
+	getMenuEntry() 
+	{
+		if ( menuEntry != null ){
+			return( menuEntry );
+		}
+		return (SideBarEntrySWT) super.getMenuEntry();
 	}
 
 	@Override

@@ -1217,7 +1217,23 @@ public class SideBarEntrySWT
 				gc.fillRectangle(drawBounds);
 			}
 
-			if (this == sidebar.draggingOver) {
+			if ( sidebar.getMenuEntry() == this ){
+				
+				Color c;
+				if ( Utils.isDarkAppearanceNativeWindows()){
+					c = Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW );
+				}else{
+					c = ColorCache.getSchemedColor(gc.getDevice(), "#166688");
+				}
+				gc.setForeground(c);
+				final int line_width = 1;
+				gc.setLineWidth(line_width);
+				gc.setLineStyle( SWT.LINE_DASH);
+				Rectangle temp = new Rectangle( drawBounds.x+line_width, drawBounds.y+line_width, drawBounds.width-( line_width*2 ), drawBounds.height-( line_width*2 ));
+				
+				gc.drawRectangle(temp);
+				
+			}else if (this == sidebar.draggingOver) {
 				Color c = skin.getSkinProperties().getColor("color.sidebar.drag.fg");
 				gc.setForeground(c);
 				final int line_width = 2;

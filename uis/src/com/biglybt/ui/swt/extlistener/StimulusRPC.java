@@ -165,7 +165,7 @@ public class StimulusRPC
 						if (tabID.length() > 0) {
 							// 3.2 TODO: Should we be checking for partial matches?
 							MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-							MdiEntry entry = mdi.getCurrentEntry();
+							MdiEntry entry = mdi.getSelectedEntry();
 							if (entry != null) {
 								return entry.getViewID().equals(tabID);
 							}

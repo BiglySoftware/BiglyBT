@@ -156,7 +156,7 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 			return null;
 		}
 
-		return tabbedMDI.getCurrentEntry();
+		return tabbedMDI.getSelectedEntry();
 	}
 
 		// TabViews Functions

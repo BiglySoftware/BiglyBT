@@ -237,7 +237,7 @@ public class StatsView
 		if (tabbedMDI == null || tabbedMDI.isDisposed())
 			return;
 
-		MdiEntrySWT entry = tabbedMDI.getCurrentEntry();
+		MdiEntrySWT entry = tabbedMDI.getSelectedEntry();
 		if (entry != null) {
 			entry.updateUI( false );
 		}

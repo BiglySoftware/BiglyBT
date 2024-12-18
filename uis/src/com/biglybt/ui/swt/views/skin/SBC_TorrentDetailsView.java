@@ -276,7 +276,7 @@ public class SBC_TorrentDetailsView
 		if (tabbedMDI == null || tabbedMDI.isDisposed()) {
 			return null;
 		}
-		return (BaseMdiEntry) tabbedMDI.getCurrentEntry();
+		return (BaseMdiEntry) tabbedMDI.getSelectedEntry();
 	}
 
 	public static class TorrentDetailMdiEntry
