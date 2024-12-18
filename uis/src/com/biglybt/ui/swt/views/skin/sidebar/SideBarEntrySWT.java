@@ -648,7 +648,10 @@ public class SideBarEntrySWT
 	  		
 		}else if ( Constants.isOSX ){
 			
-			itemBounds.height	= drawBounds.height;
+			if ( drawBounds.height > itemBounds.height ){
+				
+				itemBounds.height	= drawBounds.height;
+			}
 			
 			drawBounds = itemBounds;
 		}
