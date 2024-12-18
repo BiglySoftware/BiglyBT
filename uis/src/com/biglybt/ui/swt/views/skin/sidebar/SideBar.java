@@ -1671,8 +1671,14 @@ public class SideBar
 	 *
 	 * @since 3.1.1.1
 	 */
-	protected void fillDropDownMenu(Menu menuDropDown, TreeItem[] items,
-			int indent) {
+	protected boolean 
+	fillDropDownMenu(
+		Menu		menuDropDown, 
+		TreeItem[]	items,
+		int 		indent) 
+	{
+		boolean hit = false;
+
 		String s = "";
 		for (int i = 0; i < indent; i++) {
 			s += "   ";
@@ -1698,11 +1704,16 @@ public class SideBar
 					//ind = "\t" + o;
 				}
 			}
-			menuItem.setText(s + entry.getTitle() + ind);
+			String title = s + entry.getTitle() + ind;
+			
+			menuItem.setText( title );
 			menuItem.addSelectionListener(dropDownSelectionListener);
 			MdiEntry currentEntry = getSelectedEntry();
+						
 			if (currentEntry != null && currentEntry.getViewID().equals(id)) {
 				menuItem.setSelection(true);
+				
+				hit = true;
 			}
 
 			TreeItem[] subItems = treeItem.getItems();
@@ -1714,9 +1725,19 @@ public class SideBar
 				}
 
 
-				fillDropDownMenu(parent, subItems, indent + 1);
+				if ( fillDropDownMenu(parent, subItems, indent + 1)){
+					
+					hit = true;
+					
+					if ( !entry.isSelectable()){
+						
+						menuItem.setText( title + " (*)");
+					}
+				};
 			}
 		}
+		
+		return( hit );
 	}
 
 	/**
