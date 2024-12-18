@@ -66,7 +66,7 @@ public class SideBarEntrySWT
 {
 	private static final boolean DARK_MODE = Utils.isDarkAppearanceNative();
 	
-	private static final boolean PAINT_BG = !Constants.isUnix;
+	private static final boolean PAINT_BG = true; // !Constants.isUnix;
 
 	private static final boolean DO_OUR_OWN_TREE_INDENT = true;
 		
@@ -632,15 +632,19 @@ public class SideBarEntrySWT
 			drawBounds = event.getBounds();
 		}
 		Rectangle treeArea = treeItem.getParent().getClientArea();
+		
 		if (Utils.isGTK3) {
-			// workaround bug
-  		if (treeArea.width > itemBounds.width) {
-  			itemBounds.width = treeArea.width;
-  		}
-  		if (treeArea.x < itemBounds.x) {
-  			itemBounds.x = treeArea.x;
-  		}
-  		drawBounds = itemBounds;
+				// workaround bug
+	  		if (treeArea.width > itemBounds.width) {
+	  			itemBounds.width = treeArea.width;
+	  		}
+	  		if (treeArea.x < itemBounds.x) {
+	  			itemBounds.x = treeArea.x;
+	  		}
+	  		itemBounds.y		= drawBounds.y;
+	  		itemBounds.height	= drawBounds.height;
+	  		
+	  		drawBounds = itemBounds;
 		}
 
 		String text = getTitle();
