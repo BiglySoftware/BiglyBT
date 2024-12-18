@@ -651,9 +651,9 @@ public class SideBarEntrySWT
 			if ( drawBounds.height > itemBounds.height ){
 				
 				itemBounds.height	= drawBounds.height;
+				
+				drawBounds = itemBounds;
 			}
-			
-			drawBounds = itemBounds;
 		}
 
 		String text = getTitle();
