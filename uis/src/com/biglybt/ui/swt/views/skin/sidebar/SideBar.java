@@ -1112,7 +1112,7 @@ public class SideBar
 							SideBarEntrySWT entry = (SideBarEntrySWT) ((treeItem == null || treeItem.isDisposed())
 									? null : treeItem.getData("MdiEntry"));
 
-							if ( entry != null ){
+							if ( entry != null && event.button == 1 ){
 								
 									// don't trigger popout if double click is in close area or
 									// item has child and user is clicking in the expandy area 
@@ -1380,6 +1380,8 @@ public class SideBar
 				
 				if ( entry != null ){
 				
+					entry.redraw();
+					
 					fillMenu(menuTree, entry, "sidebar");
 				}
 
