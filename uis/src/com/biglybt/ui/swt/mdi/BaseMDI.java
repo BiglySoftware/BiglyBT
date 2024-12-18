@@ -300,11 +300,6 @@ public abstract class BaseMDI
 		}
 		return currentEntry;
 	}
-
-	@Override
-	public MdiEntrySWT getMenuEntry() {
-		return( getSelectedEntry());
-	}
 	
 	protected void
 	setSelectedEntry(

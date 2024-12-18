@@ -503,7 +503,7 @@ public class MenuFactory
 			public void handleEvent(Event event) {
 				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 				if (mdi != null) {
-					MdiEntry currentEntry = mdi.getMenuEntry();
+					MdiEntry currentEntry = mdi.getMenuEntry( false );
 					if (currentEntry != null && currentEntry.isCloseable()) {
 						mdi.closeEntry(currentEntry,true);
 					}
@@ -515,7 +515,7 @@ public class MenuFactory
 			public void menuShown(MenuEvent e) {
 				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 				if (mdi != null) {
-					MdiEntry currentEntry = mdi.getMenuEntry();
+					MdiEntry currentEntry = mdi.getMenuEntry( false );
 					if (currentEntry != null && currentEntry.isCloseable()) {
 						menuItem.setEnabled(true);
 						return;
@@ -539,7 +539,7 @@ public class MenuFactory
 					public void handleEvent(Event e) {
 						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 						if (mdi != null) {
-							MdiEntry currentEntry = mdi.getMenuEntry();
+							MdiEntry currentEntry = mdi.getMenuEntry( false );
 							if (currentEntry != null && currentEntry.isCloseable()) {
 								mdi.closeEntry(currentEntry,true);
 							}
@@ -554,7 +554,7 @@ public class MenuFactory
 					if (!item.isDisposed() && !event.widget.isDisposed()) {
 						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 						if (mdi != null) {
-							MdiEntry currentEntry = mdi.getMenuEntry();
+							MdiEntry currentEntry = mdi.getMenuEntry( false );
 							if (currentEntry != null && currentEntry.isCloseable()) {
 								item.setEnabled(true);
 								return;

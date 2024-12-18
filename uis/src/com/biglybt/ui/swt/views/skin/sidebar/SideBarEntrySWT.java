@@ -1221,7 +1221,7 @@ public class SideBarEntrySWT
 				gc.fillRectangle(drawBounds);
 			}
 
-			if ( sidebar.getMenuEntry() == this ){
+			if ( sidebar.getMenuEntry( true ) == this ){
 				
 				Color c;
 				if ( Utils.isDarkAppearanceNativeWindows()){

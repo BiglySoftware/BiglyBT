@@ -155,7 +155,7 @@ public interface MultipleDocumentInterface
 
 	public MdiEntry getSelectedEntry();
 
-	public MdiEntry getMenuEntry();
+	public MdiEntry getMenuEntry( boolean activeOnly);
 	
 	public MdiEntry getEntry(String id);
 

@@ -136,7 +136,8 @@ public class SideBar
 	private ParameterListener configBGColorListener;
 	private SWTViewListener swtViewListener;
 
-	private SideBarEntrySWT	menuEntry;
+	private SideBarEntrySWT	activeMenuEntry;
+	private SideBarEntrySWT	lastMenuEntry;
 	
 	public SideBar() {
 		super(null, UISWTInstance.VIEW_MAIN, null);
@@ -272,7 +273,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = getMenuEntry();
+						SideBarEntrySWT sbe = getMenuEntry( false );
 	
 						if ( sbe != null && !sbe.isCloseable()){
 							
@@ -287,7 +288,7 @@ public class SideBar
 					}
 				});
 	
-			menuItem.addListener((menu, target) -> closeEntry(getMenuEntry(), true ));
+			menuItem.addListener((menu, target) -> closeEntry(getMenuEntry( false ), true ));
 		}
 		
 		{
@@ -300,7 +301,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = getMenuEntry();
+						SideBarEntrySWT sbe = getMenuEntry( false );
 	
 						if ( sbe != null ){
 							String id = sbe.getId();
@@ -317,7 +318,7 @@ public class SideBar
 				});
 	
 			menuItem.addListener((menu, target) -> {
-				SideBarEntrySWT sbe = getMenuEntry();
+				SideBarEntrySWT sbe = getMenuEntry( false );
 				
 				if ( sbe != null ){
 					
@@ -336,7 +337,7 @@ public class SideBar
 			
 			menuParentItem.addFillListener((menu, data) -> {
 				
-				SideBarEntrySWT entry = getMenuEntry();
+				SideBarEntrySWT entry = getMenuEntry( false );
 				
 				boolean visible = 
 					entry != null && 
@@ -368,7 +369,7 @@ public class SideBar
 			menuItemDashBoard.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getMenuEntry();
+					SideBarEntrySWT sbe = getMenuEntry( false );
 	
 					if ( sbe != null ){
 						
@@ -382,7 +383,7 @@ public class SideBar
 			menuItemTopbar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getMenuEntry();
+					SideBarEntrySWT sbe = getMenuEntry( false );
 	
 					if ( sbe != null ){
 						
@@ -396,7 +397,7 @@ public class SideBar
 			menuItemSidebar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getMenuEntry();
+					SideBarEntrySWT sbe = getMenuEntry( false );
 	
 					if ( sbe != null ){
 						
@@ -410,7 +411,7 @@ public class SideBar
 			menuItemRightbar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getMenuEntry();
+					SideBarEntrySWT sbe = getMenuEntry( false );
 	
 					if ( sbe != null ){
 						
@@ -424,7 +425,7 @@ public class SideBar
 			menuItemQuickLinks.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getMenuEntry();
+					SideBarEntrySWT sbe = getMenuEntry( false );
 	
 					if ( sbe != null ){
 						
@@ -445,7 +446,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = getMenuEntry();
+						SideBarEntrySWT sbe = getMenuEntry( false );
 	
 						menu.setVisible( sbe != null && sbe.canBuildStandAlone());
 					}
@@ -457,7 +458,7 @@ public class SideBar
 			MenuItemListener listener = new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getMenuEntry();
+					SideBarEntrySWT sbe = getMenuEntry( false );
 	
 					if ( sbe != null ){
 
@@ -1341,17 +1342,13 @@ public class SideBar
 			public void menuHidden(MenuEvent e) {
 				bShown = false;
 
-				SideBarEntrySWT menuEntry = getMenuEntry();
+				SideBarEntrySWT menuEntry = getMenuEntry( false );
 					
 				if ( menuEntry != null ){
+											
+					setMenuEntry( null );
 					
-					Utils.execSWTThreadLater(1,()->{
-							// needs to be cleared async so menu selection events that run after this get correct menu entry
-						
-						setMenuEntry( null );
-						
-						menuEntry.redraw();
-					});
+					menuEntry.redraw();
 				}
 				
 				if (Constants.isOSX) {
@@ -1378,13 +1375,6 @@ public class SideBar
 				bShown = true;
 				
 				SideBarEntrySWT entry = (SideBarEntrySWT)menuTree.getData("MdiEntry");
-				
-				if (entry == null) {
-					entry = getSelectedEntry();
-					if ( entry != null ){
-						entry.show();
-					}
-				}
 
 				setMenuEntry( entry );
 				
@@ -1507,7 +1497,7 @@ public class SideBar
 					@Override
 					public void pressed(SWTSkinButtonUtility buttonUtility,
 					                    SWTSkinObject skinObject, int stateMask) {
-						closeEntry(getMenuEntry(),true);
+						closeEntry( getSelectedEntry(),true);
 					}
 				});
 			}
@@ -1710,7 +1700,7 @@ public class SideBar
 			}
 			menuItem.setText(s + entry.getTitle() + ind);
 			menuItem.addSelectionListener(dropDownSelectionListener);
-			MdiEntry currentEntry = getMenuEntry();
+			MdiEntry currentEntry = getSelectedEntry();
 			if (currentEntry != null && currentEntry.getViewID().equals(id)) {
 				menuItem.setSelection(true);
 			}
@@ -2632,17 +2622,20 @@ public class SideBar
 	setMenuEntry(
 		SideBarEntrySWT		me )
 	{
-		menuEntry = me;
+		activeMenuEntry = me;
+		
+		if ( me != null ){
+			
+			lastMenuEntry = me;
+		}
 	}
 	
 	@Override
 	public SideBarEntrySWT 
-	getMenuEntry() 
+	getMenuEntry(
+		boolean activeOnly )
 	{
-		if ( menuEntry != null ){
-			return( menuEntry );
-		}
-		return (SideBarEntrySWT) super.getMenuEntry();
+		return( activeOnly?activeMenuEntry:lastMenuEntry );
 	}
 
 	@Override

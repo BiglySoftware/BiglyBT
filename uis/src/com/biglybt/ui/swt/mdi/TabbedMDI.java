@@ -1904,6 +1904,14 @@ public class TabbedMDI
 	}
 
 	@Override
+	public TabbedEntry 
+	getMenuEntry(
+		boolean activeOnly ) 
+	{
+		return( getSelectedEntry());
+	}
+	
+	@Override
 	public TabbedEntry getEntryBySkinView(Object skinView) {
 		return (TabbedEntry) super.getEntryBySkinView(skinView);
 	}
