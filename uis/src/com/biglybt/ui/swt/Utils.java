@@ -1084,15 +1084,25 @@ public class Utils
 		if (disposeList == null) {
 			return;
 		}
-		for (int i = 0; i < disposeList.length; i++) {
-			try {
-  			Object o = disposeList[i];
-  			if (o instanceof Widget && !((Widget) o).isDisposed())
-  				((Widget) o).dispose();
-  			else if ((o instanceof Resource) && !((Resource) o).isDisposed()) {
-  				((Resource) o).dispose();
-  			}
-			} catch (Exception e) {
+		for ( Object o: disposeList ){
+			if ( o == null ){
+				continue;
+			}
+			try{
+				if (o instanceof Widget){
+					Widget w = (Widget)o;
+					if ( !w.isDisposed()){
+						w.dispose();
+					}
+				}else if ( o instanceof Resource){
+					Resource r = (Resource)o;
+					if ( !r.isDisposed()){
+						r.dispose();
+					}
+				}else{
+					Debug.out( "No dispose action for " + o.getClass());
+				}
+			}catch (Exception e) {
 				Debug.out("Warning: Disposal failed "
 						+ Debug.getCompressedStackTrace(e, 0, -1, true));
 			}
