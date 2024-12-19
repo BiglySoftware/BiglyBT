@@ -1216,6 +1216,10 @@ public class SideBarEntrySWT
 				gc.setBackground(bg);
 			}
 
+				// don't think you can do a "mouse over" background effect here as it seems that on Windows
+				// Dark Theme, at least, a "mouse over" effect is generated natively and overrides any 
+				// background changes you might make here...
+			
 			if (this == sidebar.draggingOver || hot) {
 				if ( Utils.isDarkAppearanceNativeWindows()){
 					gc.setBackground( Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_NORMAL_SHADOW ));
