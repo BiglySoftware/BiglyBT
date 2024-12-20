@@ -1288,7 +1288,7 @@ RankCalculatorReal
 		  							String trDebug = null;
 		  							
 		  							if (rules.bDebugLog){
-		  								trDebug = "  Timed Rotation: connected peers, min seeding set to " + (lMsTimeToSeedFor/1000) +"\n";
+		  								trDebug = "  Timed Rotation: connected peers, min seeding set to " + (lMsTimeToSeedFor/1000);
 		  							}
 		  							
 		  							if ( iTimed_MaxSeedingTimeWithPeers > iTimed_MinSeedingTimeWithPeers && lastModifiedScrapeResultPeers > 0 ){
@@ -1298,7 +1298,7 @@ RankCalculatorReal
 		  									lMsTimeToSeedFor = iTimed_MaxSeedingTimeWithPeers;
 		  									
 		  									if (rules.bDebugLog){
-				  								trDebug = "  Timed Rotation: connected peers, max seeding set and no seeds, min seeding set to " + (lMsTimeToSeedFor/1000) +"\n";
+				  								trDebug = "  Timed Rotation: connected peers, max seeding set and no seeds, min seeding set to " + (lMsTimeToSeedFor/1000);
 				  							}
 		  								}else{
 		  									
@@ -1309,7 +1309,7 @@ RankCalculatorReal
 		  										lMsTimeToSeedFor += ( iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers) * ( 1.0 - spRatio );
 		  										
 		  										if (rules.bDebugLog){
-					  								trDebug = "  Timed Rotation: connected peers, max seeding set and SP ratio of " + spRatio + ", min seeding set to " + (lMsTimeToSeedFor/1000) +"\n";
+					  								trDebug = "  Timed Rotation: connected peers, max seeding set and SP ratio of " + spRatio + ", min seeding set to " + (lMsTimeToSeedFor/1000);
 					  							}
 		  									}
 		  								}
@@ -1319,8 +1319,14 @@ RankCalculatorReal
 		  							
 		  							if ( timedRotationSeedingStart == seedingStart ){
 		  							
-		  								lMsTimeToSeedFor = Math.max( lMsTimeToSeedFor, timedRotationSeedingStartMinSeeding );
+		  								long max = Math.max( lMsTimeToSeedFor, timedRotationSeedingStartMinSeeding );
 		  								
+		  								if ( max > lMsTimeToSeedFor ){
+		  									
+		  									trDebug += "; updated to existing max of " + ( max/1000);
+		  								}
+		  								
+		  								lMsTimeToSeedFor = max; 
 		  							}else{
 		  								
 		  								timedRotationSeedingStart = seedingStart;
@@ -1329,7 +1335,7 @@ RankCalculatorReal
 		  							timedRotationSeedingStartMinSeeding = lMsTimeToSeedFor;
 		  							
 		  							if (rules.bDebugLog){
-		  								sExplainSR += trDebug;
+		  								sExplainSR += trDebug + "\n";
 		  							}
 		  						}
 		  					}
