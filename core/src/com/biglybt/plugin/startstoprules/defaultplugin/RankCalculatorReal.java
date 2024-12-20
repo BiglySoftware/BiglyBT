@@ -236,6 +236,9 @@ RankCalculatorReal
 	private RankCalculatorSlotReserver	reservedSlot;
 	private long	lastActivationAnnounce;
 	
+	private long timedRotationSeedingStart;
+	private long timedRotationSeedingStartMinSeeding;
+	
 	private Map<Object,Object> userData;
 
 	/**
@@ -1270,8 +1273,8 @@ RankCalculatorReal
 					long lMsElapsed = 0;
 					long lMsTimeToSeedFor = minTimeAlive;
 					if (state == Download.ST_SEEDING && !dl.isForceStart()) {
-						lMsElapsed = (SystemTime.getCurrentTime() - stats
-								.getTimeStartedSeeding());
+						long seedingStart = stats.getTimeStartedSeeding();
+						lMsElapsed = (SystemTime.getCurrentTime() - seedingStart );
 						if (iTimed_MinSeedingTimeWithPeers > 0) {
 							
 								// THIS IS ALL IN TWO PLACES HERE
@@ -1311,6 +1314,19 @@ RankCalculatorReal
 		  									}
 		  								}
 		  							}
+		  							
+		  								// to preventing jumping around we only increase the seeding period
+		  							
+		  							if ( timedRotationSeedingStart == seedingStart ){
+		  							
+		  								lMsTimeToSeedFor = Math.max( lMsTimeToSeedFor, timedRotationSeedingStartMinSeeding );
+		  								
+		  							}else{
+		  								
+		  								timedRotationSeedingStart = seedingStart;
+		  							}
+		  							
+		  							timedRotationSeedingStartMinSeeding = lMsTimeToSeedFor;
 		  							
 		  							if (rules.bDebugLog){
 		  								sExplainSR += trDebug;
@@ -2123,7 +2139,7 @@ RankCalculatorReal
 				if (iRankType == StartStopRulesDefaultPlugin.RANK_TIMED) {
 					//sText += "" + sr + " ";
 					if (sr > DefaultRankCalculator.SR_TIMED_QUEUED_ENDS_AT) {
-						long timeStarted = dl.getStats().getTimeStartedSeeding();
+						long seedingStart = dl.getStats().getTimeStartedSeeding();
 						long timeLeft;
 
 						long lMsTimeToSeedFor = minTimeAlive;
@@ -2155,16 +2171,21 @@ RankCalculatorReal
 		  									}
 		  								}
 		  							}
+		  							
+		 							if ( timedRotationSeedingStart == seedingStart ){
+			  							
+		  								lMsTimeToSeedFor = Math.max( lMsTimeToSeedFor, timedRotationSeedingStartMinSeeding );
+		 							}
 		  						}
 		  					}
 						}
 
 						if (dl.isForceStart())
 							timeLeft = Constants.CRAPPY_INFINITY_AS_INT;
-						else if (timeStarted <= 0)
+						else if (seedingStart <= 0)
 							timeLeft = lMsTimeToSeedFor;
 						else
-							timeLeft = (lMsTimeToSeedFor - (SystemTime.getCurrentTime() - timeStarted));
+							timeLeft = (lMsTimeToSeedFor - (SystemTime.getCurrentTime() - seedingStart));
 
 						sText += TimeFormatter.format(timeLeft / 1000);
 					} else if (sr > 0) {
