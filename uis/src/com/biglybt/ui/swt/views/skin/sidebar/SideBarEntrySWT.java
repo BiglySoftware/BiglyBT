@@ -650,7 +650,10 @@ public class SideBarEntrySWT
 			
 			if ( drawBounds.height > itemBounds.height ){
 				
-				itemBounds.height	= drawBounds.height;
+					// -1 needed on parg's old test setup for some reason otherwise drag-over
+					// causes cheesing
+				
+				itemBounds.height	= drawBounds.height-1;
 				
 				drawBounds = itemBounds;
 			}
@@ -1144,7 +1147,7 @@ public class SideBarEntrySWT
 		boolean isDragging = sidebar.draggingOver == this;
 		boolean isHovering = sidebar.mousingOver == this;
 		
-		boolean hot = isHovering || (detail & SWT.HOT) > 0;
+		boolean hot = isHovering;// || (detail & SWT.HOT) > 0;
 		if (selected) {
 			attention_start = -1;
 		}else{
@@ -1225,8 +1228,11 @@ public class SideBarEntrySWT
 				
 				if ( Utils.isDarkAppearanceNativeWindows()){
 					
-					c = Colors.getSystemColor( gc.getDevice(), isDragging?SWT.COLOR_WIDGET_NORMAL_SHADOW:SWT.COLOR_WIDGET_LIGHT_SHADOW );
-
+					if ( isDragging ){
+						c = Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_NORMAL_SHADOW );
+					}else{
+						c = skin.getSkinProperties().getColor("color.sidebar.hover.bg");
+					}
 				}else{					
 					if ( isDragging ){
 						c = skin.getSkinProperties().getColor("color.sidebar.drag.bg");

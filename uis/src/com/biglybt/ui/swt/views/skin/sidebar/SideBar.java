@@ -912,6 +912,25 @@ public class SideBar
 								return;
 							}
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
+							
+							if ( Constants.isOSX ){
+									// need this as moving right-click menu from one
+									// entry to another doesn't result in any mouse move events
+								
+								if ( mousingOver != entry ){
+									SideBarEntrySWT old = mousingOver;
+									
+									mousingOver = entry;
+									if ( old != null ){
+										old.redraw();
+									}
+									if ( entry != null ){
+										
+										entry.redraw();
+									}
+								}
+							}
+							
 							if (entry != null ) {
 								Point cursorLocation = tree.toControl(event.display.getCursorLocation());
 								if (lastCloseAreaClicked != null && lastCloseAreaClicked.contains(cursorLocation.x, cursorLocation.y)) {
