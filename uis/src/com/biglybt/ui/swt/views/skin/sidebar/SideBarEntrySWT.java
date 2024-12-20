@@ -1140,7 +1140,11 @@ public class SideBarEntrySWT
 		Color fgText = Colors.black;
 		boolean selected = (detail & SWT.SELECTED) > 0;
 		//boolean focused = (detail & SWT.FOCUSED) > 0;
-		boolean hot = sidebar.mousingOver == this || (detail & SWT.HOT) > 0;
+		
+		boolean isDragging = sidebar.draggingOver == this;
+		boolean isHovering = sidebar.mousingOver == this;
+		
+		boolean hot = isHovering || (detail & SWT.HOT) > 0;
 		if (selected) {
 			attention_start = -1;
 		}else{
@@ -1216,20 +1220,21 @@ public class SideBarEntrySWT
 				gc.setBackground(bg);
 			}
 			
-			if (this == sidebar.draggingOver || hot) {
+			if ( isDragging || hot) {
+				Color c;
+				
 				if ( Utils.isDarkAppearanceNativeWindows()){
-					gc.setBackground( Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_LIGHT_SHADOW ));
-
-				}else{
-					Color c;
 					
-					if ( this == sidebar.draggingOver ){
+					c = Colors.getSystemColor( gc.getDevice(), isDragging?SWT.COLOR_WIDGET_NORMAL_SHADOW:SWT.COLOR_WIDGET_LIGHT_SHADOW );
+
+				}else{					
+					if ( isDragging ){
 						c = skin.getSkinProperties().getColor("color.sidebar.drag.bg");
 					}else{
 						c = skin.getSkinProperties().getColor("color.sidebar.hover.bg");
 					}
-					gc.setBackground(c);
 				}
+				gc.setBackground(c);
 			}
 
 			if (PAINT_BG) {
@@ -1252,7 +1257,7 @@ public class SideBarEntrySWT
 				
 				gc.drawRectangle(temp);
 				
-			}else if (this == sidebar.draggingOver) {
+			}else if ( isDragging ) {
 				Color c = skin.getSkinProperties().getColor("color.sidebar.drag.fg");
 				gc.setForeground(c);
 				final int line_width = 2;
