@@ -119,6 +119,7 @@ public class SideBar
 	private DropTarget dropTarget;
 
 	protected SideBarEntrySWT draggingOver;
+	protected SideBarEntrySWT mousingOver;
 
 	private Color fg;
 
@@ -948,13 +949,34 @@ public class SideBar
 							}
 							break;
 						}
-
+						case SWT.MouseExit: {
+							SideBarEntrySWT old = mousingOver;
+							mousingOver = null;
+							if ( old != null ){
+								old.redraw();
+							}
+							
+							break;
+						}
 						case SWT.MouseMove: {
 							int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
 							treeItem = tree.getItem(new Point(indent, event.y));
 							SideBarEntrySWT entry = (SideBarEntrySWT) ((treeItem == null || treeItem.isDisposed())
 									? null : treeItem.getData("MdiEntry"));
 
+							if ( mousingOver != entry ){
+								SideBarEntrySWT old = mousingOver;
+								
+								mousingOver = entry;
+								if ( old != null ){
+									old.redraw();
+								}
+								if ( entry != null ){
+									
+									entry.redraw();
+								}
+							}
+							
 							int cursorNo = SWT.CURSOR_ARROW;
 							if (treeItem != null) {
 								Rectangle closeArea = (Rectangle) treeItem.getData("closeArea");
@@ -1215,6 +1237,8 @@ public class SideBar
 
 		// For cursor
 		tree.addListener(SWT.MouseMove, treeListener);
+		// move hover
+		tree.addListener(SWT.MouseExit, treeListener);
 
 		// to disable collapsing
 		tree.addListener(SWT.Collapse, treeListener);
