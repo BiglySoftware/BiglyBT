@@ -1221,7 +1221,13 @@ public class SideBarEntrySWT
 					gc.setBackground( Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_LIGHT_SHADOW ));
 
 				}else{
-					Color c = skin.getSkinProperties().getColor("color.sidebar.drag.bg");
+					Color c;
+					
+					if ( this == sidebar.draggingOver ){
+						c = skin.getSkinProperties().getColor("color.sidebar.drag.bg");
+					}else{
+						c = skin.getSkinProperties().getColor("color.sidebar.hover.bg");
+					}
 					gc.setBackground(c);
 				}
 			}
@@ -1242,7 +1248,7 @@ public class SideBarEntrySWT
 				final int line_width = 1;
 				gc.setLineWidth(line_width);
 				gc.setLineStyle( SWT.LINE_DASH);
-				Rectangle temp = new Rectangle( drawBounds.x+line_width, drawBounds.y+line_width, drawBounds.width-( line_width*2 ), drawBounds.height-( line_width*2 ));
+				Rectangle temp = new Rectangle( drawBounds.x, drawBounds.y, drawBounds.width-1, drawBounds.height-1);
 				
 				gc.drawRectangle(temp);
 				

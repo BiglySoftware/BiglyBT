@@ -958,6 +958,7 @@ public class SideBar
 							
 							break;
 						}
+						case SWT.MouseEnter:
 						case SWT.MouseMove: {
 							int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
 							treeItem = tree.getItem(new Point(indent, event.y));
@@ -1236,6 +1237,7 @@ public class SideBar
 		tree.addListener(SWT.MouseDown, treeListener);
 
 		// For cursor
+		tree.addListener(SWT.MouseEnter, treeListener);
 		tree.addListener(SWT.MouseMove, treeListener);
 		// move hover
 		tree.addListener(SWT.MouseExit, treeListener);
