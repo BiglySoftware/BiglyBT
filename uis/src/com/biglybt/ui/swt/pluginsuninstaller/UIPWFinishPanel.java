@@ -29,17 +29,16 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
-import com.biglybt.ui.swt.wizard.Wizard;
 
 /**
  * @author Olivier Chalouhi
  *
  */
-public class UIPWFinishPanel extends AbstractWizardPanel {
+public class UIPWFinishPanel extends AbstractWizardPanel<UnInstallPluginWizard> {
 
   public UIPWFinishPanel(
-      Wizard wizard,
-      IWizardPanel 			previous)
+	  UnInstallPluginWizard 				wizard,
+      IWizardPanel<UnInstallPluginWizard> 	previous)
   {
 	super(wizard, previous);
   }

@@ -40,21 +40,20 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
-import com.biglybt.ui.swt.wizard.Wizard;
 
 
 /**
  * @author Olivier Chalouhi
  *
  */
-public class UIPWListPanel extends AbstractWizardPanel {
+public class UIPWListPanel extends AbstractWizardPanel<UnInstallPluginWizard> {
 
   Table pluginList;
 
   public
   UIPWListPanel(
-	Wizard 					wizard,
-	IWizardPanel 			previous )
+	 UnInstallPluginWizard 					wizard,
+	IWizardPanel<UnInstallPluginWizard> 	previous )
   {
 	super(wizard, previous);
   }
@@ -82,7 +81,7 @@ public class UIPWListPanel extends AbstractWizardPanel {
 	rootPanel.setLayout(layout);
 
 	Composite panel = new Composite(rootPanel, SWT.NULL);
-	GridData gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL);
+	GridData gridData = new GridData(GridData.FILL_BOTH);
 	panel.setLayoutData(gridData);
 	layout = new GridLayout();
 	layout.numColumns = 1;
@@ -93,8 +92,8 @@ public class UIPWListPanel extends AbstractWizardPanel {
 
 	pluginList = new Table(panel,SWT.BORDER | SWT.V_SCROLL | SWT.CHECK | SWT.FULL_SELECTION | SWT.SINGLE);
 	pluginList.setHeaderVisible(true);
-	GridData data = new GridData(GridData.FILL_HORIZONTAL);
-	data.heightHint = 200;
+	GridData data = new GridData(GridData.FILL_BOTH);
+	//data.heightHint = 200;
 	pluginList.setLayoutData(data);
 
 
