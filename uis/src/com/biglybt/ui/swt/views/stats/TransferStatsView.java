@@ -638,13 +638,31 @@ public class TransferStatsView
 
 	  route_info_tab.setText( MessageText.getString( "label.routing" ));
 
-	  Composite route_tab_comp = new Composite( con_folder, dark?SWT.BORDER:SWT.NULL );
-	  route_tab_comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+	  Composite route_tab_comp1;
+	  Composite route_tab_comp2;
+	  gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+	  
+	  if ( dark ){
+		  
+		  	// composite with border requires hack to colour correctly, otherwise white
+		  
+		  Composite[] comps = Utils.createSkinnedCompositeEx( con_folder, SWT.BORDER, gridData );
+		  
+		  route_tab_comp1 = comps[0];
+		  route_tab_comp2 = comps[1];
+	  }else{
+		  
+		  route_tab_comp1 = new Composite( con_folder, SWT.NULL );
+		  route_tab_comp1.setLayoutData(gridData);
+		  
+		  route_tab_comp2 = route_tab_comp1;
+	  }
+	 
 	  GridLayout routeTabLayout = Utils.getSimpleGridLayout(1);
-	  route_tab_comp.setLayout(routeTabLayout);
-	  route_info_tab.setControl( route_tab_comp );
+	  route_tab_comp2.setLayout(routeTabLayout);
+	  route_info_tab.setControl( route_tab_comp1 );
 
-	  ScrolledComposite sc = new ScrolledComposite( route_tab_comp, SWT.V_SCROLL );
+	  ScrolledComposite sc = new ScrolledComposite( route_tab_comp2, SWT.V_SCROLL );
 	  sc.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 	  con_folder.setSelection( 0 );
