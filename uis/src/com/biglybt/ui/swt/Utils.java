@@ -7186,6 +7186,12 @@ public class Utils
 		}
 	}
 	
+	public static boolean
+	isFileResponding(
+		File		file )
+	{
+		return( FileUtil.isResponding(file, 250 ));
+	}
 	
 	public static boolean
 	fileExistsWithTimeout(

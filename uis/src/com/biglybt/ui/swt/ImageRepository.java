@@ -138,81 +138,84 @@ public class ImageRepository
 			ImageLoader.getInstance().releaseImage(key);
 			image = null;
 
-			ImageData imageData = null;
+			if ( Utils.isFileResponding( file )){
 
-			if (Constants.isWindows) {
+				ImageData imageData = null;
+
+				if (Constants.isWindows) {
+						
+						// Alcohol causing crashes on various file types. Really can't be bothered
 					
-					// Alcohol causing crashes on various file types. Really can't be bothered
-				
-				if ( ignore_icon_exts.contains( ext.toLowerCase( Locale.US  ))){
+					if ( ignore_icon_exts.contains( ext.toLowerCase( Locale.US  ))){
+						
+						return ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent");
+					}
 					
-					return ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent");
-				}
-				
-				try {
-					//Image icon = Win32UIEnhancer.getFileIcon(new File(path), big);
-
-					Class<?> enhancerClass = Class.forName("com.biglybt.ui.swt.win32.Win32UIEnhancer");
-					Method method = enhancerClass.getMethod("getFileIcon",
-							new Class[] {
-								File.class,
-								boolean.class
-							});
-					image = (Image) method.invoke(null, new Object[] {
-						file,
-						bBig
-					});
-					if (image != null) {
-						if (!bBig)
-							image = force16height(image);
-						if (minifolder)
-							image = minifolderize(file.getParent(), image, bBig);
-						ImageLoader.getInstance().addImageNoDipose(key, image);
-						return image;
+					try {
+						//Image icon = Win32UIEnhancer.getFileIcon(new File(path), big);
+	
+						Class<?> enhancerClass = Class.forName("com.biglybt.ui.swt.win32.Win32UIEnhancer");
+						Method method = enhancerClass.getMethod("getFileIcon",
+								new Class[] {
+									File.class,
+									boolean.class
+								});
+						image = (Image) method.invoke(null, new Object[] {
+							file,
+							bBig
+						});
+						if (image != null) {
+							if (!bBig)
+								image = force16height(image);
+							if (minifolder)
+								image = minifolderize(file.getParent(), image, bBig);
+							ImageLoader.getInstance().addImageNoDipose(key, image);
+							return image;
+						}
+					} catch (Exception e) {
+						Debug.printStackTrace(e);
 					}
-				} catch (Exception e) {
-					Debug.printStackTrace(e);
-				}
-			} else if (Constants.isOSX) {
-				try {
-					Class<?> enhancerClass = Class.forName("com.biglybt.ui.swt.osx.CocoaUIEnhancer");
-					Method method = enhancerClass.getMethod("getFileIcon",
-							new Class[] {
-								String.class,
-								int.class
-							});
-					image = (Image) method.invoke(null, new Object[] {
-						file.getAbsolutePath(),
-						(int) (bBig ? 128 : 16)
-					});
-					if (image != null) {
-						if (!bBig)
-							image = force16height(image);
-						if (minifolder)
-							image = minifolderize(file.getParent(), image, bBig);
-						ImageLoader.getInstance().addImageNoDipose(key, image);
-						return image;
+				} else if (Constants.isOSX) {
+					try {
+						Class<?> enhancerClass = Class.forName("com.biglybt.ui.swt.osx.CocoaUIEnhancer");
+						Method method = enhancerClass.getMethod("getFileIcon",
+								new Class[] {
+									String.class,
+									int.class
+								});
+						image = (Image) method.invoke(null, new Object[] {
+							file.getAbsolutePath(),
+							(int) (bBig ? 128 : 16)
+						});
+						if (image != null) {
+							if (!bBig)
+								image = force16height(image);
+							if (minifolder)
+								image = minifolderize(file.getParent(), image, bBig);
+							ImageLoader.getInstance().addImageNoDipose(key, image);
+							return image;
+						}
+					} catch (Throwable t) {
+						Debug.printStackTrace(t);
 					}
-				} catch (Throwable t) {
-					Debug.printStackTrace(t);
 				}
-			}
-
-			if (imageData == null) {
-				Program program = Program.findProgram(ext);
-				if (program != null) {
-					imageData = program.getImageData();
+			
+				if (imageData == null) {
+					Program program = Program.findProgram(ext);
+					if (program != null) {
+						imageData = program.getImageData();
+					}
 				}
-			}
-
-			if (imageData != null) {
-				image = new Image(Display.getDefault(), imageData);
-				if (!bBig)
-					image = force16height(image);
-				if (minifolder)
-					image = minifolderize(file.getParent(), image, bBig);
-
-				ImageLoader.getInstance().addImageNoDipose(key, image);
+	
+				if (imageData != null) {
+					image = new Image(Display.getDefault(), imageData);
+					if (!bBig)
+						image = force16height(image);
+					if (minifolder)
+						image = minifolderize(file.getParent(), image, bBig);
+	
+					ImageLoader.getInstance().addImageNoDipose(key, image);
+				}
 			}
 		} catch (Throwable e) {
 			// seen exceptions thrown here, due to images.get failing in Program.hashCode

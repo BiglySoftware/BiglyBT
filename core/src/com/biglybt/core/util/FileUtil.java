@@ -4099,6 +4099,21 @@ public class FileUtil {
 		},false, strict_timeout ));	
 	}
 	
+	public static boolean
+	isResponding(
+		File		file,
+		long		strict_timeout )
+	{
+		try{
+			getCanonicalPathWithTimeout(file, strict_timeout);
+			
+			return( true );
+			
+		}catch( Throwable e ){
+			
+			return( false );
+		}
+	}
 	public static String
 	getCanonicalPathWithTimeout(
 		File		file )
