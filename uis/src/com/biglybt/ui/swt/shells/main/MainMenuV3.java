@@ -477,7 +477,7 @@ public class MainMenuV3
 					}
 					String tableID = tv.getTableID();
 					new TableColumnSetupWindow(tv.getDataSourceType(), tableID, null, focusedRow,
-							TableStructureEventDispatcher.getInstance(tableID));
+							TableStructureEventDispatcher.getInstance(tableID), false );
 				}
 			});
 			

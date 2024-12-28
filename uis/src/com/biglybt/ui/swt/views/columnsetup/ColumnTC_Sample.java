@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.*;
@@ -53,6 +54,13 @@ public class ColumnTC_Sample
 		setPosition(POSITION_INVISIBLE);
 		setRefreshInterval(INTERVAL_LIVE);
 		setWidth(120);
+		
+		if ( tableID.equals( TableColumnSetupWindow.TABLEID_ROW_DETAILS )){
+			String existing = getNameOverride();
+			if ( existing == null || existing.isEmpty()){
+				setNameOverride(MessageText.getString( "label.value" ));
+			}
+		}
 	}
 
 	// @see com.biglybt.pif.ui.tables.TableCellAddedListener#cellAdded(com.biglybt.pif.ui.tables.TableCell)
@@ -76,7 +84,7 @@ public class ColumnTC_Sample
 
 	private static class Cell
 		implements TableCellRefreshListener, TableCellSWTPaintListener,
-		TableCellVisibilityListener, TableCellDisposeListener
+		TableCellVisibilityListener, TableCellDisposeListener, TableCellClipboardListener
 	{
 		private final TableColumnCore column;
 		private FakeTableCell sampleCell;
@@ -111,6 +119,8 @@ public class ColumnTC_Sample
 				return;
 			}
 			Rectangle bounds = cell.getBounds();
+			bounds.x += 2;
+			bounds.width -=4;
 			sampleCell.setCellArea(bounds);
 			try {
 				sampleCell.refresh();
@@ -136,6 +146,16 @@ public class ColumnTC_Sample
 			}
 		}
 
+		@Override
+		public String getClipboardText(TableCell cell){
+			FakeTableCell sampleCell = this.sampleCell;
+
+			if (sampleCell == null) {
+				return( null );
+			}
+			return( sampleCell.getClipboardText());
+		}
+		
 		// @see com.biglybt.pif.ui.tables.TableCellRefreshListener#refresh(com.biglybt.pif.ui.tables.TableCell)
 		@Override
 		public void refresh(TableCell cell) {

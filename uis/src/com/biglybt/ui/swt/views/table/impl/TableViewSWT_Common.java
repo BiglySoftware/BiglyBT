@@ -1048,6 +1048,22 @@ public abstract class TableViewSWT_Common
 				});
 			}
 			
+			MenuItem itemRowDetails = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemRowDetails,
+					"MyTorrentsView.menu.row.details");
+
+			itemRowDetails.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					TableRowCore focusedRow = tv.getFocusedRow();
+					if (focusedRow == null || focusedRow.isRowDisposed()) {
+						focusedRow = tv.getRow(0);
+					}
+					String tableID = tv.getTableID();
+					new TableRowViewer(tv.getDataSourceType(), tableID, focusedRow );
+				}
+			});
+			
 			MenuItem itemChangeTable = new MenuItem(menu, SWT.PUSH);
 			Messages.setLanguageText(itemChangeTable,
 					"MyTorrentsView.menu.editTableColumns");
@@ -1069,7 +1085,7 @@ public abstract class TableViewSWT_Common
 		}
 		String tableID = tv.getTableID();
 		new TableColumnSetupWindow(tv.getDataSourceType(), tableID, column, focusedRow,
-				TableStructureEventDispatcher.getInstance(tableID));
+				TableStructureEventDispatcher.getInstance(tableID), false);
 	}
 
 
