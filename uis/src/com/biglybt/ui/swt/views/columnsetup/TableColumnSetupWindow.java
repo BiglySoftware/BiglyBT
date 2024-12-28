@@ -1569,7 +1569,10 @@ public class TableColumnSetupWindow
 			if (column != null) {
 				column.setVisible(true);
 				column.setPositionNoShift(i);
-				column.setWidth(widths[i]);
+				int existing = column.getWidth();
+				if ( existing < widths[i] ){
+					column.setWidth(widths[i]);
+				}
 			}
 		}
 		
