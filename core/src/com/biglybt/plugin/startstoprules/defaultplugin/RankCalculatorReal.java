@@ -1302,15 +1302,14 @@ RankCalculatorReal
 				  							}
 		  								}else{
 		  									
-		  									float spRatio = (float)lastModifiedScrapeResultSeeds / lastModifiedScrapeResultPeers;
-		  									
-		  									if ( spRatio < 1 ){
-		  											  										
-		  										lMsTimeToSeedFor += ( iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers) * ( 1.0 - spRatio );
+		  									float psRatio = (float)lastModifiedScrapeResultPeers/lastModifiedScrapeResultSeeds;
 		  										
-		  										if (rules.bDebugLog){
-					  								trDebug = "  Timed Rotation: connected peers, max seeding set and SP ratio of " + spRatio + ", min seeding set to " + (lMsTimeToSeedFor/1000);
-					  							}
+		  									long diff = iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers;
+		  									
+		  									lMsTimeToSeedFor += diff - ( diff / ( 1.0 + psRatio ));
+		  										
+		  									if (rules.bDebugLog){
+					  							trDebug = "  Timed Rotation: connected peers, max seeding set and SP ratio of " + psRatio + ", min seeding set to " + (lMsTimeToSeedFor/1000);
 		  									}
 		  								}
 		  							}
@@ -2169,12 +2168,11 @@ RankCalculatorReal
 		  									
 		  								}else{
 		  									
-		  									float spRatio = (float) lastModifiedScrapeResultSeeds / lastModifiedScrapeResultPeers;
+		  									float psRatio = (float)lastModifiedScrapeResultPeers/lastModifiedScrapeResultSeeds;
+
+		  									long diff = iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers;
 		  									
-		  									if ( spRatio < 1 ){
-		  											  										
-		  										lMsTimeToSeedFor += ( iTimed_MaxSeedingTimeWithPeers -  iTimed_MinSeedingTimeWithPeers) * ( 1.0 - spRatio );
-		  									}
+		  									lMsTimeToSeedFor += diff - ( diff / ( 1.0 + psRatio ));
 		  								}
 		  							}
 		  							
