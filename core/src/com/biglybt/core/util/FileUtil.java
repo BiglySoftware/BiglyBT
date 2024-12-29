@@ -4099,13 +4099,30 @@ public class FileUtil {
 		},false, strict_timeout ));	
 	}
 	
+	
+	private static boolean
+	existsWithTimeoutAndException(
+		File		file,
+		long		strict_timeout )
+	
+		throws IOException
+	{
+		return(runFileOpWithTimeoutEx(file,()->{
+			return( file.exists());
+		}, new IOException( "File system not responding/slow" ), strict_timeout ));	
+	}
+	
 	public static boolean
 	isResponding(
 		File		file,
 		long		strict_timeout )
 	{
 		try{
-			getCanonicalPathWithTimeout(file, strict_timeout);
+			long st = strict_timeout<=1?strict_timeout:(strict_timeout/2);
+			
+			getCanonicalPathWithTimeout( file, st );
+			
+			existsWithTimeoutAndException( file, st );
 			
 			return( true );
 			

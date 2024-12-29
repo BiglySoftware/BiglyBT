@@ -28,14 +28,14 @@ import java.util.Date;
 import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.LightHashMap;
-
+import com.biglybt.ui.swt.search.SBC_SearchResultsView.ImageLoadListener;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 
 public class
 SBC_SearchResult
-	implements SearchSubsResultBase, SBC_SearchResultsView.ImageLoadListener
+	implements SearchSubsResultBase
 {
 	private final SBC_SearchResultsView		view;
 
@@ -302,10 +302,22 @@ SBC_SearchResult
 		return( d==null?0:d.getTime());
 	}
 	
-	public Image
-	getIcon()
+	public void
+	getIcon(
+		ImageLoadListener	listener )
 	{
-		return( view.getIcon( engine, this ));
+		view.getIcon( 
+			engine,
+			(img)->{
+				
+				try{
+					listener.imageLoaded(img);
+					
+				}finally{
+					
+					view.invalidate( this );
+				}
+			});
 	}
 
 	@Override
@@ -320,14 +332,6 @@ SBC_SearchResult
 	setRead(
 		boolean		read )
 	{
-	}
-
-	@Override
-	public void
-	imageLoaded(
-		Image		image )
-	{
-		view.invalidate( this );
 	}
 
 	@Override

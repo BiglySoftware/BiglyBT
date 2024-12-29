@@ -55,28 +55,29 @@ public class ColumnSearchResultSite
 
 		Rectangle cellBounds = cell.getBounds();
 
-		Image img = entry.getIcon();
+		entry.getIcon(( img )->{
 
-		if (img != null && !img.isDisposed()) {
-			gc.fillRectangle( cellBounds );
-			Rectangle imgBounds = img.getBounds();
-			if (cellBounds.width < imgBounds.width || cellBounds.height < imgBounds.height) {
-				float dx = (float) cellBounds.width / imgBounds.width;
-				float dy = (float) cellBounds.height / imgBounds.height;
-				float d = Math.min(dx, dy);
-				int newWidth = (int) (imgBounds.width * d);
-				int newHeight = (int) (imgBounds.height * d);
-
-				gc.drawImage(img, 0, 0, imgBounds.width, imgBounds.height,
-						cellBounds.x + (cellBounds.width - newWidth) / 2,
-						cellBounds.y + (cellBounds.height - newHeight) / 2, newWidth,
-						newHeight);
-			} else {
-  			gc.drawImage(img, cellBounds.x
-  					+ ((cellBounds.width - imgBounds.width) / 2), cellBounds.y
-  					+ ((cellBounds.height - imgBounds.height) / 2));
+			if (img != null && !img.isDisposed()) {
+				gc.fillRectangle( cellBounds );
+				Rectangle imgBounds = img.getBounds();
+				if (cellBounds.width < imgBounds.width || cellBounds.height < imgBounds.height) {
+					float dx = (float) cellBounds.width / imgBounds.width;
+					float dy = (float) cellBounds.height / imgBounds.height;
+					float d = Math.min(dx, dy);
+					int newWidth = (int) (imgBounds.width * d);
+					int newHeight = (int) (imgBounds.height * d);
+	
+					gc.drawImage(img, 0, 0, imgBounds.width, imgBounds.height,
+							cellBounds.x + (cellBounds.width - newWidth) / 2,
+							cellBounds.y + (cellBounds.height - newHeight) / 2, newWidth,
+							newHeight);
+				} else {
+					gc.drawImage(img, cellBounds.x
+							+ ((cellBounds.width - imgBounds.width) / 2), cellBounds.y
+							+ ((cellBounds.height - imgBounds.height) / 2));
+				}
 			}
-		}
+		});
 	}
 
 	@Override
@@ -99,11 +100,12 @@ public class ColumnSearchResultSite
 
 			String name = entry.getEngine().getName();
 
-			Image img = entry.getIcon();
+			entry.getIcon((img)->{
 
-			cell.setText(img == null || img.isDisposed() ? name : null);
+				cell.setText(img == null || img.isDisposed() ? name : null);
 
-			cell.setToolTip( name);
+				cell.setToolTip( name);
+			});
 		}
 	}
 }

@@ -65,37 +65,47 @@ public class ColumnActivityType
 	public void cellPaint(GC gc, final TableCellSWT cell) {
 		ActivitiesEntry entry = (ActivitiesEntry) cell.getDataSource();
 
-		Image imgIcon;
 		String iconID = entry.getIconID();
 		if (iconID != null) {
 			ImageLoader imageLoader = ImageLoader.getInstance();
-			if (iconID.startsWith("http")) {
-				imgIcon = imageLoader.getUrlImage(iconID,
+			if (iconID.startsWith("http")){
+				imageLoader.getUrlImage(iconID,
 						new ImageDownloaderListener() {
 							@Override
-							public void imageDownloaded(Image image, String key, 
-							                            boolean returnedImmediately) {
+							public void 
+							imageDownloaded(
+								Image	image, 
+								String	key, 
+							    boolean returnedImmediately) 
+							{
+								if (ImageLoader.isRealImage(image)) {
+									Rectangle cellBounds = cell.getBounds();
+									Rectangle imgBounds = image.getBounds();
+									gc.drawImage(image, cellBounds.x
+											+ ((cellBounds.width - imgBounds.width) / 2), cellBounds.y
+											+ ((cellBounds.height - imgBounds.height) / 2));
+								}
+								imageLoader.releaseImage(iconID);
+								
 								if (returnedImmediately) {
 									return;
 								}
 								cell.invalidate();
 							}
 						});
-				if (imgIcon == null) {
-					return;
-				}
-			} else {
-				imgIcon = imageLoader.getImage(iconID);
-			}
 
-			if (ImageLoader.isRealImage(imgIcon)) {
-				Rectangle cellBounds = cell.getBounds();
-				Rectangle imgBounds = imgIcon.getBounds();
-				gc.drawImage(imgIcon, cellBounds.x
-						+ ((cellBounds.width - imgBounds.width) / 2), cellBounds.y
-						+ ((cellBounds.height - imgBounds.height) / 2));
+			}else{
+				Image imgIcon = imageLoader.getImage(iconID);
+
+				if (ImageLoader.isRealImage(imgIcon)) {
+					Rectangle cellBounds = cell.getBounds();
+					Rectangle imgBounds = imgIcon.getBounds();
+					gc.drawImage(imgIcon, cellBounds.x
+							+ ((cellBounds.width - imgBounds.width) / 2), cellBounds.y
+							+ ((cellBounds.height - imgBounds.height) / 2));
+				}
+				imageLoader.releaseImage(iconID);
 			}
-			imageLoader.releaseImage(iconID);
 		}
 	}
 

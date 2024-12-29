@@ -579,38 +579,35 @@ public abstract class TranscodeChooser
 		gridData = new GridData(GridData.FILL_VERTICAL);
 		gridData.heightHint = 50;
 		gridData.widthHint = 100;
+		lblImage.setLayoutData(gridData);
+
 		if (iconURL != null && iconURL.length() > 0) {
 			ImageLoader imageLoader = ImageLoader.getInstance();
-			Image image = imageLoader.getUrlImage(iconURL,
-					new ImageLoader.ImageDownloaderListener() {
-						@Override
-						public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
-							if (!returnedImmediately) {
-								if (lblImage.isDisposed()) {
-									return;
-								}
-								lblImage.setData("Image", image);
-								Rectangle bounds = image.getBounds();
-								GridData gridData = (GridData) lblImage.getLayoutData();
-								gridData.heightHint = bounds.height + 10;
-								gridData.widthHint = bounds.width + 16;
-								lblImage.setLayoutData(gridData);
-								lblImage.getShell().layout(new Control[] {
-									lblImage
-								});
-								Point computeSize = shell.computeSize(600, SWT.DEFAULT, true);
-								shell.setSize(computeSize);
-							}
+			imageLoader.getUrlImage(
+				iconURL,
+				new ImageLoader.ImageDownloaderListener() {
+					@Override
+					public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
+						if (lblImage.isDisposed()) {
+							return;
 						}
-					});
-			if (image != null) {
-				lblImage.setData("Image", image);
-				Rectangle bounds = image.getBounds();
-				gridData.heightHint = bounds.height + 10;
-				gridData.widthHint = bounds.width + 16;
-			}
+						lblImage.setData("Image", image);
+						Rectangle bounds = image.getBounds();
+						GridData gridData = (GridData) lblImage.getLayoutData();
+						gridData.heightHint = bounds.height + 10;
+						gridData.widthHint = bounds.width + 16;
+						lblImage.setLayoutData(gridData);
+						
+						if ( !returnedImmediately ){
+							lblImage.getShell().layout(new Control[] {
+								lblImage
+							});
+							Point computeSize = shell.computeSize(600, SWT.DEFAULT, true);
+							shell.setSize(computeSize);
+						}
+					}
+				});
 		}
-		lblImage.setLayoutData(gridData);
 
 		Label label = new Label(c, SWT.WRAP | SWT.CENTER);
 		if (listenerMouseInout != null) {

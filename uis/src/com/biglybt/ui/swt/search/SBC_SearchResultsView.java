@@ -481,26 +481,18 @@ SBC_SearchResultsView
 
 			button.setSelection( !deselected_engines.contains( engine.getUID()));
 
-			Image image =
-				getIcon(
-					engine,
-					new ImageLoadListener() {
+			getIcon(
+				engine,
+				new ImageLoadListener() {
 
-						@Override
-						public void imageLoaded(Image image) {
-							button.setImage( image );
-						}
-					});
-
-			if ( image != null ){
-
-				try{
-					button.setImage( image );
-					
-				}catch( Throwable e ){
-					
-				}
-			}
+					@Override
+					public void 
+					imageLoaded(
+						Image image) 
+					{
+						button.setImage( image );
+					}
+				});
 
 			button.addSelectionListener(
 				new SelectionAdapter() {
@@ -1525,42 +1517,26 @@ SBC_SearchResultsView
 		return( uri );
 	}
 
-	public Image
-	getIcon(
-		final SBC_SearchResult		result )
-	{
-		return( getIcon( result.getEngine(), result ));
-	}
-
-	public Image
+	public void
 	getIcon(
 		Engine					engine,
-		ImageLoadListener		result )
-	{
-		return getIconSupport( engine, result );
-	}
-	
-	private Image
-	getIconSupport(
-		Engine					engine,
-		ImageLoadListener		result )
+		ImageLoadListener		listener )
 	{
 		String icon = engine.getIcon();
+		
 		if ( icon == null ){
-			return null;
+			
+			listener.imageLoaded( null );
 		}
 
-		return ImageLoader.getInstance().getUrlImage(
+		ImageLoader.getInstance().getUrlImage(
 			icon,
 			new Point(0, 16),
-			(image, key, returnedImmediately) -> {
+			(image, key, returnedImmediately)->{
+				
 				loadedImageIDs.add(key);
-
-				if (returnedImmediately) {
-					return;
-				}
-
-				result.imageLoaded( image );
+				
+				listener.imageLoaded( image );
 			});
 	}
 

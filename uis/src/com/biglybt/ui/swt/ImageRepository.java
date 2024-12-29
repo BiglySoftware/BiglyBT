@@ -118,8 +118,13 @@ public class ImageRepository
 				"Ignore Icon Exts" );		
 	}
 	
-	public static Image getIconFromExtension(File file, String ext, boolean bBig,
-			boolean minifolder) {
+	public static Image 
+	getIconFromExtension(
+		File file, 
+		String ext, 
+		boolean bBig,
+		boolean minifolder) 
+	{
 		Image image = null;
 
 		try {
@@ -275,8 +280,12 @@ public class ImageRepository
 	* @param path Absolute path to the file or directory
 	* @return The image
 	*/
-	public static Image getPathIcon(final String path, boolean bBig,
-			boolean minifolder) {
+	public static Image 
+	getPathIcon(
+		final String path, 
+		boolean bBig,
+		boolean minifolder) 
+	{
 		if (path == null)
 			return null;
 
