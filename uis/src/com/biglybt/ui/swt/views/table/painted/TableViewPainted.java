@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.utils.*;
+import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_Common;
@@ -64,6 +65,7 @@ import com.biglybt.util.MapUtils;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
+import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 import com.biglybt.pif.ui.tables.TableRowMouseListener;
 import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
@@ -799,32 +801,50 @@ public class TableViewPainted
 	@Override
 	public void clipboardSelected() {
 		String sToClipboard = "";
-		TableColumnCore[] visibleColumns = getVisibleColumns();
-		for (int j = 0; j < visibleColumns.length; j++) {
-			if (j != 0) {
-				sToClipboard += "\t";
+		
+			// hack to just copy the "value" cell...
+		
+		if ( tableID.equals( TableColumnSetupWindow.TABLEID_ROW_DETAILS )){
+			
+			com.biglybt.pif.ui.tables.TableColumn val = getTableColumn( "TableColumnSample" );
+			
+			TableRowCore[] rows = getSelectedRows();
+			for (TableRowCore row : rows) {
+				TableCell cell = row.getTableCell(val);
+				
+				if (cell != null) {
+					sToClipboard += ( sToClipboard.isEmpty()?"":"\n") + cell.getClipboardText();
+				}
 			}
-			String title = MessageText.getString(visibleColumns[j].getTitleLanguageKey());
-			sToClipboard += title;
-		}
-
-		TableRowCore[] rows = getSelectedRows();
-		for (TableRowCore row : rows) {
-			sToClipboard += "\n";
-			TableRowPainted p_row = (TableRowPainted)row;
-			p_row.setShown( true, true );
-			p_row.refresh( true, true );
+		}else{
+			TableColumnCore[] visibleColumns = getVisibleColumns();
 			for (int j = 0; j < visibleColumns.length; j++) {
-				TableColumnCore column = visibleColumns[j];
 				if (j != 0) {
 					sToClipboard += "\t";
 				}
-				TableCellCore cell = row.getTableCellCore(column.getName());
-				if (cell != null) {
-					sToClipboard += cell.getClipboardText();
+				String title = MessageText.getString(visibleColumns[j].getTitleLanguageKey());
+				sToClipboard += title;
+			}
+	
+			TableRowCore[] rows = getSelectedRows();
+			for (TableRowCore row : rows) {
+				sToClipboard += "\n";
+				TableRowPainted p_row = (TableRowPainted)row;
+				p_row.setShown( true, true );
+				p_row.refresh( true, true );
+				for (int j = 0; j < visibleColumns.length; j++) {
+					TableColumnCore column = visibleColumns[j];
+					if (j != 0) {
+						sToClipboard += "\t";
+					}
+					TableCellCore cell = row.getTableCellCore(column.getName());
+					if (cell != null) {
+						sToClipboard += cell.getClipboardText();
+					}
 				}
 			}
 		}
+		
 		new Clipboard(getComposite().getDisplay()).setContents(new Object[] {
 			sToClipboard
 		}, new Transfer[] {

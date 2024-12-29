@@ -108,6 +108,7 @@ public class ColumnFileCount
 		}
 
 		int sortVal = dm.getNumFileInfos();
+		cell.setTextEquivalent( String.valueOf( sortVal ));
 		Rectangle bounds = cell.getBounds();
 		Rectangle printArea = new Rectangle(bounds.x, bounds.y, bounds.width - 6,
 				bounds.height);

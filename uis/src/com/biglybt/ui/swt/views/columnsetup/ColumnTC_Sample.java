@@ -77,7 +77,11 @@ public class ColumnTC_Sample
 				TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
 				TableRowCore sampleRow = (TableRowCore) tvs.getSampleRow();
 
-				cell.addListeners(new Cell(cell, column, tv.getTableComposite(), sampleRow));
+				Cell c = new Cell(cell, column, tv.getTableComposite(), sampleRow);
+				
+				cell.addListeners(c);
+				
+				cell.setData("Cell", c );
 			}
 		});
 	}
@@ -95,13 +99,12 @@ public class ColumnTC_Sample
 				return;
 			}
 			Object ds = sampleRow.getDataSource(true);
-			Object pds = sampleRow.getDataSource(false);
-			if (column.handlesDataSourceType(pds.getClass())) {
-  			sampleCell = new FakeTableCell(column, ds);
 
-  			Rectangle bounds = ((TableCellSWT)parentCell).getBounds();
-  			sampleCell.setControl(c, bounds, false);
-			}
+			sampleCell = new FakeTableCell(column, ds);
+
+			Rectangle bounds = ((TableCellSWT)parentCell).getBounds();
+			
+			sampleCell.setControl(c, bounds, false);
 		}
 
 		@Override
@@ -182,11 +185,112 @@ public class ColumnTC_Sample
 	@Override
 	public int 
 	compare(
-		TableRowCore arg0, 
-		TableRowCore arg1)
-	{
-			// can't sensibly compare the random cell sample values
+		TableRowCore row1, 
+		TableRowCore row2)
+	{		
+		final String IS_GRAPHIC = "GRAPHIC";
 		
-		return( arg0.getIndex() - arg1.getIndex());
+		TableCell cell1 = row1.getTableCell( this );
+		TableCell cell2 = row2.getTableCell( this );
+				
+		Cell c1 = (Cell)cell1.getData( "Cell" );
+		Cell c2 = (Cell)cell2.getData( "Cell" );
+		
+		String str1 = null;
+		String str2 = null;
+		
+		if ( c1 != null ){
+
+			FakeTableCell fc1 = c1.sampleCell;
+					
+			str1 = fc1.getText();
+			
+			if ( str1 == null ){
+				
+				str1 = fc1.getTextEquivalent();
+			}
+			
+			if ( str1 == null ){
+				
+				str1 = fc1.getClipboardText();
+			}
+			
+			if ( str1 == null || str1.isEmpty()){
+				
+				if ( fc1.getIcon() != null || fc1.getGraphic() != null ){
+					
+					str1 = IS_GRAPHIC;
+				}else{
+					
+					str1 = "";
+				}
+			}
+			
+			//System.out.println( fc1.getTableColumn().getName() + " -> " + str1 );
+		}else{
+			
+			//System.out.println( "c1 is null" );
+		}
+		
+		if ( c2 != null ){
+
+			FakeTableCell fc2 = c2.sampleCell;
+			
+			str2 = fc2.getText();
+			
+			if ( str2 == null ){
+				
+				str2 = fc2.getTextEquivalent();
+			}
+			
+			if ( str2 == null || str2.isEmpty()){
+				
+				str2 = fc2.getClipboardText();
+			}
+			
+			if ( str2 == null || str2.isEmpty()){
+				
+				if ( fc2.getIcon() != null || fc2.getGraphic() != null ){
+					
+					str2 = IS_GRAPHIC;
+				}else{
+					
+					str2 = "";
+				}
+			}
+			
+			//System.out.println( fc2.getTableColumn().getName() + " -> " + str2 );
+		}else{
+			
+			//System.out.println( "c2 is null" );
+		}
+
+		if ( str1 == null ){
+			
+			str1 = cell1.getClipboardText();
+		}
+		
+		if ( str2 == null ){
+			
+			str2 = cell2.getClipboardText();
+		}
+		
+		int res = 0;
+		
+		if ( str1 == IS_GRAPHIC && str2 == IS_GRAPHIC ){
+			
+		}else if ( str1 == IS_GRAPHIC ){
+			
+			res = 1;
+			
+		}else if ( str2 == IS_GRAPHIC ){
+			
+			res = -1;
+		}else{
+			
+			res = str1.compareTo(str2 );
+					
+		}
+		return((isSortAscending()?1:-1)*res );
 	}
 }

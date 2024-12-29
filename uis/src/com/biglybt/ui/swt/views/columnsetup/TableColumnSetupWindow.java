@@ -71,8 +71,8 @@ public class TableColumnSetupWindow
 	private static final int RESULT_AREA_WIDTH	= Constants.isWindows?250:280;
 	private static final int SHELL_WIDTH		= RESULT_AREA_WIDTH + 600;
 	
-	protected static final String TABLEID_AVAIL			= "ColumnSetupAvail";
-	protected static final String TABLEID_ROW_DETAILS	= "RowDetails";
+	public static final String TABLEID_AVAIL		= "ColumnSetupAvail";
+	public static final String TABLEID_ROW_DETAILS	= "RowDetails";
 
 	private static final String TABLEID_CHOSEN = "ColumnSetupChosen";
 
