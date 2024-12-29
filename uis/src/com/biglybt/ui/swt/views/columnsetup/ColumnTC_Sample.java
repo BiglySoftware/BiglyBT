@@ -23,6 +23,8 @@ package com.biglybt.ui.swt.views.columnsetup;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableRowCore;
+
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -66,24 +68,16 @@ public class ColumnTC_Sample
 	// @see com.biglybt.pif.ui.tables.TableCellAddedListener#cellAdded(com.biglybt.pif.ui.tables.TableCell)
 	@Override
 	public void cellAdded(final TableCell cell) {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (cell.isDisposed()) {
-					return;
-				}
-				TableColumnCore column = (TableColumnCore) cell.getDataSource();
-				TableViewSWT<?> tv = (TableViewSWT<?>) ((TableCellCore) cell).getTableRowCore().getView();
-				TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
-				TableRowCore sampleRow = (TableRowCore) tvs.getSampleRow();
+		TableColumnCore column = (TableColumnCore) cell.getDataSource();
+		TableViewSWT<?> tv = (TableViewSWT<?>) ((TableCellCore) cell).getTableRowCore().getView();
+		TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
+		TableRowCore sampleRow = (TableRowCore) tvs.getSampleRow();
 
-				Cell c = new Cell(cell, column, tv.getTableComposite(), sampleRow);
-				
-				cell.addListeners(c);
-				
-				cell.setData("Cell", c );
-			}
-		});
+		Cell c = new Cell(cell, column, tv.getTableComposite(), sampleRow);
+		
+		cell.addListeners(c);
+		
+		cell.setData("Cell", c );
 	}
 
 	private static class Cell
@@ -101,7 +95,9 @@ public class ColumnTC_Sample
 			Object ds = sampleRow.getDataSource(true);
 
 			sampleCell = new FakeTableCell(column, ds);
-
+			
+			sampleCell.setOrentation(SWT.LEFT);
+						
 			Rectangle bounds = ((TableCellSWT)parentCell).getBounds();
 			
 			sampleCell.setControl(c, bounds, false);

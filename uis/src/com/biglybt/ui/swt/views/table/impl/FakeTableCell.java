@@ -131,17 +131,6 @@ public class FakeTableCell
 
 	private Map<Object,Object>	userData;
 	
-	/**
-	 * @param columnRateUpDown
-	 */
-	public FakeTableCell(TableColumn column, Object ds) {
-		valid = false;
-		coreDataSource = ds;
-		this.tableColumn = (TableColumnCore) column;
-		setOrientationViaColumn();
-		tableColumn.invokeCellAddedListeners(this);
-	}
-
 	public FakeTableCell(TableColumnCore column, Object ds) {
 		valid = false;
 		coreDataSource = ds;
@@ -1170,22 +1159,26 @@ public class FakeTableCell
 		this.cellArea = cellArea;
 
 		if (addListeners) {
-  		composite.addPaintListener(this);
-  		composite.addMouseListener(this);
-  		composite.addMouseMoveListener(this);
-  		composite.addMouseTrackListener(this);
+	  		composite.addPaintListener(this);
+	  		composite.addMouseListener(this);
+	  		composite.addMouseMoveListener(this);
+	  		composite.addMouseTrackListener(this);
 		}
-
-		setForeground(-1, -1, -1);
+		
 		setText((String)null);
 		setToolTip(null);
 
-		composite.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				dispose();
-			}
+		Utils.execSWTThread(()->{
+			setForeground(-1, -1, -1);
+	
+			composite.addDisposeListener(new DisposeListener() {
+				@Override
+				public void widgetDisposed(DisposeEvent e) {
+					dispose();
+				}
+			});
 		});
+		
 		if (coreDataSource != null && !isDisposed()) {
 			invokeVisibilityListeners(TableCellVisibilityListener.VISIBILITY_SHOWN,
 					true);
@@ -1350,7 +1343,7 @@ public class FakeTableCell
 			disposeListeners = null;
 		}
 		tableColumn.invokeCellDisposeListeners(this);
-		tableColumn.invalidateCells();
+		//tableColumn.invalidateCells();
 	}
 
 	// @see TableCellCore#getCursorID()
