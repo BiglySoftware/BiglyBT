@@ -473,7 +473,7 @@ public class SB_Transfers
 		
 		infoLibraryUn.setImageLeftID("image.sidebar.unopened");
 
-		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		addGeneralLibraryMenus(mdi, infoLibraryUn, SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
 		
 		infoLibraryUn.setViewTitleInfo(new ViewTitleInfo() {
 			@Override
@@ -506,21 +506,29 @@ public class SB_Transfers
 		
 		return infoLibraryUn;
 	}
-
-	private static void addGeneralLibraryMenus( MultipleDocumentInterface mdi, String id ){
-
-		addMenuUnwatched( id );
+	
+	private static void 
+	addGeneralLibraryMenus( 
+		MultipleDocumentInterface mdi, MdiEntry entry, String id )
+	{		
+		MenuItem mi1 = addMenuUnwatched( id );
 		
-		addMenuCollapseAll( mdi, id );
+		MenuItem mi2 = addMenuCollapseAll( mdi, id );
+		
+		entry.addListener((MdiCloseListener)(e,u)->{
+			mi1.remove();
+			mi2.remove();
+		});
 	}
 	
-	private static void addMenuUnwatched(String id) {
+	
+	private static MenuItem addMenuUnwatched(String id) {
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
 
-		MenuItem menuItem = menuManager.addMenuItem("sidebar." + id,
-				"v3.activity.button.watchall");
+		MenuItem menuItem = menuManager.addMenuItem("sidebar." + id, "v3.activity.button.watchall");
+
 		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 		menuItem.addListener(new MenuItemListener() {
 			@Override
@@ -543,6 +551,8 @@ public class SB_Transfers
 						});
 			}
 		});
+		
+		return( menuItem );
 	}
 	
 	private static void
@@ -570,7 +580,10 @@ public class SB_Transfers
 	}
 
 
-	private static void addMenuCollapseAll( MultipleDocumentInterface mdi, String id ){
+	private static MenuItem 
+	addMenuCollapseAll( 
+		MultipleDocumentInterface mdi, String id )
+	{
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
@@ -592,9 +605,14 @@ public class SB_Transfers
 							
 			}
 		});
+		
+		return( menuItem );
 	}
 	
-	private static void addMenuCollapseAll( MultipleDocumentInterface mdi,  Menu menu, String group_id ){
+	private static void 
+	addMenuCollapseAll( 
+		MultipleDocumentInterface mdi,  Menu menu, String group_id )
+	{
 		org.eclipse.swt.widgets.MenuItem item = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
 		
 		item.setText( MessageText.getString( "menu.collapse.all" ));
@@ -639,7 +657,7 @@ public class SB_Transfers
 				titleInfoSeeding, null, false, getSectionPosition( mdi, SideBar.SIDEBAR_SECTION_LIBRARY_CD ));
 		entry.setImageLeftID("image.sidebar.downloading");
 
-		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_CD);
+		addGeneralLibraryMenus(mdi, entry, SideBar.SIDEBAR_SECTION_LIBRARY_CD);
 		
 		MdiEntryVitalityImage vitalityImage = entry.addVitalityImage(ID_VITALITY_ALERT);
 		vitalityImage.setVisible(false);
@@ -718,7 +736,7 @@ public class SB_Transfers
 
 		entry.setImageLeftID("image.sidebar.downloading");
 
-		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+		addGeneralLibraryMenus(mdi, entry, SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 		
 		entry.addListener(
 			new MdiCloseListener(){
@@ -1375,7 +1393,7 @@ public class SB_Transfers
 
 			entry.setUserData( CAT_KEY, category );
 			
-			addGeneralLibraryMenus( mdi, id );
+			addGeneralLibraryMenus( mdi, entry, id );
 			
 			entry.addListener(new MdiEntryDropListener() {
 				@Override
@@ -1572,6 +1590,11 @@ public class SB_Transfers
 	setupTag(
 		final Tag tag )
 	{
+		if ( tag.isTagRemoved()){
+			
+			return( null );
+		}
+		
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 
 		if ( mdi == null ){
@@ -1742,9 +1765,14 @@ public class SB_Transfers
 									boolean closed;
 									
 									public void 
-									mdiChildEntryClosed(MdiEntry parent, MdiEntry child, boolean user){
+									mdiChildEntryClosed(
+										MdiEntry parent, 
+										MdiEntry child, 
+										boolean user)
+									{
 									
 										String viewID = parent.getViewID();
+										
 										if (mdi.getChildrenOf(viewID).isEmpty()) {
 									
 											synchronized( this ){
@@ -1766,7 +1794,6 @@ public class SB_Transfers
 										}
 									}
 								});
-
 
 							if ( entry instanceof MdiEntrySWT ){
 								final MdiEntrySWT entrySWT = (MdiEntrySWT) entry;
@@ -1870,8 +1897,8 @@ public class SB_Transfers
 				entry = mdi.createEntryFromSkinRef(
 						parent_id, id, "library", name, viewTitleInfo, tag, closable, prev_id );
 				
-				addGeneralLibraryMenus( mdi, id );
-				
+				addGeneralLibraryMenus( mdi, entry, id );
+
 			}else{
 
 				UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
@@ -3131,7 +3158,7 @@ public class SB_Transfers
 					"");
 			entry.setImageLeftID("image.sidebar.library");
 			
-			addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY);
+			addGeneralLibraryMenus( mdi, entry, SideBar.SIDEBAR_SECTION_LIBRARY);
 
 			return entry;
 		}

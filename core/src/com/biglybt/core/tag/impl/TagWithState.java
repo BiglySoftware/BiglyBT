@@ -45,8 +45,6 @@ TagWithState
 
 	private TagFeatureNotifications	tag_notifications;
 
-	private boolean	removed;
-
 	public
 	TagWithState(
 		TagTypeBase			tt,
@@ -293,7 +291,7 @@ TagWithState
 	addTaggable(
 		Taggable	t )
 	{
-		if ( removed ){
+		if ( isTagRemoved()){
 
 			Debug.out( "Tag has been removed" );
 
@@ -493,14 +491,6 @@ TagWithState
 	removeTag()
 	{
 		super.removeTag();
-
-		removed = true;
-	}
-
-	protected boolean
-	isRemoved()
-	{
-		return( removed );
 	}
 
 	@Override

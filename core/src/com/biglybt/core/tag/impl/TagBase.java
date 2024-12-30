@@ -163,6 +163,8 @@ TagBase
 
 	private HashMap<String,Object>		transient_properties;
 	
+	private boolean is_removed;
+	
 	protected
 	TagBase(
 		TagTypeBase			_tag_type,
@@ -2305,7 +2307,17 @@ TagBase
 	@Override
 	public void
 	removeTag()
-	{
+	{	
+		synchronized( this ){
+			
+			if ( is_removed ){
+				
+				return;
+			}
+			
+			is_removed = true;
+		}
+		
 		boolean was_rss = isTagRSSFeedEnabled();
 
 		tag_type.removeTag( this );
@@ -2318,6 +2330,16 @@ TagBase
 		}
 
 		saveTransientStuff();
+	}
+	
+	@Override
+	public boolean 
+	isTagRemoved()
+	{
+		synchronized( this ){
+			
+			return( is_removed );
+		}
 	}
 
 	@Override

@@ -221,6 +221,9 @@ Tag
 	public void
 	removeTag();
 
+	public boolean
+	isTagRemoved();
+	
 	public String
 	getDescription();
 

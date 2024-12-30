@@ -2617,7 +2617,7 @@ TagManagerImpl
 			return;
 		}
 
-		if ( tag.isRemoved() && type != CU_TAG_REMOVE ){
+		if ( tag.isTagRemoved() && type != CU_TAG_REMOVE ){
 
 			return;
 		}
@@ -2641,7 +2641,7 @@ TagManagerImpl
 			int				type	= (Integer)update[0];
 			TagWithState	tag 	= (TagWithState)update[1];
 
-			if ( tag.isRemoved()){
+			if ( tag.isTagRemoved()){
 
 				type = CU_TAG_REMOVE;
 			}
