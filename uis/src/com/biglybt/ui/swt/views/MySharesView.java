@@ -97,7 +97,8 @@ implements ShareManagerListener,
 			new TypeItem(),
 			new CategoryItem(),
 			new TagsItem(),
-			new PersistentItem()
+			new PersistentItem(),
+			new DateItem(),
 	};
 
 	static{
