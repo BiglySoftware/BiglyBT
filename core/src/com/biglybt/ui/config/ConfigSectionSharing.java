@@ -21,6 +21,8 @@ package com.biglybt.ui.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.pifimpl.local.ui.config.*;
 
@@ -93,7 +95,25 @@ public class ConfigSectionSharing
 		protocol.addListener(protocol_cl);
 		private_torrent.addListener(protocol_cl);
 
-		// row
+			// torrent version
+		
+		String[] tt_versions = {
+				String.valueOf( TOTorrent.TT_V1 ),
+				String.valueOf( TOTorrent.TT_V1_V2 ),
+				String.valueOf( TOTorrent.TT_V2 ),
+			};
+			String[] tt_descs = {
+					MessageText.getString( "torrent.version.type.1" ),
+					MessageText.getString( "torrent.version.type.2" ),
+					MessageText.getString( "torrent.version.type.3" ),
+			};
+
+		StringListParameterImpl torrent_version = new StringListParameterImpl(
+				SCFG_SHARING_TORRENT_VERSION, "label.torrent.version", tt_versions,
+				tt_descs);
+		add(torrent_version);
+		
+			// row
 		add(new BooleanParameterImpl(BCFG_SHARING_ADD_HASHES,
 				"wizard.createtorrent.extrahashes"));
 

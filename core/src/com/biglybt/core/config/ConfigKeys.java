@@ -283,6 +283,7 @@ public final class ConfigKeys {
 	public static class Sharing {
 		public static final String SCFG_SHARING_PROTOCOL = "Sharing Protocol";
 		public static final String BCFG_SHARING_TORRENT_PRIVATE = "Sharing Torrent Private";
+		public static final String SCFG_SHARING_TORRENT_VERSION = "Sharing Torrent Version";
 		public static final String BCFG_SHARING_PERMIT_DHT = "Sharing Permit DHT";
 		public static final String BCFG_SHARING_ADD_HASHES = "Sharing Add Hashes";
 		public static final String BCFG_SHARING_DISABLE_RCM = "Sharing Disable RCM";

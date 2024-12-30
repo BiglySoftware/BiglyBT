@@ -618,6 +618,7 @@ public class ConfigurationDefaults {
     def.put( "Sharing Torrent Comment", "" );
     def.put( "Sharing Permit DHT", TRUE);
     def.put( "Sharing Torrent Private", FALSE);
+    def.put( ConfigKeys.Sharing.SCFG_SHARING_TORRENT_VERSION, String.valueOf( TOTorrent.TT_V1 ));
     def.put( "Sharing Disable RCM", FALSE);
     def.put( "Sharing Is Persistent", FALSE);
 

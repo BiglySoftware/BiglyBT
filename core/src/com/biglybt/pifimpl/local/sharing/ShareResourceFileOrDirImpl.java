@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateFactory;
 import com.biglybt.core.internat.LocaleTorrentUtil;
@@ -182,11 +183,23 @@ ShareResourceFileOrDirImpl
 
 			URL[]	urls = manager.getAnnounceURLs();
 
-			TOTorrentCreator creator = TOTorrentFactory.createFromFileOrDirWithComputedPieceLength(
-										TOTorrent.TT_V1,
-										file,
-										urls[0],
-										manager.getAddHashes());
+			int torrent_version = TOTorrent.TT_V1;
+			
+			try{
+				
+				torrent_version = Integer.parseInt( COConfigurationManager.getStringParameter( ConfigKeys.Sharing.SCFG_SHARING_TORRENT_VERSION ).trim());
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+			
+			TOTorrentCreator creator = 
+				TOTorrentFactory.createFromFileOrDirWithComputedPieceLength(
+						torrent_version,
+						file,
+						urls[0],
+						manager.getAddHashes());
 
 			creator.addListener( manager );
 
