@@ -678,7 +678,7 @@ WebEngine
 
 			if ( plugin_proxy == null ){
 
-				throw( new SearchException( "No Tor plugin proxy available for '" + target_resource + "'" ));
+				throw( new SearchException( "No " + ((explicit_tor || user_tor)?"Tor":"I2P") + " plugin proxy available for '" + target_resource + "'" ));
 			}
 
 			URL 	url		= plugin_proxy.getURL();

@@ -374,13 +374,17 @@ public class VersionCheckClient {
 					catch( UnknownHostException t ) {
 						// no internet
 						Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
-						
+						if ( Constants.isCVSVersion()){
+							Debug.out(t);
+						}
 						last_error_v4 = t;
 					}
 					catch (IOException t) {
 						// General connection problem.
 						Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
-						
+						if ( Constants.isCVSVersion()){
+							Debug.out(t);
+						}
 						last_error_v4 = t;
 						
 					}catch( Throwable t ) {

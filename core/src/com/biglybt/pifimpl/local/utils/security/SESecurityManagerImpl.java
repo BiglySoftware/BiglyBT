@@ -192,25 +192,6 @@ SESecurityManagerImpl
 	}
 
 	@Override
-	public KeyStore
-	getKeyStore()
-
-		throws Exception
-	{
-		return( SESecurityManager.getKeyStore());
-	}
-
-	@Override
-	public KeyStore
-	getTrustStore()
-
-		throws Exception
-	{
-		return( SESecurityManager.getTrustStore());
-	}
-
-
-	@Override
 	public Certificate
 	createSelfSignedCertificate(
 		String		alias,

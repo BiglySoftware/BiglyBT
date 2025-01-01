@@ -85,16 +85,6 @@ SESecurityManager
 	installServerCertificate(
 		URL		url );
 
-	public KeyStore
-	getKeyStore()
-
-		throws Exception;
-
-	public KeyStore
-	getTrustStore()
-
-		throws Exception;
-
 		/**
 		 * creates and installs a certificate capable of supporting SSL of type MD5withRSA
 		 * @param alias		alias - e.g. "mycert"

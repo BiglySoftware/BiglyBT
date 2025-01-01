@@ -162,22 +162,6 @@ SESecurityManager
 		return( SESecurityManagerImpl.getSingleton().getKeyDetails( alias ));
 	}
 
-	public static KeyStore
-	getKeyStore()
-
-		throws Exception
-	{
-		return( SESecurityManagerImpl.getSingleton().getKeyStore());
-	}
-
-	public static KeyStore
-	getTrustStore()
-
-		throws Exception
-	{
-		return( SESecurityManagerImpl.getSingleton().getTrustStore());
-	}
-
 	public static PasswordAuthentication
 	getPasswordAuthentication(
 		String		realm,
