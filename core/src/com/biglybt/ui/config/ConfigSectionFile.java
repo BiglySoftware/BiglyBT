@@ -34,6 +34,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterListener;
@@ -557,9 +558,21 @@ public class ConfigSectionFile
 
 		// download history
 
-		add(new BooleanParameterImpl(BCFG_DOWNLOAD_HISTORY_ENABLED,
-				"ConfigView.label.record.dl.history"));
+		List<Parameter> listDownloadHistory = new ArrayList<>();
 
+		
+		BooleanParameter dlh_enable = add(new BooleanParameterImpl(BCFG_DOWNLOAD_HISTORY_ENABLED,
+				"ConfigView.label.record.dl.history"), listDownloadHistory );
+
+		BooleanParameter dlh_no_dup = add(new BooleanParameterImpl(BCFG_DOWNLOAD_HISTORY_DONT_ADD_DUP,
+				"ConfigView.label.dl.history.no.dup"), listDownloadHistory );
+		
+		dlh_enable.addEnabledOnSelection(dlh_no_dup);
+
+		ParameterGroupImpl pgDownloadHistory = new ParameterGroupImpl( "downloadhistoryview.view.heading", listDownloadHistory );
+		
+		add("pgDownloadHistory", pgDownloadHistory );
+		
 		// ignore group
 
 		List<Parameter> listIgnoredFiles = new ArrayList<>();

@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.download.DownloadManager;
@@ -1428,21 +1429,21 @@ public class UIFunctionsImpl
 					Debug.out( e );
 				}
 
-				if ( !is_silent ){
+				try{
+					DownloadHistoryManager dlm = (DownloadHistoryManager)core.getGlobalManager().getDownloadHistoryManager();
 
-					try{
-						DownloadHistoryManager dlm = (DownloadHistoryManager)core.getGlobalManager().getDownloadHistoryManager();
+					final long[] existing = dlm.getDates( torrentOptions.getTorrent().getHash(), true);
 
-						final long[] existing = dlm.getDates( torrentOptions.getTorrent().getHash(), true);
-
+					if ( !is_silent ){	
+	
 						if ( existing != null ){
-
+	
 							long	redownloaded = existing[3];
-
+	
 							if ( SystemTime.getCurrentTime() - redownloaded > 60*10*1000 ){
-
+	
 								if ( getVisibilityState() != VS_TRAY_ONLY){
-
+	
 									forceNotify(STATUSICON_NONE,
 										MessageText.getString(
 											"OpenTorrentWindow.mb.inHistory.title"),
@@ -1451,14 +1452,22 @@ public class UIFunctionsImpl
 												torrentOptions.getTorrentName(),
 												DisplayFormatters.formatDateYMDHM( existing[0] )
 											}), null, new Object[0], -1);
-
+	
 								}
 							}
 						}
-					}catch( Throwable e ){
-
-						Debug.out( e );
 					}
+					
+					if ( dlm.isEnabled() && COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_DOWNLOAD_HISTORY_DONT_ADD_DUP )){
+												
+						if ( existing != null && existing[1] > 0 ){
+							
+							return( true );
+						}
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
 				}
 			}
 		}

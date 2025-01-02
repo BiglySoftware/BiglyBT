@@ -302,7 +302,8 @@ public class ConfigurationDefaults {
     def.put(ConfigKeys.StartupShutdown.ICFG_AUTO_RESTART_WHEN_IDLE, ZERO );
     def.put(ConfigKeys.StartupShutdown.BCFG_AUTO_RESTART_WHEN_IDLE_PROMPT, TRUE );
 
-    def.put( "Download History Enabled", TRUE );
+    def.put( ConfigKeys.File.BCFG_DOWNLOAD_HISTORY_ENABLED, TRUE );
+    def.put( ConfigKeys.File.BCFG_DOWNLOAD_HISTORY_DONT_ADD_DUP, FALSE );
 
     // SWT GUI Settings
 

@@ -165,6 +165,7 @@ public final class ConfigKeys {
 		/** Despite name, this is the DND file prefix when SCFG_SUBFOLDER_FOR_DND_FILES is true */
 		public static final String BCFG_USE_INCOMPLETE_FILE_PREFIX = "Use Incomplete File Prefix";
 		public static final String BCFG_DOWNLOAD_HISTORY_ENABLED = "Download History Enabled";
+		public static final String BCFG_DOWNLOAD_HISTORY_DONT_ADD_DUP = "Download History Dont Add Duplicate";
 		public static final String BCFG_FILES_AUTO_TAG_ENABLE = "Files Auto Tag Enable";
 		public static final String ICFG_FILES_AUTO_TAG_COUNT = "Files Auto Tag Count";
 		public static final String SCFG_FILE_AUTO_TAG_NAME_DEFAULT = "File Auto Tag Name Default";
