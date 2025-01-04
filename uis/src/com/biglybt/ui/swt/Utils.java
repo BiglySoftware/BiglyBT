@@ -58,6 +58,9 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -4734,7 +4737,80 @@ public class Utils
 		return false;
 	}
 
-
+	public static void
+	runWhenCoreOperationsIdle(
+		Core		core,
+		Runnable 	r )
+	{
+		  getOffOfSWTThread(()->{
+			  
+			  try{
+				  long start = SystemTime.getMonotonousTime();
+				  
+				  boolean waiting = true;
+						  
+				  while( waiting && ( SystemTime.getMonotonousTime() - start <= 60*1000 )){			  
+					  
+					  waiting = false;
+					
+					  List<CoreOperation> ops = core.getOperations();
+		
+					  for ( CoreOperation op: ops ){
+			
+						  if ( op.isRemoved()){
+			
+							  continue;
+						  }
+			
+						  int type = op.getOperationType();
+			
+						  if (	type == CoreOperation.OP_DOWNLOAD_CHECKING ||
+								type == CoreOperation.OP_DOWNLOAD_COPY ||
+								type == CoreOperation.OP_DOWNLOAD_EXPORT ||
+								type == CoreOperation.OP_FILE_MOVE ){
+			
+							  CoreOperationTask task = op.getTask();
+			
+							  if ( task != null ){
+			
+								  ProgressCallback cb = task.getProgressCallback();
+			
+								  if ( cb != null ){
+			
+									  int state = cb.getTaskState();
+			
+									  if ( state == ProgressCallback.ST_CANCEL ){
+			
+										  continue;
+									  }
+								  }
+							  }
+							  
+							  waiting = true;
+							  
+							  break;
+						  }
+					  }
+					  
+					  if ( waiting ){
+						  
+						  try{
+							  Thread.sleep(250);
+							  
+						  }catch( Throwable e ){
+						  }
+					  }
+				  }
+			  
+			  }catch( Throwable e ){
+				  
+				  Debug.out( e );
+			  }
+			  
+			  r.run();
+		  });
+	}
+	
 	public static BrowserWrapper
 	createSafeBrowser(
 		Composite parent, int style)

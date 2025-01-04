@@ -737,35 +737,39 @@ public class UIFunctionsImpl
 
 		}else if ( action_id == ACTION_UPDATE_RESTART_REQUEST ){
 
-			String title = MessageText.getString("UpdateMonitor.messagebox.restart.title" );
-
-			String text = MessageText.getString("UpdateMonitor.messagebox.restart.text" );
-
-			bringToFront();
-
-			boolean no_timeout = args instanceof Boolean && ((Boolean)args).booleanValue();
-
-			int timeout = 180000;
-
-			if ( no_timeout || !PluginInitializer.getDefaultInterface().getPluginManager().isSilentRestartEnabled()){
-
-				timeout = -1;
-			}
-
-			MessageBoxShell messageBoxShell = new MessageBoxShell(title, text,
-					new String[] {
-				MessageText.getString("UpdateWindow.restart"),
-				MessageText.getString("UpdateWindow.restartLater")
-			}, 0);
-			messageBoxShell.setAutoCloseInMS(timeout);
-			messageBoxShell.setParent(getMainShell());
-			messageBoxShell.setOneInstanceOf("UpdateMonitor.messagebox.");
-			messageBoxShell.open( new UserPrompterResultListener() {
-				@Override
-				public void prompterClosed(int result) {
-					listener.actionComplete(result == 0);
-				}
-			});
+			Utils.runWhenCoreOperationsIdle(
+				CoreFactory.getSingleton(),
+				()->{
+					String title = MessageText.getString("UpdateMonitor.messagebox.restart.title" );
+		
+					String text = MessageText.getString("UpdateMonitor.messagebox.restart.text" );
+		
+					bringToFront();
+		
+					boolean no_timeout = args instanceof Boolean && ((Boolean)args).booleanValue();
+		
+					int timeout = 180000;
+		
+					if ( no_timeout || !PluginInitializer.getDefaultInterface().getPluginManager().isSilentRestartEnabled()){
+		
+						timeout = -1;
+					}
+		
+					MessageBoxShell messageBoxShell = new MessageBoxShell(title, text,
+							new String[] {
+						MessageText.getString("UpdateWindow.restart"),
+						MessageText.getString("UpdateWindow.restartLater")
+					}, 0);
+					messageBoxShell.setAutoCloseInMS(timeout);
+					messageBoxShell.setParent(getMainShell());
+					messageBoxShell.setOneInstanceOf("UpdateMonitor.messagebox.");
+					messageBoxShell.open( new UserPrompterResultListener() {
+						@Override
+						public void prompterClosed(int result) {
+							listener.actionComplete(result == 0);
+						}
+					});
+				});
 		}else{
 
 			Debug.out( "Unknown action " + action_id );

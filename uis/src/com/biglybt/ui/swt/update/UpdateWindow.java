@@ -25,6 +25,10 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
@@ -60,8 +64,10 @@ public class
 UpdateWindow
 	implements 	ResourceDownloaderListener{
 
-  private UpdateMonitor			update_monitor;
-  private UpdateCheckInstance	check_instance;
+  private final UpdateMonitor		update_monitor;
+  private final Core				core;
+  private final UpdateCheckInstance	check_instance;
+  
   private int					check_type;
 
   Display display;
@@ -97,10 +103,11 @@ UpdateWindow
   public
   UpdateWindow(
 	UpdateMonitor		_update_monitor,
-  	Core _core,
+  	Core 				_core,
   	UpdateCheckInstance	_check_instance )
   {
 	update_monitor	= _update_monitor;
+	core			= _core;
   	check_instance 	= _check_instance;
 
   	check_type = check_instance.getType();
@@ -592,10 +599,19 @@ UpdateWindow
     }
   }
 
-  private void switchToRestart() {
-    if(display == null || display.isDisposed())
+  private void 
+  switchToRestart() 
+  {
+	  Utils.runWhenCoreOperationsIdle(core, this::_switchToRestart );
+  }
+  
+  private void 
+  _switchToRestart() 
+  {
+    if( display == null || display.isDisposed() || updateWindow == null ||  updateWindow.isDisposed()){
       return;
-
+    }
+    
     display.asyncExec(new AERunnable(){
       @Override
       public void runSupport() {
