@@ -56,6 +56,17 @@ ClientIDManagerImpl
 	private static final int	connect_timeout;
 	private static final int	read_timeout;
 
+	static final ThreadLocal<String>		tls_debug	=
+			new ThreadLocal<String>()
+			{
+				@Override
+				public String
+				initialValue()
+				{
+					return( null );
+				}
+			};
+			
 	static{
 	  	String	connect_timeout_str = System.getProperty("sun.net.client.defaultConnectTimeout");
 	  	String	read_timeout_str 	= System.getProperty("sun.net.client.defaultReadTimeout");
@@ -310,6 +321,8 @@ ClientIDManagerImpl
 
 		throws ClientIDException
 	{
+		tls_debug.set( Debug.getCompressedStackTrace());
+		
 		Boolean sni_hack = (Boolean)properties.get( ClientIDGenerator.PR_SNI_HACK );
 
 		if ( sni_hack != null && sni_hack ){
@@ -525,7 +538,7 @@ ClientIDManagerImpl
 
 				if ( lines.isEmpty()){
 					
-					throw( new Exception( "Invalid header: " + header ));
+					throw( new Exception( "Invalid header: " + header + " (remote= " + socket.getInetAddress() + ", " + tls_debug.get() +")"));
 				}
 				
 				String[]	lines_in = new String[ lines.size()];
@@ -533,8 +546,14 @@ ClientIDManagerImpl
 				lines.toArray( lines_in );
 
 				String	get = lines_in[0];
-
+				
 				int	p1 = get.indexOf( "?cid=" );
+				
+				if ( p1 == -1 ){
+					
+					throw( new Exception( "Invalid header: " + header + " (remote= " + socket.getInetAddress() + ", " + tls_debug.get() +")"));
+				}
+				
 				int	p2 = get.indexOf( "&", p1 );
 
 				boolean url_has_no_args = false;
@@ -552,7 +571,7 @@ ClientIDManagerImpl
 
 				if ( p3 == -1 ){
 					
-					throw( new Exception( "Invalid header: " + header ));
+					throw( new Exception( "Invalid header: " + header + " (remote= " + socket.getInetAddress() + ", " + tls_debug.get() +")"));
 				}
 				
 				String	target_host	= cid.substring( 0, p3 );
@@ -606,6 +625,24 @@ ClientIDManagerImpl
 
 				lines_in[0] = get;
 
+				String original_url_prefix = "http" + (is_ssl?"s":"") + "://" + target_host + ":" + target_port;
+
+				String original_url	= null;
+				
+				try{
+					String temp = get.substring( get.indexOf( ' ' ) + 1 ).trim();
+
+					temp = temp.substring( 0, temp.indexOf( ' ' )).trim();
+					
+					URL u = new URL( original_url_prefix + temp );
+					
+					original_url = UrlUtils.getCanonicalString(u);
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+				
 				String[]	lines_out;
 
 				if ( filter_override ){
@@ -699,9 +736,9 @@ ClientIDManagerImpl
 
 							if ( line.toLowerCase( Locale.US ).startsWith( "location:" )){
 
-								String redirect_url = line.substring( 9  ).trim();
+								String redirect_url_str = line.substring( 9  ).trim();
 
-								String lc_redirect_url = redirect_url.toLowerCase( Locale.US );
+								String lc_redirect_url = redirect_url_str.toLowerCase( Locale.US );
 
 								if ( lc_redirect_url.startsWith( "http:" ) || lc_redirect_url.startsWith( "https:" )){
 
@@ -711,11 +748,9 @@ ClientIDManagerImpl
 
 										// relative
 
-									String prefix = "http" + (is_ssl?"s":"") + "://" + target_host + ":" + target_port;
+									if ( redirect_url_str.startsWith( "/" )){
 
-									if ( redirect_url.startsWith( "/" )){
-
-										redirect_url = prefix + redirect_url;
+										redirect_url_str = original_url_prefix + redirect_url_str;
 
 									}else{
 
@@ -736,18 +771,25 @@ ClientIDManagerImpl
 
 										if ( x_pos == -1 ){
 
-											redirect_url = prefix + "/" + redirect_url;
+											redirect_url_str = original_url_prefix + "/" + redirect_url_str;
 
 										}else{
 
-											redirect_url = prefix + get_line.substring( 0, x_pos + 1 ) + redirect_url;
+											redirect_url_str = original_url_prefix + get_line.substring( 0, x_pos + 1 ) + redirect_url_str;
 										}
 									}
 								}
-
+									
+								URL redirect_url = new URL( redirect_url_str );
+								
+								if ( original_url != null && original_url.equals( UrlUtils.getCanonicalString( redirect_url ))){
+									
+									throw( new IOException( "Redirect loop" ));
+								}
+								
 								Properties	http_properties = new Properties();
 
-						 		http_properties.put( ClientIDGenerator.PR_URL, new URL( redirect_url ));
+						 		http_properties.put( ClientIDGenerator.PR_URL, redirect_url );
 
 						 		generateHTTPProperties( hash, http_properties );
 
@@ -775,11 +817,14 @@ ClientIDManagerImpl
 
 							break;
 						}
-
+						
 						os.write( buffer, 0,len );
 
 						written += len;
 					}
+					
+					os.flush();
+					
 				}finally{
 
 					target.close();
