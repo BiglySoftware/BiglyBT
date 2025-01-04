@@ -243,6 +243,10 @@ public class ConfigSectionInterfaceDisplaySWT
 			// other toolbar items
 
 		add(new BooleanParameterImpl(
+				"IconBar.visible." + TorrentUtil.TU_ITEM_PAUSE,
+				"v3.MainWindow.button.pause"), listToolbarItems);
+		
+		add(new BooleanParameterImpl(
 				"IconBar.visible." + TorrentUtil.TU_ITEM_RECHECK,
 				"MyTorrentsView.menu.recheck"), listToolbarItems);
 

@@ -126,6 +126,7 @@ public class TorrentUtil
 	private static final String TU_GROUP			= "tu.group";
 	private static final String BF_GROUP			= "bf.group";
 	
+	public static final String	TU_ITEM_PAUSE			= "tui.pause";
 	public static final String	TU_ITEM_RECHECK			= "tui.recheck";
 	public static final String	TU_ITEM_CHECK_FILES		= "tui.checkfiles";
 	public static final String	TU_ITEM_ALLOCATE		= "tui.allocate";
@@ -136,6 +137,7 @@ public class TorrentUtil
 	public static final String	BF_ITEM_FORWARD	= "bfi.forward";
 	
 	private static final String[] TB_ITEMS = {
+			TU_ITEM_PAUSE,
 			TU_ITEM_RECHECK,
 			TU_ITEM_CHECK_FILES,
 			TU_ITEM_ALLOCATE,
@@ -251,6 +253,37 @@ public class TorrentUtil
 								
 								addItem( tbm, forward_item );
 
+								UIToolBarItem pause_item = tbm.createToolBarItem( TU_ITEM_PAUSE );
+								
+								pause_item.setGroupID( TU_GROUP );
+								
+								pause_item.setImageID( "pause" );
+								
+								pause_item.setToolTipID( "v3.MainWindow.button.pause" );
+								
+								pause_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										List<DownloadManager>	dms = getDMs( datasource );
+										
+										for ( DownloadManager dm: dms ){
+											
+											if ( !dm.isPaused()){
+												
+												dm.pause( false );
+											}
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, pause_item );
+								
 									// refresh
 								
 								UIToolBarItem refresh_item = tbm.createToolBarItem( TU_ITEM_RECHECK );
@@ -4820,6 +4853,7 @@ public class TorrentUtil
 		
 		boolean hasDM = false;
 
+		boolean canPause = false;
 		boolean canRecheck = false;
 		boolean canAllocate = false;
 		Boolean canArchive = null;	// all must be archiveable for this to be true
@@ -4900,6 +4934,7 @@ public class TorrentUtil
 					}
 				}
 				
+				canPause = canPause || !dm.isPaused();
 				canRecheck = canRecheck || dm.canForceRecheck();
 				canAllocate = canAllocate || ManagerUtils.canAllocate( dm );
 				
@@ -5008,6 +5043,7 @@ public class TorrentUtil
 			}
 		}
 
+		mapNewToolbarStates.put( TU_ITEM_PAUSE, canPause ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_CHECK_FILES, canCheckExist ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_ALLOCATE, canAllocate ? UIToolBarItem.STATE_ENABLED : 0);
