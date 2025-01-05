@@ -77,6 +77,7 @@ import com.biglybt.ui.swt.views.tableitems.mytorrents.AlertsItem;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.util.DLReferals;
 import com.biglybt.util.DataSourceUtils;
+import com.biglybt.util.MapUtils;
 import com.biglybt.util.PlayUtils;
 
 import com.biglybt.pif.ui.tables.TableManager;
@@ -169,6 +170,8 @@ public class FilesView
 	Button btnTreeView;
 	BufferedLabel lblHeader;
 
+	BubbleTextBox bubbleTextBox;
+	
 	private boolean	disableTableWhenEmpty	= true;
 	private Object datasource;
 	private Tag[] tags;
@@ -316,7 +319,7 @@ public class FilesView
 		
 		lblHeader = new BufferedLabel(cTop, SWT.CENTER | ( Constants.isLinux?0: SWT.DOUBLE_BUFFERED));
 
-		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+		bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		Composite mainBubbleWidget = bubbleTextBox.getMainWidget();
 
 		FormData fd = new FormData();
@@ -402,8 +405,12 @@ public class FilesView
 
   // @see TableDataSourceChangedListener#tableDataSourceChanged(java.lang.Object)
 	@Override
-	public void tableDataSourceChanged(Object newDataSource) {
+	public void 
+	tableDataSourceChanged(
+		Object newDataSource) 
+	{
 		Tag[] newTags = DataSourceUtils.getTags(newDataSource);
+		
 		DownloadManager[] newManagers = DataSourceUtils.getDMs(newDataSource);
 		
 		if ( Arrays.deepEquals( newTags, tags ) && Arrays.equals( newManagers, managers )){
@@ -425,9 +432,13 @@ public class FilesView
 		}
 
 		DownloadManager[] oldManagers = managers;
+		
 		managers = newManagers;
+		
 		tags = newTags;
+		
 		datasource = newDataSource;
+		
 		ViewTitleInfoManager.refreshTitleInfo(this);
 		
 		if (tags != null && tags.length > 0) {
@@ -471,8 +482,80 @@ public class FilesView
 		
 		addManagerListeners( managers );
 
-		if (!tv.isDisposed()) {
+		if (!tv.isDisposed()){
+			
+			String	overall_filter	= null;
+			boolean	overall_regex	= false;
+			boolean has_clash		= false;
+			
+			for ( DownloadManager manager: managers ){
+				
+				DownloadManagerState state = manager.getDownloadState();
+				
+				Map<String,Map<String,Object>> map = (Map<String,Map<String,Object>>)state.getMapAttribute( DownloadManagerState.AT_VIEW_FILTERS );
 
+				String	filter	= null;
+				boolean	regex	= false;
+				
+				if ( map != null ){
+					
+					Map<String,Object> view = map.get( "FilesView" );
+					
+					if ( view != null ){
+						
+						filter	= MapUtils.getMapString( view, "filter", null );
+						regex	= MapUtils.getMapBoolean( view, "regex", false );
+					}
+				}
+				
+				if ( filter == null ){
+					
+					if ( overall_filter != null ){
+						
+						has_clash = true;
+						
+						break;
+					}
+					
+					overall_filter = null;
+										
+				}else if ( overall_filter == null ){
+					
+					if ( !has_clash ){
+					
+						overall_filter	= filter;
+						overall_regex	= regex;
+					}
+					
+				}else{
+					
+					if ( !overall_filter.equals( filter ) || overall_regex != regex ){
+						
+						overall_filter = null;
+						
+						has_clash = true;
+						
+						break;
+					}
+				}
+			}
+			
+			if ( has_clash ){
+			
+				bubbleTextBox.setState( "", false );
+				
+			}else  if ( overall_filter != null ){
+				
+				bubbleTextBox.setState( overall_filter, overall_regex );
+				
+					// we need this here to force the filter changes to be current otherwise
+					// you get an annoying table update without the filter applied first 
+					// this is caused by the various async crap in place to rate-limit
+					// filter changes
+				
+				tv.refilter();
+			}
+						
 			if (tree_view) {
 				tv.removeAllTableRows();
 				current_root = null;
@@ -745,12 +828,12 @@ public class FilesView
 		
 		return( null );
 	}
-	
+		
 	@Override
 	public boolean
 	filterCheck(
 		DiskManagerFileInfo ds, String filter, boolean regex, boolean confusable )
-	{
+	{		
 		if ( hide_dnd_files ){
 			
 			if ( ds.isSkipped()){
@@ -834,11 +917,52 @@ public class FilesView
 		}
 	}
 
+	private String	last_filter_str = "";
+	private boolean	last_filter_regex;
+
 	@Override
 	public void 
 	filterSet(
-		String filter )
+		String 		filter,
+		boolean		regex )
 	{
+		if ( !filter.equals( last_filter_str ) || regex != last_filter_regex ){
+			
+			for ( DownloadManager manager: managers ){
+				
+				DownloadManagerState state = manager.getDownloadState();
+				
+				Map<String,Map<String,Object>> map = (Map<String,Map<String,Object>>)state.getMapAttribute( DownloadManagerState.AT_VIEW_FILTERS );
+				
+				if ( map == null ){
+					
+					map = new HashMap<>();
+					
+				}else{
+					
+					map = new HashMap<>( map );
+				}
+				
+				Map<String,Object> view = map.get( "FilesView" );
+				
+				if ( view == null ){
+					
+					view = new HashMap<>();
+					
+					map.put( "FilesView", view );
+				}
+				
+				MapUtils.setMapString( view, "filter", filter);
+				
+				MapUtils.setMapBoolean( view,"regex", regex );
+				
+				state.setMapAttribute( DownloadManagerState.AT_VIEW_FILTERS, map );
+			}
+			
+			last_filter_str		= filter;
+			last_filter_regex	= regex;
+		}
+		
 		col_filter_helper.filterSet(filter);
 	}
 	

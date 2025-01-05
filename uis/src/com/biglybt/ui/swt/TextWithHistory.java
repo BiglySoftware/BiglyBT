@@ -46,6 +46,8 @@ import com.biglybt.util.StringCompareUtils;
 public class
 TextWithHistory
 {
+	public static final String HISTORY_POPUP_DISABLE = "TextWithHistory::popup.disable";
+	
 	private static final int MAX_MATCHES	= 10;
 	private static final int MAX_HISTORY	= 64;
 
@@ -262,6 +264,11 @@ TextWithHistory
 		String		current_text,
 		boolean		force )
 	{
+		if ( text.getData( HISTORY_POPUP_DISABLE ) != null ){
+			
+			return;
+		}
+		
 		List<String>	current_matches = match( current_text );
 
 		if ( current_text.length() == 0 || current_matches.size() == 0 ){
@@ -501,9 +508,12 @@ TextWithHistory
 
 			String chars = selection[0];
 
-			text.setText( chars );
-
-			text.setSelection( chars.length());
+			if ( !text.isDisposed()){
+				
+				text.setText( chars );
+	
+				text.setSelection( chars.length());
+			}
 
 			if ( current_shell != null ){
 

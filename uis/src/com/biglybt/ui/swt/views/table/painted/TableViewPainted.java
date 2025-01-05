@@ -2115,7 +2115,7 @@ public class TableViewPainted
 
 		filter.checker = filterCheck;
 
-		filter.checker.filterSet(filter.text);
+		filter.checker.filterSet(filter.text, filter.regex);
 		refilter();
 	}
 

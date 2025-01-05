@@ -680,7 +680,7 @@ public abstract class TableViewSWT_Common
 						if (filter.nextText != null
 								&& (force || !filter.nextText.equals(filter.text))) {
 							filter.text = filter.nextText;
-							filter.checker.filterSet(filter.text);
+							filter.checker.filterSet(filter.text, filter.regex);
 							tv.refilter();
 						}
 					}

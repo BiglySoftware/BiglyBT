@@ -700,7 +700,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (filter.eventUpdate != null) {
 			filter.eventUpdate.cancel();
 			filter.text = filter.nextText;
-			filter.checker.filterSet(filter.text);
+			filter.checker.filterSet(filter.text, filter.regex);
 		}
 		filter.eventUpdate = null;
 

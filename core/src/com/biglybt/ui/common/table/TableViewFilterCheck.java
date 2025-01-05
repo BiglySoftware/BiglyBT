@@ -42,7 +42,12 @@ public interface TableViewFilterCheck<DATASOURCETYPE>
 			return( filterCheck( ds, filter, regex ));
 		}
 	}
-	public void filterSet(String filter);
+	
+	public default void filterSet(String filter){}
+	
+	public default void filterSet(String filter, boolean regex ){
+		filterSet( filter );
+	}
 
 	public interface TableViewFilterCheckEx<DATASOURCETYPE>
 		extends TableViewFilterCheck<DATASOURCETYPE>

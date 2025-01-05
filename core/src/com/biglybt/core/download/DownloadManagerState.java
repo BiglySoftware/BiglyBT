@@ -106,6 +106,8 @@ DownloadManagerState
 
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 	public static final String AT_TRANSIENT_TAG_SORT		= "t_tagsort";
+	
+	public static final String AT_VIEW_FILTERS				= "vfilt";			// Map
 
 	
 	public static Object[][] ATTRIBUTE_DEFAULTS = {
