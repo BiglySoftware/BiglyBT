@@ -130,7 +130,7 @@ public class ConfigSectionIPFilterSWT
 
 		private IPFilterListener filterListener;
 
-		volatile boolean noChange;
+		// volatile boolean noChange = true;
 
 		@Override
 		public void create(Composite gFilter) {
@@ -195,11 +195,7 @@ public class ConfigSectionIPFilterSWT
 					ipFilterManager1.cacheAllDescriptions();
 					bIsCachingDescriptions = true;
 				}
-				ipRanges = getSortedRanges(filter.getRanges());
-				table.setItemCount(ipRanges.length);
-				table.clearAll();
-				// bug 69398 on Windows
-				table.redraw();
+				resyncTable();
 			};
 
 			columns[0].addListener(SWT.Selection, listener);
@@ -240,10 +236,7 @@ public class ConfigSectionIPFilterSWT
 					return;
 				}
 				removeRange((IpRange) selection[0].getData());
-				ipRanges = getSortedRanges(filter.getRanges());
-				table.setItemCount(ipRanges.length);
-				table.clearAll();
-				table.redraw();
+				resyncTable();
 			});
 
 			Button edit = new Button(cArea, SWT.PUSH);
@@ -255,7 +248,7 @@ public class ConfigSectionIPFilterSWT
 				TableItem[] selection = table.getSelection();
 				if (selection.length == 0)
 					return;
-				editRange((IpRange) selection[0].getData());
+				editRange(selection[0]);
 			});
 
 			table.addMouseListener(new MouseAdapter() {
@@ -264,7 +257,7 @@ public class ConfigSectionIPFilterSWT
 					TableItem[] selection = table.getSelection();
 					if (selection.length == 0)
 						return;
-					editRange((IpRange) selection[0].getData());
+					editRange( selection[0]);
 				}
 			});
 
@@ -286,7 +279,7 @@ public class ConfigSectionIPFilterSWT
 				code.run();
 			}
 
-			ipRanges = getSortedRanges(filter.getRanges());
+			ipRanges = new IpRange[0];
 
 			table.addListener(SWT.SetData, event -> {
 				TableItem item = (TableItem) event.item;
@@ -304,10 +297,7 @@ public class ConfigSectionIPFilterSWT
 				item.setData(range);
 			});
 
-			table.setItemCount(ipRanges.length);
-			table.clearAll();
-			// bug 69398 on Windows
-			table.redraw();
+			resyncTable();
 
 			table.addListener(SWT.Resize, e -> resizeTable());
 
@@ -334,10 +324,7 @@ public class ConfigSectionIPFilterSWT
 							filter.removeListener(filterListener);
 							return;
 						}
-						ipRanges = getSortedRanges(filter.getRanges());
-						table.setItemCount(ipRanges.length);
-						table.clearAll();
-						table.redraw();
+						resyncTable();
 					});
 
 				}
@@ -378,8 +365,21 @@ public class ConfigSectionIPFilterSWT
 			filter.removeRange(range);
 		}
 
-		public void editRange(IpRange range) {
-			new IpFilterEditor(CoreFactory.getSingleton(), table.getShell(), range,()->{noChange=false;});
+		public void 
+		editRange(
+			TableItem item )
+		{	
+			IpRange range = (IpRange)item.getData();
+			
+			new IpFilterEditor(
+				CoreFactory.getSingleton(), 
+				table.getShell(), 
+				range,
+				()->{
+					item.setText(0, range.getDescription());
+					item.setText(1, range.getStartIp());
+					item.setText(2, range.getEndIp());
+				});
 		}
 
 		public void addRange() {
@@ -387,6 +387,7 @@ public class ConfigSectionIPFilterSWT
 		}
 
 		public void refresh() {
+			/* table.getItems() is VERY slow
 			if (table == null || table.isDisposed() || noChange)
 				return;
 			noChange = true;
@@ -412,9 +413,27 @@ public class ConfigSectionIPFilterSWT
 					item.setText(2, range.getEndIp());
 
 			}
+			*/
 		}
 
-		protected IpRange[] getSortedRanges(IpRange[] ranges) {
+		private void
+		resyncTable()
+		{
+			Utils.getOffOfSWTThread(()->{
+			
+				IpRange[] ranges = getSortedRanges(filter.getRanges());
+				
+				Utils.execSWTThread(()->{
+					ipRanges = ranges;
+					table.setItemCount(ipRanges.length);
+					table.clearAll();
+						// 	bug 69398 on Windows
+					table.redraw();
+				});
+			});
+		}
+		
+		private IpRange[] getSortedRanges(IpRange[] ranges) {
 			Arrays.sort(ranges, comparator);
 
 			return (ranges);
