@@ -359,6 +359,15 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
+			tcm.registerColumn(TorrentOpenFileOptions.class,
+					TableColumnOTOF_PositionPlus1.COLUMN_ID,
+					new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOF_PositionPlus1(column);
+						}
+					});
+			
 			tcm.setDefaultColumnNames(TABLEID_FILES, new String[] {
 				TableColumnOTOF_Position.COLUMN_ID,
 				TableColumnOTOF_Download.COLUMN_ID,

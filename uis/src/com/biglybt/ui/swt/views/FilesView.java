@@ -126,6 +126,7 @@ public class FilesView
     new StorageTypeItem(),
     new FileExtensionItem(),
     new FileIndexItem(),
+    new FileIndexPlus1Item(),
     new TorrentRelativePathItem(),
     new FileCRC32Item(),
     new FileMD5Item(),
