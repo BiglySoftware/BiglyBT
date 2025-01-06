@@ -706,61 +706,69 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		boolean changed = false;
 
+		
 		synchronized (rows_sync) {
 			DATASOURCETYPE[] unfilteredArray = (DATASOURCETYPE[]) listUnfilteredDataSources.keySet().toArray();
 			if (DEBUGADDREMOVE) {
 				debug("filter: unfilteredArray is " + unfilteredArray.length);
 			}
 
-			if (getFilterSubRows()){
-				
-				for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
-					TableRowCore row = iter.next();
-					for ( TableRowCore sr: row.getSubRowsWithNull()){
-						if (sr.refilter()){
-							
-							changed = true;
+			Map<Object,Object>	cache = new IdentityHashMap<>();
+
+			try{
+				filter.checker.setRefilterCache( cache );
+				if (getFilterSubRows()){
+					
+					for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
+						TableRowCore row = iter.next();
+						for ( TableRowCore sr: row.getSubRowsWithNull()){
+							if (sr.refilter()){
+								
+								changed = true;
+							}
 						}
 					}
 				}
-			}
-
-			Collection<DATASOURCETYPE> existing = getDataSources();
-			List<DATASOURCETYPE> listRemoves = new ArrayList<>();
-			List<DATASOURCETYPE> listAdds = new ArrayList<>();
-
-			for (DATASOURCETYPE dst : unfilteredArray) {
-				boolean bHave = existing.contains(dst);
-				boolean isOurs;
-				
-				try{
-					isOurs = filterCheck(dst);
+	
+				Collection<DATASOURCETYPE> existing = getDataSources();
+				List<DATASOURCETYPE> listRemoves = new ArrayList<>();
+				List<DATASOURCETYPE> listAdds = new ArrayList<>();
+	
+				for (DATASOURCETYPE dst : unfilteredArray) {
+					boolean bHave = existing.contains(dst);
+					boolean isOurs;
 					
-				}catch( PatternSyntaxException e ){
-					// get this with malformed filter regex, ignore
-					isOurs = true;
-				}	
-				
-				if (!isOurs) {
-					if (bHave) {
-						listRemoves.add(dst);
-					}
-				} else {
-					if (!bHave) {
-						listAdds.add(dst);
+					try{
+						isOurs = filterCheck(dst);
+						
+					}catch( PatternSyntaxException e ){
+						// get this with malformed filter regex, ignore
+						isOurs = true;
+					}	
+					
+					if (!isOurs) {
+						if (bHave) {
+							listRemoves.add(dst);
+						}
+					} else {
+						if (!bHave) {
+							listAdds.add(dst);
+						}
 					}
 				}
-			}
-			if (listRemoves.size() > 0) {
-				removeDataSources((DATASOURCETYPE[]) listRemoves.toArray());
-			}
-			if (listAdds.size() > 0) {
-				addDataSources((DATASOURCETYPE[]) listAdds.toArray(), true);
-			}
-
-			// add back the ones removeDataSources removed
-			for ( DATASOURCETYPE ds: listRemoves ){
-				listUnfilteredDataSources.put(ds,"");
+				if (listRemoves.size() > 0) {
+					removeDataSources((DATASOURCETYPE[]) listRemoves.toArray());
+				}
+				if (listAdds.size() > 0) {
+					addDataSources((DATASOURCETYPE[]) listAdds.toArray(), true);
+				}
+	
+				// add back the ones removeDataSources removed
+				for ( DATASOURCETYPE ds: listRemoves ){
+					listUnfilteredDataSources.put(ds,"");
+				}
+			}finally{
+				filter.checker.setRefilterCache( null );
 			}
 		}
 		

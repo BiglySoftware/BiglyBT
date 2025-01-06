@@ -47,10 +47,10 @@ public class FileIndexPlus1Item
   @Override
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
-    int index = fileInfo==null?-1:(fileInfo.getIndex()+1);
+    int index = fileInfo==null?-1:(fileInfo.getIndex());
 
     if ( cell.setSortValue( index )){
-    	cell.setText( index==-1?"":String.valueOf(index));
+    	cell.setText( index==-1?"":String.valueOf(index+1));
     }
   }
 }

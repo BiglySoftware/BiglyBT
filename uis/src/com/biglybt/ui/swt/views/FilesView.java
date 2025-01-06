@@ -830,11 +830,59 @@ public class FilesView
 		return( null );
 	}
 		
+	private Map<Object,Object>	filter_cache;
+	
+	public void 
+	setRefilterCache( 
+		Map<Object,Object> cache )
+	{
+		filter_cache = cache;
+	}
+	
 	@Override
 	public boolean
 	filterCheck(
 		DiskManagerFileInfo ds, String filter, boolean regex, boolean confusable )
-	{		
+	{	
+		Map<Object,Object> cache = filter_cache;
+		
+		if ( cache != null ){
+			
+			Boolean[] entry = (Boolean[])cache.get( ds );
+			
+			if ( entry != null ){
+				
+				Boolean r = entry[confusable?0:1];
+				
+				if ( r != null ){
+					
+					return( r );
+				}
+			}
+		}
+		
+		boolean result = filterCheckSupport( ds, filter, regex, confusable );
+		
+		if ( cache != null ){
+			
+			Boolean[] entry = (Boolean[])cache.get( ds );
+
+			if ( entry == null ){
+				
+				entry = new Boolean[2];
+				
+				cache.put( ds, entry );
+			}
+			
+			entry[confusable?0:1] = result;
+		}
+		
+		return( result );
+	}
+	private boolean
+	filterCheckSupport(
+		DiskManagerFileInfo ds, String filter, boolean regex, boolean confusable )
+	{	
 		if ( hide_dnd_files ){
 			
 			if ( ds.isSkipped()){
@@ -874,10 +922,30 @@ public class FilesView
 		}
 
 		if ( tree_view && ds instanceof FilesViewNodeInner ){
+						
+			List<FilesViewTreeNode> kids = ((FilesViewNodeInner)ds).getKids();
 			
-				// don't filter intermediate tree nodes
+			boolean visible = false;
 			
-			return( true );
+			for ( FilesViewTreeNode kid: kids ){
+				
+				if ( kid instanceof DiskManagerFileInfo ){
+				
+					if ( filterCheck((DiskManagerFileInfo)kid, filter, regex, confusable )){
+						
+						visible = true;
+						
+						break;
+					}
+				}else{
+					
+					visible = true;
+					
+					break;
+				}
+			}
+			
+			return( visible );
 		}
 		
 		if ( confusable ){

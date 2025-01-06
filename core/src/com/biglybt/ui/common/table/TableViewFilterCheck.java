@@ -20,6 +20,8 @@
 
 package com.biglybt.ui.common.table;
 
+import java.util.Map;
+
 /**
  * @author TuxPaper
  * @created Oct 4, 2009
@@ -49,6 +51,8 @@ public interface TableViewFilterCheck<DATASOURCETYPE>
 		filterSet( filter );
 	}
 
+	public default void setRefilterCache( Map<Object,Object> cache ){};
+	
 	public interface TableViewFilterCheckEx<DATASOURCETYPE>
 		extends TableViewFilterCheck<DATASOURCETYPE>
 	{
