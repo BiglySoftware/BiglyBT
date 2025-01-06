@@ -53,9 +53,5 @@ public interface TableViewFilterCheck<DATASOURCETYPE>
 
 	public default void setRefilterCache( Map<Object,Object> cache ){};
 	
-	public interface TableViewFilterCheckEx<DATASOURCETYPE>
-		extends TableViewFilterCheck<DATASOURCETYPE>
-	{
-		public void viewChanged(TableView<DATASOURCETYPE> view);
-	}
+	public default void viewChanged(TableView<DATASOURCETYPE> view){};
 }

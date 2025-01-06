@@ -121,7 +121,7 @@ public class MyTorrentsView
                   TableSelectionListener,
                   TableViewSWTMenuFillListener,
                   TableRefreshListener,
-                  TableViewFilterCheck.TableViewFilterCheckEx<DownloadManager>,
+                  TableViewFilterCheck<DownloadManager>,
                   TableRowRefreshListener,
                   TableCountChangeListener,
                   TableExpansionChangeListener,

@@ -27,7 +27,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
+import com.biglybt.ui.common.table.TableViewFilterCheck;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.components.BubbleTextBox;
@@ -51,7 +51,7 @@ public abstract class TableViewTab<DATASOURCETYPE>
 	private Composite composite;
 	private UISWTView swtView;
 	private BubbleTextBox filterTextControl;
-	private TableViewFilterCheckEx<DATASOURCETYPE> filterCheck;
+	private TableViewFilterCheck<DATASOURCETYPE> filterCheck;
 	private boolean enableTabs = true;
 
 	public TableViewTab(String textPrefixID) {
@@ -247,7 +247,7 @@ public abstract class TableViewTab<DATASOURCETYPE>
 	}
 
 	public void enableFilterCheck(BubbleTextBox textControl,
-			TableViewFilterCheckEx<DATASOURCETYPE> filter_check_handler) {
+			TableViewFilterCheck<DATASOURCETYPE> filter_check_handler) {
 		if (tv != null) {
 			tv.enableFilterCheck(textControl, filter_check_handler);
 		} else {

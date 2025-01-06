@@ -50,7 +50,6 @@ import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
@@ -95,7 +94,7 @@ public class FilesView
 	implements TableDataSourceChangedListener, TableSelectionListener,
 	TableViewSWTMenuFillListener, TableRefreshListener, TableExpansionChangeListener,
 	DownloadManagerListener,
-	TableLifeCycleListener, TableViewFilterCheckEx<DiskManagerFileInfo>, KeyListener, ParameterListener,
+	TableLifeCycleListener, TableViewFilterCheck<DiskManagerFileInfo>, KeyListener, ParameterListener,
 	UISWTViewCoreEventListener, ViewTitleInfo
 {
 	private static final Object	KEY_DM_TREE_STATE 		= new Object();

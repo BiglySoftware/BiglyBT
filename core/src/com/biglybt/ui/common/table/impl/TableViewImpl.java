@@ -1656,10 +1656,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if ( f != null ){
 			TableViewFilterCheck<DATASOURCETYPE> checker = f.checker;
 
-			if ( checker instanceof TableViewFilterCheck.TableViewFilterCheckEx ){
-
-				((TableViewFilterCheck.TableViewFilterCheckEx)checker).viewChanged( this );
-			}
+			checker.viewChanged( this );
 		}
 	}
 
