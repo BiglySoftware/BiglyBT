@@ -104,6 +104,8 @@ public class SB_Transfers
 	private static final String ID_VITALITY_ALERT = "image.sidebar.vitality.alert";
 	private final HasBeenOpenedListener hasBeenOpenedListener;
 
+	private final AESemaphore initSem = new AESemaphore( "SB_Transfers" );
+	
 	private CategoryListener categoryListener;
 	private DownloadManagerListener dmListener;
 	private GlobalManagerAdapter gmListener;
@@ -788,8 +790,9 @@ public class SB_Transfers
 	}
 
 	protected void
-	setupViewTitleWithCore(Core _core) {
-
+	setupViewTitleWithCore(
+		Core _core) 
+	{
 		synchronized( SB_Transfers.class ){
 			if (!first) {
 				return;
@@ -800,358 +803,363 @@ public class SB_Transfers
 			coreCreateTime 	= core.getCreateTime();
 		}
 
-		categoryListener = new CategoryListener() {
-
-			@Override
-			public void downloadManagerRemoved(Category cat, DownloadManager removed) {
-				RefreshCategorySideBar(cat);
-			}
-
-			@Override
-			public void downloadManagerAdded(Category cat, DownloadManager manager) {
-				RefreshCategorySideBar(cat);
-			}
-		};
-
-		paramCatInSidebarListener = new ParameterListener() {
-			@Override
-			public void parameterChanged(String parameterName) {
-				if (Utils.isAZ2UI()) {
-					return;
+		try{
+			categoryListener = new CategoryListener() {
+	
+				@Override
+				public void downloadManagerRemoved(Category cat, DownloadManager removed) {
+					RefreshCategorySideBar(cat);
 				}
-
-				Category[] categories = CategoryManager.getCategories();
-				if (categories.length == 0) {
-					return;
+	
+				@Override
+				public void downloadManagerAdded(Category cat, DownloadManager manager) {
+					RefreshCategorySideBar(cat);
 				}
-
-				boolean catInSidebar = COConfigurationManager.getBooleanParameter("Library.CatInSideBar");
-				if (catInSidebar) {
-					if (categoryManagerListener != null) {
+			};
+	
+			paramCatInSidebarListener = new ParameterListener() {
+				@Override
+				public void parameterChanged(String parameterName) {
+					if (Utils.isAZ2UI()) {
 						return;
 					}
-
-					categoryManagerListener = new CategoryManagerListener() {
-
-						@Override
-						public void categoryRemoved(Category category) {
-							removeCategory(category);
+	
+					Category[] categories = CategoryManager.getCategories();
+					if (categories.length == 0) {
+						return;
+					}
+	
+					boolean catInSidebar = COConfigurationManager.getBooleanParameter("Library.CatInSideBar");
+					if (catInSidebar) {
+						if (categoryManagerListener != null) {
+							return;
 						}
-
-						@Override
-						public void categoryChanged(Category category) {
-							RefreshCategorySideBar(category);
-						}
-
-						@Override
-						public void categoryAdded(Category category) {
-							Category[] categories = CategoryManager.getCategories();
-							if (categories.length == 3) {
-								for (Category cat : categories) {
-									setupCategory(cat);
+	
+						categoryManagerListener = new CategoryManagerListener() {
+	
+							@Override
+							public void categoryRemoved(Category category) {
+								removeCategory(category);
+							}
+	
+							@Override
+							public void categoryChanged(Category category) {
+								RefreshCategorySideBar(category);
+							}
+	
+							@Override
+							public void categoryAdded(Category category) {
+								Category[] categories = CategoryManager.getCategories();
+								if (categories.length == 3) {
+									for (Category cat : categories) {
+										setupCategory(cat);
+									}
+								} else {
+									setupCategory(category);
 								}
-							} else {
+							}
+						};
+						CategoryManager.addCategoryManagerListener(categoryManagerListener);
+						if (categories.length > 2) {
+							for (Category category : categories) {
 								setupCategory(category);
 							}
 						}
-					};
-					CategoryManager.addCategoryManagerListener(categoryManagerListener);
-					if (categories.length > 2) {
+	
+					} else {
+	
+						if (categoryManagerListener != null) {
+							CategoryManager.removeCategoryManagerListener(categoryManagerListener);
+							categoryManagerListener = null;
+						}
 						for (Category category : categories) {
-							setupCategory(category);
+							removeCategory(category);
 						}
 					}
-
-				} else {
-
-					if (categoryManagerListener != null) {
-						CategoryManager.removeCategoryManagerListener(categoryManagerListener);
-						categoryManagerListener = null;
-					}
-					for (Category category : categories) {
-						removeCategory(category);
-					}
 				}
-			}
-		};
-		COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",	paramCatInSidebarListener);
-
-		show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
-
-		paramTagsInSidebarListener = new ParameterListener() {
-
-			@Override
-			public void parameterChanged(String parameter ) {
-
-				if ( parameter == null || parameter.equals( "Library.TagInTabBar" )){
-				
-					show_tag_tab_views = COConfigurationManager.getBooleanParameter("Library.TagInTabBar");
+			};
+			COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",	paramCatInSidebarListener);
+	
+			show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
+	
+			paramTagsInSidebarListener = new ParameterListener() {
+	
+				@Override
+				public void parameterChanged(String parameter ) {
+	
+					if ( parameter == null || parameter.equals( "Library.TagInTabBar" )){
 					
-					if ( parameter != null ){
+						show_tag_tab_views = COConfigurationManager.getBooleanParameter("Library.TagInTabBar");
 						
-							// this will cause us to come back through here with the tags-in-sidebar change and
-							// remove/add tag views as necessary
-						
-						COConfigurationManager.setParameter( "Library.TagInSideBar", show_tag_tab_views );
-					}
-				}
-				
-				if ( parameter == null || parameter.equals( "Library.TagInSideBar")){
-					
-					boolean tagInSidebar = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
-	
-					if (tagInSidebar) {
-	
-						addTagManagerListeners();
-	
-					} else {
-	
-						removeTagManagerListeners(true);
-					}
-				}
-			}
-
-		};
-		
-		COConfigurationManager.addAndFireParameterListeners(
-			new String[]{ "Library.TagInSideBar", "Library.TagInTabBar" }, paramTagsInSidebarListener);
-
-		paramTagGroupsInSidebarListener = new ParameterListener() {
-
-			@Override
-			public void parameterChanged(String parameterName) {
+						if ( parameter != null ){
 							
-				removeTagManagerListeners(true);
+								// this will cause us to come back through here with the tags-in-sidebar change and
+								// remove/add tag views as necessary
+							
+							COConfigurationManager.setParameter( "Library.TagInSideBar", show_tag_tab_views );
+						}
+					}
 					
-				show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
-
-				addTagManagerListeners();
-			}
-		};
-				
-		COConfigurationManager.addParameterListener("Library.TagGroupsInSideBar", paramTagGroupsInSidebarListener);
-
+					if ( parameter == null || parameter.equals( "Library.TagInSideBar")){
+						
+						boolean tagInSidebar = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
 		
-		final GlobalManager gm = core.getGlobalManager();
-		dmListener = new DownloadManagerAdapter() {
-			@Override
-			public void stateChanged(DownloadManager dm, int state) {
-				stateChanged(dm, state, statsNoLowNoise);
-				stateChanged(dm, state, statsWithLowNoise);
-			}
-
-			public void stateChanged(DownloadManager dm, int state, stats stats) {
-				if (!stats.includeLowNoise
-						&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
-					return;
-				}
-
-				synchronized( statsLock ){
-					updateDMCounts(dm);
-
-					boolean complete = dm.getAssumedComplete();
-					Boolean wasErrorStateB = (Boolean) dm.getUserData("wasErrorState");
-					boolean wasErrorState = wasErrorStateB != null && wasErrorStateB.booleanValue();
-					boolean isErrorState = state == DownloadManager.STATE_ERROR;
-					if (isErrorState != wasErrorState) {
-						int rel = isErrorState ? 1 : -1;
-						if (complete) {
-							stats.numErrorComplete += rel;
+						if (tagInSidebar) {
+		
+							addTagManagerListeners();
+		
 						} else {
-							stats.numErrorInComplete += rel;
+		
+							removeTagManagerListeners(true);
 						}
-						updateErrorTooltip(gm,stats);
-						dm.setUserData("wasErrorState", Boolean.valueOf(isErrorState));
 					}
-					refreshAllLibraries();
 				}
-			}
-
-			@Override
-			public void completionChanged(DownloadManager dm, boolean completed) {
-				completionChanged(dm, completed, statsNoLowNoise);
-				completionChanged(dm, completed, statsWithLowNoise);
-			}
-
-			public void completionChanged(DownloadManager dm, boolean completed,
-					stats stats) {
-				if (!stats.includeLowNoise
-						&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
-					return;
+	
+			};
+			
+			COConfigurationManager.addAndFireParameterListeners(
+				new String[]{ "Library.TagInSideBar", "Library.TagInTabBar" }, paramTagsInSidebarListener);
+	
+			paramTagGroupsInSidebarListener = new ParameterListener() {
+	
+				@Override
+				public void parameterChanged(String parameterName) {
+								
+					removeTagManagerListeners(true);
+						
+					show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
+	
+					addTagManagerListeners();
 				}
-
-				synchronized( statsLock ){
-					int dm_state = updateDMCounts(dm);
-
-					if (completed) {
-						stats.numComplete++;
-						stats.numIncomplete--;
-						if (dm_state == DownloadManager.STATE_ERROR) {
-							stats.numErrorComplete++;
-							stats.numErrorInComplete--;
-						}
-						if (dm_state == DownloadManager.STATE_STOPPED) {
-							statsNoLowNoise.numStoppedIncomplete--;
-						}
-
-					} else {
-						stats.numComplete--;
-						stats.numIncomplete++;
-
-						if (dm_state == DownloadManager.STATE_ERROR) {
-							stats.numErrorComplete--;
-							stats.numErrorInComplete++;
-						}
-						if (dm_state == DownloadManager.STATE_STOPPED) {
-							statsNoLowNoise.numStoppedIncomplete++;
-						}
-					}
-					updateErrorTooltip( gm, stats);
-					recountItems();
-					refreshAllLibraries();
-				}
-			}
-		};
-
-		gmListener = new GlobalManagerAdapter() {
-			@Override
-			public void downloadManagerRemoved(DownloadManager dm) {
-				downloadManagerRemoved(dm, statsNoLowNoise);
-				downloadManagerRemoved(dm, statsWithLowNoise);
-			}
-
-			public void downloadManagerRemoved(DownloadManager dm, stats stats) {
-				if (!stats.includeLowNoise
-						&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
-					return;
-				}
-
-				synchronized (statsLock) {
-					if (dm.getAssumedComplete()) {
-						stats.numComplete--;
-						Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
-						if (wasDownloadingB != null && wasDownloadingB.booleanValue()) {
-							stats.numDownloading--;
-						}
-					} else {
-						stats.numIncomplete--;
-						Boolean wasSeedingB = (Boolean) dm.getUserData("wasSeeding");
-						if (wasSeedingB != null && wasSeedingB.booleanValue()) {
-							stats.numSeeding--;
-						}
-					}
-
-					Boolean wasStoppedB = (Boolean) dm.getUserData("wasStopped");
-					boolean wasStopped = wasStoppedB != null && wasStoppedB.booleanValue();
-					if (wasStopped) {
-						if (!dm.getAssumedComplete()) {
-							stats.numStoppedIncomplete--;
-						}
-					}
-					Boolean wasQueuedB = (Boolean) dm.getUserData("wasQueued");
-					boolean wasQueued = wasQueuedB != null && wasQueuedB.booleanValue();
-					if (wasQueued) {
-						stats.numQueued--;
-					}
+			};
 					
-					recountItems();
-					refreshAllLibraries();
+			COConfigurationManager.addParameterListener("Library.TagGroupsInSideBar", paramTagGroupsInSidebarListener);
+	
+			
+			final GlobalManager gm = core.getGlobalManager();
+			dmListener = new DownloadManagerAdapter() {
+				@Override
+				public void stateChanged(DownloadManager dm, int state) {
+					stateChanged(dm, state, statsNoLowNoise);
+					stateChanged(dm, state, statsWithLowNoise);
 				}
-
-				dm.removeListener(dmListener);
-			}
-
-			@Override
-			public void downloadManagerAdded(DownloadManager dm) {
-				dm.addListener(dmListener, false);
-
-				synchronized (statsLock) {
-					downloadManagerAdded(dm, statsNoLowNoise);
-					downloadManagerAdded(dm, statsWithLowNoise);
-				}
-			}
-
-			public void downloadManagerAdded(DownloadManager dm, stats stats) {
-				if (!stats.includeLowNoise
-						&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
-					return;
-				}
-				boolean assumed_complete = dm.getAssumedComplete();
-
-				synchronized (statsLock) {
-					if (dm.isPersistent() && dm.getTorrent() != null && !assumed_complete) {  // ignore borked torrents as their create time is inaccurate
-						stats.newestIncompleteDownloadTime = Math.max(stats.newestIncompleteDownloadTime, dm.getCreationTime());
+	
+				public void stateChanged(DownloadManager dm, int state, stats stats) {
+					if (!stats.includeLowNoise
+							&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
+						return;
 					}
-					int dm_state = dm.getState();
-					if (assumed_complete) {
-						stats.numComplete++;
-						if (dm_state == DownloadManager.STATE_SEEDING) {
-							stats.numSeeding++;
+	
+					synchronized( statsLock ){
+						updateDMCounts(dm);
+	
+						boolean complete = dm.getAssumedComplete();
+						Boolean wasErrorStateB = (Boolean) dm.getUserData("wasErrorState");
+						boolean wasErrorState = wasErrorStateB != null && wasErrorStateB.booleanValue();
+						boolean isErrorState = state == DownloadManager.STATE_ERROR;
+						if (isErrorState != wasErrorState) {
+							int rel = isErrorState ? 1 : -1;
+							if (complete) {
+								stats.numErrorComplete += rel;
+							} else {
+								stats.numErrorInComplete += rel;
+							}
+							updateErrorTooltip(gm,stats);
+							dm.setUserData("wasErrorState", Boolean.valueOf(isErrorState));
 						}
-					} else {
-						stats.numIncomplete++;
-						if (dm_state == DownloadManager.STATE_DOWNLOADING) {
-							dm.setUserData("wasDownloading", Boolean.TRUE);
-							stats.numDownloading++;
+						refreshAllLibraries();
+					}
+				}
+	
+				@Override
+				public void completionChanged(DownloadManager dm, boolean completed) {
+					completionChanged(dm, completed, statsNoLowNoise);
+					completionChanged(dm, completed, statsWithLowNoise);
+				}
+	
+				public void completionChanged(DownloadManager dm, boolean completed,
+						stats stats) {
+					if (!stats.includeLowNoise
+							&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
+						return;
+					}
+	
+					synchronized( statsLock ){
+						int dm_state = updateDMCounts(dm);
+	
+						if (completed) {
+							stats.numComplete++;
+							stats.numIncomplete--;
+							if (dm_state == DownloadManager.STATE_ERROR) {
+								stats.numErrorComplete++;
+								stats.numErrorInComplete--;
+							}
+							if (dm_state == DownloadManager.STATE_STOPPED) {
+								statsNoLowNoise.numStoppedIncomplete--;
+							}
+	
 						} else {
-							dm.setUserData("wasDownloading", Boolean.FALSE);
+							stats.numComplete--;
+							stats.numIncomplete++;
+	
+							if (dm_state == DownloadManager.STATE_ERROR) {
+								stats.numErrorComplete--;
+								stats.numErrorInComplete++;
+							}
+							if (dm_state == DownloadManager.STATE_STOPPED) {
+								statsNoLowNoise.numStoppedIncomplete++;
+							}
 						}
+						updateErrorTooltip( gm, stats);
+						recountItems();
+						refreshAllLibraries();
 					}
-					
-					recountItems();
-					refreshAllLibraries();
 				}
-			}
-		};
-		gm.addListener(gmListener, false);
-
-		resetStats( gm, dmListener, statsWithLowNoise, statsNoLowNoise );
-
-		refreshAllLibraries();
-
-		timerEventPeriodic = SimpleTimer.addPeriodicEvent(
-				"header:refresh",
-				60 * 1000,
-				new TimerEventPerformer() {
-
-					@Override
-					public void
-					perform(
-							TimerEvent event) {
-						stats withNoise = new stats();
-						stats noNoise = new stats();
-
-						noNoise.includeLowNoise = false;
-						withNoise.includeLowNoise = true;
-
-						synchronized (statsLock) {
-
-							resetStats(gm, null, withNoise, noNoise);
-
-							boolean fixed = false;
-
-							if (!withNoise.sameAs(statsWithLowNoise)) {
-								statsWithLowNoise.copyFrom(withNoise);
-								fixed = true;
+			};
+	
+			gmListener = new GlobalManagerAdapter() {
+				@Override
+				public void downloadManagerRemoved(DownloadManager dm) {
+					downloadManagerRemoved(dm, statsNoLowNoise);
+					downloadManagerRemoved(dm, statsWithLowNoise);
+				}
+	
+				public void downloadManagerRemoved(DownloadManager dm, stats stats) {
+					if (!stats.includeLowNoise
+							&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
+						return;
+					}
+	
+					synchronized (statsLock) {
+						if (dm.getAssumedComplete()) {
+							stats.numComplete--;
+							Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
+							if (wasDownloadingB != null && wasDownloadingB.booleanValue()) {
+								stats.numDownloading--;
 							}
-
-							if (!noNoise.sameAs(statsNoLowNoise)) {
-								statsNoLowNoise.copyFrom(noNoise);
-								fixed = true;
-							}
-
-							if (fixed) {
-
-								updateErrorTooltip(gm, statsWithLowNoise);
-								updateErrorTooltip(gm, statsNoLowNoise);
-
-								refreshAllLibraries();
+						} else {
+							stats.numIncomplete--;
+							Boolean wasSeedingB = (Boolean) dm.getUserData("wasSeeding");
+							if (wasSeedingB != null && wasSeedingB.booleanValue()) {
+								stats.numSeeding--;
 							}
 						}
+	
+						Boolean wasStoppedB = (Boolean) dm.getUserData("wasStopped");
+						boolean wasStopped = wasStoppedB != null && wasStoppedB.booleanValue();
+						if (wasStopped) {
+							if (!dm.getAssumedComplete()) {
+								stats.numStoppedIncomplete--;
+							}
+						}
+						Boolean wasQueuedB = (Boolean) dm.getUserData("wasQueued");
+						boolean wasQueued = wasQueuedB != null && wasQueuedB.booleanValue();
+						if (wasQueued) {
+							stats.numQueued--;
+						}
+						
+						recountItems();
+						refreshAllLibraries();
 					}
-				});
+	
+					dm.removeListener(dmListener);
+				}
+	
+				@Override
+				public void downloadManagerAdded(DownloadManager dm) {
+					dm.addListener(dmListener, false);
+	
+					synchronized (statsLock) {
+						downloadManagerAdded(dm, statsNoLowNoise);
+						downloadManagerAdded(dm, statsWithLowNoise);
+					}
+				}
+	
+				public void downloadManagerAdded(DownloadManager dm, stats stats) {
+					if (!stats.includeLowNoise
+							&& PlatformTorrentUtils.isAdvancedViewOnly(dm)) {
+						return;
+					}
+					boolean assumed_complete = dm.getAssumedComplete();
+	
+					synchronized (statsLock) {
+						if (dm.isPersistent() && dm.getTorrent() != null && !assumed_complete) {  // ignore borked torrents as their create time is inaccurate
+							stats.newestIncompleteDownloadTime = Math.max(stats.newestIncompleteDownloadTime, dm.getCreationTime());
+						}
+						int dm_state = dm.getState();
+						if (assumed_complete) {
+							stats.numComplete++;
+							if (dm_state == DownloadManager.STATE_SEEDING) {
+								stats.numSeeding++;
+							}
+						} else {
+							stats.numIncomplete++;
+							if (dm_state == DownloadManager.STATE_DOWNLOADING) {
+								dm.setUserData("wasDownloading", Boolean.TRUE);
+								stats.numDownloading++;
+							} else {
+								dm.setUserData("wasDownloading", Boolean.FALSE);
+							}
+						}
+						
+						recountItems();
+						refreshAllLibraries();
+					}
+				}
+			};
+			gm.addListener(gmListener, false);
+	
+			resetStats( gm, dmListener, statsWithLowNoise, statsNoLowNoise );
+	
+			refreshAllLibraries();
+	
+			timerEventPeriodic = SimpleTimer.addPeriodicEvent(
+					"header:refresh",
+					60 * 1000,
+					new TimerEventPerformer() {
+	
+						@Override
+						public void
+						perform(
+								TimerEvent event) {
+							stats withNoise = new stats();
+							stats noNoise = new stats();
+	
+							noNoise.includeLowNoise = false;
+							withNoise.includeLowNoise = true;
+	
+							synchronized (statsLock) {
+	
+								resetStats(gm, null, withNoise, noNoise);
+	
+								boolean fixed = false;
+	
+								if (!withNoise.sameAs(statsWithLowNoise)) {
+									statsWithLowNoise.copyFrom(withNoise);
+									fixed = true;
+								}
+	
+								if (!noNoise.sameAs(statsNoLowNoise)) {
+									statsNoLowNoise.copyFrom(noNoise);
+									fixed = true;
+								}
+	
+								if (fixed) {
+	
+									updateErrorTooltip(gm, statsWithLowNoise);
+									updateErrorTooltip(gm, statsNoLowNoise);
+	
+									refreshAllLibraries();
+								}
+							}
+						}
+					});
+		}finally{
+			
+			initSem.releaseForever();
+		}
 	}
-
+	
 	private void
 	resetStats(
 		GlobalManager				gm,
@@ -1316,6 +1324,8 @@ public class SB_Transfers
 			return(null);
 		}
 
+		initSem.reserve( 5000 );
+		
 		String name = category.getName();
 		String id = "Cat." + Base32.encode(name.getBytes());
 		
