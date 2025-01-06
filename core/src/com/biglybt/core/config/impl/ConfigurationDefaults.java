@@ -791,6 +791,7 @@ public class ConfigurationDefaults {
     def.put( "br.backup.auto.everyhours", ZERO );
     def.put( "br.backup.auto.retain", 5L );
     def.put( ConfigKeys.BackupRestore.BCFG_BACKUP_PLUGINS, TRUE );
+    def.put( ConfigKeys.BackupRestore.BCFG_BACKUP_PAUSE_DOWNLOADS, FALSE );
     
     //temp section for SpeedManagerAlgorithmProviderV2
 

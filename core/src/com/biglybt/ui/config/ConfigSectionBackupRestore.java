@@ -146,6 +146,11 @@ public class ConfigSectionBackupRestore
 		paramNotify.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramNotify, listBackupParams);
 
+		BooleanParameterImpl pauseDownloads = new BooleanParameterImpl(
+				BCFG_BACKUP_PAUSE_DOWNLOADS, "br.backup.pause.downloads");
+		pauseDownloads.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(pauseDownloads, listBackupParams);
+		
 		ActionParameterImpl paramBackupNow = new ActionParameterImpl(
 				"br.backup.auto.now", "br.test");
 		add("backupNow", paramBackupNow, listBackupParams);

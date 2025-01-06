@@ -25,6 +25,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.biglybt.core.config.ConfigKeys.BackupRestore;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.backup.BackupManager;
@@ -34,6 +35,7 @@ import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.custom.CustomizationManagerFactory;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -534,46 +536,80 @@ BackupManagerImpl
 				public void
 				runSupport()
 				{
-					BackupListener listener = new
-					BackupListener()
-					{
-						@Override
-						public boolean
-						reportProgress(
-							String		str )
-						{
-							return( _listener.reportProgress(str));
-						}
-
-						@Override
-						public void
-						reportComplete()
-						{
-							try{
-								setStatus( "" );
-
-							}finally{
-
-								_listener.reportComplete();
+					boolean pause_downloads = COConfigurationManager.getBooleanParameter( ConfigKeys.BackupRestore.BCFG_BACKUP_PAUSE_DOWNLOADS );
+					
+					List<DownloadManager> paused_downloads = new ArrayList<>();
+					
+					try{
+						if ( pause_downloads ){
+							
+							List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
+							
+							for ( DownloadManager dm: dms ){
+								
+								if ( dm.pause( true )){
+									
+									paused_downloads.add( dm );
+								}
 							}
+							
+							_listener.reportProgress( "Paused " + paused_downloads.size() + " downloads" );
 						}
-
-						@Override
-						public void
-						reportError(
-							Throwable 	error )
-						{
-							try{
-								setStatus( Debug.getNestedExceptionMessage( error ));
-
-							}finally{
-
-								_listener.reportError( error );
+						
+						BackupListener listener = new
+							BackupListener()
+							{
+								@Override
+								public boolean
+								reportProgress(
+									String		str )
+								{
+									return( _listener.reportProgress(str));
+								}
+		
+								@Override
+								public void
+								reportComplete()
+								{
+									try{
+										setStatus( "" );
+		
+									}finally{
+		
+										_listener.reportComplete();
+									}
+								}
+		
+								@Override
+								public void
+								reportError(
+									Throwable 	error )
+								{
+									try{
+										setStatus( Debug.getNestedExceptionMessage( error ));
+		
+									}finally{
+		
+										_listener.reportError( error );
+									}
+								}
+							};
+	
+						backupSupport( parent_folder, listener );
+						
+					}finally{
+						
+						if ( !paused_downloads.isEmpty()){
+							
+							for ( DownloadManager dm: paused_downloads ){
+								
+								dm.resume();
 							}
-						}
-					};
+							
+							_listener.reportProgress( "Resumed " + paused_downloads.size() + " downloads" );
 
-					backupSupport( parent_folder, listener );
+						}
+					}
 				}
 
 				void
@@ -841,7 +877,7 @@ BackupManagerImpl
 	{
 		try{
 			String date_dir = new SimpleDateFormat( "yyyy-MM-dd" ).format( new Date());
-
+			
 			File 		backup_folder 	= null;
 			boolean		ok 				= false;
 
@@ -969,6 +1005,8 @@ BackupManagerImpl
 				core.saveState();
 
 				try{
+					long total_size = 0;
+
 					listener.reportProgress( "Reading configuration data from " + user_dir.getAbsolutePath());
 
 					File[] user_files = user_dir.listFiles();
@@ -1013,16 +1051,22 @@ BackupManagerImpl
 
 						long[]	result = copyFiles( f, dest_file );
 
-						String	result_str = DisplayFormatters.formatByteCountToKiBEtc( result[1] );
+						long size = result[1];
+						
+						total_size += size;
+						
+						String	result_str = DisplayFormatters.formatByteCountToKiBEtc( size );
 
 						if ( result[0] > 1 ){
 
 							result_str = result[0] + " files, " + result_str;
 						}
 
-						listener.reportProgress( result_str );
+						listener.reportProgress( " " + result_str );
 					}
 
+					listener.reportProgress( "Backup size: " + DisplayFormatters.formatByteCountToKiBEtc( total_size ));
+					
 					listener.reportComplete();
 
 					ok	= true;

@@ -33,6 +33,7 @@ public final class ConfigKeys {
 		public static final String BCFG_BACKUP_NOTIFY = "br.backup.notify";
 		public static final String BCFG_RESTORE_AUTOPAUSE = "br.restore.autopause";
 		public static final String BCFG_BACKUP_PLUGINS = "br.restore.doplugins";
+		public static final String BCFG_BACKUP_PAUSE_DOWNLOADS = "br.backup.pause.downloads";
 	}
 
 	public static class Connection {
