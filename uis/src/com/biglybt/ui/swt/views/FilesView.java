@@ -1035,11 +1035,13 @@ public class FilesView
 	}
 	
 
-	/* (non-Javadoc)
-	 * @see TableViewFilterCheck.TableViewFilterCheckEx#viewChanged(TableView)
-	 */
+	private boolean update_header_pending;
+
 	@Override
 	public void viewChanged(TableView<DiskManagerFileInfo> view) {
+		if ( update_header_pending ){
+			return;
+		}
 		updateHeader();
 	}
 
@@ -1223,29 +1225,41 @@ public class FilesView
 		int								action,
 		boolean							test_only )
 	{
-		TableRowCore[] tv_rows = tv.getRowsAndSubRows(true);
-		
-		Map<FilesViewNodeInner,TableRowCore>	node_to_row_map = new HashMap<>();
-		
-		for ( TableRowCore tv_row: tv_rows ){
-			
-			DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
-			
-			if ( ds_file instanceof FilesViewNodeInner ){
-								
-				node_to_row_map.put((FilesViewNodeInner)ds_file, tv_row );	
-			}
+		if ( !Utils.isSWTThread()){
+			Debug.out("eh?");
 		}
-		
-		for ( FilesViewNodeInner node: nodes ){
+		try{
+			update_header_pending = true;
 			
-			if ( doTreeAction( node_to_row_map, node, action, true, test_only )){
+			TableRowCore[] tv_rows = tv.getRowsAndSubRows(true);
+			
+			Map<FilesViewNodeInner,TableRowCore>	node_to_row_map = new HashMap<>();
+			
+			for ( TableRowCore tv_row: tv_rows ){
 				
-				if ( test_only ){
-					
-					return( true );
+				DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
+				
+				if ( ds_file instanceof FilesViewNodeInner ){
+									
+					node_to_row_map.put((FilesViewNodeInner)ds_file, tv_row );	
 				}
 			}
+			
+			for ( FilesViewNodeInner node: nodes ){
+				
+				if ( doTreeAction( node_to_row_map, node, action, true, test_only )){
+					
+					if ( test_only ){
+						
+						return( true );
+					}
+				}
+			}
+		}finally{
+			
+			update_header_pending = false;
+			
+			updateHeader();
 		}
 		
 		return( false );

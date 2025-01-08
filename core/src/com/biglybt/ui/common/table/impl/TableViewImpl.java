@@ -487,27 +487,26 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		listenersExpansionChange.remove(listener);
 	}
 
+	private static AsyncDispatcher dispatcher = new AsyncDispatcher();
+	
 	public void invokeExpansionChangeListeners(final TableRowCore row, final boolean expanded ) {
 		if (listenersExpansionChange.size() == 0) {
 			return;
 		}
-		getOffUIThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				for (Iterator<TableExpansionChangeListener> iter = listenersExpansionChange.iterator(); iter.hasNext();) {
-					try{
-						if ( expanded ){
+		dispatcher.dispatch(()->{
+			for (Iterator<TableExpansionChangeListener> iter = listenersExpansionChange.iterator(); iter.hasNext();) {
+				try{
+					if ( expanded ){
 
-							iter.next().rowExpanded(row);
+						iter.next().rowExpanded(row);
 
-						}else{
+					}else{
 
-							iter.next().rowCollapsed(row);
-						}
-					}catch( Throwable e){
-
-						Debug.out( e );
+						iter.next().rowCollapsed(row);
 					}
+				}catch( Throwable e){
+
+					Debug.out( e );
 				}
 			}
 		});
