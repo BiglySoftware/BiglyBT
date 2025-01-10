@@ -57,13 +57,14 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.search.SBC_SearchResult;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI.SubsLists;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
-
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
@@ -98,6 +99,8 @@ public class SubscriptionsView
 	private Font textFont2;
 
 	private UISWTView swtView;
+
+	private TableColumnFilterHelper<Subscription>	col_filter_helper;
 
 	public 
 	SubscriptionsView() 
@@ -250,6 +253,8 @@ public class SubscriptionsView
 		if ( view != null && !view.isDisposed()){
 			view.delete();
 		}
+		col_filter_helper = null;
+		
 		if (viewComposite != null && !viewComposite.isDisposed()) {
 			viewComposite.dispose();
 		}
@@ -313,6 +318,12 @@ public class SubscriptionsView
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(topComposite, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		Composite mainBubbleWidget = bubbleTextBox.getMainWidget();
 
+		String tooltip = MessageText.getString("filter.tt.start");
+		tooltip += MessageText.getString("column.filter.tt.line1");
+		tooltip += MessageText.getString("column.filter.tt.line2");
+
+		bubbleTextBox.setTooltip( tooltip );
+		
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 5);
 		fd.top = new FormAttachment(btnAdd, 0, SWT.CENTER );
@@ -339,6 +350,7 @@ public class SubscriptionsView
 				new ColumnSubscriptionNbResults(TABLE_ID),
 				new ColumnSubscriptionAutoDownload(TABLE_ID),
 
+				new ColumnSubscriptionURL(TABLE_ID),
 				new ColumnSubscriptionMaxResults(TABLE_ID),
 				new ColumnSubscriptionLastChecked(TABLE_ID),
 				new ColumnSubscriptionSubscribers(TABLE_ID),
@@ -364,6 +376,8 @@ public class SubscriptionsView
 		view = TableViewFactory.createTableViewSWT(Subscription.class, TABLE_ID, TABLE_ID + ".view",
 				columns, "name", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
+		col_filter_helper = new TableColumnFilterHelper<>( view, "subsv" );
+
 		view.enableFilterCheck(bubbleTextBox, this );
 		
 		view.addLifeCycleListener(new TableLifeCycleListener() {
@@ -384,7 +398,7 @@ public class SubscriptionsView
 			}
 
 		});
-
+		
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 
@@ -668,26 +682,14 @@ public class SubscriptionsView
 			name = GeneralUtils.getConfusableEquivalent( name, false );
 		}
 		
-		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
-
-		boolean	match_result = true;
-
-		if ( regex && s.startsWith( "!" )){
-
-			s = s.substring(1);
-
-			match_result = false;
-		}
-
-		Pattern pattern = RegExUtil.getCachedPattern( "subscriptions:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-
-		return( pattern.matcher(name).find() == match_result );
+		return( col_filter_helper.filterCheck( ds, filter, regex, name, false ));
 	}
 
 	public void 
 	filterSet(
 		String filter)
 	{
+		col_filter_helper.filterSet(filter);
 	}
 	
 	private void refresh() {
@@ -721,7 +723,7 @@ public class SubscriptionsView
       	//dataSourceChanged(event.getData());
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+      case UISWTViewEvent.TYPE_SHOWN:
       	break;
 
       case UISWTViewEvent.TYPE_REFRESH:
