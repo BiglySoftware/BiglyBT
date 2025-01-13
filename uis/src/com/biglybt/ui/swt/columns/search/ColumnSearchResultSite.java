@@ -104,8 +104,17 @@ public class ColumnSearchResultSite
 
 				cell.setText(img == null || img.isDisposed() ? name : null);
 
-				cell.setToolTip( name);
+				String tt = entry.getDescription();
+				
+				if ( tt == null || tt.isEmpty()){
+					
+					tt = name;	
+				}
+				
+				cell.setToolTip( tt);
 			});
+			
+			
 		}
 	}
 }
