@@ -92,18 +92,33 @@ public class RememberedDecisionsManager
 			return;
 		}
 
-		Map remembered_decisions = COConfigurationManager.getMapParameter(
-				"MessageBoxWindow.decisions", new HashMap());
+		Map remembered_decisions = COConfigurationManager.getMapParameter( "MessageBoxWindow.decisions", new HashMap());
 
-		if (value == -1) {
-			remembered_decisions.remove(id);
-		} else {
-			remembered_decisions.put(id, new Long(value));
+		boolean changed = false;
+		
+		if ( value == -1 ){
+			
+			changed = remembered_decisions.remove(id) != null;
+			
+		}else{
+			
+			Number existing = (Number)remembered_decisions.get(id);
+			
+			if ( existing == null || existing.intValue() != value ){
+			
+				changed = true;
+						
+				remembered_decisions.put(id, new Long(value));
+			}
 		}
 
-		// System.out.println("setR " + id + " -> " + value);
-		COConfigurationManager.setParameter("MessageBoxWindow.decisions",
-				remembered_decisions);
-		COConfigurationManager.save();
+		if ( changed ){
+			
+				// System.out.println("setR " + id + " -> " + value);
+			
+			COConfigurationManager.setParameter("MessageBoxWindow.decisions", remembered_decisions);
+			
+			COConfigurationManager.save();
+		}
 	}
 }
