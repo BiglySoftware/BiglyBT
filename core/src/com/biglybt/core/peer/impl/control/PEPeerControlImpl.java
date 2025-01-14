@@ -7188,13 +7188,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					str = ia == null ? "127.0.0.1" : ia.getHostAddress();
 
-				}else if( net == AENetworkClassifier.AT_I2P ){
-
-					str = "i2p";
-					
 				}else{
 					
-					str = "tor";
+					str = net;
 				}
 				
 				if ( result.isEmpty()){

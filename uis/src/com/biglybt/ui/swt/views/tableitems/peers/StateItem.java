@@ -26,6 +26,7 @@ package com.biglybt.ui.swt.views.tableitems.peers;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.Transport;
+import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.AENetworkClassifier;
@@ -62,10 +63,12 @@ public class StateItem
 	
 	String extra = null;
 	
+	boolean localPeer = ( ds instanceof PEPeer )?((PEPeer)ds).isMyPeer():false;
+	
 	if ( ds instanceof PEPeerTransport ){
     
 		PEPeerTransport peer = (PEPeerTransport)ds;
-		
+			
 		state = peer.getConnectionState();
 	
 		reconnect = peer.isReconnect();
@@ -117,30 +120,32 @@ public class StateItem
 
     String state_text = "";
 
-    switch( state ) {
-	    case PEPeerTransport.CONNECTION_PENDING :
-	    	state_text = MessageText.getString( "PeersView.state.pending" );
-	    	break;
-	    case PEPeerTransport.CONNECTION_CONNECTING :
-	    	state_text = MessageText.getString( "PeersView.state.connecting" );
-	    	if ( extra != null ){
-	    		state_text += extra;
+    if ( !localPeer ){
+	    switch( state ) {
+		    case PEPeerTransport.CONNECTION_PENDING :
+		    	state_text = MessageText.getString( "PeersView.state.pending" );
+		    	break;
+		    case PEPeerTransport.CONNECTION_CONNECTING :
+		    	state_text = MessageText.getString( "PeersView.state.connecting" );
+		    	if ( extra != null ){
+		    		state_text += extra;
+		    	}
+		    	break;
+		    case PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE :
+		    	state_text = MessageText.getString( "PeersView.state.handshake" );
+		    	break;
+		    case PEPeerTransport.CONNECTION_FULLY_ESTABLISHED :
+		    	state_text = MessageText.getString( "PeersView.state.established" );
+		    	break;
+	    }
+	
+	    if ( state != PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
+	    
+	    	if ( reconnect ){
+	    	
+	    		state_text += " *";
 	    	}
-	    	break;
-	    case PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE :
-	    	state_text = MessageText.getString( "PeersView.state.handshake" );
-	    	break;
-	    case PEPeerTransport.CONNECTION_FULLY_ESTABLISHED :
-	    	state_text = MessageText.getString( "PeersView.state.established" );
-	    	break;
-    }
-
-    if ( state != PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
-    
-    	if ( reconnect ){
-    	
-    		state_text += " *";
-    	}
+	    }
     }
     
     cell.setText( state_text );
