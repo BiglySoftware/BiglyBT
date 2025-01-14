@@ -1835,85 +1835,93 @@ public class ManagerUtils {
 
 			boolean was_force_start = dm.isForceStart();
 			
-			listener[0] = 
-				new DownloadManagerAdapter()
-				{
-					long	start_time	= SystemTime.getMonotonousTime();
-					
-					boolean waiting_for_stop 	= true;
-					boolean waiting_for_recheck = true;
-	
-					boolean	done = false;
-					
-					public void 
-					stateChanged(
-						DownloadManager 	manager, 
-						int 				state )
+			synchronized( listener ){
+				
+				listener[0] = 
+					new DownloadManagerAdapter()
 					{
-						try{
-							if ( done ){
-							
-								return;
-							}
+						long	start_time	= SystemTime.getMonotonousTime();
 						
-							if ( waiting_for_stop ){
+						boolean waiting_for_stop		= true;
+						boolean waiting_for_checking	= true;
 		
-								if ( state == DownloadManager.STATE_STOPPED ){
-		
-									waiting_for_stop = false;
-		
-									asyncRecheck( dm );
-									
-								}else{
-									
-									if ( SystemTime.getMonotonousTime() - start_time > 30*1000 ){
-									
-										Debug.out( "Abandoning recheck, download hasn't stopped" );
-										
-										done = true;
-									}
+						boolean	done = false;
+						
+						public void 
+						stateChanged(
+							DownloadManager 	manager, 
+							int 				state )
+						{
+							try{
+								if ( done ){
+								
+									return;
 								}
-							}else{
-		
-								if ( state == DownloadManager.STATE_CHECKING ){
-		
-									waiting_for_recheck = false;
-									
-								}else{
-		
-									if (	state == DownloadManager.STATE_STOPPED &&
-											!waiting_for_recheck ){
-		
-										done = true;
+							
+								if ( waiting_for_stop ){
+			
+									if ( state == DownloadManager.STATE_STOPPED ){
+			
+										waiting_for_stop = false;
+			
+										asyncRecheck( dm );
 										
-										if ( was_force_start ){
+									}else if ( state == DownloadManager.STATE_STOPPING){
 										
-											asyncForceStart( dm );
+									}else{
+										
+										if ( SystemTime.getMonotonousTime() - start_time > 30*1000 ){
+										
+											Debug.out( "Abandoning recheck, download hasn't stopped" );
 											
-										}else{
-										
-											asyncQueue( dm );
+											done = true;
 										}
-										
-									}else if (	state == DownloadManager.STATE_DOWNLOADING || 
-												state == DownloadManager.STATE_SEEDING ){
-										
-										done = true;
 									}
+								}else{
+			
+									if ( state == DownloadManager.STATE_CHECKING ){
+			
+										waiting_for_checking = false;
+										
+									}else{
+			
+										if (	state == DownloadManager.STATE_STOPPED &&
+												!waiting_for_checking ){
+			
+											done = true;
 											
+											if ( was_force_start ){
+											
+												asyncForceStart( dm );
+												
+											}else{
+											
+												asyncQueue( dm );
+											}
+											
+										}else if (	state == DownloadManager.STATE_DOWNLOADING || 
+													state == DownloadManager.STATE_SEEDING ||
+													state == DownloadManager.STATE_ERROR ){
+											
+											done = true;
+										}		
+									}
 								}
-							}
-						}finally{
-								
-							if ( done ){
-								
-								dm.removeListener( listener[0] );
+							}finally{
+									
+								if ( done ){
+									
+									synchronized( listener ){
+									
+										dm.removeListener( listener[0] );
+									}
+								}
 							}
 						}
-					}
-				};
+					};
+			}
 
-			dm.addListener (listener[0] );
+			dm.addListener( listener[0] );
 
 			dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
 		}
