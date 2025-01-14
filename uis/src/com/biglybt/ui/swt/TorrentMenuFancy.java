@@ -833,7 +833,7 @@ public class TorrentMenuFancy
 
 			pause = pause || ManagerUtils.isPauseable( dm );
 			
-			recheck = recheck || dm.canForceRecheck();
+			recheck = recheck || ManagerUtils.canForceRecheck( dm );
 
 			int state = dm.getState();
 			bChangeDir &= (state == DownloadManager.STATE_ERROR
@@ -925,8 +925,8 @@ public class TorrentMenuFancy
 				"recheck", recheck, new ListenerDMTask(dms) {
 					@Override
 					public void run(DownloadManager dm) {
-						if (dm.canForceRecheck()) {
-							dm.forceRecheck();
+						if (ManagerUtils.canForceRecheck( dm )) {
+							ManagerUtils.forceRecheck( dm );
 						}
 					}
 				});

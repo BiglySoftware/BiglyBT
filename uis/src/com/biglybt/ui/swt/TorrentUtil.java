@@ -306,9 +306,9 @@ public class TorrentUtil
 										
 										for ( DownloadManager dm: dms ){
 											
-											if ( dm.canForceRecheck()){
+											if ( ManagerUtils.canForceRecheck( dm )){
 												
-												dm.forceRecheck();
+												ManagerUtils.forceRecheck( dm );
 											}
 										}
 										
@@ -654,7 +654,7 @@ public class TorrentUtil
 
 				pause = pause || ManagerUtils.isPauseable(dm);
 						
-				recheck = recheck || dm.canForceRecheck();
+				recheck = recheck || ManagerUtils.canForceRecheck( dm );
 
 				lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck( dm );
 						
@@ -1953,8 +1953,8 @@ public class TorrentUtil
 		itemRecheck.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager dm) {
-				if (dm.canForceRecheck()) {
-					dm.forceRecheck();
+				if (ManagerUtils.canForceRecheck( dm )) {
+					ManagerUtils.forceRecheck( dm );
 				}
 			}
 		});
@@ -4935,7 +4935,7 @@ public class TorrentUtil
 				}
 				
 				canPause = canPause || !dm.isPaused();
-				canRecheck = canRecheck || dm.canForceRecheck();
+				canRecheck = canRecheck || ManagerUtils.canForceRecheck( dm );
 				canAllocate = canAllocate || ManagerUtils.canAllocate( dm );
 				
 				Download stub = PluginCoreUtils.wrap(dm);

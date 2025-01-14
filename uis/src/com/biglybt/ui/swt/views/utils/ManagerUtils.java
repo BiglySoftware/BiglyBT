@@ -1793,6 +1793,131 @@ public class ManagerUtils {
 
     return( true );
   }
+  
+  public static boolean
+  canForceRecheck(
+		DownloadManager		dm )
+  {
+	 if ( dm.canForceRecheck()){
+		 
+		 return( true );
+	 }
+		
+	 int state = dm.getState();
+		 
+	 if ( state == DownloadManager.STATE_SEEDING || state == DownloadManager.STATE_DOWNLOADING ){
+			 
+		 return( true );
+		 
+	 }else{
+		 
+		 return( false );
+	 }
+	 
+  }
+  
+	public static void
+	forceRecheck(
+		DownloadManager	dm )
+	{
+		if ( dm.canForceRecheck()){
+
+			dm.forceRecheck();
+
+			return;
+		}
+
+		int state = dm.getState();
+
+		if ( state == DownloadManager.STATE_SEEDING || state == DownloadManager.STATE_DOWNLOADING ){
+
+			DownloadManagerListener[] listener = { null };
+
+			boolean was_force_start = dm.isForceStart();
+			
+			listener[0] = 
+				new DownloadManagerAdapter()
+				{
+					long	start_time	= SystemTime.getMonotonousTime();
+					
+					boolean waiting_for_stop 	= true;
+					boolean waiting_for_recheck = true;
+	
+					boolean	done = false;
+					
+					public void 
+					stateChanged(
+						DownloadManager 	manager, 
+						int 				state )
+					{
+						try{
+							if ( done ){
+							
+								return;
+							}
+						
+							if ( waiting_for_stop ){
+		
+								if ( state == DownloadManager.STATE_STOPPED ){
+		
+									waiting_for_stop = false;
+		
+									asyncRecheck( dm );
+									
+								}else{
+									
+									if ( SystemTime.getMonotonousTime() - start_time > 30*1000 ){
+									
+										Debug.out( "Abandoning recheck, download hasn't stopped" );
+										
+										done = true;
+									}
+								}
+							}else{
+		
+								if ( state == DownloadManager.STATE_CHECKING ){
+		
+									waiting_for_recheck = false;
+									
+								}else{
+		
+									if (	state == DownloadManager.STATE_STOPPED &&
+											!waiting_for_recheck ){
+		
+										done = true;
+										
+										if ( was_force_start ){
+										
+											asyncForceStart( dm );
+											
+										}else{
+										
+											asyncQueue( dm );
+										}
+										
+									}else if (	state == DownloadManager.STATE_DOWNLOADING || 
+												state == DownloadManager.STATE_SEEDING ){
+										
+										done = true;
+									}
+											
+								}
+							}
+						}finally{
+								
+							if ( done ){
+								
+								dm.removeListener( listener[0] );
+							}
+						}
+					}
+				};
+
+			dm.addListener (listener[0] );
+
+			dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+		}
+	}
 
   /**
    * Host a DownloadManager on our Tracker.
@@ -2259,6 +2384,48 @@ public class ManagerUtils {
 		});
   	}
 
+ 	public static void
+	asyncRecheck(
+		final DownloadManager	dm )
+  	{
+    	async.dispatch(new AERunnable() {
+    		@Override
+		    public void
+			runSupport()
+    		{
+    			dm.forceRecheck();
+    		}
+		});
+  	}
+ 	
+	public static void
+	asyncQueue(
+		final DownloadManager	dm )
+  	{
+    	async.dispatch(new AERunnable() {
+    		@Override
+		    public void
+			runSupport()
+    		{
+    			dm.setStateQueued();
+    		}
+		});
+  	}
+ 	
+	public static void
+	asyncForceStart(
+		final DownloadManager	dm )
+  	{
+    	async.dispatch(new AERunnable() {
+    		@Override
+		    public void
+			runSupport()
+    		{
+    			dm.setForceStart( true );
+    		}
+		});
+  	}
+	
 	public static void asyncStartAll() {
 		CoreWaiterSWT.waitForCore(TriggerInThread.NEW_THREAD,
 				new CoreRunningListener() {
