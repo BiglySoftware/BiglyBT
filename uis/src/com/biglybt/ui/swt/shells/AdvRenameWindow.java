@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.download.DownloadManager;
@@ -211,8 +212,11 @@ public class AdvRenameWindow
 		
 			// separator
 		
-		Label separator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
+		Control separator = Utils.createSkinnedLabelSeparator(shell, SWT.HORIZONTAL);
+		//Label separator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 		
+		Composite padding = new Composite( shell, SWT.None );
+				
 			// buttons
 		
 		Composite cButtons = new Composite(shell, SWT.NONE);
@@ -357,7 +361,7 @@ public class AdvRenameWindow
 		fd.top = new FormAttachment(lblMessage, 5);
 		fd.left = new FormAttachment(0, 3);
 		fd.right = new FormAttachment(100, -3);
-		fd.width = 300;
+		//fd.width = 300;
 		txtInput.setLayoutData(fd);
 
 			// display value
@@ -370,17 +374,18 @@ public class AdvRenameWindow
 		fd = new FormData();
 		fd.top = new FormAttachment(btnDisplayUse, 0, SWT.CENTER );
 		fd.left = new FormAttachment(btnDisplayName, 40);
+		fd.right = new FormAttachment(btnDisplayPad, 0);
 		btnDisplayValue.setLayoutData(fd);
 	
 		fd = new FormData();
-		fd.left = new FormAttachment(btnDisplayValue, 0);
+		//fd.left = new FormAttachment(btnDisplayValue, 0);
 		fd.right = new FormAttachment(btnDisplayUse, -8);
 		btnDisplayPad.setLayoutData(fd);
 	
 		fd = new FormData();
 		fd.top = new FormAttachment(txtInput, 5 );
 		fd.right = new FormAttachment(100, -3);
-		fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
+		//fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
 		btnDisplayUse.setLayoutData(fd);	
 		
 			// save path
@@ -393,17 +398,18 @@ public class AdvRenameWindow
 		fd = new FormData();
 		fd.top = new FormAttachment(btnSavePathUse, 0, SWT.CENTER );
 		fd.left = new FormAttachment(btnDisplayValue, 0, SWT.LEFT );
+		fd.right = new FormAttachment(btnSavePathPad, 0);
 		btnSavePathValue.setLayoutData(fd);
 	
 		fd = new FormData();
-		fd.left = new FormAttachment(btnSavePathValue, 0);
+		//fd.left = new FormAttachment(btnSavePathValue, 0);
 		fd.right = new FormAttachment(btnSavePathUse, -8);
 		btnSavePathPad.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.top = new FormAttachment(btnDisplayUse, 5 );
 		fd.right = new FormAttachment(100, -3);
-		fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
+		//fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
 		btnSavePathUse.setLayoutData(fd);
 		
 			// torrent
@@ -416,17 +422,18 @@ public class AdvRenameWindow
 		fd = new FormData();
 		fd.top = new FormAttachment(btnTorrentUse, 0, SWT.CENTER );
 		fd.left = new FormAttachment(btnSavePathValue, 0, SWT.LEFT );
+		fd.right = new FormAttachment(btnTorrentPad, 0);
 		btnTorrentValue.setLayoutData(fd);
 	
 		fd = new FormData();
-		fd.left = new FormAttachment(btnTorrentValue, 0);
+		//fd.left = new FormAttachment(btnTorrentValue, 0);
 		fd.right = new FormAttachment(btnTorrentUse, -8);
 		btnTorrentPad.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.top = new FormAttachment(btnSavePathUse, 5 );
 		fd.right = new FormAttachment(100, -3);
-		fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
+		//fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
 		btnTorrentUse.setLayoutData(fd);
 
 		
@@ -451,27 +458,67 @@ public class AdvRenameWindow
 			btnTorrent.setEnabled( false );
 		}
 		
+			// padding
+		
+		fd = new FormData();
+		fd.top = new FormAttachment(btnTorrentUse, 0);
+		fd.left = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(separator, 0);
+		fd.height = 0;
+		padding.setLayoutData(fd);
+		
 			// separator
 		
 		fd = new FormData();
-		fd.top = new FormAttachment(btnTorrentUse, 2);
+		//fd.top = new FormAttachment(btnTorrentUse, 2);
 		fd.left = new FormAttachment(0, 3);
 		fd.right = new FormAttachment(100, -3);
+		fd.bottom = new FormAttachment(cButtons, -3);
 		separator.setLayoutData(fd);
 		
 			// buttons
 		
 		fd = new FormData();
-		fd.top = new FormAttachment(separator, 5);
+		// fd.top = new FormAttachment(separator, 5);
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(100, -3);
 		cButtons.setLayoutData(fd);
 
 		Utils.makeButtonsEqualWidth( Arrays.asList(btnReset, btnOk,btnCancel ));
 
-		shell.pack();
-		Utils.centreWindow(shell);
-		shell.open();
+		Point computedSize = shell.computeSize(SWT.DEFAULT,SWT.DEFAULT);
+		
+		int width	= Math.max( 400, computedSize.x );
+				
+		int height	= Math.max( 100, computedSize.y );
+
+		boolean hasMetrics = Utils.hasShellMetricsConfig( "AdvRenameWindow.metrics" );
+		
+		Utils.linkShellMetricsToConfig( shell, "AdvRenameWindow.metrics" );
+		
+		if ( !hasMetrics ){
+						
+			shell.setSize( width, computedSize.y );
+			
+			Utils.centreWindow(shell);
+			
+		}else{
+			
+			Point existingSize = shell.getSize();
+			
+			if ( existingSize.x != width || existingSize.y < height ){
+				
+				existingSize.x = width;
+				existingSize.y = Math.max( existingSize.y, height );
+				
+				shell.setSize( existingSize );
+			}
+		}
+		
+		Utils.verifyShellRect( shell, true);
+		
+	    shell.open();
 	}
 
 	public void
