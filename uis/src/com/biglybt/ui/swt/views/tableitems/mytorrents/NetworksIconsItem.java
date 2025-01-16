@@ -78,31 +78,24 @@ NetworksIconsItem
 
 	@Override
 	public void refresh(TableCell cell) {
-		String networks = "";
+		long sort = 0;
+		
 		DownloadManager dm = (DownloadManager)cell.getDataSource();
 		if (dm != null) {
-		      String[] nets = dm.getDownloadState().getNetworks();
+			String[] nets = dm.getDownloadState().getNetworks();
 
-		      String[] order = AENetworkClassifier.AT_NETWORKS;
+			String[] order = AENetworkClassifier.AT_NETWORKS;
 
-		      if ( nets.length == 1 ){
-		    	  networks = nets[0];
-		      }else if ( nets.length == order.length ){
-		    	  for (int i=0;i<order.length;i++){
-		    		  networks += (i==0?"":",") + order[i];
-		    	  }
-		      }else{
-		    	  for ( String str: order ){
-		    		  for ( int i=0;i<nets.length;i++){
-		    			  if ( str == nets[i] ){
-		    				  networks += (i==0?"":",") + str;
-		    				  break;
-		    			  }
-		    		  }
-		    	  }
-		      }
+			for ( int i=0; i<order.length; i++ ){
+				for ( int j=0;j<nets.length;j++){
+					if ( order[i] == nets[j] ){
+						sort = ( sort << 4 ) + i+1;
+						break;
+					}
+				}
+			}
 		}
-		cell.setSortValue(networks);
+		cell.setSortValue(sort);
 	}
 	
 	@Override
