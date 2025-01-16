@@ -1820,16 +1820,21 @@ public class ManagerUtils {
 	forceRecheck(
 		DownloadManager	dm )
 	{
-		if ( dm.canForceRecheck()){
+			// changed this so that if it is in an error state then we'll restart it after 
+			// the recheck completes rather than leaving it stopped
+		
+		int state = dm.getState();
 
-			dm.forceRecheck();
+		if ( state != DownloadManager.STATE_ERROR && dm.canForceRecheck()){
+
+			asyncRecheck( dm );
 
 			return;
 		}
 
-		int state = dm.getState();
 
-		if ( state == DownloadManager.STATE_SEEDING || state == DownloadManager.STATE_DOWNLOADING ){
+		if (	state == DownloadManager.STATE_ERROR || 
+				state == DownloadManager.STATE_SEEDING || state == DownloadManager.STATE_DOWNLOADING ){
 
 			DownloadManagerListener[] listener = { null };
 
