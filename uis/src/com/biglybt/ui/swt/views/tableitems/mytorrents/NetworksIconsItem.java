@@ -18,16 +18,19 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.AENetworkClassifier;
-import com.biglybt.core.util.Debug;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -115,21 +118,47 @@ NetworksIconsItem
 			String[] nets = dm.getDownloadState().getNetworks();
 
 			Rectangle bounds = cell.getBounds();
-
-			int x = bounds.x;
 			
 			String[] order = AENetworkClassifier.AT_NETWORKS;
 
+			List<Image>	list = new ArrayList<>();
+			
+			int pad = -10;
+			
+			int total_width = -pad;
+			
+				// these icons have a lot of space around them...
+			
 			for ( int i=0;i<order.length;i++){
 				for ( String str: nets ){
 					if ( str == order[i] ){
-						gc.drawImage( images[i], x, bounds.y );
+						Image img = images[i];
+						list.add( img );						
 						
-							// these icons have a lot of space around them...
-						
-						x += images[i].getBounds().width-10;
+						total_width += img.getBounds().width+pad;
 					}
 				}
+			}
+			
+			TableColumn tableColumn = cell.getTableColumn();
+			
+			if (tableColumn != null && tableColumn.getPreferredWidth() < total_width) {
+				
+				tableColumn.setPreferredWidth(total_width);
+			}
+			
+			int x = bounds.x;
+			
+			if ( bounds.width > total_width ){
+				
+				x += (bounds.width - total_width ) / 2;
+			}
+
+			for ( Image img: list ){
+				
+				gc.drawImage(img, x, bounds.y );
+				
+				x += img.getBounds().width + pad;
 			}
 		}
 	}
