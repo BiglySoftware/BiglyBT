@@ -69,12 +69,22 @@ public class NetworksItem
 
 		String[] order = AENetworkClassifier.AT_NETWORKS;
 
-		for ( int i=0; i<order.length; i++ ){
-			for ( int j=0;j<nets.length;j++){
-				if ( order[i] == nets[j] ){
-					sort = ( sort << 4 ) + i+1;
-					networks += (networks.isEmpty()?"":",") + order[i];
-					break;
+		if ( nets.length == order.length ){
+			
+			sort = Long.MAX_VALUE;
+			
+			for ( String net: order ){
+				networks += (networks.isEmpty()?"":",") + net;
+			}
+		}else{
+			
+			for ( int i=0; i<order.length; i++ ){
+				for ( int j=0;j<nets.length;j++){
+					if ( order[i] == nets[j] ){
+						sort = ( sort << 4 ) + i+1;
+						networks += (networks.isEmpty()?"":",") + order[i];
+						break;
+					}
 				}
 			}
 		}

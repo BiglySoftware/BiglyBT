@@ -1173,6 +1173,13 @@ SubscriptionManagerUI
 
 						cell.setSortValue( 0 );
 					}
+					
+					TableColumn tableColumn = cell.getTableColumn();
+					
+					if ( tableColumn != null && tableColumn.getPreferredWidth() < 32 ){
+					
+						cell.getTableColumn().setPreferredWidth( 32 );
+					}
 				}
 			};
 
