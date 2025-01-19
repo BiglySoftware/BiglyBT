@@ -18,7 +18,6 @@ package com.biglybt.ui.swt.shells.main;
 
 import java.io.File;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 
@@ -48,6 +47,7 @@ import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginHTTPProxy;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
@@ -1484,8 +1484,60 @@ public class UIFunctionsImpl
 		TorrentOpenOptions 		torrentOptions,
 		Map<String, Object> 	addOptions,
 		boolean					is_silent )
-
 	{
+		TOTorrent torrent = torrentOptions.getTorrent();
+
+		if ( torrent != null ){
+			
+			String name = TorrentUtils.getLocalisedName(torrent);
+			
+			TOTorrentFile[] files = torrent.getFiles();
+			
+			if ( files.length == 1 ){
+				
+				String file_name = files[0].getRelativePath();
+				
+				if ( !file_name.equals(name)){
+					
+					int n_pos = name.lastIndexOf( "." );
+					int f_pos = file_name.lastIndexOf( "." );
+					
+					if ( n_pos != -1 && f_pos != -1 ){
+						
+						String n_ext = name.substring( n_pos+1 ).trim().toLowerCase( Locale.US );
+						String f_ext = file_name.substring( f_pos+1 ).trim().toLowerCase( Locale.US );
+						
+						if ( !f_ext.isEmpty() && !n_ext.equals( f_ext )){
+							
+							UIFunctionsUserPrompter prompter = 
+								getUserPrompter(
+									MessageText.getString( "msg.suspicious.file.name" ),
+									MessageText.getString( "msg.suspicious.file.name.info", new String[]{ name, n_ext, f_ext }),
+									new String[] {
+										MessageText.getString("Button.ok"),
+									}, 
+									0 );
+			
+							prompter.setStyle( SWT.ON_TOP );
+							
+							prompter.setRemember(
+								"oto:suspicious.torrent",
+								false,
+								MessageText.getString("MessageBoxWindow.nomoreprompting"));
+							
+			
+							prompter.setIconResource("warning");
+							
+							prompter.setAutoCloseInMS(0);
+			
+							prompter.open(null);
+						}
+					}
+				}
+			}
+		}
+		
+		
 		Boolean force = (Boolean)addOptions.get( UIFunctions.OTO_FORCE_OPEN );
 
 		if ( force == null ){
@@ -1494,8 +1546,6 @@ public class UIFunctionsImpl
 		}
 
 		if ( !force ){
-
-			TOTorrent torrent = torrentOptions.getTorrent();
 
 			boolean is_featured = torrent != null && PlatformTorrentUtils.isFeaturedContent( torrent );
 

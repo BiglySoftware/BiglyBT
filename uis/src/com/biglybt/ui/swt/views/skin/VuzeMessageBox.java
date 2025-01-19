@@ -109,6 +109,10 @@ public class VuzeMessageBox
 		return 0;
 	}
 
+	@Override
+	public void setStyle(int style){
+	}
+	
 	/* (non-Javadoc)
 	 * @see UIFunctionsUserPrompter#getHtml()
 	 */

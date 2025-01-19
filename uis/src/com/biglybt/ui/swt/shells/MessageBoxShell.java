@@ -145,6 +145,8 @@ public class MessageBoxShell
 
 	private boolean	modal;
 
+	private int explicit_style;
+	
 	private static Map<String, MessageBoxShell> mapInstances = new HashMap<>(1);
 
 	public static void open(Shell parent, String title, String text,
@@ -377,6 +379,11 @@ public class MessageBoxShell
 
 		int	shell_style = SWT.DIALOG_TRIM | SWT.RESIZE;
 
+		if ( explicit_style != 0 ){
+			
+			shell_style |= explicit_style;
+		}
+		
 		if ( modal ){
 
 			shell_style |= SWT.APPLICATION_MODAL;
@@ -952,6 +959,14 @@ public class MessageBoxShell
 		return canvas;
 	}
 
+	@Override
+	public void
+	setStyle(
+		int style)
+	{
+		explicit_style = style;
+	}
+	
 	@Override
 	public String getHtml() {
 		return html;

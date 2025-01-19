@@ -70,6 +70,8 @@ public interface UIFunctionsUserPrompter
 	 */
 	String getRememberText();
 
+	void setStyle( int style );
+	
 	/**
 	 * Opens the prompt.  returns when user has chosen an action, or auto-close
 	 *
