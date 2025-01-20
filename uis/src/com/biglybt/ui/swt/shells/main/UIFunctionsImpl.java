@@ -92,7 +92,7 @@ import com.biglybt.ui.swt.views.skin.SkinnedDialog.SkinnedDialogClosedListener;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
-
+import com.biglybt.util.PlayUtils;
 import com.biglybt.pif.download.DownloadStub;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -1507,7 +1507,9 @@ public class UIFunctionsImpl
 						String n_ext = name.substring( n_pos+1 ).trim().toLowerCase( Locale.US );
 						String f_ext = file_name.substring( f_pos+1 ).trim().toLowerCase( Locale.US );
 						
-						if ( !f_ext.isEmpty() && !n_ext.equals( f_ext )){
+						if ( 	!f_ext.isEmpty() && 
+								!n_ext.equals( f_ext ) &&
+								!PlayUtils.getPlayableFileExtensions().contains(f_ext)){
 							
 							UIFunctionsUserPrompter prompter = 
 								getUserPrompter(
