@@ -1251,7 +1251,9 @@ DiskManagerImpl
             		
             		String name = data_file.getName();
             		
-					if ( !skip_incomplete_file_checks && name.endsWith( incomplete_suffix ) && !data_file.exists()){
+            		boolean has_is = name.endsWith( incomplete_suffix );
+            		
+					if ( !skip_incomplete_file_checks &&  has_is && !data_file.exists()){
 						
 	                	File test_file = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
 	                	
@@ -1261,7 +1263,7 @@ DiskManagerImpl
 	                		
 		                	FileUtil.renameFile( test_file, data_file );
 	                	}
-					}else if ( !skip_complete_file_checks && !name.endsWith( incomplete_suffix ) && !data_file.exists()){
+					}else if ( !skip_complete_file_checks && !has_is && !data_file.exists()){
    	
 						File test_file = FileUtil.newFile( data_file.getParentFile(), name + incomplete_suffix );
 	                	
