@@ -2217,33 +2217,67 @@ DownloadManagerController
 
 					boolean 	exists = fileInfo.exists();
 
-					File file = fileInfo.getFile(true);
+					File data_file = fileInfo.getFile(true);
 
 					long elapsed = SystemTime.getMonotonousTime() - start;
 
 					if ( elapsed >= 500 ){
 
-						Debug.out( "Accessing '" + file.getAbsolutePath() + "' in '" + getDisplayName() + "' took " + elapsed + "ms - possibly offline" );
+						Debug.out( "Accessing '" + data_file.getAbsolutePath() + "' in '" + getDisplayName() + "' took " + elapsed + "ms - possibly offline" );
 					}
 
+					if ( !exists && !test_only ){
+						
+						String incomplete_suffix = download_manager_state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+
+		               	String name = data_file.getName();
+
+						if ( incomplete_suffix != null ){
+	                	
+							if ( name.endsWith( incomplete_suffix )){
+								
+			                	File test_file = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
+			                	
+			                	if ( test_file.exists()){
+			                			
+			                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to restore the incomplete file suffix" );
+			                		
+				                	FileUtil.renameFile( test_file, data_file );
+			                	}
+							}else{
+           	
+								File test_file = FileUtil.newFile( data_file.getParentFile(), name + incomplete_suffix );
+			                	
+			                	if ( test_file.exists()){
+			                			
+			                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to remove the incomplete file suffix" );
+			                		
+				                	FileUtil.renameFile( test_file, data_file );
+			                	}
+							}
+							
+							exists = fileInfo.exists();
+						}
+					}
+					
 					if ( !exists ){
 
 						// For multi-file torrents, complain if the save directory is missing.
 						if (!this.download_manager.getTorrent().isSimpleTorrent()) {
 							File save_path = this.download_manager.getAbsoluteSaveLocation();
-							if (FileUtil.isAncestorOf(save_path, file) && !save_path.exists()) {
-								file = save_path; // We're going to abort very soon, so it's OK to overwrite this.
+							if (FileUtil.isAncestorOf(save_path, data_file) && !save_path.exists()) {
+								data_file = save_path; // We're going to abort very soon, so it's OK to overwrite this.
 							}
 						}
 
 						if ( !test_only ){
 						
-							setFailed( DownloadManager.ET_FILE_MISSING, MessageText.getString("DownloadManager.error.datamissing") + ": " + file.getAbsolutePath());
+							setFailed( DownloadManager.ET_FILE_MISSING, MessageText.getString("DownloadManager.error.datamissing") + ": " + data_file.getAbsolutePath());
 						}
 						
 						return false;
 
-					} else if (fileInfo.getLength() < file.length()) {
+					} else if (fileInfo.getLength() < data_file.length()) {
 
 							// file may be incremental creation - don't complain if too small
 
@@ -2254,7 +2288,7 @@ DownloadManagerController
 							if ( !test_only ){
 							
 								setFailed(MessageText.getString("DownloadManager.error.badsize")
-									+ " " + file + "(" + fileInfo.getLength() + "/" + file.length() + ")");
+									+ " " + data_file + "(" + fileInfo.getLength() + "/" + data_file.length() + ")");
 							}
 
 							return false;

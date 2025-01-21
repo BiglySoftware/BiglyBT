@@ -1249,6 +1249,35 @@ DiskManagerImpl
 
                 CacheFile   cache_file      = fileInfo.getCacheFile();
 
+           		// recover incorrect incomplete file settings
+            	
+            	if ( incomplete_suffix != null && !data_file.exists()){
+            		
+            		String name = data_file.getName();
+            		
+					if ( name.endsWith( incomplete_suffix )){
+						
+	                	File test_file = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
+	                	
+	                	if ( test_file.exists()){
+	                			
+	                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to restore the incomplete file suffix" );
+	                		
+		                	FileUtil.renameFile( test_file, data_file );
+	                	}
+					}else{
+   	
+						File test_file = FileUtil.newFile( data_file.getParentFile(), name + incomplete_suffix );
+	                	
+	                	if ( test_file.exists()){
+	                			
+	                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to remove the incomplete file suffix" );
+	                		
+		                	FileUtil.renameFile( test_file, data_file );
+	                	}
+					}
+            	}
+
                 int st = cache_file.getStorageType();
 
                 boolean compact = st == CacheFile.CT_COMPACT || st == CacheFile.CT_PIECE_REORDER_COMPACT;
@@ -1268,7 +1297,7 @@ DiskManagerImpl
 	                	notRequiredFiles++;
                 	}
                 }else{
-                	
+                	                	
                 		// delete compact files that do not contain pieces we need
                 	
 	                if (!mustExistOrAllocate && !skip_incomplete_file_checks && cache_file.exists()){
