@@ -1213,10 +1213,8 @@ DiskManagerImpl
 				*/
                 
                 String      ext  = data_file.getName();
-
-                boolean has_incomp_suffix = incomplete_suffix != null && ext.endsWith( incomplete_suffix );
                 
-                if ( has_incomp_suffix ){
+                if ( incomplete_suffix != null && ext.endsWith( incomplete_suffix )){
 
                 	ext = ext.substring( 0, ext.length() - incomplete_suffix.length());
                 }
@@ -1247,15 +1245,13 @@ DiskManagerImpl
 
                 fileInfo.setDownloaded(0);
 
-                CacheFile   cache_file      = fileInfo.getCacheFile();
-
-           		// recover incorrect incomplete file settings
-            	
-            	if ( incomplete_suffix != null && !data_file.exists()){
+                	// recover incorrect incomplete file settings
+            	                
+            	if ( incomplete_suffix != null ){
             		
             		String name = data_file.getName();
             		
-					if ( name.endsWith( incomplete_suffix )){
+					if ( !skip_incomplete_file_checks && name.endsWith( incomplete_suffix ) && !data_file.exists()){
 						
 	                	File test_file = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
 	                	
@@ -1265,7 +1261,7 @@ DiskManagerImpl
 	                		
 		                	FileUtil.renameFile( test_file, data_file );
 	                	}
-					}else{
+					}else if ( !skip_complete_file_checks && !name.endsWith( incomplete_suffix ) && !data_file.exists()){
    	
 						File test_file = FileUtil.newFile( data_file.getParentFile(), name + incomplete_suffix );
 	                	
@@ -1277,6 +1273,8 @@ DiskManagerImpl
 	                	}
 					}
             	}
+
+                CacheFile   cache_file      = fileInfo.getCacheFile();
 
                 int st = cache_file.getStorageType();
 
@@ -1300,31 +1298,12 @@ DiskManagerImpl
                 	                	
                 		// delete compact files that do not contain pieces we need
                 	
-	                if (!mustExistOrAllocate && !skip_incomplete_file_checks && cache_file.exists()){
+	                if (!mustExistOrAllocate && !skip_incomplete_file_checks && data_file.exists()){
 	
 						data_file.delete();
-						
-	                }else{
-		
-		                	// handle case where file has incomplete suffix but file without the suffix exists
-		                	// for example, someone has copied the final file into place to recover things
-		                
-		                if ( !skip_incomplete_file_checks && has_incomp_suffix && !data_file.exists()){
-		                	
-		                	String name = data_file.getName();
-		                	
-		                	File temp = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
-		                	
-		                	if ( temp.exists()){
-		                			
-		                		FileUtil.log( "Moving '" + temp + "' to '" + data_file + "' to restore the incomplete file suffix" );
-		                		
-			                	FileUtil.renameFile( temp, data_file );
-		                	}
-		                }
 	                }
 	                
-	                if ( skip_incomplete_file_checks || cache_file.exists() ){
+	                if ( skip_incomplete_file_checks || data_file.exists() ){
 	
 	                	boolean did_allocate = false;
 	                	
