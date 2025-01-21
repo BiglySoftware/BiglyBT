@@ -208,7 +208,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     		
     		File move_to = FileUtil.newFile( explicit_target );
     		
-    		if ( !move_to.exists()){
+    		if ( !FileUtil.exists( move_to )){
 
 				move_to.mkdirs();
 			}
@@ -350,7 +350,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 	
 		    			if ( move_to != null ){
 	
-		    				if ( !move_to.exists()){
+		    				if ( !FileUtil.exists( move_to )){
 	
 		    					move_to.mkdirs();
 		    				}
@@ -811,7 +811,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 						torrent_target = temp;
 
-					}else if ( !temp.exists()){
+					}else if ( !FileUtil.exists( temp )){
 
 						if ( temp.mkdirs()){
 

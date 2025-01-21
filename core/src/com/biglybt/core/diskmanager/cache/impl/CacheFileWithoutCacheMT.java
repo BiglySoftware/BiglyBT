@@ -297,7 +297,7 @@ CacheFileWithoutCacheMT
 	{
 		try{
 
-			return( base_file.exists() ? base_file.getLength() : 0);
+			return( base_file.getLength());
 
 		}catch( FMFileManagerException e ){
 

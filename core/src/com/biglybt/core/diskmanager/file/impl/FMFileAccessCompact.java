@@ -67,10 +67,8 @@ FMFileAccessCompact
 				
 				return( true );
 			}
-			
-			File state_file = FileUtil.newFile( control_dir, control_file_name );
-			
-			if ( state_file.exists()){
+						
+			if ( FileUtil.existsWithCache( control_dir, control_file_name )){
 				
 				return( true );
 			}
@@ -103,6 +101,8 @@ FMFileAccessCompact
 						
 						FileUtil.writeResilientFile( control_dir, control_file_name, data, false );
 		
+						FileUtil.existsWithCacheClear( control_dir );
+						
 						return( true );
 						
 					}catch( Throwable e ){
@@ -115,7 +115,7 @@ FMFileAccessCompact
 			return( false );
 		}
 	
-		return( FileUtil.newFile( control_dir, control_file_name ).exists());
+		return( FileUtil.existsWithCache( control_dir, control_file_name ));
 	}
 	
 	private final File				controlFileDir;
@@ -191,7 +191,7 @@ FMFileAccessCompact
 
 			if ( state_required ){
 				
-				if ( !FileUtil.newFile(controlFileDir,controlFileName).exists()){
+				if ( !FileUtil.exists( FileUtil.newFile(controlFileDir,controlFileName))){
 	
 					if (!controlFileDir.isDirectory() && !FileUtil.mkdirs(controlFileDir)){
 						
@@ -619,10 +619,12 @@ FMFileAccessCompact
 					data.put( "version", version);
 	
 					data.put( "length", current_length_in_state );
-	
+						
 					FileUtil.writeResilientFile(
 							controlFileDir, controlFileName, data, false );
 	
+					FileUtil.existsWithCacheClear( controlFileDir );
+
 				}catch( Throwable e ){
 	
 					throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "Failed to write control file state", e ));

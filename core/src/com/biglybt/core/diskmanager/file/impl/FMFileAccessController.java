@@ -116,7 +116,7 @@ FMFileAccessController
 
 				type = FMFile.FT_COMPACT;
 
-			}else if ( FileUtil.newFile( control_dir, controlFileName + REORDER_SUFFIX ).exists()){
+			}else if ( FileUtil.existsWithCache( control_dir, controlFileName + REORDER_SUFFIX )){
 
 				type = _target_type==FMFile.FT_PIECE_REORDER?FMFile.FT_PIECE_REORDER:FMFile.FT_PIECE_REORDER_COMPACT;
 
@@ -126,7 +126,7 @@ FMFileAccessController
 
 					File	target_file = owner.getLinkedFile();
 
-					if ( target_file.exists()){
+					if ( FileUtil.exists( target_file )){
 
 						FMFileAccessPieceReorderer.recoverConfig(
 							owner.getOwner().getTorrentFile(),
@@ -252,7 +252,7 @@ FMFileAccessController
 										new FMFileAccessLinear( owner ));
 			}
 
-			if ( file.exists()){
+			if ( FileUtil.exists( file )){
 
 				fa = FileUtil.newFileAccessor( file, FMFileImpl.WRITE_ACCESS_MODE);
 
@@ -538,7 +538,7 @@ FMFileAccessController
 		
 			throws FileNotFoundException
 		{
-			if ( enable_sparse_files && !file.exists()){
+			if ( enable_sparse_files && !FileUtil.exists( file )){
 				
 				try{
 					Set<OpenOption>	options = new HashSet<>();

@@ -79,7 +79,7 @@ DownloadManagerStateImpl
 
 		ACTIVE_DIR = FileUtil.getUserFile( "active" );
 
-		if ( !ACTIVE_DIR.exists()){
+		if ( !FileUtil.exists( ACTIVE_DIR )){
 
 			FileUtil.mkdirs(ACTIVE_DIR);
 		}
@@ -395,7 +395,7 @@ DownloadManagerStateImpl
 
 		boolean	was_corrupt = false;
 		
-		if ( saved_file.exists()){
+		if ( FileUtil.exists( saved_file )){
 
 			try{
 				saved_state = TorrentUtils.readDelegateFromFile( saved_file, false );
@@ -452,7 +452,7 @@ DownloadManagerStateImpl
 
 			File	saved_file = getStateFile( torrent_hash );
 
-			if ( saved_file.exists()){
+			if ( FileUtil.exists( saved_file )){
 				
 				if ( debug_on ){
 
@@ -511,7 +511,7 @@ DownloadManagerStateImpl
 
 			File	saved_file = getStateFile( torrent_hash );
 			
-			if ( saved_file.exists()){
+			if ( FileUtil.exists( saved_file )){
 				
 				if ( debug_on ){
 
@@ -771,12 +771,12 @@ DownloadManagerStateImpl
 		File	target_state_file 	= FileUtil.newFile( ACTIVE_DIR, state_file );
 		File	source_state_file 	= FileUtil.newFile( source_dir, state_file );
 
-		if ( !source_state_file.exists()){
+		if ( !FileUtil.exists( source_state_file )){
 
 			throw( new DownloadManagerException( "Source state file missing: " + source_state_file ));
 		}
 
-		if ( target_state_file.exists()){
+		if ( FileUtil.exists( target_state_file )){
 
 			target_state_file.delete();
 
@@ -790,7 +790,7 @@ DownloadManagerStateImpl
 
 		File	source_state_dir = FileUtil.newFile( source_dir, hash_str );
 
-		if ( source_state_dir.exists()){
+		if ( FileUtil.exists( source_state_dir )){
 
 			try{
 				FileUtil.copyFileOrDirectory( source_state_dir, ACTIVE_DIR );
@@ -842,7 +842,7 @@ DownloadManagerStateImpl
 
 		File	target_state_file 	= FileUtil.newFile( source_dir, state_file );
 
-		if ( target_state_file.exists()){
+		if ( FileUtil.exists( target_state_file )){
 
 			if ( !target_state_file.delete()){
 
@@ -852,7 +852,7 @@ DownloadManagerStateImpl
 
 		File target_state_file_bak = FileUtil.newFile( source_dir, state_file + ".bak" );
 		
-		if ( target_state_file_bak.exists()){
+		if ( FileUtil.exists( target_state_file_bak )){
 
 			if ( !target_state_file_bak.delete()){
 
@@ -862,7 +862,7 @@ DownloadManagerStateImpl
 
 		File	target_state_dir = FileUtil.newFile( source_dir, hash_str );
 
-		if ( target_state_dir.exists()){
+		if ( FileUtil.exists( target_state_dir )){
 
 			if ( !FileUtil.recursiveDelete( target_state_dir )){
 
@@ -1346,7 +1346,7 @@ DownloadManagerStateImpl
 
 			File	existing_state_dir = FileUtil.newFile( ACTIVE_DIR, hash_str );
 
-			if ( existing_state_dir.exists()){
+			if ( FileUtil.exists( existing_state_dir )){
 
 				FileUtil.copyFileOrDirectory( existing_state_dir, target_dir );
 			}
@@ -1513,7 +1513,7 @@ DownloadManagerStateImpl
 			
 			File	target_state_file 	= FileUtil.newFile( ACTIVE_DIR, state_file );
 
-			if ( target_state_file.exists()){
+			if ( FileUtil.exists( target_state_file )){
 
 				if ( !target_state_file.delete()){
 
@@ -1525,7 +1525,7 @@ DownloadManagerStateImpl
 			
 			File	dir = FileUtil.newFile( ACTIVE_DIR, hash_str );
 
-			if ( dir.exists() && dir.isDirectory()){
+			if ( FileUtil.exists( dir ) && dir.isDirectory()){
 
 				FileUtil.recursiveDelete( dir );
 			}
@@ -4544,7 +4544,7 @@ DownloadManagerStateImpl
 
 			File	saved_file = getStateFile( torrent_hash_wrapper.getBytes() );
 
-			if ( saved_file.exists()){
+			if ( FileUtil.exists( saved_file )){
 
 				try{
 
@@ -4566,7 +4566,7 @@ DownloadManagerStateImpl
 
 			boolean	was_corrupt = false;
 			
-			if ( saved_file.exists()){
+			if ( FileUtil.exists( saved_file )){
 
 				try{
 					return( TorrentUtils.readDelegateFromFile( saved_file, discard_pieces ));

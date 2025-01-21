@@ -247,7 +247,7 @@ DiskManagerUtil
 								// these are compact files and can't be recovered as they just contain
 								// start/end piece data
 							
-							if ( currentFile.exists()){
+							if ( FileUtil.exists( currentFile )){
 								
 								FileUtil.log( "Deleting \"" + currentFile.getAbsolutePath() + "\" as no longer required", true );
 
@@ -289,7 +289,7 @@ DiskManagerUtil
 		    	
 		    	if ( !FileUtil.areFilePathsIdentical( to_link, existing_file )){
 	        		
-		    		if ( existing_file.exists()){
+		    		if ( FileUtil.exists( existing_file )){
 		    			
 			            if ( !FileUtil.renameFile( existing_file, to_link )){
 	
@@ -315,9 +315,9 @@ DiskManagerUtil
 			        }
 			    }
 	
-			    if ( to_link.exists()){
+			    if ( FileUtil.exists( to_link )){
 	
-			        if ( !existing_file.exists()){
+			        if ( !FileUtil.exists( existing_file )){
 	
 			                // using a new file, make sure we recheck
 	
@@ -379,7 +379,7 @@ DiskManagerUtil
 			        }
 			    }else{
 	
-			        if ( existing_file.exists()){
+			        if ( FileUtil.exists( existing_file )){
 	
 			            if ( !FileUtil.renameFile( existing_file, to_link, pl )){
 	
@@ -678,7 +678,7 @@ DiskManagerUtil
 									// files for dnd files which then force a recheck when the download
 									// starts for the first time)
 
-									if ( target_file.exists()){
+									if ( FileUtil.exists( target_file )){
 
 										CacheFile cache_file =
 											CacheFileManagerFactory.getSingleton().createFile(
@@ -2510,9 +2510,9 @@ DiskManagerUtil
 
 					File new_file = FileUtil.newFile( new_parent, new_name );
 
-					if ( !new_file.exists()){
+					if ( !FileUtil.exists( new_file )){
 
-						if ( !new_parent.exists()){
+						if ( !FileUtil.exists( new_parent )){
 
 							new_parent.mkdirs();
 						}
@@ -2525,7 +2525,7 @@ DiskManagerUtil
 								
 		   						File source = link==null?base_file:link;
 	    						
-	    						if ( source.exists()){
+	    						if ( FileUtil.exists( source )){
 
 	    							ok = FileUtil.renameFile( source, new_file );
 
@@ -2594,7 +2594,7 @@ DiskManagerUtil
 								
 								File result = null;
 								
-								if ( link.exists()){
+								if ( FileUtil.exists( link )){
 									
 									if ( FileUtil.renameFile( link, new_file )){
 		
@@ -2607,7 +2607,7 @@ DiskManagerUtil
 									result = new_file;
 								}
 								
-								if ( link_parent.exists()){
+								if ( FileUtil.exists( link_parent )){
 									
 									File[] files = link_parent.listFiles();
 									
@@ -2723,9 +2723,9 @@ DiskManagerUtil
 
 					File new_file = FileUtil.newFile( new_parent, new_name );
 
-					if ( !new_file.exists()){
+					if ( !FileUtil.exists( new_file )){
 
-						if ( !new_parent.exists()){
+						if ( !FileUtil.exists( new_parent )){
 
 							new_parent.mkdirs();
 						}
@@ -2738,7 +2738,7 @@ DiskManagerUtil
 								
 		   						File source = link==null?base_file:link;
 	    						
-	    						if ( source.exists()){
+	    						if ( FileUtil.exists( source )){
 
 	    							ok = FileUtil.renameFile( source, new_file );
 
@@ -2805,7 +2805,7 @@ DiskManagerUtil
 								
 								File result = null;
 								
-								if ( link.exists()){
+								if ( FileUtil.exists( link )){
 									
 									if ( FileUtil.renameFile( link, new_file )){
 		

@@ -240,7 +240,7 @@ FMFileImpl
 	{
 		File lf = linked_file.getFile();
 		
-		return( lf.exists());
+		return( FileUtil.exists( lf ));
 	}
 
 	protected File
@@ -373,7 +373,7 @@ FMFileImpl
 				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "getCanonicalPath fails", e ));
 			}
 
-			if ( new_linked_file.exists()){
+			if ( FileUtil.exists( new_linked_file )){
 
 				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "moveFile fails - file '" + new_canonical_path + "' already exists"));
 			}
@@ -386,7 +386,7 @@ FMFileImpl
 
 			File lf = linked_file.getFile();
 			
-			if ( !lf.exists() || FileUtil.renameFile( lf, new_linked_file, pl )) {
+			if ( !FileUtil.exists( lf ) || FileUtil.renameFile( lf, new_linked_file, pl )) {
 
 				linked_file		= new StringInterner.FileKey( new_linked_file );
 				canonical_path	= new StringInterner.FileKey( new_canonical_path );
@@ -473,7 +473,7 @@ FMFileImpl
 				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "getCanonicalPath fails", e ));
 			}
 
-			if ( new_linked_file.exists()){
+			if ( FileUtil.exists( new_linked_file )){
 
 				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "renameFile fails - file '" + new_canonical_path + "' already exists"));
 			}
@@ -482,7 +482,7 @@ FMFileImpl
 
 			close();	// full close, this will release any slots in the limited file case
 
-			if ( !lf.exists() || lf.renameTo( new_linked_file )){
+			if ( !FileUtil.exists( lf ) || lf.renameTo( new_linked_file )){
 
 				linked_file		= new StringInterner.FileKey( new_linked_file );
 				canonical_path	= new StringInterner.FileKey( new_canonical_path );
@@ -619,7 +619,7 @@ FMFileImpl
 			
 			if ( 	switch_to_upload_only_enable && 
 					access_mode == FM_WRITE && 
-					lf.exists()  && 
+					FileUtil.exists( lf )  && 
 					lf.canRead()){
 				
 				fa = FileUtil.newFileAccessor( lf, READ_ACCESS_MODE );
@@ -817,7 +817,7 @@ FMFileImpl
 
 		File lf = linked_file.getFile();
 
-		if ( lf.exists()){
+		if ( FileUtil.exists( lf )){
 
 			if ( !lf.delete()){
 
@@ -1233,7 +1233,7 @@ FMFileImpl
 
 			File	current = parent;
 
-			while( current != null && !current.exists()){
+			while( current != null && !FileUtil.exists( current )){
 
 				new_dirs.add( current );
 
@@ -1293,7 +1293,7 @@ FMFileImpl
 
 				// delete any dirs we created if the target file doesn't exist
 
-			if ( !created_dirs_leaf.exists()){
+			if ( !FileUtil.exists( created_dirs_leaf )){
 
 				Iterator<File>	it = created_dirs.iterator();
 
@@ -1301,7 +1301,7 @@ FMFileImpl
 
 					File	dir = it.next();
 
-					if ( dir.exists() && dir.isDirectory()){
+					if ( FileUtil.exists( dir ) && dir.isDirectory()){
 
 						File[]	entries = dir.listFiles();
 

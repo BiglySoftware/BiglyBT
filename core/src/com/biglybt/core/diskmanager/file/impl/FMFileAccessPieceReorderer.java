@@ -151,7 +151,7 @@ FMFileAccessPieceReorderer
 				}
 			}
 
-			dirt_state = FileUtil.newFile( control_dir, control_file ).exists()?DIRT_CLEAN:DIRT_NEVER_WRITTEN;
+			dirt_state = FileUtil.exists( FileUtil.newFile( control_dir, control_file ))?DIRT_CLEAN:DIRT_NEVER_WRITTEN;
 
 		}catch( Throwable e ){
 
@@ -1039,7 +1039,7 @@ FMFileAccessPieceReorderer
 
 		File	control_dir = config_file.getParentFile();
 
-		if ( !control_dir.exists()){
+		if ( !FileUtil.exists(control_dir )){
 
 			control_dir.mkdirs();
 		}
@@ -1048,6 +1048,8 @@ FMFileAccessPieceReorderer
 
 			throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "Failed to write control file " + config_file.getAbsolutePath()));
 		}
+		
+		FileUtil.existsWithCacheClear( control_dir );
 	}
 
 	private void
@@ -1062,7 +1064,7 @@ FMFileAccessPieceReorderer
 
 		Map	map = encodeConfig( storage_type, current_length, next_piece_index, piece_map );
 
-		if ( !control_dir.exists()){
+		if ( !FileUtil.exists( control_dir )){
 
 			control_dir.mkdirs();
 		}
@@ -1072,6 +1074,8 @@ FMFileAccessPieceReorderer
 			throw( new FMFileManagerException( FMFileManagerException.OP_WRITE, "Failed to write control file " + FileUtil.newFile( control_dir, control_file ).getAbsolutePath()));
 		}
 
+		FileUtil.existsWithCacheClear( control_dir );
+		
 		if ( TRACE ){
 			System.out.println( "WriteConfig: length=" + current_length + ", next=" + next_piece_index );
 		}

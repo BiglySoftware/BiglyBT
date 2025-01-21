@@ -273,6 +273,101 @@ public class FileUtil {
 	  }
   }
   
+  
+	public static final boolean
+	exists(
+		File		file )
+	{
+		return( file.exists());
+	}
+	
+	final static Map<String,Map<Object,Object>>	exists_dir_cache =
+			new LinkedHashMap<String,Map<Object,Object>>(16,0.75f,true)
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+			   		Map.Entry<String,Map<Object,Object>> eldest)
+				{
+					return size() > 16;
+				}
+			};
+		
+	final static Object CACHE_TIME_KEY = new Object();
+	
+		/**
+		 * caches directory contents for a short time, therefore may answer incorrectly... 
+		 * NOTE this does not cater for file system case insensitivity issues so don't use
+		 * it unless you are sure these will NOT ARISE!!!!
+		 * @param parent
+		 * @param name
+		 * @return
+		 */
+			
+	public static final boolean
+	existsWithCache(
+		File		parent,
+		String		name )
+	{
+		long now = SystemTime.getMonotonousTime();
+
+		String key = parent.getAbsolutePath();
+
+		synchronized( exists_dir_cache ){
+
+			Map<Object,Object> map = exists_dir_cache.get( key );
+
+			if ( map != null ){
+
+				long t = (Long)map.get( CACHE_TIME_KEY );
+
+				if ( now - t < 5000 ){
+
+					return( map.containsKey( name ));
+				}
+			}
+		}
+
+		String[] files = parent.list();
+	
+		synchronized( exists_dir_cache ){
+
+			Map<Object,Object> map = new HashMap<>();
+
+			map.put( CACHE_TIME_KEY, now );
+
+			if ( files == null ){
+				
+				exists_dir_cache.put( key, map );
+				
+				return( false );
+				
+			}else{
+				
+				for ( String f: files ){
+	
+					map.put( f,  "" );
+				}
+				
+				exists_dir_cache.put( key, map );
+				
+				return( map.containsKey( name ));
+			}
+		}
+	}
+	
+	public static final void
+	existsWithCacheClear(
+		File		parent )
+	{
+		String key = parent.getAbsolutePath();
+
+		synchronized( exists_dir_cache ){
+
+			exists_dir_cache.remove( key );
+		}
+	}
+	
 	final static Map<String,Long>	exists_cache =
 			new LinkedHashMap<String,Long>(16,0.75f,true)
 			{

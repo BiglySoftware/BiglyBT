@@ -1424,7 +1424,7 @@ DownloadManagerController
 
 	  					File	save_dir_file	= download_manager.getAbsoluteSaveLocation();
 
-	  					if ( save_dir_file != null && save_dir_file.exists() && save_dir_file.isDirectory()){
+	  					if ( save_dir_file != null && FileUtil.exists( save_dir_file ) && save_dir_file.isDirectory()){
 
 	  						TorrentUtils.recursiveEmptyDirDelete( save_dir_file, false );
 	  					}
@@ -2238,7 +2238,7 @@ DownloadManagerController
 								
 			                	File test_file = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
 			                	
-			                	if ( test_file.exists()){
+			                	if ( FileUtil.exists( test_file )){
 			                			
 			                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to restore the incomplete file suffix" );
 			                		
@@ -2248,7 +2248,7 @@ DownloadManagerController
            	
 								File test_file = FileUtil.newFile( data_file.getParentFile(), name + incomplete_suffix );
 			                	
-			                	if ( test_file.exists()){
+			                	if ( FileUtil.exists( test_file )){
 			                			
 			                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to remove the incomplete file suffix" );
 			                		
@@ -2265,7 +2265,7 @@ DownloadManagerController
 						// For multi-file torrents, complain if the save directory is missing.
 						if (!this.download_manager.getTorrent().isSimpleTorrent()) {
 							File save_path = this.download_manager.getAbsoluteSaveLocation();
-							if (FileUtil.isAncestorOf(save_path, data_file) && !save_path.exists()) {
+							if (FileUtil.isAncestorOf(save_path, data_file) && !FileUtil.exists(save_path )) {
 								data_file = save_path; // We're going to abort very soon, so it's OK to overwrite this.
 							}
 						}
@@ -3676,7 +3676,7 @@ DownloadManagerController
 						
 						File f = file.getFile( true );
 								
-						writer.println( file.getIndex() + ": " + f + ", exists=" + f.exists());
+						writer.println( file.getIndex() + ": " + f + ", exists=" + FileUtil.exists( f ));
 					}
 				}finally{
 					

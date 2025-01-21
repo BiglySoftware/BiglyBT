@@ -1631,7 +1631,7 @@ CacheFileWithCache
 				try{
 					this_mon.enter();
 
-					long	physical_size = file.exists() ?  file.getLength() : 0;
+					long	physical_size = file.getLength();
 
 					Iterator	it = cache.iterator();
 

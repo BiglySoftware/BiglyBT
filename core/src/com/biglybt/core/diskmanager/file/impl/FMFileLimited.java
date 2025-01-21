@@ -163,6 +163,11 @@ FMFileLimited
 			
 			got_mon = true;
 			
+			if ( isOpen()){
+				
+				return( getLengthSupport());
+			}
+			
 				// if the file doesn't exist then we don't want to ensure it is open to get the length
 				// as this will create the file
 			

@@ -1229,7 +1229,7 @@ DownloadManagerImpl
 				 		// make sure we're working off a canonical save dir if possible
 
 				 	try{
-				 		if ( save_dir_file.exists()){
+				 		if ( FileUtil.exists( save_dir_file )){
 
 				 			save_dir_file = FileUtil.getCanonicalFileSafe( save_dir_file );
 				 		}
@@ -1244,7 +1244,7 @@ DownloadManagerImpl
 				 			// dir and use the torrent display name as the target. Otherwise we
 				 			// use the file name
 
-				 		if ( save_dir_file.exists()){
+				 		if ( FileUtil.exists( save_dir_file )){
 
 				 			if ( save_dir_file.isDirectory()){
 
@@ -1278,7 +1278,7 @@ DownloadManagerImpl
 				 			// has been selected. If ths is the case the select X as the dir and Y
 				 			// as the file name
 
-				 		if ( save_dir_file.exists()){
+				 		if ( FileUtil.exists( save_dir_file )){
 
 				 			if ( !save_dir_file.isDirectory()){
 
@@ -1332,7 +1332,7 @@ DownloadManagerImpl
 							 
 							 if ( res == null ){
 								 
-								 res = parent.exists();
+								 res = FileUtil.exists( parent );
 								 
 								 save_dir_check_cache.put( key, res );
 								 								 
@@ -5230,7 +5230,7 @@ DownloadManagerImpl
 
 				File f = file.getFile( true );
 
-				if ( f.exists()){
+				if ( FileUtil.exists( f )){
 
 					if ( f.delete()){
 
@@ -5753,7 +5753,7 @@ DownloadManagerImpl
 
 	  if ( dm == null || dm.getFiles() == null){
 
-		  if ( !old_file.exists()){
+		  if ( !FileUtil.exists( old_file )){
 
 			  // files not created yet
 
@@ -6002,7 +6002,7 @@ DownloadManagerImpl
 
 		throws DownloadManagerException
 	{
-		if ( dest_parent_dir.exists()){
+		if ( FileUtil.exists( dest_parent_dir )){
 
 			if ( !dest_parent_dir.isDirectory()){
 
@@ -6104,7 +6104,7 @@ DownloadManagerImpl
 		  try{
 			  File file_to = FileUtil.newFile( dest_parent_dir, file_from.getName());
 
-			  if ( file_to.exists()){
+			  if ( FileUtil.exists( file_to )){
 
 				  if ( file_to.length() != file_from.length()){
 
@@ -6136,7 +6136,7 @@ DownloadManagerImpl
 
 					  File file_from = file.getFile( true );
 
-					  if ( !file_from.exists() && file.getTorrentFile().isPadFile()){
+					  if ( !FileUtil.exists( file_from ) && file.getTorrentFile().isPadFile()){
 						  
 						  continue;
 					  }
@@ -6148,7 +6148,7 @@ DownloadManagerImpl
 
 							  File file_to = FileUtil.newFile( dest_parent_dir, relativePath);
 
-							  if ( file_to.exists()){
+							  if ( FileUtil.exists( file_to )){
 
 								  if ( file_to.length() != file_from.length()){
 
@@ -6158,7 +6158,7 @@ DownloadManagerImpl
 
 								  File parent = file_to.getParentFile();
 
-								  if ( !parent.exists()){
+								  if ( !FileUtil.exists( parent )){
 
 									  if ( !parent.mkdirs()){
 
@@ -6190,7 +6190,7 @@ DownloadManagerImpl
 
 	  File target = FileUtil.newFile( parent_dir, file.getName());
 	  
-	  if ( !file.exists()){
+	  if ( !FileUtil.exists( file )){
 		  
 		  		// try to recover using internal torrent
 		  
@@ -6353,7 +6353,7 @@ DownloadManagerImpl
 
 	  File	old_file = FileUtil.newFile( getTorrentFileName() );
 
-	  if ( !old_file.exists()){
+	  if ( !FileUtil.exists( old_file )){
 		  
 		  // used to fail here but we might as well use our internal copy of the torrent file
 		  // don't resurrect it if the user has explicity deleted it (on removal, required  for
@@ -6376,7 +6376,7 @@ DownloadManagerImpl
 			  }
 		  }
 		  
-		  if ( !old_file.exists()){
+		  if ( !FileUtil.exists( old_file )){
 		  
 			  Debug.out( "torrent file '" + old_file + "' doesn't exist!" );
 		  
@@ -7810,7 +7810,7 @@ DownloadManagerImpl
 
 			try{
 					// Data files don't exist, so we just don't do anything.
-		    	if (!getSaveLocation().exists()) {return;}
+		    	if (!FileUtil.exists( getSaveLocation())) {return;}
 
 		    	DiskManager dm = this.getDiskManager();
 		    	if (dm != null) {

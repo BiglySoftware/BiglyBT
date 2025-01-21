@@ -860,7 +860,7 @@ DiskManagerImpl
 
                           File current = data_file;
 
-                          while( !current.exists()){
+                          while( !FileUtil.exists( current )){
 
                             File    parent = current.getParentFile();
 
@@ -868,7 +868,7 @@ DiskManagerImpl
 
                                 break;
 
-                            }else if ( !parent.exists()){
+                            }else if ( !FileUtil.exists( parent )){
 
                                 current = parent;
 
@@ -989,7 +989,7 @@ DiskManagerImpl
 
         		while( temp != null ){
 
-        			if ( temp.exists()){
+        			if ( FileUtil.exists( temp )){
 
         				break;
         			}
@@ -1244,34 +1244,40 @@ DiskManagerImpl
                 }
 
                 fileInfo.setDownloaded(0);
+            	      
+                Boolean data_file_exists = null;	// minimise calls to .exists
 
                 	// recover incorrect incomplete file settings
-            	                
+
             	if ( incomplete_suffix != null ){
             		
             		String name = data_file.getName();
             		
             		boolean has_is = name.endsWith( incomplete_suffix );
             		
-					if ( !skip_incomplete_file_checks &&  has_is && !data_file.exists()){
+					if ( !skip_incomplete_file_checks &&  has_is && !( data_file_exists = FileUtil.exists( data_file ))){
 						
 	                	File test_file = FileUtil.newFile( data_file.getParentFile(), name.substring( 0, name.length() - incomplete_suffix.length()));
 	                	
-	                	if ( test_file.exists()){
+	                	if ( FileUtil.exists( test_file )){
 	                			
 	                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to restore the incomplete file suffix" );
 	                		
 		                	FileUtil.renameFile( test_file, data_file );
+		                	
+		                	data_file_exists = null;
 	                	}
-					}else if ( !skip_complete_file_checks && !has_is && !data_file.exists()){
+					}else if ( !skip_complete_file_checks && !has_is && !( data_file_exists = FileUtil.exists(data_file))){
    	
 						File test_file = FileUtil.newFile( data_file.getParentFile(), name + incomplete_suffix );
 	                	
-	                	if ( test_file.exists()){
+	                	if ( FileUtil.exists( test_file )){
 	                			
 	                		FileUtil.log( "Moving '" + test_file + "' to '" + data_file + "' to remove the incomplete file suffix" );
 	                		
 		                	FileUtil.renameFile( test_file, data_file );
+		                	
+		                	data_file_exists = null;
 	                	}
 					}
             	}
@@ -1300,12 +1306,21 @@ DiskManagerImpl
                 	                	
                 		// delete compact files that do not contain pieces we need
                 	
-	                if (!mustExistOrAllocate && !skip_incomplete_file_checks && data_file.exists()){
+	                if ( !mustExistOrAllocate && !skip_incomplete_file_checks ){
+	                	
+	                	if ( data_file_exists == null ){
+	                		
+	                		data_file_exists = FileUtil.exists( data_file );
+	                	}
 	
-						data_file.delete();
+	                	if ( data_file_exists ){
+	                		
+	                		data_file_exists = !data_file.delete();
+	                	}
 	                }
 	                
-	                if ( skip_incomplete_file_checks || data_file.exists() ){
+	                if ( 	skip_incomplete_file_checks || 
+	                		(( data_file_exists != null && data_file_exists ) || FileUtil.exists( data_file ))){
 	
 	                	boolean did_allocate = false;
 	                	
@@ -1354,7 +1369,7 @@ DiskManagerImpl
 		                         	did_allocate = true;
 	                        	}
 	                        }
-	                    }catch (Throwable e) {
+	                    }catch ( Throwable e ){
 	                    	Debug.out(e);
 	
 	                    	fileAllocFailed( data_file, target_length, false, e );
@@ -1932,7 +1947,7 @@ DiskManagerImpl
 	
 		                    					File new_file = FileUtil.newFile( link.getParentFile(), new_name );
 	
-		                    					if ( !new_file.exists()){
+		                    					if ( !FileUtil.exists( new_file )){
 	
 		                    						this_file.renameFile( new_name );
 	
@@ -1977,7 +1992,7 @@ DiskManagerImpl
 	
 			                    					File new_file = FileUtil.newFile( save_location.getParentFile(), new_name );
 	
-			                    					if ( !new_file.exists()){
+			                    					if ( !FileUtil.exists( new_file )){
 	
 			                    						this_file.renameFile( new_name );
 	
@@ -3227,7 +3242,7 @@ DiskManagerImpl
 					  
 					  total_size_bytes += file_lengths_to_move[i] = old_file.length();
 	
-					  if ( new_file.exists()){
+					  if ( FileUtil.exists( new_file )){
 	
 						  String msg = "" + linked_file.getName() + " already exists in MoveTo destination dir";
 	
@@ -3690,7 +3705,7 @@ DiskManagerImpl
 		File old_torrent_file = FileUtil.newFile(download_manager.getTorrentFileName());
 		File new_torrent_file = loc_change.normaliseTorrentLocation(old_torrent_file);
 
-		if (!old_torrent_file.exists()) {
+		if (!FileUtil.exists( old_torrent_file )){
             // torrent file's been removed in the meantime, just log a warning
             if (Logger.isEnabled())
                   Logger.log(new LogEvent(this, LOGID, LogEvent.LT_WARNING, "Torrent file '" + old_torrent_file.getPath() + "' has been deleted, move operation ignored" ));
@@ -3904,7 +3919,7 @@ DiskManagerImpl
                     }
                 }
 
-                if ( !skip && file.exists() && !file.isDirectory()){
+                if ( !skip && FileUtil.exists( file ) && !file.isDirectory()){
 
                     res++;
                 }
@@ -4014,7 +4029,7 @@ DiskManagerImpl
             	delete = true;
             }
 
-            if ( delete && file.exists() && !file.isDirectory()){
+            if ( delete && FileUtil.exists( file ) && !file.isDirectory()){
 
                 try{
                     FileUtil.deleteWithRecycle( file, force_no_recycle );
