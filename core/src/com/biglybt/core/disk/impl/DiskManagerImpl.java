@@ -596,7 +596,9 @@ DiskManagerImpl
 
         boolean[] stop_after_start = { false };
         
-        int[] alloc_result = allocateFiles( stop_after_start );
+        Map<DiskManagerFileInfo,Long>	file_sizes = new HashMap<>();
+        
+        int[] alloc_result = allocateFiles( file_sizes, stop_after_start );
 
         int	newFiles 		= alloc_result[0];
         int	notNeededFiles	= alloc_result[1];
@@ -617,7 +619,7 @@ DiskManagerImpl
 
 	        if ( newFiles == 0 ){
 
-	            resume_handler.checkAllPieces(false, download_manager.isForceRechecking(), (p)->{ percentDone = p; });
+	            resume_handler.checkAllPieces(false, download_manager.isForceRechecking(), file_sizes, (p)->{ percentDone = p; });
 
 	            	// unlikely to need piece list, force discard
 
@@ -629,7 +631,7 @@ DiskManagerImpl
 
 	                //  if not a fresh torrent, check pieces ignoring fast resume data
 
-	            resume_handler.checkAllPieces(true, download_manager.isForceRechecking(), (p)->{ percentDone = p; });
+	            resume_handler.checkAllPieces(true, download_manager.isForceRechecking(), file_sizes, (p)->{ percentDone = p; });
 	        }
         }
 
@@ -1060,7 +1062,8 @@ DiskManagerImpl
 
     private int[]
     allocateFiles(
-    	boolean[] stop_after_start )
+    	Map<DiskManagerFileInfo,Long>	file_sizes,
+    	boolean[] 						stop_after_start )
     {
     	int[] fail_result = { -1, -1, -1 };
 
@@ -1320,7 +1323,7 @@ DiskManagerImpl
 	                }
 	                
 	                if ( 	skip_incomplete_file_checks || 
-	                		(( data_file_exists != null && data_file_exists ) || FileUtil.exists( data_file ))){
+	                		( data_file_exists != null?data_file_exists:FileUtil.exists( data_file ))){
 	
 	                	boolean did_allocate = false;
 	                	
@@ -1330,6 +1333,8 @@ DiskManagerImpl
 	
 	                        long    existing_length = skip_incomplete_file_checks?target_length:cache_file.getLength();
 	
+	                        file_sizes.put( fileInfo, existing_length );
+	                        
 	                        if(  existing_length > target_length ){
 	
 	                            if ( COConfigurationManager.getBooleanParameter("File.truncate.if.too.large")){
@@ -1342,6 +1347,8 @@ DiskManagerImpl
 	
 	                                Debug.out( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " +data_file.getAbsolutePath() + ", truncating" );
 	
+	                                file_sizes.put( fileInfo, target_length );
+	                                
 	                            }else{
 	
 	                                setErrorState( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath() );
@@ -1365,6 +1372,8 @@ DiskManagerImpl
 	
 		                         		return( fail_result );
 		                         	}
+		                         	
+		                         	file_sizes.put( fileInfo, target_length );
 		                         	
 		                         	did_allocate = true;
 	                        	}
@@ -1412,6 +1421,8 @@ DiskManagerImpl
 	                    		return( fail_result );
 	                    	}
 	
+	                    	file_sizes.put( fileInfo, target_length );
+	                    	
 	                    }catch( Throwable e ){
 	
 	                    	fileAllocFailed( data_file, target_length, true, e );

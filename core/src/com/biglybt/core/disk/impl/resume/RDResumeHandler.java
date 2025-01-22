@@ -140,9 +140,10 @@ RDResumeHandler
 
 	public void
 	checkAllPieces(
-		boolean 			newfiles,
-		boolean				forceRecheck,
-		ProgressListener	listener )
+		boolean 						newfiles,
+		boolean							forceRecheck,
+		Map<DiskManagerFileInfo,Long>	file_sizes,
+		ProgressListener				listener )
 	{
 		//long	start = System.currentTimeMillis();
 
@@ -192,7 +193,6 @@ RDResumeHandler
 
 					// calculate the current file sizes up front for performance reasons
 				
-				final Map<DiskManagerFileInfo,Long>	file_sizes;
 								
 				boolean is_complete = disk_manager.getDownloadManager().isDownloadComplete(false);
 				
@@ -202,8 +202,11 @@ RDResumeHandler
 					file_sizes = null;
 					
 				}else{
-										
-					file_sizes = new HashMap<>();
+						
+					if ( file_sizes == null ){
+					
+						file_sizes = new HashMap<>();
+					}
 				}
 
 				boolean resumeValid = false;

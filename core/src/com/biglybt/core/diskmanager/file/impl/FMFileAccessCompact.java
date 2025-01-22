@@ -191,7 +191,7 @@ FMFileAccessCompact
 
 			if ( state_required ){
 				
-				if ( !FileUtil.exists( FileUtil.newFile(controlFileDir,controlFileName))){
+				if ( !FileUtil.existsWithCache( controlFileDir, controlFileName )){
 	
 					if (!controlFileDir.isDirectory() && !FileUtil.mkdirs(controlFileDir)){
 						

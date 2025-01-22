@@ -450,32 +450,33 @@ DownloadManagerStateImpl
 
 		if ( torrent_hash != null ){
 
-			File	saved_file = getStateFile( torrent_hash );
+			Map	cached_state = (Map)global_state_cache.remove( new HashWrapper( torrent_hash ));
 
-			if ( FileUtil.exists( saved_file )){
-				
+			if ( cached_state != null ){
+
 				if ( debug_on ){
 
-					FileUtil.log("    saved state 1 exists" );
+					FileUtil.log("    saved state 1: got cached state" );
 				}
+						
+				CachedStateWrapper wrapper = new CachedStateWrapper( download_manager, torrent_file, torrent_hash, cached_state, inactive );
 
-				try{
-					Map	cached_state = (Map)global_state_cache.remove( new HashWrapper( torrent_hash ));
+				global_state_cache_wrappers.add( wrapper );
 
-					if ( cached_state != null ){
+				saved_state	= wrapper;
+
+			}else{
+
+				File	saved_file = getStateFile( torrent_hash );
+
+				if ( FileUtil.exists( saved_file )){
+			
+					try{
 
 						if ( debug_on ){
 
-							FileUtil.log("    saved state 1: got cached state" );
+							FileUtil.log("    saved state 1 exists" );
 						}
-						
-						CachedStateWrapper wrapper = new CachedStateWrapper( download_manager, torrent_file, torrent_hash, cached_state, inactive );
-
-						global_state_cache_wrappers.add( wrapper );
-
-						saved_state	= wrapper;
-
-					}else{
 
 						saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 						
@@ -483,17 +484,16 @@ DownloadManagerStateImpl
 
 							FileUtil.log("    saved state 1: read from " + saved_file );
 						}
+					}catch( Throwable e ){
+
+						Debug.out( "Failed to load download state for " + saved_file, e );
 					}
-
-				}catch( Throwable e ){
-
-					Debug.out( "Failed to load download state for " + saved_file, e );
-				}
-			}else{
+				}else{
 				
-				if ( debug_on ){
+					if ( debug_on ){
 
-					FileUtil.log("    saved state 1 doesn't exist" );
+						FileUtil.log("    saved state 1 doesn't exist" );
+					}
 				}
 			}
 		}
