@@ -456,6 +456,14 @@ TRTrackerDHTAnnouncerImpl
 	}
 
 	@Override
+	public void 
+	clearTrackerResponseCache()
+	{
+		
+		Debug.out( "not implemented" );
+	}
+	
+	@Override
 	public void
 	generateEvidence(
 		IndentWriter writer )

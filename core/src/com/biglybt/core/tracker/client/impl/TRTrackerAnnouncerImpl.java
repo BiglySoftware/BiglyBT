@@ -234,6 +234,13 @@ TRTrackerAnnouncerImpl
 
 				@Override
 				public void
+				clearTrackerResponseCache()
+				{
+					TRTrackerAnnouncerImpl.this.clearTrackerResponseCache();
+				}
+				
+				@Override
+				public void
 				informResponse(
 					TRTrackerAnnouncerHelper		helper,
 					TRTrackerAnnouncerRequest		request,
@@ -295,7 +302,21 @@ TRTrackerAnnouncerImpl
 	{
 		return( exportTrackerCache());
 	}
+	
+	@Override
+	public void
+	clearTrackerResponseCache()
+	{
+		try{
+			tracker_peer_cache_mon.enter();
+			
+			tracker_peer_cache.clear();
+			
+		}finally{
 
+			tracker_peer_cache_mon.exit();
+		}
+	}
 
 	@Override
 	public void
@@ -310,55 +331,58 @@ TRTrackerAnnouncerImpl
 	}
 
 	protected Map
-	exportTrackerCache()
+	exportTrackerCache() 
 	{
 		Map	res = new LightHashMap(1);
-
-		List	peers = new ArrayList();
-
-		res.put( "tracker_peers", peers );
 
 		try{
 			tracker_peer_cache_mon.enter();
 
-			Iterator it = tracker_peer_cache.values().iterator();
+			if ( !tracker_peer_cache.isEmpty()){
+				
+				List	peers = new ArrayList();
 
-			while( it.hasNext()){
+				res.put( "tracker_peers", peers );
 
-				TRTrackerAnnouncerResponsePeer	peer = (TRTrackerAnnouncerResponsePeer)it.next();
-
-				LightHashMap entry = new LightHashMap();
-
-				entry.put( "ip", peer.getAddress().getBytes());
-				entry.put( "src", peer.getSource().getBytes());
-				entry.put( "port", new Long(peer.getPort()));
-
-				int	udp_port = peer.getUDPPort();
-				if ( udp_port != 0 ){
-					entry.put( "udpport", new Long( udp_port));
+				Iterator it = tracker_peer_cache.values().iterator();
+	
+				while( it.hasNext()){
+	
+					TRTrackerAnnouncerResponsePeer	peer = (TRTrackerAnnouncerResponsePeer)it.next();
+	
+					LightHashMap entry = new LightHashMap();
+	
+					entry.put( "ip", peer.getAddress().getBytes());
+					entry.put( "src", peer.getSource().getBytes());
+					entry.put( "port", new Long(peer.getPort()));
+	
+					int	udp_port = peer.getUDPPort();
+					if ( udp_port != 0 ){
+						entry.put( "udpport", new Long( udp_port));
+					}
+					int	http_port = peer.getHTTPPort();
+					if ( http_port != 0 ){
+						entry.put( "httpport", new Long( http_port));
+					}
+	
+					entry.put( "prot", new Long(peer.getProtocol()));
+	
+					byte	az_ver = peer.getAZVersion();
+	
+					if ( az_ver != TRTrackerAnnouncer.AZ_TRACKER_VERSION_1 ){
+						entry.put( "azver", new Long( az_ver ));
+					}
+	
+					entry.compactify(0.9f);
+	
+					peers.add( entry );
 				}
-				int	http_port = peer.getHTTPPort();
-				if ( http_port != 0 ){
-					entry.put( "httpport", new Long( http_port));
-				}
-
-				entry.put( "prot", new Long(peer.getProtocol()));
-
-				byte	az_ver = peer.getAZVersion();
-
-				if ( az_ver != TRTrackerAnnouncer.AZ_TRACKER_VERSION_1 ){
-					entry.put( "azver", new Long( az_ver ));
-				}
-
-				entry.compactify(0.9f);
-
-				peers.add( entry );
-			}
 
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(getTorrent(), LOGID,
 						"TRTrackerClient: exported " + tracker_peer_cache.size()
 								+ " cached peers"));
+			}
 		}finally{
 
 			tracker_peer_cache_mon.exit();
@@ -723,6 +747,9 @@ TRTrackerAnnouncerImpl
 		setTrackerResponseCache(
 			Map map	);
 
+		public void
+		clearTrackerResponseCache();
+		
 		public void
 		removeFromTrackerResponseCache(
 			String ip, int tcpPort );

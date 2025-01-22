@@ -2831,6 +2831,7 @@ public class TorrentUtil
 		boolean scrape_stopped = COConfigurationManager.getBooleanParameter("Tracker Client Scrape Stopped Enable");
 
 		boolean manualScrape;
+		boolean clearPeerCache = false;
 		
 		if ( !scrape_enabled ){
 			
@@ -2845,9 +2846,32 @@ public class TorrentUtil
 			manualScrape = allStopped;
 		}
 
+		for ( DownloadManager dm: dms ){
+		
+			if ( !dm.getDownloadState().getTrackerResponseCache().isEmpty()){
+				
+				clearPeerCache = true;
+				
+				break;
+				
+			}else{
+				
+				TRTrackerAnnouncer tc = dm.getTrackerClient();
+				
+				if ( tc != null ){
+					
+					if ( !tc.getTrackerResponseCache().isEmpty()){
+						
+						clearPeerCache = true;
+						
+						break;
+					}
+				}
+			}
+		}
+		
 		final MenuItem itemManualScrape = new MenuItem(menuTracker, SWT.PUSH);
-		Messages.setLanguageText(itemManualScrape,
-				"GeneralView.label.trackerscrapeupdate");
+		Messages.setLanguageText(itemManualScrape,	"GeneralView.label.trackerscrapeupdate");
 		
 		itemManualScrape.addListener(SWT.Selection, new ListenerDMTask(dms, true, true) {
 			@Override
@@ -2857,6 +2881,17 @@ public class TorrentUtil
 		});
 		itemManualScrape.setEnabled(manualScrape);
 
+		final MenuItem itemClearPeerCache = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText(itemClearPeerCache, "GeneralView.label.clearpeercache");
+		
+		itemClearPeerCache.addListener(SWT.Selection, new ListenerDMTask(dms, true, true) {
+			@Override
+			public void run(DownloadManager dm) {
+				dm.getDownloadState().clearTrackerResponseCache();
+			}
+		});
+		itemClearPeerCache.setEnabled(clearPeerCache);
+		
 			// enable hybrid v2 swarm, create hybrid/v2
 		
 		List<DownloadManager>	can_v2_from_hybrid 	= new ArrayList<>();

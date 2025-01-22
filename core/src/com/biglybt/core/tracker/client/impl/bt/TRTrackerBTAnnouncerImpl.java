@@ -4503,6 +4503,13 @@ TRTrackerBTAnnouncerImpl
 	}
 
 	@Override
+	public void
+	clearTrackerResponseCache()
+	{
+		helper.clearTrackerResponseCache();
+	}
+	
+	@Override
 	public TrackerPeerSource
 	getTrackerPeerSource(
 		TOTorrentAnnounceURLSet set)

@@ -1016,7 +1016,19 @@ DownloadManagerStateImpl
 	public void
 	clearTrackerResponseCache()
 	{
-		setTrackerResponseCache( new HashMap());
+		Map map = new HashMap<>();
+		
+		setTrackerResponseCache( map );
+		
+		if ( download_manager != null ){
+		
+			TRTrackerAnnouncer tc = download_manager.getTrackerClient();
+			
+			if ( tc != null ){
+			
+				tc.clearTrackerResponseCache();
+			}
+		}
 	}
 
 	@Override

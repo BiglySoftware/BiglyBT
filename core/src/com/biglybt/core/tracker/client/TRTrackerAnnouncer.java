@@ -151,6 +151,9 @@ TRTrackerAnnouncer
 		String		ip,
 		int			tcp_port );
 
+	public void
+	clearTrackerResponseCache();
+	
 		/**
 		 * Gets a delegate tracker peer source for reporting against
 		 * @param set
