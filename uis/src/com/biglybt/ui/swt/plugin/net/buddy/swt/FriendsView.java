@@ -35,7 +35,8 @@ public class FriendsView implements UISWTViewCoreEventListener
 {
 	public static final String VIEW_ID = "azbuddy";
 
-	public static final String DS_SELECT_CLASSIC_TAB = "SelectClassicTab";
+	public static final String DS_SELECT_CLASSIC_TAB	= "SelectClassicTab";
+	public static final String DS_SELECT_CHAT_TAB		= "SelectChatTab";
 	private BuddyPlugin plugin;
 	private UISWTInstance ui_instance;
 	private BuddyPluginView buddyPluginView;
@@ -97,6 +98,8 @@ public class FriendsView implements UISWTViewCoreEventListener
 
 				if (DS_SELECT_CLASSIC_TAB.equals(datasource)) {
 					current_instance.selectClassicTab();
+				}else if (DS_SELECT_CHAT_TAB.equals(datasource)) {
+					current_instance.selectChatTab();
 				}
 
 				break;
@@ -117,13 +120,27 @@ public class FriendsView implements UISWTViewCoreEventListener
 				break;
 			}
 			case UISWTViewEvent.TYPE_DATASOURCE_CHANGED: {
-				if (current_instance != null && DS_SELECT_CLASSIC_TAB.equals(datasource)) {
-					current_instance.selectClassicTab();
+				datasource = event.getData();
+				if ( current_instance != null ){
+					if (DS_SELECT_CLASSIC_TAB.equals(datasource)) {
+						current_instance.selectClassicTab();
+					}else if (DS_SELECT_CHAT_TAB.equals(datasource)) {
+						current_instance.selectChatTab();
+					}
 				}
+				
 				break;
 			}
 		}
 
 		return true;
+	}
+	
+	@Override
+	public boolean
+	informOfDuplicates(
+		int	type )
+	{
+		return( type == UISWTViewEvent.TYPE_DATASOURCE_CHANGED );
 	}
 }

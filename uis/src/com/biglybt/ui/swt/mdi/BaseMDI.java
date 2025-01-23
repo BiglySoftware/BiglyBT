@@ -754,6 +754,7 @@ public abstract class BaseMDI
 				builder = vi.getBuilder(getDataSourceType(), id);
 			}
 			if (builder != null) {
+				builder.setInitialDatasource(datasource);
 				mdiEntry = createEntry(builder, true);
 			}
 		}

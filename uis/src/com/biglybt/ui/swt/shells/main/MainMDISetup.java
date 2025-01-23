@@ -50,6 +50,7 @@ import com.biglybt.core.tracker.host.TRHostListener;
 import com.biglybt.core.tracker.host.TRHostTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
@@ -66,6 +67,7 @@ import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.plugin.net.buddy.swt.FriendsView;
 import com.biglybt.ui.swt.plugin.net.buddy.swt.SBC_ChatOverview;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.*;
@@ -168,6 +170,8 @@ public class MainMDISetup
 		COConfigurationManager.addAndFireParameterListener(
 				"Beta Programme Enabled", configBetaEnabledListener);
 		
+		PluginInterface pi = PluginInitializer.getDefaultInterface();
+
 		// Note: We don't use ViewManagerSWT because it adds a menu item, and we
 		//       manually do that for StatsView and others
 		//		ViewManagerSWT vi = ViewManagerSWT.getInstance();
@@ -615,7 +619,9 @@ public class MainMDISetup
 					}
 				});
 
-		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_CHAT,
+		if ( BuddyPluginUtils.isBetaChatEnabled()){
+			
+			mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_CHAT,
 				new MdiEntryCreationListener() {
 					@Override
 					public MdiEntry createMDiEntry(String id) {
@@ -685,10 +691,33 @@ public class MainMDISetup
 						MdiEntry mdi_entry = mdi.createEntryFromSkinRef(
 								MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
 								MultipleDocumentInterface.SIDEBAR_SECTION_CHAT, "chatsview",
-								"{mdi.entry.chatsoverview}", title_info, null, true, MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS );
+								"{mdi.entry.chatsoverview}", title_info, null, false, MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS );
 
 						mdi_entry.setImageLeftID("image.sidebar.chat-overview");
 
+						String parentID = "sidebar." + MultipleDocumentInterface.SIDEBAR_SECTION_CHAT;
+
+						MenuManager menu_manager = pi.getUIManager().getMenuManager();
+						
+						MenuItem mi = menu_manager.addMenuItem( parentID, "MainWindow.menu.view.configuration" );
+						mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+
+						mi.addListener(
+							new MenuItemListener()
+							{
+								@Override
+								public void
+								selected(
+									MenuItem menu, Object target )
+								{
+							      	 UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+							      	 if ( uif != null ){
+							      		 
+							      		 uif.getMDI().loadEntryByID( BuddyPlugin.VIEW_ID, true, false, FriendsView.DS_SELECT_CHAT_TAB );
+							      	 }
+								}
+							});
 								
 						final TimerEventPeriodic	timer =
 							SimpleTimer.addPeriodicEvent(
@@ -741,7 +770,8 @@ public class MainMDISetup
 						return mdi_entry;
 					}
 				});
-
+		}
+		
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_ARCHIVED_DOWNLOADS,
 				new MdiEntryCreationListener() {
 					@Override
@@ -1251,7 +1281,6 @@ public class MainMDISetup
 					return null;
 				});
 
-		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		try {
 			if ( !COConfigurationManager.getBooleanParameter( "my.shares.view.auto.open.done", false )){
 				
@@ -1364,17 +1393,19 @@ public class MainMDISetup
 				}
 			});
 
-			menuItem = uim.getMenuManager().addMenuItem(
-					MenuManager.MENU_MENUBAR, "chats.view.heading");
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-			menuItem.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
-							MultipleDocumentInterface.SIDEBAR_SECTION_CHAT);
-				}
-			});
-
+			if ( BuddyPluginUtils.isBetaChatEnabled()){
+				menuItem = uim.getMenuManager().addMenuItem(
+						MenuManager.MENU_MENUBAR, "chats.view.heading");
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+				menuItem.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+						UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+								MultipleDocumentInterface.SIDEBAR_SECTION_CHAT);
+					}
+				});
+			}
+			
 			menuItem = uim.getMenuManager().addMenuItem(
 					MenuManager.MENU_MENUBAR, "archivedlsview.view.heading");
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);

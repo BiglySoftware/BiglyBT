@@ -36,6 +36,7 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.Plugin;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.peers.Peer;
@@ -288,6 +289,12 @@ BuddyPluginUtils
 		return( null );
 	}
 
+	public static boolean
+	isBetaChatEnabled()
+	{
+		return( BuddyPlugin.isBetaChatEnabled());
+	}
+	
 	public static boolean
 	isBetaChatAvailable()
 	{

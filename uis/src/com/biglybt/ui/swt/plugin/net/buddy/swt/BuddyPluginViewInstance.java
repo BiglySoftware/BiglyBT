@@ -21,7 +21,6 @@
 package com.biglybt.ui.swt.plugin.net.buddy.swt;
 
 import java.net.InetSocketAddress;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 
@@ -72,7 +71,6 @@ import com.biglybt.ui.swt.config.IntSwtParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.plugin.net.buddy.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 
@@ -109,6 +107,7 @@ BuddyPluginViewInstance
 	private CTabFolder  		tab_folder;
 	
 	private CTabItem 			classic_item;
+	private CTabItem 			chat_item;
 
 	private boolean				classic_enabled;
 	private boolean				beta_enabled;
@@ -149,9 +148,9 @@ BuddyPluginViewInstance
 		GridData grid_data = new GridData(GridData.FILL_BOTH);
 		tab_folder.setLayoutData(grid_data);
 
-		CTabItem beta_item = new CTabItem(tab_folder, SWT.NULL);
+		chat_item = new CTabItem(tab_folder, SWT.NULL);
 
-		beta_item.setText( lu.getLocalisedMessageText( "azbuddy.dchat.decentralized" ));
+		chat_item.setText( lu.getLocalisedMessageText( "azbuddy.dchat.decentralized" ));
 
 		ScrolledComposite beta_area = new ScrolledComposite( tab_folder, SWT.V_SCROLL | SWT.H_SCROLL );
 		
@@ -160,7 +159,7 @@ BuddyPluginViewInstance
 
 		beta_area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		beta_item.setControl( beta_area );
+		chat_item.setControl( beta_area );
 				
 		Composite beta_area_comp = new Composite( beta_area, SWT.NULL );
 				
@@ -228,7 +227,7 @@ BuddyPluginViewInstance
 		
 		int sel = COConfigurationManager.getIntParameter( "buddy.plugin.ui.selected.tab", 0 );
 		
-		tab_folder.setSelection(sel==0?beta_item:classic_item);
+		tab_folder.setSelection(sel==0?chat_item:classic_item);
 		
 		tab_folder.addSelectionListener(
 			new SelectionAdapter(){
@@ -246,16 +245,15 @@ BuddyPluginViewInstance
 	protected void
 	selectClassicTab()
 	{
-		Utils.execSWTThread(
-			new Runnable() {
-
-				@Override
-				public void run() {
-					tab_folder.setSelection( classic_item );
-				}
-			});
+		Utils.execSWTThread(()->tab_folder.setSelection( classic_item ));
 	}
 
+	protected void
+	selectChatTab()
+	{
+		Utils.execSWTThread(()->tab_folder.setSelection( chat_item ));;
+	}
+	
 	private void
 	createBeta(
 		Composite main )

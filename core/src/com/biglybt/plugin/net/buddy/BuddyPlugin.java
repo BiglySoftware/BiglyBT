@@ -112,8 +112,16 @@ BuddyPlugin
 
 	private static final int FEED_UPDATE_MIN_MILLIS	= 6*60*60*1000;
 
-	private static final String VIEW_ID = "azbuddy";
+	public static final String VIEW_ID = "azbuddy";
 
+	private static final boolean BETA_ENABLE_DEFAULT = true;
+	
+	public static boolean
+	isBetaChatEnabled()
+	{
+		return( COConfigurationManager.getBooleanParameter( "Plugin.azbuddy.azbuddy.dchat.decentralized.enabled", BETA_ENABLE_DEFAULT ));
+	}
+	
 	public static void
 	load(
 		PluginInterface		plugin_interface )
@@ -451,9 +459,9 @@ BuddyPlugin
 
 			// decentralised stuff
 
-
-		beta_enabled_param = config.addBooleanParameter2( "azbuddy.dchat.decentralized.enabled", "azbuddy.dchat.decentralized.enabled", true );
-
+			// this parameter is explicitly accessed above
+		
+		beta_enabled_param = config.addBooleanParameter2( "azbuddy.dchat.decentralized.enabled", "azbuddy.dchat.decentralized.enabled", BETA_ENABLE_DEFAULT );
 
 		config.createGroup(
 				"azbuddy.dchat.decentralized",
