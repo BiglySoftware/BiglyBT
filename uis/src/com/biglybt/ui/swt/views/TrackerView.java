@@ -47,6 +47,7 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.ListenerDMTask;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -318,6 +319,37 @@ public class TrackerView
 
 			if ( found_tracker ){
 
+				if ( manager != null ){
+					
+					boolean clearPeerCache = false;
+				
+					if ( !manager.getDownloadState().getTrackerResponseCache().isEmpty()){
+						
+						clearPeerCache = true;
+						
+					}else{
+						
+						TRTrackerAnnouncer tc = manager.getTrackerClient();
+						
+						if ( tc != null ){
+							
+							if ( !tc.getTrackerResponseCache().isEmpty()){
+								
+								clearPeerCache = true;
+							}
+						}
+					}
+					
+					final MenuItem itemClearPeerCache = new MenuItem(menu, SWT.PUSH);
+					Messages.setLanguageText(itemClearPeerCache, "GeneralView.label.clearpeercache");
+					
+					itemClearPeerCache.addListener(SWT.Selection, (ev)->
+							manager.getDownloadState().clearTrackerResponseCache()
+						);
+					
+					itemClearPeerCache.setEnabled(clearPeerCache);
+				}
+				
 				final MenuItem edit_item = new MenuItem( menu, SWT.PUSH);
 
 				Messages.setLanguageText(edit_item, "MyTorrentsView.menu.editTracker" );
