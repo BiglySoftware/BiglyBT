@@ -435,11 +435,11 @@ FMFileImpl
 		String		new_name )
 
 		throws FMFileManagerException
-	{
-		File lf = linked_file.getFile();
-		
+	{		
 		try{
 			this_mon.enter();
+
+			File lf = linked_file.getFile();
 
 			length_cache = getLength();
 			
@@ -473,9 +473,13 @@ FMFileImpl
 				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "getCanonicalPath fails", e ));
 			}
 
-			if ( FileUtil.exists( new_linked_file )){
-
-				throw( new FMFileManagerException( FMFileManagerException.OP_OTHER, "renameFile fails - file '" + new_canonical_path + "' already exists"));
+			if ( FileUtil.exists( new_linked_file )){				
+				
+				throw( 
+					new FMFileManagerException( 
+						FMFileManagerException.OP_OTHER, 
+						"renameFile fails - new file '" + new_canonical_path + "' already exists (old file='" +
+								lf + "', exists=" + FileUtil.exists(lf) +")"));
 			}
 
 			boolean	was_open	= isOpen();
