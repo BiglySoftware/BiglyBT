@@ -1422,21 +1422,25 @@ public class TableColumnSetupWindow
 	 *
 	 * @since 4.0.0.5
 	 */
-	protected void apply() {
-		TableColumnManager tcm = TableColumnManager.getInstance();
-
-		for (TableColumnCore tc : mapNewVisibility.keySet()) {
-			boolean visible = mapNewVisibility.get(tc).booleanValue();
-			tc.setVisible(visible);
+	protected void 
+	apply() 
+	{
+		if ( !rowDetailsOnly ){
+			TableColumnManager tcm = TableColumnManager.getInstance();
+	
+			for (TableColumnCore tc : mapNewVisibility.keySet()) {
+				boolean visible = mapNewVisibility.get(tc).booleanValue();
+				tc.setVisible(visible);
+			}
+			
+			tcm.saveTableColumns(forDataSourceType, forTableID);
+			
+			if ( listener != null ){
+				listener.tableStructureChanged(true, forDataSourceType);
+			}
+			
+			setHasChanges( false );
 		}
-		
-		tcm.saveTableColumns(forDataSourceType, forTableID);
-		
-		if ( listener != null ){
-			listener.tableStructureChanged(true, forDataSourceType);
-		}
-		
-		setHasChanges( false );
 	}
 
 	/**
