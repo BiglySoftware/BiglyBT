@@ -50,6 +50,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.ListenerDMTask;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
@@ -248,6 +249,7 @@ public class TrackerView
 		List<TrackerPeerSource>	found_trackers		= new ArrayList<>();
 		
 		boolean	found_dht_tracker	= false;
+		boolean	found_http_seed		= false;
 		boolean	update_ok 			= false;
 		boolean delete_ok			= false;
 
@@ -255,17 +257,21 @@ public class TrackerView
 
 			TrackerPeerSource ps = (TrackerPeerSource)o;
 
-			if ( ps.getType() == TrackerPeerSource.TP_TRACKER ){
+			int type = ps.getType();
+					
+			if ( type == TrackerPeerSource.TP_TRACKER ){
 
 				found_trackers.add( ps );
 
-			}
-
-			if ( ps.getType() == TrackerPeerSource.TP_DHT  ){
+			}else if ( type == TrackerPeerSource.TP_DHT  ){
 
 				found_dht_tracker = true;
-			}
+				
+			}else if ( type == TrackerPeerSource.TP_HTTP_SEED  ){
 
+				found_http_seed = true;
+			}
+			
 			int	state = ps.getStatus();
 
 			if ( 	( 	state == TrackerPeerSource.ST_ONLINE ||
@@ -288,35 +294,38 @@ public class TrackerView
 
 		boolean found_tracker = !found_trackers.isEmpty();
 		
-		if ( found_tracker || found_dht_tracker ){
+		if ( found_tracker || found_dht_tracker || found_http_seed ){
 
-			final MenuItem update_item = new MenuItem( menu, SWT.PUSH);
-
-			Messages.setLanguageText(update_item, "GeneralView.label.trackerurlupdate");
-
-			update_item.setEnabled( update_ok );
-
-			update_item.addListener(
-				SWT.Selection,
-				new TableSelectedRowsListener(tv)
-				{
-					@Override
-					public void
-					run(
-						TableRowCore row )
+			if ( found_tracker || found_dht_tracker ){
+				
+				final MenuItem update_item = new MenuItem( menu, SWT.PUSH);
+	
+				Messages.setLanguageText(update_item, "GeneralView.label.trackerurlupdate");
+	
+				update_item.setEnabled( update_ok );
+	
+				update_item.addListener(
+					SWT.Selection,
+					new TableSelectedRowsListener(tv)
 					{
-						for ( Object o: sources ){
-
-							TrackerPeerSource ps = (TrackerPeerSource)o;
-
-							if ( ps.canManuallyUpdate()){
-
-								ps.manualUpdate();
+						@Override
+						public void
+						run(
+							TableRowCore row )
+						{
+							for ( Object o: sources ){
+	
+								TrackerPeerSource ps = (TrackerPeerSource)o;
+	
+								if ( ps.canManuallyUpdate()){
+	
+									ps.manualUpdate();
+								}
 							}
 						}
-					}
-				});
-
+					});
+			}
+			
 			if ( found_tracker ){
 
 				if ( manager != null ){
@@ -424,6 +433,11 @@ public class TrackerView
 				edit_item.setEnabled( torrent != null && !TorrentUtils.isReallyPrivate( torrent ));
 			}
 
+			if ( found_http_seed && manager != null ){
+				
+				TorrentUtil.addEditWebseeds(menu, new DownloadManager[]{ manager });
+			}
+			
 			if ( found_trackers.size() == 1 ){
 
 				TrackerPeerSource tps = found_trackers.get(0);

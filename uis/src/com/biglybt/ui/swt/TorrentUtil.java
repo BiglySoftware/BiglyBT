@@ -2569,6 +2569,107 @@ public class TorrentUtil
 		}
 	}
 
+	public static void
+	addEditWebseeds(
+		Menu				menu,
+		DownloadManager[]	dms )
+	{
+		final MenuItem itemEditWebSeeds = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemEditWebSeeds,
+				"MyTorrentsView.menu.editWebSeeds");
+		itemEditWebSeeds.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(final DownloadManager[] dms) {
+				final TOTorrent torrent = dms[0].getTorrent();
+
+				if (torrent == null) {
+
+					return;
+				}
+
+				List getright = getURLList(torrent, "url-list");
+				List webseeds = getURLList(torrent, "httpseeds");
+
+				Map ws = new HashMap();
+
+				ws.put("getright", getright);
+				ws.put("webseeds", webseeds);
+
+				ws = BDecoder.decodeStrings(ws);
+
+				new WebSeedsEditor(null, ws, new WebSeedsEditorListener() {
+					@Override
+					public void webSeedsChanged(String oldName, String newName, Map ws) {
+						try {
+							// String -> byte[]
+
+							ws = BDecoder.decode(BEncoder.encode(ws));
+
+							List getright = (List) ws.get("getright");
+
+							if (getright == null || getright.size() == 0) {
+
+								torrent.removeAdditionalProperty("url-list");
+
+							} else {
+
+								torrent.setAdditionalListProperty("url-list", getright);
+							}
+
+							List webseeds = (List) ws.get("webseeds");
+
+							if (webseeds == null || webseeds.size() == 0) {
+
+								torrent.removeAdditionalProperty("httpseeds");
+
+							} else {
+
+								torrent.setAdditionalListProperty("httpseeds", webseeds);
+							}
+
+							PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByClass(
+									ExternalSeedPlugin.class);
+
+							if (pi != null) {
+
+								ExternalSeedPlugin ext_seed_plugin = (ExternalSeedPlugin) pi.getPlugin();
+
+								ext_seed_plugin.downloadChanged(PluginCoreUtils.wrap(dms[0]));
+							}
+
+						} catch (Throwable e) {
+
+							Debug.printStackTrace(e);
+						}
+					}
+				}, true);
+
+			}
+
+			protected List getURLList(TOTorrent torrent, String key) {
+				Object obj = torrent.getAdditionalProperty(key);
+
+				if (obj instanceof byte[]) {
+
+					List l = new ArrayList();
+
+					l.add(obj);
+
+					return (l);
+
+				} else if (obj instanceof List) {
+
+					return ((List) obj);
+
+				} else {
+
+					return (new ArrayList());
+				}
+			}
+		});
+
+		itemEditWebSeeds.setEnabled(dms.length == 1);
+	}
 	protected static void addTrackerTorrentMenu(final Menu menuTracker,
 			final DownloadManager[] dms, boolean changeUrl, boolean manualUpdate,
 			boolean allStopped, final boolean use_open_containing_folder, boolean canMove) {
@@ -2714,103 +2815,9 @@ public class TorrentUtil
 
 		itemEditTrackerMerged.setEnabled(dms.length > 1);
 
-		// edit webseeds
+			// edit webseeds
 
-		final MenuItem itemEditWebSeeds = new MenuItem(menuTracker, SWT.PUSH);
-		Messages.setLanguageText(itemEditWebSeeds,
-				"MyTorrentsView.menu.editWebSeeds");
-		itemEditWebSeeds.addListener(SWT.Selection, new ListenerDMTask(dms) {
-			@Override
-			public void run(final DownloadManager[] dms) {
-				final TOTorrent torrent = dms[0].getTorrent();
-
-				if (torrent == null) {
-
-					return;
-				}
-
-				List getright = getURLList(torrent, "url-list");
-				List webseeds = getURLList(torrent, "httpseeds");
-
-				Map ws = new HashMap();
-
-				ws.put("getright", getright);
-				ws.put("webseeds", webseeds);
-
-				ws = BDecoder.decodeStrings(ws);
-
-				new WebSeedsEditor(null, ws, new WebSeedsEditorListener() {
-					@Override
-					public void webSeedsChanged(String oldName, String newName, Map ws) {
-						try {
-							// String -> byte[]
-
-							ws = BDecoder.decode(BEncoder.encode(ws));
-
-							List getright = (List) ws.get("getright");
-
-							if (getright == null || getright.size() == 0) {
-
-								torrent.removeAdditionalProperty("url-list");
-
-							} else {
-
-								torrent.setAdditionalListProperty("url-list", getright);
-							}
-
-							List webseeds = (List) ws.get("webseeds");
-
-							if (webseeds == null || webseeds.size() == 0) {
-
-								torrent.removeAdditionalProperty("httpseeds");
-
-							} else {
-
-								torrent.setAdditionalListProperty("httpseeds", webseeds);
-							}
-
-							PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByClass(
-									ExternalSeedPlugin.class);
-
-							if (pi != null) {
-
-								ExternalSeedPlugin ext_seed_plugin = (ExternalSeedPlugin) pi.getPlugin();
-
-								ext_seed_plugin.downloadChanged(PluginCoreUtils.wrap(dms[0]));
-							}
-
-						} catch (Throwable e) {
-
-							Debug.printStackTrace(e);
-						}
-					}
-				}, true);
-
-			}
-
-			protected List getURLList(TOTorrent torrent, String key) {
-				Object obj = torrent.getAdditionalProperty(key);
-
-				if (obj instanceof byte[]) {
-
-					List l = new ArrayList();
-
-					l.add(obj);
-
-					return (l);
-
-				} else if (obj instanceof List) {
-
-					return ((List) obj);
-
-				} else {
-
-					return (new ArrayList());
-				}
-			}
-		});
-
-		itemEditWebSeeds.setEnabled(dms.length == 1);
+		addEditWebseeds( menuTracker, dms );
 
 		// manual update
 
