@@ -2045,6 +2045,8 @@ SubscriptionManagerUI
 					.getScheduler()
 					.downloadAsync(sub, true));
 
+			menu_creator.newSeparator();
+			
 			menu_creator.newItem("Subscription.menu.clearall",
 				(SelectionList_NoTemplates) (subs) -> {
 					for (Subscription sub : subs) {
