@@ -43,7 +43,6 @@ import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
-import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
@@ -57,7 +56,6 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import com.biglybt.ui.swt.search.SBC_SearchResult;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI.SubsLists;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -346,6 +344,7 @@ public class SubscriptionsView
 		TableColumnCore[] columns = new TableColumnCore[] {
 				new ColumnSubscriptionNew(TABLE_ID),
 				new ColumnSubscriptionName(TABLE_ID),
+				new ColumnSubscriptionActions(TABLE_ID),
 				new ColumnSubscriptionNbNewResults(TABLE_ID),
 				new ColumnSubscriptionNbResults(TABLE_ID),
 				new ColumnSubscriptionAutoDownload(TABLE_ID),

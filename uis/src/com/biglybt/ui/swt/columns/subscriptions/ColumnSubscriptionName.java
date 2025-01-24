@@ -17,22 +17,10 @@
 
 package com.biglybt.ui.swt.columns.subscriptions;
 
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
-
-import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-import com.biglybt.ui.swt.views.table.TableCellSWT;
-import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 
 import com.biglybt.core.subs.Subscription;
 
-import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.pif.ui.tables.*;
 
 /**
@@ -40,9 +28,10 @@ import com.biglybt.pif.ui.tables.*;
  * @created Oct 7, 2008
  *
  */
+
 public class ColumnSubscriptionName
 	extends CoreTableColumnSWT
-	implements TableCellRefreshListener, TableCellSWTPaintListener, TableCellMouseListener, TableCellMouseMoveListener
+	implements TableCellRefreshListener // , TableCellSWTPaintListener, TableCellMouseListener, TableCellMouseMoveListener
 {
 	public static String COLUMN_ID = "name";
 
@@ -62,7 +51,7 @@ public class ColumnSubscriptionName
 	public ColumnSubscriptionName(String sTableID) {
 		super(COLUMN_ID, POSITION_LAST, 350, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setMinWidth(300);
+		// setMinWidth(300);
 	}
 
 	@Override
@@ -79,7 +68,11 @@ public class ColumnSubscriptionName
 		if (!cell.setSortValue(name) && cell.isValid()) {
 			return;
 		}
+		
+		cell.setText(name);
 	}
+	
+	/*
 
 	@Override
 	public void cellPaint(GC gc, TableCellSWT cell) {
@@ -141,7 +134,8 @@ public class ColumnSubscriptionName
 		}
 
 	}
-
+	*/
+	
 	@Override
 	public String getClipboardText(TableCell cell) {
 		Comparable sortValue = cell.getSortValue();
