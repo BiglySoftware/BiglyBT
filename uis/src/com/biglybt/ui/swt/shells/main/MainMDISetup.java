@@ -808,6 +808,8 @@ public class MainMDISetup
 									MdiEntry entry, boolean userClosed)
 								{
 									timer.cancel();
+									
+									mi.remove();
 								}
 							});
 
