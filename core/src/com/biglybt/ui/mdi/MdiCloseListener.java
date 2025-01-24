@@ -30,4 +30,6 @@ public interface MdiCloseListener
 	 * @param userClosed true if the user closed the entry; false if programmically closed (App close)
 	 */
 	public void mdiEntryClosed(MdiEntry entry, boolean userClosed);
+	
+	public default boolean midEntryCanClose( MdiEntry entry, boolean userClosed ){ return( true ); }
 }

@@ -691,7 +691,7 @@ public class MainMDISetup
 						MdiEntry mdi_entry = mdi.createEntryFromSkinRef(
 								MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
 								MultipleDocumentInterface.SIDEBAR_SECTION_CHAT, "chatsview",
-								"{mdi.entry.chatsoverview}", title_info, null, false, MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS );
+								"{mdi.entry.chatsoverview}", title_info, null, true, MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS );
 
 						mdi_entry.setImageLeftID("image.sidebar.chat-overview");
 
@@ -758,6 +758,50 @@ public class MainMDISetup
 						mdi_entry.addListener(
 							new MdiCloseListener() {
 
+								boolean can_close = false;
+								
+								@Override
+								public boolean 
+								midEntryCanClose(
+									MdiEntry entry, boolean userClosed)
+								{
+									if ( can_close || !userClosed ){
+										
+										return( true );
+									}
+									
+									String title 	= MessageText.getString( "message.confirm.sb.close.title" );
+									String text 	= MessageText.getString( "message.confirm.sb.close.text" );
+
+									MessageBoxShell prompter =
+										new MessageBoxShell(
+											title, text,
+											new String[]{
+												MessageText.getString("Button.cancel"),
+												MessageText.getString("Button.ok") }, 0 );
+
+									prompter.setAutoCloseInMS(0);
+
+									prompter.open((result)->{
+										
+										if ( result == 1 ){
+										
+											can_close = true;
+										
+											List<MdiEntry> kids = mdi.getChildrenOf( mdi_entry.getViewID());
+											
+											for ( MdiEntry k: kids ){
+												
+												mdi.closeEntry( k, false );
+											}
+											
+											mdi.closeEntry( mdi_entry, true );
+										}
+									});
+									
+									return false;
+								}
+								
 								@Override
 								public void
 								mdiEntryClosed(

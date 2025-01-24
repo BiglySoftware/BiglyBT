@@ -160,6 +160,26 @@ public abstract class BaseMdiEntry
 		}
 	}
 
+	public boolean
+	canClose(
+		boolean userInitiated )
+	{
+		MdiCloseListener[] list = {};
+		synchronized (this) {
+			if (listCloseListeners != null) {
+				list = listCloseListeners.toArray(new MdiCloseListener[0]);
+			}
+		}		
+		
+		for (MdiCloseListener l : list) {
+			if ( !l.midEntryCanClose( this, userInitiated )){
+				return( false );
+			}
+		}
+		
+		return( true );
+	}
+	
 	@Override
 	public boolean close(boolean forceClose) {
 		closeView();

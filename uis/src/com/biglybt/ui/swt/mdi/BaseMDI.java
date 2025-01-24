@@ -203,6 +203,11 @@ public abstract class BaseMDI
 		if (entry == null) {
 			return null;
 		}
+		if (( entry instanceof BaseMdiEntry ) && !((BaseMdiEntry)entry).canClose( userInitiated )){
+		
+			return( null );
+		}
+		
 		return closeEntryByID(entry.getViewID(), userInitiated );
 	}
 	
