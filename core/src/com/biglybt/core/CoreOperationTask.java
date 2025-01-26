@@ -46,11 +46,9 @@ CoreOperationTask
 		return( null );
 	}
 	
-	public default void
-	run(
-		CoreOperation operation )
-	{
-	}
+	public boolean
+	runOperation(
+		CoreOperation operation );
 	
 	public ProgressCallback
 	getProgressCallback();

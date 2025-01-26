@@ -2204,7 +2204,10 @@ public class FilesViewMenuUtil
 				}
 
 				@Override
-				public void run(CoreOperation operation) {
+				public boolean 
+				runOperation(
+					CoreOperation operation)
+				{
 					boolean went_async = false;
 
 					try{
@@ -2246,6 +2249,8 @@ public class FilesViewMenuUtil
 							}
 						}
 					}
+					
+					return( true );
 				}
 			});
 		}catch( Throwable e ){
@@ -2300,7 +2305,10 @@ public class FilesViewMenuUtil
 					}
 	
 					@Override
-					public void run(CoreOperation operation) {
+					public boolean 
+					runOperation(
+						CoreOperation operation) 
+					{
 						boolean went_async = false;
 	
 						try{
@@ -2349,6 +2357,8 @@ public class FilesViewMenuUtil
 								}
 							}
 						}
+						
+						return( true );
 					}
 				});
 		}catch( Throwable e ){

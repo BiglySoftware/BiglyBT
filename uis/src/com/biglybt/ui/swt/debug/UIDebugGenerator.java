@@ -332,7 +332,10 @@ public class UIDebugGenerator
 							}
 							
 							@Override
-							public void run(CoreOperation operation) {
+							public boolean 
+							runOperation(
+								CoreOperation operation) 
+							{
 								try {
 
 									File fEvidence = new File(path, "evidence.log");
@@ -346,6 +349,8 @@ public class UIDebugGenerator
 
 									Debug.printStackTrace(e);
 								}
+								
+								return( true );
 							}
 
 							@Override

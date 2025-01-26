@@ -249,17 +249,38 @@ ProgressWindow
 									(	type ==  CoreOperation.OP_FILE_MOVE && 
 										COConfigurationManager.getBooleanParameter("Suppress File Move Dialog" ))){
 
-								core_op_pool.run( AERunnable.create(()->{
-									
-									try{
-										task.run( operation );
-										
-									}finally{
-										
-										core.removeOperation( operation );
-									}
-								}));
-								
+								core_op_pool.run( 
+									new AERunnable()
+									{
+										public void 
+										runSupport() 
+										{
+											boolean done  = true;
+											
+											try{
+												done = task.runOperation( operation );
+												
+												if ( !done ){
+													
+													try{
+														Thread.sleep( 50 );
+																												
+													}catch( Throwable e ){	
+													}
+													
+														// reschedule
+													
+													core_op_pool.run( this );
+												}
+											}finally{
+												
+												if ( done ){
+												
+													core.removeOperation( operation );
+												}
+											}
+										}
+									});			
 							}else{
 								
 								new ProgressWindow( operation );
@@ -294,7 +315,7 @@ ProgressWindow
 		UIExitUtilsSWT.removeListener(canCloseListener);
 	}
 	
-    private static final ThreadPool	core_op_pool = new ThreadPool( "ProgressWindow:coreops", 32, true );
+    private static final ThreadPool<AERunnable>	core_op_pool = new ThreadPool<>( "ProgressWindow:coreops", 32, true );
 	
 	private final int window_id = window_id_next.incrementAndGet();
 
@@ -421,7 +442,19 @@ ProgressWindow
 						throw( new RuntimeException( "Task not available" ));
 					}
 
-					task.run( operation );
+					while( true ){
+					
+						if ( task.runOperation( operation )){
+							
+							break;
+						}
+						
+						try{
+							Thread.sleep( 50 );
+							
+						}catch( Throwable e ){
+						}
+					}
 
 				}catch( RuntimeException e ){
 

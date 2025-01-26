@@ -1280,9 +1280,9 @@ TagManagerImpl
 													}
 
 													@Override
-													public void
-													run(
-															CoreOperation operation)
+													public boolean
+													runOperation(
+														CoreOperation operation)
 													{
 														try{
 															manager.copyDataFiles( new_loc, cb );
@@ -1291,6 +1291,8 @@ TagManagerImpl
 
 															throw( new RuntimeException( e ));
 														}
+														
+														return( true );
 													}
 
 													@Override

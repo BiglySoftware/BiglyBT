@@ -283,6 +283,7 @@ DiskManagerRecheckScheduler
 			CoreOperationTask task =
 				new CoreOperationTask()
 				{
+					@Override
 					public String
 					getName()
 					{
@@ -296,10 +297,19 @@ DiskManagerRecheckScheduler
 						return( helper.getDownload());
 					}
 					
+					@Override
 					public ProgressCallback
 					getProgressCallback()
 					{
 						return( progress );
+					}
+					
+					@Override
+					public boolean 
+					runOperation(
+						CoreOperation operation)
+					{
+						return( true );
 					}
 				};
 				

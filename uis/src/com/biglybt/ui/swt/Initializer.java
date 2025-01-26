@@ -821,8 +821,8 @@ public class Initializer
 											}
 											
 											@Override
-											public void
-											run(
+											public boolean
+											runOperation(
 												CoreOperation operation)
 											{
 												try{												
@@ -832,6 +832,8 @@ public class Initializer
 		
 													throw( new RuntimeException( e ));
 												}
+												
+												return( true );
 											}
 		
 											@Override

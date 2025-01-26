@@ -3268,7 +3268,20 @@ CoreImpl
 	
 			if ( run_it ){
 	
-				task.run( op );
+				while( true ){
+				
+					if ( task.runOperation( op )){
+						
+						break;
+					}
+					
+					try{
+						Thread.sleep( 50 );
+						
+					}catch( Throwable e ){
+						
+					}
+				}
 			}
 		}finally{
 			

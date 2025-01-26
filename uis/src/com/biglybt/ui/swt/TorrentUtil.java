@@ -3179,8 +3179,8 @@ public class TorrentUtil
 									}
 
 									@Override
-									public void 
-									run(
+									public boolean 
+									runOperation(
 										CoreOperation operation ) 
 									{
 										try {
@@ -3231,6 +3231,8 @@ public class TorrentUtil
 	
 											Debug.printStackTrace(e);
 										}
+										
+										return( true );
 									}
 	
 									@Override

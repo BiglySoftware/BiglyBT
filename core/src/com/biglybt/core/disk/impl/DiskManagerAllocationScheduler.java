@@ -168,6 +168,7 @@ DiskManagerAllocationScheduler
 			CoreOperationTask task =
 				new CoreOperationTask()
 				{
+					@Override
 					public String
 					getName()
 					{
@@ -181,10 +182,19 @@ DiskManagerAllocationScheduler
 						return( helper.getDownload());
 					}
 					
+					@Override
 					public ProgressCallback
 					getProgressCallback()
 					{
 						return( progress );
+					}
+					
+					@Override
+					public boolean 
+					runOperation(
+						CoreOperation operation)
+					{
+						return( true );
 					}
 				};
 				

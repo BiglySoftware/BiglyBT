@@ -6276,8 +6276,8 @@ DownloadManagerImpl
 					  }
 
 					  @Override
-					  public void
-					  run(
+					  public boolean
+					  runOperation(
 						  CoreOperation operation)
 					  {
 						  try{
@@ -6289,6 +6289,8 @@ DownloadManagerImpl
 
 							  throw( new RuntimeException( e ));
 						  }
+						  
+						  return( true );
 					  }
 
 					  @Override

@@ -1,7 +1,83 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2024.xx.yy | BiglyBT 3.7.0.1
+2025.02.yy | BiglyBT 3.8.0.0
+
+up to B27
+
+FEATURE: Plug  | Added download/upload rate limits to simple-api plugin
+FEATURE: Core  | Improve RSS feed entity fudger
+FEATURE: Core  | Added option to put dnd data in different folder
+FEATURE: Core  | Added timed rotation option to increase minimum seeding time via SP ratio
+FEATURE: UI    | Increase MOC recent location limit
+FEATURE: UI    | Add search results name tooltip for subscription hits
+FEATURE: UI    | Support dynamically constructed table cell content
+FEATURE: UI    | Support multi-column sub-row sort
+FEATURE: UI    | Added last update, next update and error tooltip to subscription header
+FEATURE: UI    | Support multi-downloads in peers sub-tab
+
+CHANGE: Core   | Auto enable IPV6 without performing connectivity test
+CHANGE: Core   | Rework torrent path component caching
+CHANGE: Core   | Some torrent charset guessing improvements
+CHANGE: Core   | Parameterise a couple of services
+CHANGE: Core   | Improve hash extraction from RSS feeds
+CHANGE: Core   | Increase string interner limits
+CHANGE: Core   | Update the generally unused PBE spec
+CHANGE: Core   | Rework link storage to support future fixes
+CHANGE: Core   | Store torrent utf8 name internally as a string
+CHANGE: Core   | Switch default date formats to yyyy/mm/dd to avoid confusion
+CHANGE: Core   | Use pre-computed file offset in torrent
+CHANGE: Core   | Increase max trackers limit as it is getting hit
+CHANGE: Core   | Reworked subs newest result date calculation
+CHANGE: Core   | Increase recovery buffer
+CHANGE: Core   | Decrease read timeout default
+CHANGE: Core   | Only backup most recent plugin jar/zip files
+CHANGE: UI     | Prevent too many "operation in progress" dialogs
+CHANGE: UI     | Stay on SWT thread for browser dispatch
+CHANGE: UI     | Update subscription header on both results+metadata change
+CHANGE: UI     | Cache data text widths
+CHANGE: UI     | Make column set-pref-width do something sensible when there are no rows
+CHANGE: UI     | Make subs config dirty mark non-blocking
+CHANGE: UI     | Tidy up the NAT test window
+
+BUGFIX: Plug   | Prevent client-stats from filling up with Unknown random ids
+BUGFIX: Plug   | Skip aznettor lock file during backup
+BUGFIX: Core   | Optimise memory when adding torrents
+BUGFIX: Core   | Various memory saving hacks
+BUGFIX: Core   | Various memory reductions on torrent addition
+BUGFIX: Core   | Memory reduction
+BUGFIX: Core   | Never need to check pieces on metadata download
+BUGFIX: Core   | Fix client name
+BUGFIX: Core   | Remove duplicate tag names as it confuses upnpav
+BUGFIX: Core   | Better password management
+BUGFIX: Core   | Remove dead download chat config on exit
+BUGFIX: Core   | Improve memory usage for file links
+BUGFIX: Core   | Improve performance of multiple file priority changes
+BUGFIX: Core   | Fix re-seeding of downloads with skipped files
+BUGFIX: Core   | Fix concurrent access bug
+BUGFIX: Core   | Avoid state write if file download stats unchanged
+BUGFIX: Core   | Flag state as dirty if recovery action seems successful
+BUGFIX: Core   | Fail ipv6 host lookup rather than revert to ipv4
+BUGFIX: UI     | Files tree view node selection performance improvements
+BUGFIX: UI     | Performance fixes when selecting in large table
+BUGFIX: UI     | Windows OTO save dir combo dark mode fix
+BUGFIX: UI     | More efficient visible-row calculation
+BUGFIX: UI     | Clear tree-map on destruction in case still on a GC root
+BUGFIX: UI     | Reduce file tree-view memory usage
+BUGFIX: UI     | Fix my-tracker view weird code
+BUGFIX: UI     | Don't trigger refresh when same icon set on a cell
+BUGFIX: UI     | Fix overlapping text with some translations on column setup window
+BUGFIX: UI     | Fixed up the subscription next-scan displayed value
+BUGFIX: UI     | Update subscription header info when view re-shown
+BUGFIX: UI     | Disable debug generate buttons during generation
+BUGFIX: UI     | Fix subscription group order in sidebar
+BUGFIX: UI     | Try to ensure filter path is responding when setting on dialog
+BUGFIX: UI     | Fix "show download" missing in all-peers view; add double-click action
+BUGFIX: UI     | Reduce GC creation
+BUGFIX: UI     | Clear down filter helpers on view hide to free memory
+BUGFIX: UI     | Limit number of open-torrent windows to avoid hitting handle limit
+BUGFIX: UI     | Fix some UI cheese on "set preferred width"
+BUGFIX: UI     | Reduce UI blocking
 
 2024.09.27 | BiglyBT 3.7.0.0
 

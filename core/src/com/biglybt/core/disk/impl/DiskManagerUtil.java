@@ -2174,7 +2174,8 @@ DiskManagerUtil
 			FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
-					private boolean		queued = true;
+					private boolean		added_to_tasks	= false;
+					private boolean		queued			= true;
 
 					@Override
 					public String 
@@ -2198,91 +2199,91 @@ DiskManagerUtil
 					}
 
 					private ProgressCallback callback = 
-					new ProgressCallbackAdapter( move_smallest_first?ProgressCallbackAdapter.SORT_SIZE:ProgressCallbackAdapter.SORT_ALLOC_ORDER )
-					{
-						private volatile int	current_state = ProgressCallback.ST_NONE;
-
-						@Override
-						public int 
-						getProgress()
+						new ProgressCallbackAdapter( move_smallest_first?ProgressCallbackAdapter.SORT_SIZE:ProgressCallbackAdapter.SORT_ALLOC_ORDER )
 						{
-							long[] mp = adapter.getMoveProgress();
-
-							return( mp==null?0:(int)mp[0]);
-						}
-
-						@Override
-						public long 
-						getSize()
-						{
-							long[] mp = adapter.getMoveProgress();
-
-							return( mp==null?download_manager.getStats().getSizeExcludingDND():mp[1] );
-						}
-
-						@Override
-						public String 
-						getSubTaskName()
-						{
-							return( adapter.getMoveSubTask());
-						}
-
-						@Override
-						public int 
-						getSupportedTaskStates()
-						{
-							return( 
-									ProgressCallback.ST_PAUSE |  
-									ProgressCallback.ST_RESUME |
-									ProgressCallback.ST_CANCEL |
-									ProgressCallback.ST_SUBTASKS );
-						}
-
-						@Override
-						public void 
-						setTaskState(
-								int state )
-						{
-							if ( current_state == ProgressCallback.ST_CANCEL ){
-
-								return;
+							private volatile int	current_state = ProgressCallback.ST_NONE;
+	
+							@Override
+							public int 
+							getProgress()
+							{
+								long[] mp = adapter.getMoveProgress();
+	
+								return( mp==null?0:(int)mp[0]);
 							}
-
-							if ( state == ProgressCallback.ST_PAUSE ){
-
-								adapter.setMoveState( ProgressListener.ST_PAUSED );
-
-								current_state = state;
-
-							}else if ( state == ProgressCallback.ST_RESUME ){
-
-								adapter.setMoveState( ProgressListener.ST_NORMAL );
-
-								current_state = ProgressCallback.ST_NONE;									
-
-							}else if ( state == ProgressCallback.ST_CANCEL ){
-
-								adapter.setMoveState( ProgressListener.ST_CANCELLED );
-
-								current_state = ProgressCallback.ST_CANCEL;									
+	
+							@Override
+							public long 
+							getSize()
+							{
+								long[] mp = adapter.getMoveProgress();
+	
+								return( mp==null?download_manager.getStats().getSizeExcludingDND():mp[1] );
 							}
-						}
-
-						public int
-						getTaskState()
-						{
-							if ( current_state == ProgressCallback.ST_NONE && queued ){
-
-								return( ProgressCallback.ST_QUEUED );
+	
+							@Override
+							public String 
+							getSubTaskName()
+							{
+								return( adapter.getMoveSubTask());
 							}
-
-							return( current_state );
-						}
-					};
-
+	
+							@Override
+							public int 
+							getSupportedTaskStates()
+							{
+								return( 
+										ProgressCallback.ST_PAUSE |  
+										ProgressCallback.ST_RESUME |
+										ProgressCallback.ST_CANCEL |
+										ProgressCallback.ST_SUBTASKS );
+							}
+	
+							@Override
+							public void 
+							setTaskState(
+									int state )
+							{
+								if ( current_state == ProgressCallback.ST_CANCEL ){
+	
+									return;
+								}
+	
+								if ( state == ProgressCallback.ST_PAUSE ){
+	
+									adapter.setMoveState( ProgressListener.ST_PAUSED );
+	
+									current_state = state;
+	
+								}else if ( state == ProgressCallback.ST_RESUME ){
+	
+									adapter.setMoveState( ProgressListener.ST_NORMAL );
+	
+									current_state = ProgressCallback.ST_NONE;									
+	
+								}else if ( state == ProgressCallback.ST_CANCEL ){
+	
+									adapter.setMoveState( ProgressListener.ST_CANCELLED );
+	
+									current_state = ProgressCallback.ST_CANCEL;									
+								}
+							}
+	
+							public int
+							getTaskState()
+							{
+								if ( current_state == ProgressCallback.ST_NONE && queued ){
+	
+									return( ProgressCallback.ST_QUEUED );
+								}
+	
+								return( current_state );
+							}
+						};
+	
 					@Override
-					public void
-					run(
+					public boolean
+					runOperation(
 						CoreOperation operation)
 					{
 						boolean has_scheduler = DiskManagerOperationScheduler.isEnabled();
@@ -2314,6 +2315,11 @@ DiskManagerUtil
 
 											throw( new RuntimeException( "Cancelled" ));
 										}
+										
+											// come back later
+										
+										return( false );
+										
 									}else{
 										
 										break;
@@ -2329,7 +2335,12 @@ DiskManagerUtil
 
 						synchronized( move_tasks ){
 
-							move_tasks.add( this );
+							if ( !added_to_tasks ){
+								
+								move_tasks.add( this );
+								
+								added_to_tasks = true;
+							}
 
 							ready = move_tasks.size() == 1;
 						}
@@ -2345,6 +2356,10 @@ DiskManagerUtil
 									}catch( Throwable e ){
 
 									}
+									
+										// come back later
+									
+									return( false );
 								}
 
 								if ( callback.getTaskState() == ProgressCallback.ST_CANCEL ){
@@ -2388,6 +2403,13 @@ DiskManagerUtil
 											}
 										}
 									}
+									
+									if ( !ready ){
+										
+											// come back later
+										
+										return( false );
+									}
 								}
 							}
 
@@ -2395,6 +2417,8 @@ DiskManagerUtil
 
 							target.run();
 
+							return( true );
+							
 						}finally{
 
 							synchronized( move_tasks ){
@@ -2403,7 +2427,7 @@ DiskManagerUtil
 							}
 						}
 					}
-
+				
 					@Override
 					public ProgressCallback 
 					getProgressCallback()
