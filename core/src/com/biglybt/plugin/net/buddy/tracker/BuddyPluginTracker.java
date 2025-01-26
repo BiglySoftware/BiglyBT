@@ -20,7 +20,6 @@
 
 package com.biglybt.plugin.net.buddy.tracker;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -29,7 +28,6 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
-import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -536,13 +534,27 @@ BuddyPluginTracker
 				
 				temp.remove( d );
 				
-				PluginCoreUtils.unwrap( d ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, true );
+				DownloadManagerState state = PluginCoreUtils.unwrap( d ).getDownloadState();
+				
+				if ( !state.getTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP )){
+				
+					state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, true );
+					
+					log( "Download '" + d.getName() + "' set first priorty" );
+				}
 			}
 		}
 		
 		for ( Download d: temp ){
-						
-			PluginCoreUtils.unwrap( d ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
+				
+			DownloadManagerState state = PluginCoreUtils.unwrap( d ).getDownloadState();
+			
+			if ( state.getTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP )){
+			
+				state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
+				
+				log( "Download '" + d.getName() + "' unset first priorty" );
+			}
 		}
 	}
 
@@ -2250,9 +2262,9 @@ outer:
 				}
 			}
 
-				// first check to see if completion state changed for any common downloads
+				// first check to see if completion or active state changed for any common downloads
 
-			List<Download>	comp_changed = new ArrayList<>();
+			List<Download>	comp_or_active_changed = new ArrayList<>();
 
 			synchronized( this ){
 
@@ -2283,19 +2295,37 @@ outer:
 						
 						boolean	local_complete = d.isComplete( false );
 
+						boolean added = false;
+						
 						if ( local_complete != bdd.isLocalComplete()){
 
 							bdd.setLocalComplete( local_complete );
 
-							comp_changed.add( d );
+							comp_or_active_changed.add( d );
+							
+							added = true;
+						}
+						
+						int dl_state = d.getState();
+						
+						int	local_active = ( dl_state == Download.ST_DOWNLOADING || dl_state == Download.ST_SEEDING )?ACTIVE_YES:ACTIVE_NO;
+
+						if ( local_active != bdd.getLocalActive()){
+
+							bdd.setLocalActive( local_active );
+
+							if ( !added ){
+							
+								comp_or_active_changed.add( d );
+							}
 						}
 					}
 				}
 			}
 
-			if ( comp_changed.size() > 0 ){
+			if ( comp_or_active_changed.size() > 0 ){
 
-				byte[][] change_details = exportFullIDs( comp_changed );
+				byte[][] change_details = exportFullIDs( comp_or_active_changed );
 
 				if ( change_details[0].length > 0 ){
 
@@ -2943,7 +2973,10 @@ outer:
 	{
 		private boolean	local_is_complete;
 		private boolean	remote_is_complete;
-		private int		remote_active = ACTIVE_UNKNOWN;
+		
+		private int		local_active	= ACTIVE_UNKNOWN;
+		private int		remote_active	= ACTIVE_UNKNOWN;
+		
 		private long	last_peer_check;
 
 		protected
@@ -2951,6 +2984,10 @@ outer:
 			Download		download )
 		{
 			local_is_complete = download.isComplete( false );
+			
+			int dl_state = download.getState();
+			
+			local_active = ( dl_state == Download.ST_DOWNLOADING || dl_state == Download.ST_SEEDING )?ACTIVE_YES:ACTIVE_NO;
 		}
 
 		protected void
@@ -2979,6 +3016,19 @@ outer:
 			return( remote_is_complete );
 		}
 
+		protected void
+		setLocalActive(
+			int		a )
+		{
+			local_active	= a;
+		}
+
+		protected int
+		getLocalActive()
+		{
+			return( local_active );
+		}
+		
 		protected void
 		setRemoteActive(
 			int		a )
