@@ -64,6 +64,11 @@ BuddyPluginTracker
 	public static final int BUDDY_NETWORK_INBOUND		= 3;
 	public static final int BUDDY_NETWORK_INOUTBOUND	= 4;
 
+		// 1 - initial version, no version actually sent
+		// 2 - added whether download active (seeding or downloading) to state
+	
+	private static final int	VERSION	= 2;
+	
 	private static final int	TRACK_CHECK_PERIOD		= 15*1000;
 	private static final int	TRACK_CHECK_TICKS		= TRACK_CHECK_PERIOD/ BuddyPlugin.TIMER_PERIOD;
 
@@ -98,6 +103,10 @@ BuddyPluginTracker
 	private static final int	BUDDY_NO		= 0;
 	private static final int	BUDDY_MAYBE		= 1;
 	private static final int	BUDDY_YES		= 2;
+
+	private static final int	ACTIVE_UNKNOWN	= 0;
+	private static final int	ACTIVE_NO		= 1;
+	private static final int	ACTIVE_YES		= 2;
 
 	private final BuddyPlugin		plugin;
 
@@ -508,7 +517,7 @@ BuddyPluginTracker
 
 		Map	diff_map = new HashMap();
 
-		Set<Download>	downloads_with_remote_incomplete = new HashSet<>();
+		Set<Download>	downloads_with_remote_active_incomplete = new HashSet<>();
 		
 		for (int i=0;i<online.size();i++){
 
@@ -516,14 +525,14 @@ BuddyPluginTracker
 
 			BuddyTrackingData buddy_data = getBuddyData( buddy );
 
-			buddy_data.updateLocal( downloads, downloads_id, diff_map, downloads_with_remote_incomplete );
+			buddy_data.updateLocal( downloads, downloads_id, diff_map, downloads_with_remote_active_incomplete );
 		}
 		
 		Set<Download>	temp = new HashSet<>( downloads );
 		
 		if ( plugin.getFPEnabled()){
 			
-			for ( Download d: downloads_with_remote_incomplete ){
+			for ( Download d: downloads_with_remote_active_incomplete ){
 				
 				temp.remove( d );
 				
@@ -2042,6 +2051,9 @@ outer:
 	public class
 	BuddyTrackingData
 	{
+		private static final byte	STATE_COMPLETE	= 0x01;
+		private static final byte	STATE_ACTIVE	= 0x02;
+				
 		private BuddyPluginBuddy		buddy;
 
 		private Set<Download>	downloads_sent;
@@ -2207,7 +2219,7 @@ outer:
 			Set<Download>		downloads,
 			int					id,
 			Map					diff_map,
-			Set<Download>		downloads_with_remote_incomplete )
+			Set<Download>		downloads_with_remote_active_incomplete )
 		{
 			if ( consecutive_fails > 0 ){
 
@@ -2258,7 +2270,15 @@ outer:
 
 						if ( !bdd.isRemoteComplete()){
 							
-							downloads_with_remote_incomplete.add( d );
+							int active = bdd.getRemoteActive();
+							
+								// unknown for old peers that don't support the active flag so have to assume active
+								// for migration purposes
+							
+							if ( active == ACTIVE_UNKNOWN || active == ACTIVE_YES ){
+							
+								downloads_with_remote_active_incomplete.add( d );
+							}
 						}
 						
 						boolean	local_complete = d.isComplete( false );
@@ -2384,7 +2404,8 @@ outer:
 
 		protected Map
 		updateRemote(
-			Map		msg )
+			int					version,
+			Map<String,Object>	msg )
 		{
 			byte[] added_bytes 		= (byte[])msg.get( "added" );
 
@@ -2406,7 +2427,7 @@ outer:
 
 					byte[] removed_bytes	= (byte[])msg.get( "removed" );
 
-					Map removed = importFullIDs( removed_bytes, null );
+					Map removed = importFullIDs( version, removed_bytes, null );
 
 					Iterator it = removed.keySet().iterator();
 
@@ -2518,6 +2539,8 @@ outer:
 			int						type,
 			Map<String,Object>		body )
 		{
+			body.put( "ver", VERSION );
+			
 			body.put( "track", tracked_downloads.size());
 
 			sendMessage( buddy, type, body );
@@ -2530,6 +2553,10 @@ outer:
 		{
 			int	reply_type	= -1;
 
+			Long l_version = (Long)msg_in.get( "ver" );
+			
+			int version = l_version==null?1:l_version.intValue();
+			
 			Map<String,Object>	msg_out		= null;
 
 			Long	l_track = (Long)msg_in.get( "track" );
@@ -2557,7 +2584,7 @@ outer:
 
 				reply_type	= REPLY_TRACKER_SUMMARY;
 
-				msg_out = updateRemote( msg_in );
+				msg_out = updateRemote( version, msg_in );
 
 				msg_out.put( "inc", msg_in.get( "inc" ));
 
@@ -2573,13 +2600,13 @@ outer:
 				
 				if ( msg_in.containsKey( "change" )){
 					
-					Map downloads = importFullIDs((byte[])msg_in.get( "change" ), (byte[])msg_in.get( "change_s" ));
+					Map downloads = importFullIDs( version, (byte[])msg_in.get( "change" ), (byte[])msg_in.get( "change_s" ));
 
 					updateCommonDownloads( downloads, true );
 
 				}else{
 					
-					Map downloads = importFullIDs((byte[])msg_in.get( "changed" ), (byte[])msg_in.get( "changed_s" ));
+					Map downloads = importFullIDs( version, (byte[])msg_in.get( "changed" ), (byte[])msg_in.get( "changed_s" ));
 
 					updateCommonDownloads( downloads, true );
 				}
@@ -2587,7 +2614,7 @@ outer:
 
 				reply_type	= REPLY_TRACKER_ADD;
 
-				Map downloads = importFullIDs((byte[])msg_in.get( "added" ), (byte[])msg_in.get( "added_s" ));
+				Map downloads = importFullIDs( version, (byte[])msg_in.get( "added" ), (byte[])msg_in.get( "added_s" ));
 
 				updateCommonDownloads( downloads, true );
 
@@ -2602,7 +2629,7 @@ outer:
 
 				if ( possible_matches != null && possible_match_states != null ){
 
-					Map downloads = importFullIDs( possible_matches, possible_match_states );
+					Map downloads = importFullIDs( version, possible_matches, possible_match_states );
 
 					if ( downloads.size() > 0 ){
 
@@ -2739,7 +2766,21 @@ outer:
 					i * FULL_ID_SIZE,
 					FULL_ID_SIZE );
 
-				states[i] = download.isComplete( false )?(byte)0x01:(byte)0x00;
+				byte state = 0;
+				
+				if (  download.isComplete( false )){
+					
+					state |= STATE_COMPLETE;
+				}
+				
+				int dl_state = download.getState();
+				
+				if ( dl_state == Download.ST_DOWNLOADING || dl_state == Download.ST_SEEDING ){
+					
+					state |= STATE_ACTIVE;
+				}
+				
+				states[i] = state;
    			}
 
    			return( new byte[][]{ hashes, states });
@@ -2747,6 +2788,7 @@ outer:
 
 		protected Map<Download,buddyDownloadData>
 		importFullIDs(
+			int			version,
 			byte[]		ids,
 			byte[]		states )
 		{
@@ -2766,7 +2808,17 @@ outer:
 
 							if ( states != null ){
 
-								bdd.setRemoteComplete(( states[i/FULL_ID_SIZE] & 0x01 ) != 0 );
+								byte state = states[i/FULL_ID_SIZE];
+								
+								bdd.setRemoteComplete(( state & STATE_COMPLETE ) != 0 );
+								
+								if ( version >= 2 ){
+									
+									bdd.setRemoteActive(( state & STATE_ACTIVE ) != 0 ? ACTIVE_YES:ACTIVE_NO );
+								}else{
+									
+									bdd.setRemoteActive( ACTIVE_UNKNOWN );
+								}
 							}
 
 							res.put( dl, bdd );
@@ -2891,6 +2943,7 @@ outer:
 	{
 		private boolean	local_is_complete;
 		private boolean	remote_is_complete;
+		private int		remote_active = ACTIVE_UNKNOWN;
 		private long	last_peer_check;
 
 		protected
@@ -2926,6 +2979,19 @@ outer:
 			return( remote_is_complete );
 		}
 
+		protected void
+		setRemoteActive(
+			int		a )
+		{
+			remote_active	= a;
+		}
+
+		protected int
+		getRemoteActive()
+		{
+			return( remote_active );
+		}
+		
 		protected void
 		setPeerCheckTime(
 			long	time )
