@@ -540,7 +540,7 @@ BuddyPluginTracker
 				
 					state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, true );
 					
-					log( "Download '" + d.getName() + "' set first priorty" );
+					log( "Download '" + d.getName() + "' set first priority" );
 				}
 			}
 		}
@@ -553,7 +553,7 @@ BuddyPluginTracker
 			
 				state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
 				
-				log( "Download '" + d.getName() + "' unset first priorty" );
+				log( "Download '" + d.getName() + "' unset first priority" );
 			}
 		}
 	}
@@ -2333,7 +2333,7 @@ outer:
 
 					msg.put( "seeding", new Long( seeding_only?1:0 ));
 
-					msg.put( "changed", 		change_details[0] );
+					msg.put( "changed", 	change_details[0] );
 					msg.put( "changed_s", 	change_details[1] );
 
 					sendTrackerMessage( REQUEST_TRACKER_CHANGE, msg );
@@ -2538,10 +2538,27 @@ outer:
 						boolean	old_rc = existing.isRemoteComplete();
 						boolean	new_rc = bdd.isRemoteComplete();
 
+						boolean changed = false;
+						
 						if ( old_rc != new_rc ){
 
 							existing.setRemoteComplete( new_rc );
 
+							changed = true;
+						}
+						
+						int old_la	= existing.getLocalActive();
+						int new_la	= bdd.getLocalActive();
+						
+						if ( old_la != new_la ){
+
+							existing.setRemoteActive(new_la);
+							
+							changed = true;
+						}
+						
+						if ( changed ){
+							
 							log( "Changing " + d.getName() + " common downloads (bdd=" + existing.getString() + ")", false, true );
 						}
 					}
@@ -2704,6 +2721,8 @@ outer:
 
 				msg_out.put( "seeding", new Long( seeding_only?1:0 ));
 
+				msg_out.put( "ver", version );
+				
 				reply.put( "msg", msg_out );
 
 				return( reply );
@@ -3058,7 +3077,7 @@ outer:
 		protected String
 		getString()
 		{
-			return( "lic=" + local_is_complete + ",ric=" + remote_is_complete + ",lpc=" + last_peer_check );
+			return( "lic=" + local_is_complete + ",ric=" + remote_is_complete + ",ria=" + remote_active + ",lpc=" + last_peer_check );
 		}
 	}
 
