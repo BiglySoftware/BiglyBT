@@ -2616,8 +2616,8 @@ outer:
 							changed = true;
 						}
 						
-						int old_la	= existing.getLocalActive();
-						int new_la	= bdd.getLocalActive();
+						int old_la	= existing.getRemoteActive();
+						int new_la	= bdd.getRemoteActive();
 						
 						if ( old_la != new_la ){
 
