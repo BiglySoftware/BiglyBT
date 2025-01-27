@@ -65,6 +65,8 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.PropertiesWindow;
+import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.IntSwtParameter;
@@ -1899,7 +1901,7 @@ BuddyPluginViewInstance
 				"azbuddy.ui.table.ss" };
 
 		int[] sizes = {
-			250, 100, 100, 100, 200,
+			250, 75, 130, 50, 200,
 			100, 100, 100, 75, 75,
 			75, 75, 75, 75, 75,
 			40 };
@@ -3057,7 +3059,28 @@ BuddyPluginViewInstance
 				}
 			});
 
+		new MenuItem( menu, SWT.SEPARATOR );
 
+		MenuItem properties_item = new MenuItem(menu, SWT.PUSH);
+
+		properties_item.setText( lu.getLocalisedMessageText( "label.properties" ));
+			
+		properties_item.addListener( SWT.Selection, (ev)->{
+			
+			TableItem[] selection = buddy_table.getSelection();
+
+			BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[0].getData();
+			
+			String text = buddy.getProperties();
+			
+			TextViewerWindow viewer =
+					new TextViewerWindow(
+						composite.getShell(),
+						"label.properties",
+						null, text, false, false );
+			
+		});
+		
 			// done with menus
 
 		buddy_table.setMenu( menu );
@@ -3091,6 +3114,7 @@ BuddyPluginViewInstance
 					verify_item.setEnabled(true);
 					cat_item.setEnabled(selection.length > 0);
 					set_name_item.setEnabled( selection.length == 1);
+					properties_item.setEnabled(selection.length == 1);
 				}
 
 				@Override

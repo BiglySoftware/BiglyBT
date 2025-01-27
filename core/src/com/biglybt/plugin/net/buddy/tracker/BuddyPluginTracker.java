@@ -1975,6 +1975,34 @@ outer:
 		return( data.getStatus());
 	}
 
+	public void
+	getProperties(
+		BuddyPluginBuddy	buddy,
+		IndentWriter		writer )
+	{
+		BuddyTrackingData data  = getTrackingData( buddy );
+		
+		if ( data == null ){
+			
+			writer.println( "Tracker: Inactive" );
+			
+		}else{
+			
+			writer.println( "Tracker: Active" );
+			
+			writer.indent();
+			
+			try{
+				
+				data.getProperties( writer );
+				
+			}finally{
+				
+				writer.exdent();
+			}
+		}
+	}
+	
 	protected boolean
 	okToTrack(
 		Download	d )
@@ -2088,6 +2116,47 @@ outer:
 			buddy	= _buddy;
 		}
 
+		protected void
+		getProperties(
+			IndentWriter	writer )
+		{
+			writer.println( "tracking remote: " + tracking_remote );
+			writer.println( "seeding only: " + buddy_seeding_only );
+			
+			String str = "";
+			
+			for ( String ip: current_ips ){
+					
+				str += (str.isEmpty()?"":", ") + ip;
+			}
+			
+			writer.println( "current ips: " + str );
+			
+			writer.println( "consec fails: " + consecutive_fails );
+			writer.println( "last_fail: " + last_fail );
+			
+			Map<Download,buddyDownloadData> dic = downloads_in_common;
+			
+			writer.println( "downloads in common: " + (dic==null?0:dic.size()));
+			
+			if ( dic != null ){
+				
+				writer.indent();
+				
+				try{
+					for (Map.Entry<Download,buddyDownloadData>	entry: dic.entrySet()){
+						
+						writer.println( entry.getKey().getName());
+						
+						entry.getValue().getProperties( writer );
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+			}
+		}
+		
 		protected void
 		updateIPs()
 		{
@@ -3009,6 +3078,18 @@ outer:
 			local_active = ( dl_state == Download.ST_DOWNLOADING || dl_state == Download.ST_SEEDING )?ACTIVE_YES:ACTIVE_NO;
 		}
 
+		protected void
+		getProperties(
+			IndentWriter	writer )
+		{
+			writer.indent();
+			
+			writer.println( "complete: " + local_is_complete + "/" + remote_is_complete );
+			writer.println( "active: " + local_active + "/" + remote_active );
+			
+			writer.exdent();
+		}
+		
 		protected void
 		setLocalComplete(
 			boolean		b )
