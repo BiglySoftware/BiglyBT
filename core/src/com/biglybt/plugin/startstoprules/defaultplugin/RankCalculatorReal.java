@@ -1526,8 +1526,24 @@ RankCalculatorReal
 						( 	DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP | 
 							DownloadManagerState.TRANSIENT_FLAG_TAG_FP )) != 0 ){
 				
-				if (rules.bDebugLog)
-					sExplainFP += "Is FP: Friend(s) have interest or Tag is FP\n";
+				if (rules.bDebugLog){
+					
+					boolean f_fp = ( tFlags & DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP ) != 0;
+					boolean t_fp = ( tFlags & DownloadManagerState.TRANSIENT_FLAG_TAG_FP ) != 0;
+					
+					String str = "";
+					
+					if ( f_fp ){
+						str = "Friend(s) have interest";
+						if ( t_fp ){
+							str += " and Tag(s) are FP";
+						}
+					}else{
+						str = "Tag(s) are FP";
+					}
+					
+					sExplainFP += "Is FP: " + str + "\n";
+				}
 				
 				return( true );
 			}
