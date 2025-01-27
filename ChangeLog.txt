@@ -3,81 +3,130 @@ BIGLYBT CHANGELOG
 
 2025.02.yy | BiglyBT 3.8.0.0
 
-up to B27
+up to B48
 
-FEATURE: Plug  | Added download/upload rate limits to simple-api plugin
-FEATURE: Core  | Improve RSS feed entity fudger
-FEATURE: Core  | Added option to put dnd data in different folder
-FEATURE: Core  | Added timed rotation option to increase minimum seeding time via SP ratio
-FEATURE: UI    | Increase MOC recent location limit
-FEATURE: UI    | Add search results name tooltip for subscription hits
-FEATURE: UI    | Support dynamically constructed table cell content
-FEATURE: UI    | Support multi-column sub-row sort
-FEATURE: UI    | Added last update, next update and error tooltip to subscription header
-FEATURE: UI    | Support multi-downloads in peers sub-tab
+FEATURE: Plug  | Added download/upload rate limits to simple-api plugin [Parg]
+FEATURE: Core  | Improve RSS feed entity fudger [Parg]
+FEATURE: Core  | Added option to put DND data in different folder [Parg]
+FEATURE: Core  | Added timed rotation option to increase minimum seeding time via SP ratio [Parg]
+FEATURE: Core  | Added option to not add new download if previously completed [Parg]
+FEATURE: Core  | Added torrent version option to share config [Parg]
+FEATURE: Core  | Added option to pause downloads during backups [Parg]
+FEATURE: UI    | Increase MOC recent location limit [Parg]
+FEATURE: UI    | Add search results name tooltip for subscription hits [Parg]
+FEATURE: UI    | Support dynamically constructed table cell content [Parg]
+FEATURE: UI    | Support multi-column sub-row sort [Parg]
+FEATURE: UI    | Added last update, next update and error tooltip to subscription header [Parg]
+FEATURE: UI    | Support multi-downloads in peers sub-tab [Parg]
+FEATURE: UI    | Double click middle mouse button to pop-out sidebar entry [Parg]
+FEATURE: UI    | Added row-details viewer [Parg]
+FEATURE: UI    | Added date-added column to my-shares [Parg]
+FEATURE: UI    | Added "pause" toolbar icon [Parg]
+FEATURE: UI    | Remember FilesView filters [Parg]
+FEATURE: UI    | Some people like their files indexed from 1. Visual option only [Parg]
+FEATURE: UI    | Filter intermediate Files View nodes when no visible kids [Parg]
+FEATURE: UI    | Add search result description to site column tooltip as well [Parg]
+FEATURE: UI    | Added URL column to subscriptions; support column filters [Parg]
+FEATURE: UI    | Prompt if torrent has suspicious file name extension [Parg]
+FEATURE: UI    | Added a networks icons column to library [Parg]
+FEATURE: UI    | Added menu item to clear cached tracker peers [Parg]
+FEATURE: UI    | Added "actions" subscription column; removed view button [Parg]
+FEATURE: UI    | Added options menu to chat overview sidebar [Parg]
+FEATURE: UI    | Added edit-http-seeds to sources view [Parg]
+FEATURE: UI    | Added clear-peer-cache to sources view [Parg]
 
-CHANGE: Core   | Auto enable IPV6 without performing connectivity test
-CHANGE: Core   | Rework torrent path component caching
-CHANGE: Core   | Some torrent charset guessing improvements
-CHANGE: Core   | Parameterise a couple of services
-CHANGE: Core   | Improve hash extraction from RSS feeds
-CHANGE: Core   | Increase string interner limits
-CHANGE: Core   | Update the generally unused PBE spec
-CHANGE: Core   | Rework link storage to support future fixes
-CHANGE: Core   | Store torrent utf8 name internally as a string
-CHANGE: Core   | Switch default date formats to yyyy/mm/dd to avoid confusion
-CHANGE: Core   | Use pre-computed file offset in torrent
-CHANGE: Core   | Increase max trackers limit as it is getting hit
-CHANGE: Core   | Reworked subs newest result date calculation
-CHANGE: Core   | Increase recovery buffer
-CHANGE: Core   | Decrease read timeout default
-CHANGE: Core   | Only backup most recent plugin jar/zip files
-CHANGE: UI     | Prevent too many "operation in progress" dialogs
-CHANGE: UI     | Stay on SWT thread for browser dispatch
-CHANGE: UI     | Update subscription header on both results+metadata change
-CHANGE: UI     | Cache data text widths
-CHANGE: UI     | Make column set-pref-width do something sensible when there are no rows
-CHANGE: UI     | Make subs config dirty mark non-blocking
-CHANGE: UI     | Tidy up the NAT test window
+CHANGE: Plug   | Only apply first-priority for active remote buddy downloads [Parg]
+CHANGE: Core   | Auto enable IPV6 without performing connectivity test [Parg]
+CHANGE: Core   | Rework torrent path component caching [Parg]
+CHANGE: Core   | Some torrent character set guessing improvements [Parg]
+CHANGE: Core   | Parameterise a couple of services [Parg]
+CHANGE: Core   | Improve hash extraction from RSS feeds [Parg]
+CHANGE: Core   | Increase string interner limits [Parg]
+CHANGE: Core   | Update the generally unused PBE specification [Parg]
+CHANGE: Core   | Rework link storage to support future fixes [Parg]
+CHANGE: Core   | Store torrent utf8 name internally as a string [Parg]
+CHANGE: Core   | Switch default date formats to yyyy/mm/dd to avoid confusion [Parg]
+CHANGE: Core   | Use pre-computed file offset in torrent [Parg]
+CHANGE: Core   | Increase max trackers limit as it is getting hit [Parg]
+CHANGE: Core   | Reworked subs newest result date calculation [Parg]
+CHANGE: Core   | Increase recovery buffer [Parg]
+CHANGE: Core   | Decrease read timeout default [Parg]
+CHANGE: Core   | Only backup most recent plugin jar/zip files [Parg]
+CHANGE: Core   | Only increase the scaled seeding time for timed rotation [Parg]
+CHANGE: Core   | Added file responding check [Parg]
+CHANGE: Core   | Wait until core operations are idle before prompting for restart [Parg]
+CHANGE: Core   | Allow downloading/seeding downloads to be rechecked without stopping [Parg]
+CHANGE: Core   | Force-recheck of an error download will restart it [Parg]
+CHANGE: UI     | Prevent too many "operation in progress" dialogs [Parg]
+CHANGE: UI     | Stay on SWT thread for browser dispatch [Parg]
+CHANGE: UI     | Update subscription header on both results+metadata change [Parg]
+CHANGE: UI     | Cache data text widths [Parg]
+CHANGE: UI     | Make column set-pref-width do something sensible when there are no rows [Parg]
+CHANGE: UI     | Make subs config dirty mark non-blocking [Parg]
+CHANGE: UI     | Tidy up the NAT test window [Parg]
+CHANGE: UI     | Sidebar right-click menu now doesn't select the entry first [Parg]
+CHANGE: UI     | Lighten sidebar hover background [Parg]
+CHANGE: UI     | Remove non-async supporting image loader functions [Parg]
+CHANGE: UI     | Rework download rename dialog [Parg]
+CHANGE: UI     | Prompt when closing the "chat overview" sidebar entry [Parg]
+CHANGE: UI     | Added some buddy diagnostics [Parg]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | ru_RU: Russian translation update [adem4ik, Kuzmich]
+CHANGE: UI     | zh_CN: Simplified Chinese translation update [l329978214, ghostchu]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
 
-BUGFIX: Plug   | Prevent client-stats from filling up with Unknown random ids
-BUGFIX: Plug   | Skip aznettor lock file during backup
-BUGFIX: Core   | Optimise memory when adding torrents
-BUGFIX: Core   | Various memory saving hacks
-BUGFIX: Core   | Various memory reductions on torrent addition
-BUGFIX: Core   | Memory reduction
-BUGFIX: Core   | Never need to check pieces on metadata download
-BUGFIX: Core   | Fix client name
-BUGFIX: Core   | Remove duplicate tag names as it confuses upnpav
-BUGFIX: Core   | Better password management
-BUGFIX: Core   | Remove dead download chat config on exit
-BUGFIX: Core   | Improve memory usage for file links
-BUGFIX: Core   | Improve performance of multiple file priority changes
-BUGFIX: Core   | Fix re-seeding of downloads with skipped files
-BUGFIX: Core   | Fix concurrent access bug
-BUGFIX: Core   | Avoid state write if file download stats unchanged
-BUGFIX: Core   | Flag state as dirty if recovery action seems successful
-BUGFIX: Core   | Fail ipv6 host lookup rather than revert to ipv4
-BUGFIX: UI     | Files tree view node selection performance improvements
-BUGFIX: UI     | Performance fixes when selecting in large table
-BUGFIX: UI     | Windows OTO save dir combo dark mode fix
-BUGFIX: UI     | More efficient visible-row calculation
-BUGFIX: UI     | Clear tree-map on destruction in case still on a GC root
-BUGFIX: UI     | Reduce file tree-view memory usage
-BUGFIX: UI     | Fix my-tracker view weird code
-BUGFIX: UI     | Don't trigger refresh when same icon set on a cell
-BUGFIX: UI     | Fix overlapping text with some translations on column setup window
-BUGFIX: UI     | Fixed up the subscription next-scan displayed value
-BUGFIX: UI     | Update subscription header info when view re-shown
-BUGFIX: UI     | Disable debug generate buttons during generation
-BUGFIX: UI     | Fix subscription group order in sidebar
-BUGFIX: UI     | Try to ensure filter path is responding when setting on dialog
-BUGFIX: UI     | Fix "show download" missing in all-peers view; add double-click action
-BUGFIX: UI     | Reduce GC creation
-BUGFIX: UI     | Clear down filter helpers on view hide to free memory
-BUGFIX: UI     | Limit number of open-torrent windows to avoid hitting handle limit
-BUGFIX: UI     | Fix some UI cheese on "set preferred width"
-BUGFIX: UI     | Reduce UI blocking
+BUGFIX: Tag    | Fix tags not deleting from sidebar and some other things [Parg]
+BUGFIX: Plug   | Prevent client-stats from filling up with Unknown random ids [Parg]
+BUGFIX: Plug   | Skip aznettor lock file during backup [Parg]
+BUGFIX: Core   | Optimise memory when adding torrents [Parg]
+BUGFIX: Core   | Various memory saving hacks [Parg]
+BUGFIX: Core   | Various memory reductions on torrent addition [Parg]
+BUGFIX: Core   | Memory reduction [Parg]
+BUGFIX: Core   | Never need to check pieces on metadata download [Parg]
+BUGFIX: Core   | Fix client name [Parg]
+BUGFIX: Core   | Remove duplicate tag names as it confuses upnpav [Parg]
+BUGFIX: Core   | Better password management [Parg]
+BUGFIX: Core   | Remove dead download chat config on exit [Parg]
+BUGFIX: Core   | Improve memory usage for file links [Parg]
+BUGFIX: Core   | Improve performance of multiple file priority changes [Parg]
+BUGFIX: Core   | Fix re-seeding of downloads with skipped files [Parg]
+BUGFIX: Core   | Fix concurrent access bug [Parg]
+BUGFIX: Core   | Avoid state write if file download stats unchanged [Parg]
+BUGFIX: Core   | Flag state as dirty if recovery action seems successful [Parg]
+BUGFIX: Core   | Fail ipv6 host lookup rather than revert to ipv4 [Parg]
+BUGFIX: Core   | Fix a sync issue stalling stuff [Parg]
+BUGFIX: Core   | Pick up redirect loop [Parg]
+BUGFIX: Core   | Reduce file existence checks [Parg]
+BUGFIX: Core   | Recover some incomplete file suffix inconsistencies [Parg]
+BUGFIX: Core   | Few more file-store operation reductions [Parg]
+BUGFIX: Core   | Fix move-file scheduling bug [Parg]
+BUGFIX: UI     | Files tree view node selection performance improvements [Parg]
+BUGFIX: UI     | Performance fixes when selecting in large table [Parg]
+BUGFIX: UI     | Windows OTO save directory combo dark mode fix [Parg]
+BUGFIX: UI     | More efficient visible-row calculation [Parg]
+BUGFIX: UI     | Clear tree-map on destruction in case still on a GC root [Parg]
+BUGFIX: UI     | Reduce file tree-view memory usage [Parg]
+BUGFIX: UI     | Fix my-tracker view weird code [Parg]
+BUGFIX: UI     | Don't trigger refresh when same icon set on a cell [Parg]
+BUGFIX: UI     | Fix overlapping text with some translations on column setup window [Parg]
+BUGFIX: UI     | Fixed up the subscription next-scan displayed value [Parg]
+BUGFIX: UI     | Update subscription header info when view re-shown [Parg]
+BUGFIX: UI     | Disable debug generate buttons during generation [Parg]
+BUGFIX: UI     | Fix subscription group order in sidebar [Parg]
+BUGFIX: UI     | Try to ensure filter path is responding when setting on dialog [Parg]
+BUGFIX: UI     | Fix "show download" missing in all-peers view; add double-click action [Parg]
+BUGFIX: UI     | Reduce GC creation [Parg]
+BUGFIX: UI     | Clear down filter helpers on view hide to free memory [Parg]
+BUGFIX: UI     | Limit number of open-torrent windows to avoid hitting handle limit [Parg]
+BUGFIX: UI     | Fix some UI cheese on "set preferred width" [Parg]
+BUGFIX: UI     | Reduce UI blocking [Parg]
+BUGFIX: UI     | Dark mode sidebar drag-over fix [Parg]
+BUGFIX: UI     | Prevent multiple early-init when > 1 UI [Parg]
+BUGFIX: UI     | Fix border colour in Win dark [Parg]
+BUGFIX: UI     | Fix un-install wizard table sizing [Parg]
+BUGFIX: UI     | Fix performance issues with IP filter table in config [Parg]
+BUGFIX: UI     | Improve performance of expand/collapse in large files view [Parg]
+BUGFIX: UI     | Only force config save if remembered decision has changed [Parg]
 
 2024.09.27 | BiglyBT 3.7.0.0
 
