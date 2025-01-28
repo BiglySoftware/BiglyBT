@@ -106,6 +106,8 @@ BuddyPluginTracker
 	private static final int	ACTIVE_NO		= 1;
 	private static final int	ACTIVE_YES		= 2;
 
+	private static final String[]	ACTIVE_STRS = { "unknown", "no", "yes" };
+	
 	private final BuddyPlugin		plugin;
 
 	private final TorrentAttribute		ta_networks;
@@ -413,6 +415,8 @@ BuddyPluginTracker
 
 			List<Download>	downloads = (List<Download>)entry.getValue();
 
+			BuddyTrackingData tracking_data = getBuddyData( buddy );
+			
 			for (int i=0;i<downloads.size();i++){
 
 				Download	download = downloads.get(i);
@@ -462,20 +466,23 @@ BuddyPluginTracker
 					continue;
 				}
 
-				log( download.getName() + " - connecting to peer " +  host );
-
-				PEPeerManager c_pm = PluginCoreUtils.unwrap( pm );
-
-				Map	user_data = new LightHashMap();
-
-				user_data.put( PEER_DOWNLOAD_KEY, new Object[]{ download, false });
-
-				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
-
-				try{
-					c_pm.addPeer( host, tcp_port, udp_port, true, user_data );
-					
-				}catch( Throwable e ){
+				if ( !tracking_data.isDownloadInactive( download )){
+				
+					log( download.getName() + " - connecting to peer " +  host );
+	
+					PEPeerManager c_pm = PluginCoreUtils.unwrap( pm );
+	
+					Map	user_data = new LightHashMap();
+	
+					user_data.put( PEER_DOWNLOAD_KEY, new Object[]{ download, false });
+	
+					user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
+	
+					try{
+						c_pm.addPeer( host, tcp_port, udp_port, true, user_data );
+						
+					}catch( Throwable e ){
+					}
 				}
 			}
 		}
@@ -540,7 +547,7 @@ BuddyPluginTracker
 				
 					state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, true );
 					
-					log( "Download '" + d.getName() + "' set first priority" );
+					log( "Download '" + d.getName() + "' set first priority, common active download" );
 				}
 			}
 		}
@@ -553,7 +560,7 @@ BuddyPluginTracker
 			
 				state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
 				
-				log( "Download '" + d.getName() + "' unset first priority" );
+				log( "Download '" + d.getName() + "' unset first priority, no common active download" );
 			}
 		}
 	}
@@ -592,9 +599,13 @@ BuddyPluginTracker
 		}
 		
 		if ( buddy.isOnline( false )){
+				
+			BuddyTrackingData btd = addBuddy( buddy );
 
-			addBuddy( buddy );
-
+			if ( btd != null ){
+					
+				btd.setConnected( buddy.isConnected());
+			}
 		}else{
 
 			removeBuddy( buddy );
@@ -1252,8 +1263,15 @@ outer:
 
 			if ( tracked_downloads.remove( download )){
 
-				PluginCoreUtils.unwrap( download ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
-
+				DownloadManagerState state = PluginCoreUtils.unwrap( download ).getDownloadState();
+				
+				if ( state.getTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP )){
+					
+					state.setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
+					
+					log( "Download '" + download.getName() + "' unset first priority, not tracking" );
+				}
+				
 				download_set_id++;
 
 				downloadData download_data = (downloadData)download.getUserData( BuddyPluginTracker.class );
@@ -1316,7 +1334,7 @@ outer:
 			}
 		}else{
 
-			log( "Tracking peers for " + download.getName());
+			// log( "Tracking peers for " + download.getName());
 
 			download.addPeerListener( this );
 		}
@@ -1478,7 +1496,7 @@ outer:
 
 			if ( !buddy_peers.contains( peer )){
 
-				log( "Adding buddy peer " + peer.getIp());
+				// log( "Adding buddy peer " + peer.getIp());
 
 				if ( buddy_peers.size() == 0 ){
 
@@ -1542,7 +1560,7 @@ outer:
 					
 				}
 				
-				log( download.getName() + ": adding buddy peer " + peer.getIp());
+				// log( download.getName() + ": adding buddy peer " + peer.getIp());
 
 				peer.addListener(
 					new PeerListener2()
@@ -1608,7 +1626,7 @@ outer:
 					}
 				}
 
-				log( ((Download)details[0]).getName() + ": removing buddy peer " + peer.getIp());
+				// log( ((Download)details[0]).getName() + ": removing buddy peer " + peer.getIp());
 			}
 
 			peer.setUserData( PEER_DOWNLOAD_KEY, null );
@@ -2101,7 +2119,7 @@ outer:
 
 		private int 			tracking_remote;
 
-		private Map<Download,buddyDownloadData>		downloads_in_common;
+		private Map<Download,BuddyDownloadData>		downloads_in_common;
 		private boolean	buddy_seeding_only;
 
 		private int		consecutive_fails;
@@ -2135,7 +2153,7 @@ outer:
 			writer.println( "consec fails: " + consecutive_fails );
 			writer.println( "last_fail: " + last_fail );
 			
-			Map<Download,buddyDownloadData> dic = downloads_in_common;
+			Map<Download,BuddyDownloadData> dic = downloads_in_common;
 			
 			writer.println( "downloads in common: " + (dic==null?0:dic.size()));
 			
@@ -2144,9 +2162,15 @@ outer:
 				writer.indent();
 				
 				try{
-					for (Map.Entry<Download,buddyDownloadData>	entry: dic.entrySet()){
+					for (Map.Entry<Download,BuddyDownloadData>	entry: dic.entrySet()){
 						
-						writer.println( entry.getKey().getName());
+						Download download = entry.getKey();
+						
+						DownloadManagerState state = PluginCoreUtils.unwrap( download ).getDownloadState();
+						
+						boolean fp = state.getTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP );
+						
+						writer.println( download.getName() + ", FP=" + fp );
 						
 						entry.getValue().getProperties( writer );
 					}
@@ -2275,6 +2299,50 @@ outer:
 			}
 		}
 
+		protected boolean
+		isDownloadInactive(
+			Download		download )
+		{
+			BuddyDownloadData bdd = getBuddyDownloadData( download );
+			
+			if ( bdd != null ){
+				
+				return( bdd.getRemoteActive() == ACTIVE_NO );
+			}
+			
+			return( false );
+		}
+		
+		protected BuddyDownloadData
+		getBuddyDownloadData(
+			Download		download )
+		{
+			synchronized( this ){
+				
+				if ( downloads_in_common != null ){
+					
+					return( downloads_in_common.get(download));
+				}
+			}
+			
+			return( null );
+		}
+		
+		protected void
+		setConnected(
+			boolean	connected )
+		{
+		
+			if ( !connected ){
+				
+				synchronized( this ){
+
+					downloads_sent 		= null;
+					downloads_sent_id	= 0;
+				}
+			}
+		}
+		
 		protected void
 		setAlive(
 			boolean		alive )
@@ -2283,7 +2351,14 @@ outer:
 
 				if ( alive ){
 
-					consecutive_fails		= 0;
+					if ( consecutive_fails > 0 ){
+						
+						consecutive_fails		= 0;
+						
+						downloads_sent 		= null;
+						downloads_sent_id	= 0;
+					}
+					
 					last_fail				= 0;
 
 				}else{
@@ -2339,15 +2414,15 @@ outer:
 
 				if ( downloads_in_common != null ){
 
-					Iterator<Map.Entry<Download,buddyDownloadData>>  it = downloads_in_common.entrySet().iterator();
+					Iterator<Map.Entry<Download,BuddyDownloadData>>  it = downloads_in_common.entrySet().iterator();
 
 					while( it.hasNext()){
 
-						Map.Entry<Download,buddyDownloadData>	entry = it.next();
+						Map.Entry<Download,BuddyDownloadData>	entry = it.next();
 
 						Download d = entry.getKey();
 
-						buddyDownloadData	bdd = entry.getValue();
+						BuddyDownloadData	bdd = entry.getValue();
 
 						if ( !bdd.isRemoteComplete()){
 							
@@ -2536,7 +2611,7 @@ outer:
 
 						if ( downloads_in_common.remove( d ) != null ){
 
-							log( "Removed " + d.getName() + " common download", false, true );
+							log( "Removed " + d.getName() + " common download", false, false );
 						}
 					}
 
@@ -2576,7 +2651,7 @@ outer:
 
 							if ( !downloads.containsKey( download )){
 
-								log( "Removing " + download.getName() + " from common downloads", false, true );
+								log( "Removing " + download.getName() + " from common downloads", false, false );
 
 								it.remove();
 							}
@@ -2592,13 +2667,13 @@ outer:
 
 					Download d = (Download)entry.getKey();
 
-					buddyDownloadData	bdd = (buddyDownloadData)entry.getValue();
+					BuddyDownloadData	bdd = (BuddyDownloadData)entry.getValue();
 
-					buddyDownloadData existing = (buddyDownloadData)downloads_in_common.get( d );
+					BuddyDownloadData existing = (BuddyDownloadData)downloads_in_common.get( d );
 
 					if ( existing == null ){
 
-						log( "Adding " + d.getName() + " to common downloads (bdd=" + bdd.getString() + ")", false, true );
+						log( "Adding " + d.getName() + " to common downloads (bdd={" + bdd.getString() + "})", false, false );
 
 						downloads_in_common.put( d, bdd );
 
@@ -2628,7 +2703,7 @@ outer:
 						
 						if ( changed ){
 							
-							log( "Changing " + d.getName() + " common downloads (bdd=" + existing.getString() + ")", false, true );
+							log( "Changing " + d.getName() + " common downloads (bdd=" + existing.getString() + ")", false, false );
 						}
 					}
 				}
@@ -2904,13 +2979,13 @@ outer:
    			return( new byte[][]{ hashes, states });
    		}
 
-		protected Map<Download,buddyDownloadData>
+		protected Map<Download,BuddyDownloadData>
 		importFullIDs(
 			int			version,
 			byte[]		ids,
 			byte[]		states )
 		{
-			Map<Download,buddyDownloadData>	res = new HashMap<>();
+			Map<Download,BuddyDownloadData>	res = new HashMap<>();
 
 			if ( ids != null ){
 
@@ -2922,7 +2997,7 @@ outer:
 
 						if ( dl != null ){
 
-							buddyDownloadData bdd = new buddyDownloadData( dl );
+							BuddyDownloadData bdd = new BuddyDownloadData( dl );
 
 							if ( states != null ){
 
@@ -2972,15 +3047,15 @@ outer:
 					return( res );
 				}
 
-				Iterator<Map.Entry<Download,buddyDownloadData>> it = downloads_in_common.entrySet().iterator();
+				Iterator<Map.Entry<Download,BuddyDownloadData>> it = downloads_in_common.entrySet().iterator();
 
 				while( it.hasNext()){
 
-					Map.Entry<Download,buddyDownloadData>	entry = it.next();
+					Map.Entry<Download,BuddyDownloadData>	entry = it.next();
 
 					Download d = entry.getKey();
 
-					buddyDownloadData	bdd = entry.getValue();
+					BuddyDownloadData	bdd = entry.getValue();
 
 					if ( d.isComplete( false ) && bdd.isRemoteComplete()){
 
@@ -2995,7 +3070,7 @@ outer:
 						if ( 	last_check == 0 ||
 								now - last_check >= PEER_CHECK_INTERVAL ){
 
-							log( d.getName() + " - checking peer", false, true );
+							// log( d.getName() + " - checking peer", false, true );
 
 							bdd.setPeerCheckTime( now );
 
@@ -3030,7 +3105,7 @@ outer:
 		protected String
 		getStatus()
 		{
-			Map<Download,buddyDownloadData> c = downloads_in_common;
+			Map<Download,BuddyDownloadData> c = downloads_in_common;
 
 			String str = String.valueOf( tracked_downloads.size());
 
@@ -3057,7 +3132,7 @@ outer:
 	}
 
 	private static class
-	buddyDownloadData
+	BuddyDownloadData
 	{
 		private boolean	local_is_complete;
 		private boolean	remote_is_complete;
@@ -3068,7 +3143,7 @@ outer:
 		private long	last_peer_check;
 
 		protected
-		buddyDownloadData(
+		BuddyDownloadData(
 			Download		download )
 		{
 			local_is_complete = download.isComplete( false );
@@ -3085,7 +3160,7 @@ outer:
 			writer.indent();
 			
 			writer.println( "complete: " + local_is_complete + "/" + remote_is_complete );
-			writer.println( "active: " + local_active + "/" + remote_active );
+			writer.println( "active: " + ACTIVE_STRS[local_active] + "/" + ACTIVE_STRS[remote_active] );
 			
 			writer.exdent();
 		}
@@ -3158,7 +3233,7 @@ outer:
 		protected String
 		getString()
 		{
-			return( "lic=" + local_is_complete + ",ric=" + remote_is_complete + ",ria=" + remote_active + ",lpc=" + last_peer_check );
+			return( "lic=" + local_is_complete + ",ric=" + remote_is_complete + ",lia=" + ACTIVE_STRS[local_active] + ",ria=" + ACTIVE_STRS[remote_active] + ",lpc=" + last_peer_check );
 		}
 	}
 
