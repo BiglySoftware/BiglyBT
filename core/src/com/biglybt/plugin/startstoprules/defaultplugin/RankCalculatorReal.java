@@ -1549,10 +1549,11 @@ RankCalculatorReal
 			}
 			
 			if (( tFlags & DownloadManagerState.TRANSIENT_FLAG_TAG_NOT_FP ) != 0 ){
-			
-			if (rules.bDebugLog)
-				sExplainFP += "Not FP: Tag is Not FP\n";
-			
+
+				if (rules.bDebugLog){
+					sExplainFP += "Not FP: Tag is Not FP\n";
+				}
+				
 				return( false );
 			}
 				

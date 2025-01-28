@@ -2853,6 +2853,7 @@ TagPropertyConstraintHandler
 		private static final int FT_TRACKER_PEERS		= 62;
 		private static final int FT_TRACKER_SEEDS		= 63;
 		private static final int FT_PLUGIN_OPTION		= 64;
+		private static final int FT_IS_FRIEND_FP		= 65;
 
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
@@ -2934,6 +2935,9 @@ TagPropertyConstraintHandler
 			fn_map.put( "trackerseeds", FT_TRACKER_SEEDS );
 			
 			fn_map.put( "pluginoption", FT_PLUGIN_OPTION );
+			
+			fn_map.put( "isfriendfp", FT_IS_FRIEND_FP );
+			fn_map.put( "isbuddyfp", FT_IS_FRIEND_FP );
 		}
 		
 		private static final int	DEP_STATIC		= 0;
@@ -3660,6 +3664,12 @@ TagPropertyConstraintHandler
 					case FT_PLUGIN_OPTION:{
 						
 						params_ok = num_params == 2 && getStringLiteral( params, 0 ) && getStringLiteral( params, 1 );
+						
+						break;
+					}
+					case FT_IS_FRIEND_FP:{
+
+						params_ok = num_params == 0;
 						
 						break;
 					}
@@ -4811,6 +4821,10 @@ TagPropertyConstraintHandler
 						}
 						
 						return( value );
+					}
+					case FT_IS_FRIEND_FP:{
+						
+						return( dm.getDownloadState().getTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP ));
 					}
 				}
 
