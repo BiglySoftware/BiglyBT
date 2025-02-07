@@ -50,13 +50,6 @@ public class AvailabilityItem
   public void refresh(TableCell cell) {
     PEPiece piece = (PEPiece)cell.getDataSource();
     
-	boolean is_uploading = piece instanceof PiecesView.PEPieceUploading;
-
-	if ( is_uploading ){
-		cell.setText("");
-		return;
-	}
-	
     long value = (piece == null) ? 0 : piece.getAvailability();
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {

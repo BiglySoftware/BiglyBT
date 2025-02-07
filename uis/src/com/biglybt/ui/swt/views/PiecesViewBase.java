@@ -1122,7 +1122,7 @@ public abstract class PiecesViewBase
 
 		public int			getNbWritten(){ return( 0 ); }
 
-		public int			getAvailability(){ return( 0 ); }
+		public int			getAvailability(){ return pm.getAvailability(piece_number); }
 
 		public boolean		hasUnrequestedBlock(){ return( false ); }
 		public int[]		getAndMarkBlocks(PEPeer peer, int nbWanted, int[] request_hint, boolean reverse_order ){ return( null ); }
