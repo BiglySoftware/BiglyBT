@@ -5,6 +5,7 @@ BIGLYBT CHANGELOG
 
 up to B48
 
+FEATURE: Tag   | Added Tag constraint function "isFriendFP()" [Parg]
 FEATURE: Plug  | Added download/upload rate limits to simple-api plugin [Parg]
 FEATURE: Core  | Improve RSS feed entity fudger [Parg]
 FEATURE: Core  | Added option to put DND data in different folder [Parg]
@@ -34,6 +35,7 @@ FEATURE: UI    | Added "actions" subscription column; removed view button [Parg]
 FEATURE: UI    | Added options menu to chat overview sidebar [Parg]
 FEATURE: UI    | Added edit-http-seeds to sources view [Parg]
 FEATURE: UI    | Added clear-peer-cache to sources view [Parg]
+FEATURE: UI    | Show availability value in column for uploading pieces [TuxPaper]
 
 CHANGE: Plug   | Only apply first-priority for active remote buddy downloads [Parg]
 CHANGE: Core   | Auto enable IPV6 without performing connectivity test [Parg]
@@ -70,6 +72,7 @@ CHANGE: UI     | Remove non-async supporting image loader functions [Parg]
 CHANGE: UI     | Rework download rename dialog [Parg]
 CHANGE: UI     | Prompt when closing the "chat overview" sidebar entry [Parg]
 CHANGE: UI     | Added some buddy diagnostics [Parg]
+CHANGE: UI     | Keep focused row shown after filter change [TuxPaper]
 CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
 CHANGE: UI     | ru_RU: Russian translation update [adem4ik, Kuzmich]
 CHANGE: UI     | zh_CN: Simplified Chinese translation update [l329978214, ghostchu]
@@ -127,6 +130,7 @@ BUGFIX: UI     | Fix un-install wizard table sizing [Parg]
 BUGFIX: UI     | Fix performance issues with IP filter table in config [Parg]
 BUGFIX: UI     | Improve performance of expand/collapse in large files view [Parg]
 BUGFIX: UI     | Only force config save if remembered decision has changed [Parg]
+BUGFIX: UI     | Fix deleting torrent then sometime selects last torrent row [TuxPaper]
 
 2024.09.27 | BiglyBT 3.7.0.0
 
