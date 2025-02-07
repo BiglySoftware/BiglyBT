@@ -207,6 +207,13 @@ public interface TableView<DATASOURCETYPE>
 	void processDataSourceQueue();
 
 	/**
+	 * Process the queue of datasources to be added and removed
+	 *
+	 * @param refocusAfter If selected were in focus, ensure they remain in focus
+	 */
+	void processDataSourceQueue(boolean refocusAfter);
+
+	/**
 	 * @param bForceSort
 	 */
 	void refreshTable(boolean bForceSort);

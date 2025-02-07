@@ -205,7 +205,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	private DataSourceCallBackUtil.addDataSourceCallback processDataSourceQueueCallback = new DataSourceCallBackUtil.addDataSourceCallback() {
 		@Override
 		public void process() {
-			processDataSourceQueue();
+			processDataSourceQueue(false);
 		}
 
 		@Override
@@ -692,9 +692,9 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	@SuppressWarnings("unchecked")
-	public void refilter() {
+	public boolean refilter() {
 		if (filter == null) {
-			return;
+			return false;
 		}
 		if (filter.eventUpdate != null) {
 			filter.eventUpdate.cancel();
@@ -703,6 +703,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 		filter.eventUpdate = null;
 
+		boolean subRowsChanged = false;
 		boolean changed = false;
 
 		
@@ -722,8 +723,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						TableRowCore row = iter.next();
 						for ( TableRowCore sr: row.getSubRowsWithNull()){
 							if (sr.refilter()){
-								
-								changed = true;
+
+								changed = subRowsChanged = true;
 							}
 						}
 					}
@@ -757,9 +758,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				}
 				if (listRemoves.size() > 0) {
 					removeDataSources((DATASOURCETYPE[]) listRemoves.toArray());
+					changed = true;
 				}
 				if (listAdds.size() > 0) {
 					addDataSources((DATASOURCETYPE[]) listAdds.toArray(), true);
+					changed = true;
 				}
 	
 				// add back the ones removeDataSources removed
@@ -772,12 +775,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 		
 		
-		if ( changed ){
+		if ( subRowsChanged ){
 			tableMutated();
 			redrawTable();
 		}
 
-		processDataSourceQueue();
+		processDataSourceQueue(true);
+		return changed;
 	}
 
 	public boolean
@@ -812,7 +816,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				+ ": " + getTableID() + ": " + s);
 	}
 
-	private void _processDataSourceQueue() {
+	private void _processDataSourceQueue(boolean refocus) {
 		boolean hasAdd;
 		boolean hasRemove;
 		
@@ -870,6 +874,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		
 		if (hasAdd || hasRemove) {
 			tableMutated();
+		}
+
+		if (refocus) {
+			TableRowCore focusedRow = getFocusedRow();
+			if (focusedRow != null && !isRowVisible(focusedRow)) {
+				showRow(focusedRow);
+			}
 		}
 	}
 
@@ -1075,10 +1086,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	@Override
 	public void processDataSourceQueue() {
+		processDataSourceQueue(false);
+	}
+
+	@Override
+	public void processDataSourceQueue(boolean refocus) {
 		getOffUIThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				_processDataSourceQueue();
+				_processDataSourceQueue(refocus);
 			}
 		});
 	}
@@ -1087,7 +1103,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	@Override
 	public void processDataSourceQueueSync() {
-		_processDataSourceQueue();
+		_processDataSourceQueue(false);
 	}
 
 	/**
