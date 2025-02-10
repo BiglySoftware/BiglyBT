@@ -424,6 +424,15 @@ PopOutManager
 			if ( ds instanceof ExportableDataSource ){
 				
 				eds = (ExportableDataSource)ds;
+				
+			}else{
+				
+				ds = entry.getInitialDataSource();
+				
+				if ( ds instanceof ExportableDataSource ){
+					
+					eds = (ExportableDataSource)ds;
+				}
 			}
 		}
 		

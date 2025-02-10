@@ -1408,6 +1408,11 @@ public abstract class BaseMdiEntry
 			data_source = getUserData( UD_STANDALONE_DATA_SOURCE );
 		}
 		
+		if ( data_source == null ){
+			
+			data_source = getInitialDataSource();
+		}
+		
 		return(
 			buildStandAlone(
 				soParent,
