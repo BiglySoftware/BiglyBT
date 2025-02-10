@@ -6,6 +6,7 @@ BIGLYBT CHANGELOG
 up to B48
 
 FEATURE: Tag   | Added Tag constraint function "isFriendFP()" [Parg]
+FEATURE: Tag   | Enable filtering in Tags discoveries [Parg]
 FEATURE: Plug  | Added download/upload rate limits to simple-api plugin [Parg]
 FEATURE: Core  | Improve RSS feed entity fudger [Parg]
 FEATURE: Core  | Added option to put DND data in different folder [Parg]

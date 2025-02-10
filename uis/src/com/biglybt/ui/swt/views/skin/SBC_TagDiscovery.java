@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.views.skin;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -637,8 +638,45 @@ public class SBC_TagDiscovery
 
 	// @see TableViewFilterCheck#filterCheck(java.lang.Object, java.lang.String, boolean)
 	@Override
-	public boolean filterCheck(TagDiscovery ds, String filter, boolean regex, boolean confusable) {
-		return true;
-	}
+	public boolean 
+	filterCheck(
+		TagDiscovery	ds, 
+		String			filter, 
+		boolean			regex, 
+		boolean			confusable) 
+	{
+		if ( confusable ){
+			
+			return( false );
+		}
+				
+		String[] names = new String[]{ ds.getName(), ds.getTorrentName() };
+		
+		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
+		boolean	match_result = true;
+
+		if ( regex && s.startsWith( "!" )){
+
+			s = s.substring(1);
+
+			match_result = false;
+		}
+
+		Pattern pattern = RegExUtil.getCachedPattern( "tagsoverview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+
+		boolean bOurs = !match_result;
+
+		for ( String name: names ){
+			
+			if ( pattern.matcher( name ).find()){
+
+				bOurs = match_result;
+
+				break;
+			}
+		}
+		
+		return( bOurs );
+	}
 }
