@@ -542,9 +542,10 @@ public class SBC_TagDiscovery
 
 			tv.setRowDefaultHeightEM(1);
 
-			table_parent = new Composite(control, SWT.BORDER);
-			table_parent.setLayoutData(Utils.getFilledFormData());
+			table_parent = Utils.createSkinnedComposite(control, SWT.BORDER, Utils.getFilledFormData());
+			
 			GridLayout layout = new GridLayout();
+			
 			layout.marginHeight = layout.marginWidth = layout.verticalSpacing = layout.horizontalSpacing = 0;
 			table_parent.setLayout(layout);
 
