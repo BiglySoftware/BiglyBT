@@ -1,9 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2025.02.yy | BiglyBT 3.8.0.0
-
-up to B48
+2025.02.17 | BiglyBT 3.8.0.0
 
 FEATURE: Tag   | Added Tag constraint function "isFriendFP()" [Parg]
 FEATURE: Tag   | Enable filtering in Tags discoveries [Parg]
