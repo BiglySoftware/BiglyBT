@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2025.xx.yy | BiglyBT 3.8.0.1
+
 2025.02.17 | BiglyBT 3.8.0.0
 
 FEATURE: Tag   | Added Tag constraint function "isFriendFP()" [Parg]
