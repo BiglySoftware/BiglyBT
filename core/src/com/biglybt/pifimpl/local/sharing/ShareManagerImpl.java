@@ -77,7 +77,7 @@ ShareManagerImpl
 			});
 	}
 
-	protected AEMonitor				this_mon	= new AEMonitor( "ShareManager" );
+	private AEMonitor				this_mon	= new AEMonitor( "ShareManager" );
 
 	protected TOTorrentCreator		to_creator;
 
@@ -237,12 +237,12 @@ ShareManagerImpl
 
 					FileUtil.mkdirs(share_dir);
 
-					config = new ShareConfigImpl();
+					config = new ShareConfigImpl( this, this_mon );
 
 					try{
 						config.suspendSaving();
 
-						config.loadConfig(this);
+						config.loadConfig();
 
 					}finally{
 

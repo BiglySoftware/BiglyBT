@@ -36,20 +36,26 @@ import com.biglybt.pif.sharing.ShareResource;
 public class
 ShareConfigImpl
 {
-	protected ShareManagerImpl		manager;
+	private ShareManagerImpl		manager;
 
-	protected int					suspend_level;
+	private int						suspend_level;
 
-	protected boolean				save_outstanding;
+	private boolean					save_outstanding;
 
-	protected AEMonitor				this_mon	= new AEMonitor( "ShareConfig" );
+	private AEMonitor				lock;
 
-	protected void
-	loadConfig(
-		ShareManagerImpl	_manager )
+	protected
+	ShareConfigImpl(
+		ShareManagerImpl	_manager,
+		AEMonitor			_lock )
 	{
 		manager	= _manager;
-
+		lock	= _lock;
+	}
+	
+	protected void
+	loadConfig()
+	{	
 		try{
 
 			Map map = FileUtil.readResilientConfigFile("sharing.config");
@@ -82,7 +88,7 @@ ShareConfigImpl
 		throws ShareException
 	{
 		try{
-			this_mon.enter();
+			lock.enter();
 
 			if ( suspend_level > 0 ){
 
@@ -112,7 +118,7 @@ ShareConfigImpl
 
 		}finally{
 
-			this_mon.exit();
+			lock.exit();
 		}
 	}
 
@@ -120,13 +126,13 @@ ShareConfigImpl
 	suspendSaving()
 	{
 		try{
-			this_mon.enter();
+			lock.enter();
 
 			suspend_level++;
 
 		}finally{
 
-			this_mon.exit();
+			lock.exit();
 		}
 	}
 
@@ -135,7 +141,7 @@ ShareConfigImpl
 		throws ShareException
 	{
 		try{
-			this_mon.enter();
+			lock.enter();
 
 			suspend_level--;
 
@@ -147,7 +153,7 @@ ShareConfigImpl
 			}
 		}finally{
 
-			this_mon.exit();
+			lock.exit();
 		}
 	}
 }
