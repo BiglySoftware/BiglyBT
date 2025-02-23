@@ -1518,6 +1518,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					if ( BuddyPluginUtils.isUnknownDownloadChatKey( key )){
 						
 						try{
+							String net = (String)map.get( "network" );
+							
+							if ( getFavourite( net, key )){
+							
+								continue;
+							}
+							
 							azmsgsync_pi.getIPC().invoke( "destroyMessageHandler", new Object[]{ map });
 							
 						}catch( Throwable e ){
@@ -1548,6 +1555,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				String key	= decodeKey( bits[1] );
 				
 				if ( BuddyPluginUtils.isUnknownDownloadChatKey( key )){
+					
+					String net = bits[0];
+					
+					if ( getFavourite( net, key )){
+						
+						continue;
+					}
 					
 					it.remove();
 					
