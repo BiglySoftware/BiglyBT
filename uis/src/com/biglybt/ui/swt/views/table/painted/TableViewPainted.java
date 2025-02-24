@@ -50,7 +50,6 @@ import com.biglybt.ui.swt.components.BubbleTextBox.BubbleTextBoxChangeListener;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.HSLColor;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -91,6 +90,8 @@ public class TableViewPainted
 
 	public static final boolean DIRECT_DRAW = (Constants.isOSX || Constants.isUnix) && Utils.getDeviceZoom() != 100;
 
+	private static final boolean REDUCE_GC_CREATION = !Constants.isOSX;
+	
 	private static final boolean DEBUG_REDRAW_CLIP = false;
 
 	private static final boolean expand_enabled_default = COConfigurationManager.getBooleanParameter("Table.useTree");
@@ -2599,7 +2600,12 @@ public class TableViewPainted
 						if (Math.abs(yDiff) < clientArea.height || !vBarVisible ){
 							boolean wasIn = in_swt_updateCanvasImage;
 							in_swt_updateCanvasImage = true;
+							GC gc = null;
 							try{
+								gc = canvasImageGC;								
+								if ( gc == null ){								
+									gc = new GC( canvasImage );
+								}
 								if ( vBarVisible ){
 									Rectangle bounds = canvasImage.getBounds();
 									//System.out.println("moving y " + yDiff + ";cah=" + clientArea.height);
@@ -2607,18 +2613,18 @@ public class TableViewPainted
 										// User Scrolled up, Move Image Down
 										if (Utils.isGTK3) {
 											// Can't copyArea(x, y, w, h, dx, dy, paint) or drawImage(Image, x, y) downward without cheese
-											canvasImageGC.copyArea(canvasImage, 0, -yDiff);
+											gc.copyArea(canvasImage, 0, -yDiff);
 										} else {
-											canvasImageGC.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
+											gc.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
 										}
-										swt_paintCanvasImage(canvasImageGC, new Rectangle(0, 0, 9999, yDiff));
+										swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, yDiff));
 									} else {
 										// User scrolled down, move image up
 										if (Utils.isGTK3) {
 											//copyArea cheese on GTK3 SWT 4528/4608
-											canvasImageGC.drawImage(canvasImage, 0, yDiff);
+											gc.drawImage(canvasImage, 0, yDiff);
 										} else {
-											canvasImageGC.copyArea(0, -yDiff, bounds.width, bounds.height , 0, 0, false);
+											gc.copyArea(0, -yDiff, bounds.width, bounds.height , 0, 0, false);
 										}
 										int h = -yDiff;
 										TableRowPainted row = getLastVisibleRow();
@@ -2626,10 +2632,10 @@ public class TableViewPainted
 											//row.invalidate();
 											h += row.getHeight();
 										}
-										swt_paintCanvasImage(canvasImageGC, new Rectangle(0, bounds.height - h, 9999, h));
+										swt_paintCanvasImage(gc, new Rectangle(0, bounds.height - h, 9999, h));
 									}
 								}else{
-									swt_paintCanvasImage(canvasImageGC, new Rectangle(0, 0, 9999, 9999));
+									swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, 9999));
 								}
 
 					  		if ( DEBUG_WITH_SHELL ){
@@ -2644,7 +2650,11 @@ public class TableViewPainted
 								refreshTable = true;
 
 							}finally{
-
+								if ( canvasImageGC == null ){									
+									if ( gc != null ){
+										gc.dispose();
+									}
+								}
 								in_swt_updateCanvasImage = wasIn;
 							}
 
@@ -2743,8 +2753,10 @@ public class TableViewPainted
 	  			
 	  			if ( canvasImage!= null ){
 	  			
-	  				canvasImageGC	= new GC( canvasImage );
+	  				if ( REDUCE_GC_CREATION ){
 	  				
+	  					canvasImageGC	= new GC( canvasImage );
+	  				}
 	  			}else{
 	  				
 	  				canvasImageGC = null;
@@ -2843,8 +2855,29 @@ public class TableViewPainted
 				}
 				//System.out.println("UpdateCanvasImage " + bounds + "; via " + Debug.getCompressedStackTrace());
 				
-				swt_paintCanvasImage(canvasImageGC, bounds);
-
+				GC gc = null;
+				
+				try{
+					gc = canvasImageGC;
+					
+					if ( gc == null ){
+						
+						gc = new GC( canvasImage );
+					}
+					
+					swt_paintCanvasImage(gc, bounds);
+					
+				}finally{
+					
+					if ( canvasImageGC == null ){
+						
+						if ( gc != null ){
+							
+							gc.dispose();
+						}
+					}
+				}
+				
 				if (DEBUG_WITH_SHELL) {
 					forceDebugShellRefresh(bounds);
 				}
