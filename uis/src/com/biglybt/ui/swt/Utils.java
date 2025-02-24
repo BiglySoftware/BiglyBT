@@ -4578,7 +4578,7 @@ public class Utils
 	private static Map truncatedTextCache = new HashMap();
 
 	public static final String THREAD_NAME_OFFSWT = "GetOffSWT";
-	private static ThreadPool tp = new ThreadPool(THREAD_NAME_OFFSWT, 10, true);
+	private static ThreadPool<AERunnable> tp = new ThreadPool<>(THREAD_NAME_OFFSWT, 10, true);
 
 	static{
 		if ( Constants.isCVSVersion()){
@@ -4692,13 +4692,18 @@ public class Utils
 	}
 
 	public static void getOffOfSWTThread(Runnable runnable) {
-		AERunnable r = (runnable instanceof AERunnable) ? (AERunnable) runnable : new AERunnable() {
-			@Override
-			public void runSupport() {
-				runnable.run();
-			}
-		};
-		tp.run(r);
+
+		if ( isSWTThread()){
+			AERunnable r = (runnable instanceof AERunnable) ? (AERunnable) runnable : new AERunnable() {
+				@Override
+				public void runSupport() {
+					runnable.run();
+				}
+			};
+			tp.run(r);
+		}else{
+			runnable.run();
+		}
 	}
 
 	// Needed because plugins use it (VPNHelper)
