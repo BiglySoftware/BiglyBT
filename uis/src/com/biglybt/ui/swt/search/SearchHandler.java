@@ -20,6 +20,9 @@
 
 package com.biglybt.ui.swt.search;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.core.config.COConfigurationManager;
@@ -66,6 +69,8 @@ SearchHandler
 		}
 	}
 
+	private static List<MdiEntry>		active_searches = new ArrayList<>();
+	
 	public static void
 	handleSearch(
 		String		sSearchText,
@@ -119,6 +124,7 @@ SearchHandler
 			return;
 		}
 
+				
 		final MdiEntry entry = mdi.createEntryFromSkinRef(
 				MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY, id,
 				"main.area.searchresultstab", sSearchText, null, sq, true, MultipleDocumentInterface.SIDEBAR_POS_FIRST );
@@ -126,6 +132,31 @@ SearchHandler
 			entry.setImageLeftID("image.sidebar.search");
 			entry.setDatasource(sq);
 			entry.setViewTitleInfo(new ViewTitleInfoImplementation());
+			
+			MdiEntry to_remove = null;
+			
+			entry.addListener((e,user)->{
+				
+				synchronized( active_searches ){
+					
+					active_searches.remove( e );
+				}
+			});
+			
+			synchronized( active_searches ){
+			
+				active_searches.add( entry );
+				
+				if ( active_searches.size() > 5 ){
+					
+					to_remove = active_searches.remove(0);
+				}
+			}
+			
+			if ( to_remove != null ){
+				
+				to_remove.closeView();
+			}
 		}
 
 		mdi.showEntryByID(id);
