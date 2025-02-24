@@ -42,6 +42,7 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.pif.download.Download;
@@ -92,8 +93,11 @@ public class RankItem
     CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
 			public void coreRunning(Core core) {
-				gmListener = new GMListener();
-				core.getGlobalManager().addListener(gmListener);
+				Utils.getOffOfSWTThread(()->{
+					gmListener = new GMListener();
+						// can block somewhat if global manager saving downloads for example
+					core.getGlobalManager().addListener(gmListener);
+				});
 			}
 		});
  
