@@ -2345,6 +2345,8 @@ DiskManagerUtil
 							ready = move_tasks.size() == 1;
 						}
 
+						boolean deferred = false;
+						
 						try{
 							if ( has_scheduler ){
 
@@ -2358,6 +2360,8 @@ DiskManagerUtil
 									}
 									
 										// come back later
+									
+									deferred = true;
 									
 									return( false );
 								}
@@ -2408,6 +2412,8 @@ DiskManagerUtil
 										
 											// come back later
 										
+										deferred = true;
+										
 										return( false );
 									}
 								}
@@ -2421,9 +2427,12 @@ DiskManagerUtil
 							
 						}finally{
 
-							synchronized( move_tasks ){
-
-								move_tasks.remove( this );
+							if ( !deferred ){
+								
+								synchronized( move_tasks ){
+	
+									move_tasks.remove( this );
+								}
 							}
 						}
 					}
