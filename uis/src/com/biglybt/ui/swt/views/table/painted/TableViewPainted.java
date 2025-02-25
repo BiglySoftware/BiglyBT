@@ -90,6 +90,8 @@ public class TableViewPainted
 
 	public static final boolean DIRECT_DRAW = (Constants.isOSX || Constants.isUnix) && Utils.getDeviceZoom() != 100;
 
+		// on later OSX (14+?) reducing GC creation causes the Library to fail to paint almost entirely...
+	
 	private static final boolean REDUCE_GC_CREATION = !Constants.isOSX;
 	
 	private static final boolean DEBUG_REDRAW_CLIP = false;
