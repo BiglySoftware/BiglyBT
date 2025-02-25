@@ -716,7 +716,9 @@ public class TagUIUtils
 						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS,
 						TagFeatureExecOnAssign.ACTION_REMOVE_TAGS,
 						TagFeatureExecOnAssign.ACTION_HOST,
-						TagFeatureExecOnAssign.ACTION_PUBLISH };
+						TagFeatureExecOnAssign.ACTION_PUBLISH,
+						TagFeatureExecOnAssign.ACTION_BAN,
+					};
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
@@ -734,7 +736,9 @@ public class TagUIUtils
 						"label.assign.tags",
 						"label.remove.tags",
 						"menu.host.on.tracker",
-						"menu.publish.on.tracker"};
+						"menu.publish.on.tracker",
+						"label.ban",
+					};
 
 				for ( int i=0;i<action_ids.length;i++ ){
 

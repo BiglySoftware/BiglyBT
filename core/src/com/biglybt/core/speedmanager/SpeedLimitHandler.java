@@ -23,7 +23,6 @@ package com.biglybt.core.speedmanager;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.nio.file.FileSystem;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -38,6 +37,8 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.ipfilter.IpFilter;
+import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.PEPeer;
@@ -88,6 +89,8 @@ SpeedLimitHandler
 	private static final Object PEER_LT_WAIT_START_KEY	= new Object();
 	private static final Object PEER_ASN_WAIT_START_KEY	= new Object();
 	
+	private static final IpFilter	ip_filter	= IpFilterManagerFactory.getSingleton().getIPFilter();
+
 	public static SpeedLimitHandler
 	getSingleton(
 		Core core )
@@ -6460,9 +6463,15 @@ SpeedLimitHandler
 				
 				int actions = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".eos", -1 );
 				
-				if ( actions == TagFeatureExecOnAssign.ACTION_DESTROY ){
+				if ( actions != -1 ){
 					
-					super.setActionEnabled( actions, true );
+					for ( int action: new int[]{TagFeatureExecOnAssign.ACTION_DESTROY, TagFeatureExecOnAssign.ACTION_BAN }){
+						
+						if (( actions & action ) != 0 ){
+							
+							super.setActionEnabled( action, true );
+						}
+					}
 				}
 				
 				int[] colour = COConfigurationManager.getRGBParameter( "speed.limit.handler.ipset_n." + getTagID() + ".color" );
@@ -6484,7 +6493,7 @@ SpeedLimitHandler
 			public int
 			getSupportedActions()
 			{
-				return( TagFeatureExecOnAssign.ACTION_DESTROY );
+				return( TagFeatureExecOnAssign.ACTION_DESTROY | TagFeatureExecOnAssign.ACTION_BAN );
 			}
 
 			@Override
@@ -6495,9 +6504,36 @@ SpeedLimitHandler
 			{
 				super.setActionEnabled( action, enabled );
 				
-				if ( action == TagFeatureExecOnAssign.ACTION_DESTROY  ){
+				if ( action == TagFeatureExecOnAssign.ACTION_DESTROY || action == TagFeatureExecOnAssign.ACTION_BAN ){
 				
-					COConfigurationManager.setParameter( "speed.limit.handler.ipset_n." + getTagID() + ".eos", enabled?TagFeatureExecOnAssign.ACTION_DESTROY:-1);
+					int tag_id = getTagID();
+					
+					int actions = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".eos", -1 );
+					
+					if ( enabled ){
+						
+						if ( actions == -1 ){
+							
+							actions = action;
+							
+						}else{
+							
+							actions |= action;
+						}
+					}else{
+						
+						if ( actions != -1 ){
+					
+							actions &= ~action;
+						}
+						
+						if ( actions == 0 ){
+							
+							actions = -1;	// bad default, keep it I guess
+						}
+					}
+					
+					COConfigurationManager.setParameter( "speed.limit.handler.ipset_n." + tag_id + ".eos", actions );
 				}
 			}
 			
@@ -6618,13 +6654,24 @@ SpeedLimitHandler
 				
 				if ( to_delete != null ){
 					
+					boolean do_ban = isActionEnabled( TagFeatureExecOnAssign.ACTION_BAN );
+					
 					for ( PEPeer peer: to_delete ){
 						
-						PEPeerManager pm = peer.getManager();
+						PEPeerManager peer_manager = peer.getManager();
 						
-						if ( pm != null ){
+						if ( peer_manager != null ){
 						
-							pm.removePeer( peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
+							if ( do_ban ){
+								
+								ip_filter.ban( peer.getIp(), MessageText.getString( "tag.type.ipset" ) + ": " + getTagName( true ), false );
+								
+								peer_manager.removePeer( peer, "PeerSet ban action", Transport.CR_IP_BLOCKED );
+								
+							}else{
+							
+								peer_manager.removePeer( peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
+							}
 						}
 					}
 				}
@@ -6809,7 +6856,7 @@ SpeedLimitHandler
 				
 				if ( result ){
 					
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY ) || isActionEnabled( TagFeatureExecOnAssign.ACTION_BAN )){
 
 						return( 3 );
 					}
@@ -6866,7 +6913,7 @@ SpeedLimitHandler
 				
 				if ( result ){
 					
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY ) || isActionEnabled( TagFeatureExecOnAssign.ACTION_BAN )){
 
 						return( 3 );
 					}
@@ -6934,7 +6981,7 @@ SpeedLimitHandler
 				
 				if ( result ){
 					
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY ) || isActionEnabled( TagFeatureExecOnAssign.ACTION_BAN )){
 
 						return( 3 );
 					}
@@ -6950,11 +6997,23 @@ SpeedLimitHandler
 			{
 				PEPeer peer = PluginCoreUtils.unwrap( _peer );
 
-				if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY ) && !deferEOS()){
+				if ( !deferEOS()){
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_BAN )){
+					
+						ip_filter.ban( peer.getIp(), MessageText.getString( "tag.type.ipset" ) + ": " + getTagName( true ), false );
+						
+						peer_manager.removePeer( _peer, "PeerSet ban action", Transport.CR_IP_BLOCKED );
+						
+						return;
+					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
 
-					peer_manager.removePeer( _peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
-
-					return;
+						peer_manager.removePeer( _peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
+						
+						return;
+					}
 				}
 
 				synchronized( this ){
@@ -6980,7 +7039,16 @@ SpeedLimitHandler
 							
 								// immediate remove
 							
-							peer_manager.removePeer( _peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
+							if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_BAN )){
+								
+								ip_filter.ban( peer.getIp(), MessageText.getString( "tag.type.ipset" ) + ": " + getTagName( true ), false );
+								
+								peer_manager.removePeer( _peer, "PeerSet ban action", Transport.CR_IP_BLOCKED );
+								
+							}else{
+								
+								peer_manager.removePeer( _peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
+							}
 							
 							return;
 							

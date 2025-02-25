@@ -31,23 +31,24 @@ public interface
 TagFeatureExecOnAssign
 	extends TagFeature
 {
-	public static final int ACTION_NONE						= 0x0000;
-	public static final int ACTION_DESTROY					= 0x0001;
-	public static final int ACTION_START					= 0x0002;
-	public static final int ACTION_STOP						= 0x0004;
-	public static final int ACTION_FORCE_START				= 0x0008;
-	public static final int ACTION_NOT_FORCE_START			= 0x0010;
-	public static final int ACTION_SCRIPT					= 0x0020;
-	public static final int ACTION_PAUSE					= 0x0040;
-	public static final int ACTION_RESUME					= 0x0080;
-	public static final int ACTION_APPLY_OPTIONS_TEMPLATE	= 0x0100;
-	public static final int ACTION_POST_MAGNET_URI			= 0x0200;
-	public static final int ACTION_MOVE_INIT_SAVE_LOC		= 0x0400;
-	public static final int ACTION_ASSIGN_TAGS				= 0x0800;
-	public static final int ACTION_HOST						= 0x1000;
-	public static final int ACTION_PUBLISH					= 0x2000;
-	public static final int ACTION_REMOVE_TAGS				= 0x4000;
-	public static final int ACTION_QUEUE					= 0x8000;
+	public static final int ACTION_NONE						= 0x00000;
+	public static final int ACTION_DESTROY					= 0x00001;
+	public static final int ACTION_START					= 0x00002;
+	public static final int ACTION_STOP						= 0x00004;
+	public static final int ACTION_FORCE_START				= 0x00008;
+	public static final int ACTION_NOT_FORCE_START			= 0x00010;
+	public static final int ACTION_SCRIPT					= 0x00020;
+	public static final int ACTION_PAUSE					= 0x00040;
+	public static final int ACTION_RESUME					= 0x00080;
+	public static final int ACTION_APPLY_OPTIONS_TEMPLATE	= 0x00100;
+	public static final int ACTION_POST_MAGNET_URI			= 0x00200;
+	public static final int ACTION_MOVE_INIT_SAVE_LOC		= 0x00400;
+	public static final int ACTION_ASSIGN_TAGS				= 0x00800;
+	public static final int ACTION_HOST						= 0x01000;
+	public static final int ACTION_PUBLISH					= 0x02000;
+	public static final int ACTION_REMOVE_TAGS				= 0x04000;
+	public static final int ACTION_QUEUE					= 0x08000;
+	public static final int ACTION_BAN						= 0x10000;
 
 	public static final int[] ACTIONS = {
 			ACTION_DESTROY,
@@ -66,6 +67,7 @@ TagFeatureExecOnAssign
 			ACTION_PUBLISH,
 			ACTION_REMOVE_TAGS,
 			ACTION_QUEUE,
+			ACTION_BAN,
 	};
 	
 	public int
