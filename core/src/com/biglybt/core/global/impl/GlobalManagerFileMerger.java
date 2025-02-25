@@ -106,8 +106,8 @@ GlobalManagerFileMerger
 
 	final Map<HashWrapper,DownloadManager>		dm_map = new HashMap<>();
 
-	final List<SameSizeFiles>				sames 		= new ArrayList<>();
-	final Set<DownloadManager>				sames_dms	= new IdentityHashSet<>();
+	final CopyOnWriteList<SameSizeFiles>	sames_cow		= new CopyOnWriteList<>();
+	volatile Set<DownloadManager>			sames_dms_cow	= new IdentityHashSet<>();
 	
 	final AsyncDispatcher		read_write_dispatcher 	= new AsyncDispatcher( "GMFM" );
 	final AsyncDispatcher 		sync_dispatcher 		= new AsyncDispatcher( "GMFM:serial" );
@@ -190,14 +190,14 @@ GlobalManagerFileMerger
 						
 						synchronized( dm_map ){
 
-							for ( SameSizeFiles s: sames ){
+							for ( SameSizeFiles s: sames_cow ){
 
 								s.destroy();
 							}
 							
-							sames.clear();
+							sames_cow.clear();
 							
-							sames_dms.clear();
+							sames_dms_cow = new IdentityHashSet<DownloadManager>();
 							
 							syncFileSets( true );
 						}
@@ -329,43 +329,37 @@ GlobalManagerFileMerger
 	isSwarmMergingZ(
 		DownloadManager		dm )
 	{
-		synchronized( dm_map ){
-
-			return( sames_dms.contains( dm ));
-		}
+		return( sames_dms_cow.contains( dm ));
 	}
 
 	protected String
 	getSwarmMergingInfo(
 		DownloadManager		dm )
 	{
-		synchronized( dm_map ){
+		if ( sames_cow.size() > 0 ){
 
-			if ( sames.size() > 0 ){
+			StringBuffer	result = null;
 
-				StringBuffer	result = null;
+			for ( SameSizeFiles s: sames_cow ){
 
-				for ( SameSizeFiles s: sames ){
+				if ( s.hasDownloadManager( dm )){
 
-					if ( s.hasDownloadManager( dm )){
+					String info = s.getInfo();
 
-						String info = s.getInfo();
+					if ( result == null ){
 
-						if ( result == null ){
+						result = new StringBuffer( 1024 );
 
-							result = new StringBuffer( 1024 );
+					}else{
 
-						}else{
-
-							result.append( "\n" );
-						}
-
-						result.append( info );
+						result.append( "\n" );
 					}
-				}
 
-				return( result==null?null:result.toString());
+					result.append( info );
+				}
 			}
+
+			return( result==null?null:result.toString());
 		}
 
 		return( null );
@@ -766,7 +760,7 @@ GlobalManagerFileMerger
 					}
 				}
 
-				List<SameSizeFiles>	sames_copy = new LinkedList<>(sames);
+				List<SameSizeFiles>	sames_copy = new LinkedList<>(sames_cow.getList());
 
 				for ( Set<DiskManagerFileInfo> set: interesting ){
 
@@ -790,7 +784,7 @@ GlobalManagerFileMerger
 
 					if ( !found ){
 
-						sames.add( new SameSizeFiles( set ));
+						sames_cow.add( new SameSizeFiles( set ));
 					}
 				}
 
@@ -798,22 +792,26 @@ GlobalManagerFileMerger
 
 					dead.destroy();
 
-					sames.remove( dead );
+					sames_cow.remove( dead );
 				}
 
 				if ( enabled ){
 					
-					log( "Scan result: dm_map=" + dm_map.size() + ", sames=" + sames.size());
+					log( "Scan result: dm_map=" + dm_map.size() + ", sames=" + sames_cow.size());
 				}
 				
-				sames_dms.clear();
+				sames_dms_cow = new IdentityHashSet<DownloadManager>();
 				
-				if ( sames.size() > 0 ){
+				if ( sames_cow.size() > 0 ){
 
-					for ( SameSizeFiles same: sames ){
+					Set<DownloadManager> sames_dms_temp = new IdentityHashSet<DownloadManager>();
+					
+					for ( SameSizeFiles same: sames_cow ){
 						
-						sames_dms.addAll( same.getDownloadManagers());
+						sames_dms_temp.addAll( same.getDownloadManagers());
 					}
+					
+					sames_dms_cow = sames_dms_temp;
 					
 					if ( timer_event == null ){
 
@@ -834,7 +832,7 @@ GlobalManagerFileMerger
 
 										synchronized( dm_map ){
 
-											for ( SameSizeFiles s: sames ){
+											for ( SameSizeFiles s: sames_cow ){
 
 												s.sync( tick_count );
 											}
@@ -1514,6 +1512,7 @@ GlobalManagerFileMerger
 				}
 			}
 		}
+		
 		private String
 		getString()
 		{
@@ -2496,14 +2495,11 @@ GlobalManagerFileMerger
 	logCurrentState(
 		IndentWriter	write )
 	{
-		synchronized( dm_map ){
-
-			log( write, "Same size file sets=" + sames.size() + ", dm_map=" + dm_map.size());
+		log( write, "Same size file sets=" + sames_cow.size() + ", dm_map=" + dm_map.size());
 			
-			for ( SameSizeFiles same: sames ){
+		for ( SameSizeFiles same: sames_cow ){
 				
-				same.logCurrentState( write );
-			}
+			same.logCurrentState( write );
 		}
 	}
 	
