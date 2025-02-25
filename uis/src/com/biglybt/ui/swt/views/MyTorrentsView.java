@@ -2677,41 +2677,55 @@ public class MyTorrentsView
 	}
 
 
+	AsyncDispatcher reposition_disps = new AsyncDispatcher();
 
-
+	private void
+	reposition(
+		Runnable r )
+	{
+		reposition_disps.dispatch(r);
+	}
 
   private void moveSelectedTorrentsDown() {
     // Don't use runForSelectDataSources to ensure the order we want
   	DownloadManager[] dms = getSelectedDownloads();
-    Arrays.sort(dms, new Comparator<DownloadManager>() {
-			@Override
-			public int compare(DownloadManager a, DownloadManager b) {
-        return a.getPosition() - b.getPosition();
-			}
+      
+    reposition(()->{
+    	Arrays.sort(dms, new Comparator<DownloadManager>() {
+    		@Override
+    		public int compare(DownloadManager a, DownloadManager b) {
+    			return a.getPosition() - b.getPosition();
+    		}
+    	});
+  
+	    for (int i = dms.length - 1; i >= 0; i--) {
+	      DownloadManager dm = dms[i];
+	      if (dm.getGlobalManager().isMoveableDown(dm)) {
+	        dm.getGlobalManager().moveDown(dm);
+	      }
+	    }
     });
-    for (int i = dms.length - 1; i >= 0; i--) {
-      DownloadManager dm = dms[i];
-      if (dm.getGlobalManager().isMoveableDown(dm)) {
-        dm.getGlobalManager().moveDown(dm);
-      }
-    }
   }
 
   private void moveSelectedTorrentsUp() {
     // Don't use runForSelectDataSources to ensure the order we want
   	DownloadManager[] dms = getSelectedDownloads();
-    Arrays.sort(dms, new Comparator<DownloadManager>() {
-    	@Override
-	    public int compare(DownloadManager a, DownloadManager b) {
-        return a.getPosition() - b.getPosition();
-      }
+    
+  	reposition(()->{
+    	Arrays.sort(dms, new Comparator<DownloadManager>() {
+    		@Override
+    		public int compare(DownloadManager a, DownloadManager b) {
+    			return a.getPosition() - b.getPosition();
+    		}
+    	});
+    	   
+	    for (int i = 0; i < dms.length; i++) {
+	      DownloadManager dm = dms[i];
+	      if (dm.getGlobalManager().isMoveableUp(dm)) {
+	        dm.getGlobalManager().moveUp(dm);
+	      }
+	    }
     });
-    for (int i = 0; i < dms.length; i++) {
-      DownloadManager dm = dms[i];
-      if (dm.getGlobalManager().isMoveableUp(dm)) {
-        dm.getGlobalManager().moveUp(dm);
-      }
-    }
   }
 
 	private void moveSelectedTorrents(int by) {
@@ -2720,41 +2734,43 @@ public class MyTorrentsView
 		if (dms.length <= 0)
 			return;
 
-		int[] newPositions = new int[dms.length];
+		reposition(()->{
+			int[] newPositions = new int[dms.length];
 
-		if (by < 0) {
-			Arrays.sort(dms, new Comparator<DownloadManager>() {
-				@Override
-				public int compare(DownloadManager a, DownloadManager b) {
-					return a.getPosition() - b.getPosition();
-				}
-			});
-		} else {
-			Arrays.sort(dms, new Comparator<DownloadManager>() {
-				@Override
-				public int compare(DownloadManager a, DownloadManager b) {
-					return b.getPosition() - a.getPosition();
-				}
-			});
-		}
-
-		for (int i = 0; i < dms.length; i++) {
-			DownloadManager dm = dms[i];
-			boolean complete = dm.isDownloadComplete(false);
-			int count = globalManager.downloadManagerCount(complete);
-			int pos = dm.getPosition() + by;
-			if (pos < i + 1)
-				pos = i + 1;
-			else if (pos > count - i)
-				pos = count - i;
-
-			newPositions[i] = pos;
-		}
-
-		for (int i = 0; i < dms.length; i++) {
-			DownloadManager dm = dms[i];
-			globalManager.moveTo(dm, newPositions[i]);
-		}
+			if (by < 0) {
+				Arrays.sort(dms, new Comparator<DownloadManager>() {
+					@Override
+					public int compare(DownloadManager a, DownloadManager b) {
+						return a.getPosition() - b.getPosition();
+					}
+				});
+			} else {
+				Arrays.sort(dms, new Comparator<DownloadManager>() {
+					@Override
+					public int compare(DownloadManager a, DownloadManager b) {
+						return b.getPosition() - a.getPosition();
+					}
+				});
+			}
+			
+			for (int i = 0; i < dms.length; i++) {
+				DownloadManager dm = dms[i];
+				boolean complete = dm.isDownloadComplete(false);
+				int count = globalManager.downloadManagerCount(complete);
+				int pos = dm.getPosition() + by;
+				if (pos < i + 1)
+					pos = i + 1;
+				else if (pos > count - i)
+					pos = count - i;
+	
+				newPositions[i] = pos;
+			}
+	
+			for (int i = 0; i < dms.length; i++) {
+				DownloadManager dm = dms[i];
+				globalManager.moveTo(dm, newPositions[i]);
+			}
+		});
 	}
 
 	private void columnInvalidateAfterMove() {
@@ -2781,11 +2797,13 @@ public class MyTorrentsView
     if (dms.length == 0)
       return;
 
-    if(moveToTop){
-      globalManager.moveTop(dms);
-    }else{
-      globalManager.moveEnd(dms);
-    }
+    reposition(()->{
+	    if(moveToTop){
+	      globalManager.moveTop(dms);
+	    }else{
+	      globalManager.moveEnd(dms);
+	    } 
+    });
   }
 
   public void
