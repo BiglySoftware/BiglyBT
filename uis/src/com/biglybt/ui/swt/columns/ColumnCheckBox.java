@@ -196,6 +196,10 @@ ColumnCheckBox
 
 			cell.setGraphic( icon );
 		}
+		
+		int value = state!=null&&state?1:0;
+		
+		cell.setTextEquivalent(value==1?"1":"0");
 	}
 
 	public long adjustSortVal(Object ds, long sortVal) {

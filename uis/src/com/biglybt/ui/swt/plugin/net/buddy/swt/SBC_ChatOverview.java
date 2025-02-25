@@ -33,6 +33,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
@@ -50,6 +51,7 @@ import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.plugin.net.buddy.swt.columns.*;
@@ -62,7 +64,7 @@ import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
-
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.pif.ui.*;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
@@ -374,7 +376,8 @@ public class SBC_ChatOverview
 	}
 
 
-	TableViewSWT<ChatInstance> tv;
+	TableViewSWT<ChatInstance> 						tv;
+	private TableColumnFilterHelper<ChatInstance>	col_filter_helper;
 
 	private Composite table_parent;
 
@@ -583,6 +586,8 @@ public class SBC_ChatOverview
 			table_parent,
 		});
 
+		col_filter_helper = null;
+		
 		BuddyPluginBeta beta = BuddyPluginUtils.getBetaPlugin();
 
 		if ( beta != null) {
@@ -657,7 +662,18 @@ public class SBC_ChatOverview
 							| SWT.FULL_SELECTION | SWT.VIRTUAL);
 			SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
 			if (soFilterBox != null) {
-				tv.enableFilterCheck(soFilterBox.getBubbleTextBox(), this);
+				
+				BubbleTextBox bubbleTextBox = soFilterBox.getBubbleTextBox();
+				
+				tv.enableFilterCheck(bubbleTextBox, this);
+				
+				String tooltip = MessageText.getString("filter.tt.start");
+				tooltip += MessageText.getString("column.filter.tt.line1");
+				tooltip += MessageText.getString("column.filter.tt.line2");
+
+				bubbleTextBox.setTooltip( tooltip );
+				
+				bubbleTextBox.setMessage( MessageText.getString( "Button.search2" ) );
 			}
 			tv.setRowDefaultHeightEM(1);
 
@@ -738,7 +754,8 @@ public class SBC_ChatOverview
 						}
 					});
 
-
+			col_filter_helper = new TableColumnFilterHelper<>( tv, "chatov:search" );
+			
 			tv.initialize(table_parent);
 		}
 
@@ -932,7 +949,48 @@ public class SBC_ChatOverview
 	}
 
 	@Override
-	public boolean filterCheck(ChatInstance ds, String filter, boolean regex, boolean confusable ) {
-		return true;
+	public boolean 
+	filterCheck(
+		ChatInstance	ds, 
+		String			filter, 
+		boolean			regex, 
+		boolean			confusable ) 
+	{
+		if ( filter == null || filter.length() == 0 ){
+
+			return( true );
+		}
+
+		if ( confusable ){
+		
+			filter = GeneralUtils.getConfusableEquivalent( filter, true );
+		}
+		
+		try{			
+			String[] names;
+			
+			String cn = ds.getName();
+
+			if ( confusable ){
+				
+				cn = GeneralUtils.getConfusableEquivalent (cn, false );
+			}
+				
+			names = new String[]{ cn };
+			
+			for ( String name: names ){
+			
+				if ( col_filter_helper.filterCheck( ds, filter, regex, name, false )){
+					
+					return( true );
+				}
+			}
+			
+			return( false );
+			
+		}catch(Exception e ){
+
+			return true;
+		}
 	}
 }
