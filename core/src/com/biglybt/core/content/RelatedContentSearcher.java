@@ -40,6 +40,7 @@ import com.biglybt.core.util.bloom.BloomFilterFactory;
 import com.biglybt.pif.ddb.*;
 import com.biglybt.pif.utils.search.*;
 import com.biglybt.pifimpl.local.ddb.DDBaseImpl;
+import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 import com.biglybt.plugin.dht.DHTPluginBasicInterface;
 import com.biglybt.plugin.dht.DHTPluginContact;
 import com.biglybt.plugin.dht.DHTPluginInterface.DHTInterface;
@@ -896,6 +897,29 @@ RelatedContentSearcher
 
 	List<RelatedContent>
 	matchContent(
+		final String		term,
+		int					min_seeds,
+		int					min_leechers,
+		int					max_age_secs,
+		boolean				is_local )
+	{
+		if ( is_local ){
+			
+			return( matchContent0( term, min_seeds, min_leechers, max_age_secs, is_local ));
+			
+		}else{
+			
+			return( 
+				UtilitiesImpl.runAtLowPriority(
+				"remsearch",
+				()->{
+					return( matchContent0( term, min_seeds, min_leechers, max_age_secs, is_local ));
+				}));
+		}
+	}
+	
+	List<RelatedContent>
+	matchContent0(
 		final String		term,
 		int					min_seeds,
 		int					min_leechers,

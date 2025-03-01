@@ -34,6 +34,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Supplier;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPChecker;
@@ -1164,6 +1165,53 @@ UtilitiesImpl
 		return addDelayedTask(pi.getPluginName(), target);
 	}
 
+	public static <T> T
+	runAtLowPriority(
+		String				name,
+		Supplier<T>			r )
+	{
+		Object [] result = { null };
+		
+		AESemaphore sem = new AESemaphore( name );
+		
+		AEThread2.createAndStartDaemon(
+			name,
+			()->{
+				try{
+					Thread t = Thread.currentThread();
+					
+					int p = t.getPriority();
+					
+					t.setPriority( Thread.MIN_PRIORITY );
+					
+					try{
+					
+						T res = r.get();
+					
+						synchronized( result ){
+							
+							result[0] = res;
+						}
+						
+						
+					}finally{
+												
+						t.setPriority( p );
+					}
+				}finally{
+					
+					sem.release();
+				}
+			});
+		
+		sem.reserve();
+		
+		synchronized( result ){
+			
+			return( (T)result[0]);
+		}
+	}
+	
 	private static List			delayed_tasks = new ArrayList();
 	private static AESemaphore	delayed_tasks_sem	= new AESemaphore( "Utilities:delayedTask" );
 	private static AEThread2	delayed_task_thread;
