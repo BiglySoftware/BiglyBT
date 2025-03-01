@@ -39,7 +39,7 @@ PlatformManagerBase
 				!lc_vendor.startsWith( "oracle " ) &&
 				!lc_vendor.contains( "openjdk" ) &&
 				!lc_vendor.startsWith( "azul ") && 
-				!lc_vendor.startsWith( "Eclipse Adoptium" )){
+				!lc_vendor.startsWith( "eclipse adoptium" )){
 			
 			throw( new PlatformManagerException(
 					MessageText.getString(
