@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Runs the Updater.jar plugin and processes any pending updates
+set -x
+# First Run:
+# updateBiglyBT [-Dproperty=val ...] -Dazureus.script.version="X" <mainClass> <"updateonly"|"restart"> <appPath> <userPath> <configOverride>
+# Second Run if sudo was needed:
+# updateBiglyBT "rerun" <originalUser> $@
+
+exists () {
+  type "$1" >/dev/null 2>/dev/null
+}
+
+if [ "$1" = "rerun" ]; then
+	ISRERUN=1
+else
+	ISRERUN=0
+fi
+
+if [ $ISRERUN -eq 1 ]; then
+	PARAMS=( "${@:3}" )
+else
+	SCRIPT=`realpath $0`
+	SCRIPTPATH=`dirname $SCRIPT`
+
+	if [ "$1" = "" ]; then
+		# No params were passed in, make ones up
+		PARAMS=( "com.biglybt.update.Updater" "updateonly" "${SCRIPTPATH}" "${HOME}/.biglybt" )
+	else
+		PARAMS=( "${@}" )
+	fi
+	
+	for i in "${!PARAMS[@]}"; do
+		if [ "${PARAMS[$i]}" = "updateonly" ] || [ "${PARAMS[$i]}" = "restart" ]; then
+			PARAM_IDX_APPPATH=$(( $i + 1 ))
+			break
+		fi
+	done
+
+	if [ ! -w "${PARAMS[${PARAM_IDX_APPPATH}]}" ]; then
+		# Can't write to appdir, going to need super user
+	
+		if [ "$EUID" -ne 0 ]; then
+			if exists "pkexec"; then
+				CMD="pkexec"
+			elif exists "gksudo"; then
+				CMD="gksudo"
+			elif exists "kdesudo"; then
+				CMD="kdesudo"
+			elif exists "sudo"; then
+				CMD="sudo"
+			else
+				echo "Can't get write access to ${PARAMS[${PARAM_IDX_APPPATH}]}"
+				echo "Please run ${SCRIPT} with higher access level"
+				exit 1
+			fi
+		
+			echo Running as root..
+			$CMD $SCRIPT "rerun" "${USER}" ${PARAMS[@]}
+			if [ $? -ne 0 ]; then
+				echo "Could not run with ${CMD}. Trying one more time with sudo"
+				sudo $SCRIPT "rerun" "${USER}" ${PARAMS[@]}
+			fi
+			exit
+		fi
+	
+	fi
+
+fi
+
+for i in "${!PARAMS[@]}"; do
+	if [ "${PARAMS[$i]}" = "updateonly" ] || [ "${PARAMS[$i]}" = "restart" ]; then
+		PARAM_IDX_USERPATH=$(( $i + 2 ))
+		break
+	fi
+done
+
+echo Running Updater..
+java -cp "${PARAMS[${PARAM_IDX_USERPATH}]}/plugins/azupdater/Updater.jar" ${PARAMS[@]}
+
+if [ $ISRERUN -eq 1 ]; then
+	echo Ensuring $2 still owns ${PARAMS[${PARAM_IDX_USERPATH}]}
+	chown -R $2:$2 ${PARAMS[${PARAM_IDX_USERPATH}]}
+fi
+
+echo Done
