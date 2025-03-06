@@ -64,10 +64,11 @@ TRTrackerServerUDP
 	TRTrackerServerUDP(
 		String				_name,
 		int					_port,
+		boolean				_apply_ip_filter,
 		boolean				_start_up_ready,
 		Map<String,Object>	_properties )
 	{
-		super( _name, _start_up_ready, _properties );
+		super( _name, _apply_ip_filter, _start_up_ready, _properties );
 
 		port		= _port;
 
@@ -156,7 +157,7 @@ TRTrackerServerUDP
 
 				String	ip = packet.getAddress().getHostAddress();
 
-				if ( !ip_filter.isInRange( ip, "Tracker", null )){
+				if ( !isIPFiltered( ip )){
 
 					thread_pool.run( new TRTrackerServerProcessorUDP( this, socket, packet ));
 				}

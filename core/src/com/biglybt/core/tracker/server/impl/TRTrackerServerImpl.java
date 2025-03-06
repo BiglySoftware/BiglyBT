@@ -349,7 +349,7 @@ TRTrackerServerImpl
 		return( support_experimental_extensions );
 	}
 
-	protected final IpFilter	ip_filter	= IpFilterManagerFactory.getSingleton().getIPFilter();
+	private final IpFilter	ip_filter	= IpFilterManagerFactory.getSingleton().getIPFilter();
 
 	private long		current_announce_retry_interval;
 	private long		current_scrape_retry_interval;
@@ -361,6 +361,8 @@ TRTrackerServerImpl
 	private final TRTrackerServerStatsImpl	stats = new TRTrackerServerStatsImpl( this );
 
 	private final String				name;
+	private final boolean				apply_ip_filter;
+
 	private final Map<String,Object>	properties;
 	
 	private final boolean				reverse_proxy;
@@ -398,12 +400,14 @@ TRTrackerServerImpl
 	public
 	TRTrackerServerImpl(
 		String					_name,
+		boolean					_apply_ip_filter,
 		boolean					_start_up_ready,
 		Map<String,Object>		_properties )
 	{
-		name		= _name==null?DEFAULT_NAME:_name;
-		is_ready	= _start_up_ready;
-		properties	= _properties==null?new HashMap<>():_properties;
+		name			= _name==null?DEFAULT_NAME:_name;
+		apply_ip_filter	= _apply_ip_filter;
+		is_ready		= _start_up_ready;
+		properties		= _properties==null?new HashMap<>():_properties;
 
 		Boolean b_rp = (Boolean)properties.get( Tracker.PR_REVERSE_PROXY );
 		
@@ -473,7 +477,7 @@ TRTrackerServerImpl
 
 		key_enabled = COConfigurationManager.getBooleanParameter("Tracker Key Enable Server");
 	}
-
+	
 	@Override
 	public void
 	setReady()
@@ -515,6 +519,20 @@ TRTrackerServerImpl
 		return( keep_alive_enabled );
 	}
 
+	protected boolean
+	isIPFiltered(
+		String		ip )
+	{
+		if ( apply_ip_filter && ip_filter.isInRange( ip, "Tracker", null )){
+			
+			return( true );
+			
+		}else{
+			
+			return( false );
+		}
+	}
+	
 	public TRTrackerServerTorrent
 	addLink(
 		String					link,

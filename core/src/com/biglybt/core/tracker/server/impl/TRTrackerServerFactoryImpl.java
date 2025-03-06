@@ -201,11 +201,11 @@ TRTrackerServerFactoryImpl
 					throw( new TRTrackerServerException( "TRTrackerServerFactory: UDP doesn't support SSL"));
 				}
 
-				server = new TRTrackerServerUDP( name, port, start_up_ready, properties );
+				server = new TRTrackerServerUDP( name, port, apply_ip_filter, start_up_ready, properties );
 
 			}else{
 
-				server = new TRTrackerServerDHT( name, start_up_ready, properties );
+				server = new TRTrackerServerDHT( name, apply_ip_filter, start_up_ready, properties );
 			}
 
 			servers.add( server );

@@ -283,13 +283,14 @@ TRBlockingServer
 
 				String	ip = socket.getInetAddress().getHostAddress();
 
-				if ( (!isIPFilterEnabled()) || (!ip_filter.isInRange( ip, "Tracker", null ))){
-
-					runProcessor( new TRBlockingServerProcessor( this, socket ));
-
-				}else{
+				if ( isIPFiltered(ip)){
 
 					socket.close();
+					
+				}else{
+										
+					runProcessor( new TRBlockingServerProcessor( this, socket ));
+
 				}
 
 			}catch( Throwable e ){

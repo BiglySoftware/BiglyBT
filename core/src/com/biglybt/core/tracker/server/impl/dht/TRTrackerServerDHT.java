@@ -37,10 +37,11 @@ TRTrackerServerDHT
 	public
 	TRTrackerServerDHT(
 		String				name,
+		boolean				apply_ip_filter,
 		boolean				start_up_ready,
 		Map<String,Object>	properties )
 	{
-		super( name, start_up_ready, properties );
+		super( name, apply_ip_filter, start_up_ready, properties );
 	}
 
 	@Override

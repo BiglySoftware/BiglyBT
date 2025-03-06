@@ -93,6 +93,11 @@ TRTrackerServerProcessor
 			throw( new TRTrackerServerException( "Tracker initialising, please wait" ));
 		}
 
+		if ( server.isIPFiltered( real_ip_address )){
+			
+			throw( new TRTrackerServerException( "Unauthorized" ));
+		}
+				
 		start = SystemTime.getHighPrecisionCounter();
 
 		boolean	ip_override = real_ip_address != original_client_ip_address;
