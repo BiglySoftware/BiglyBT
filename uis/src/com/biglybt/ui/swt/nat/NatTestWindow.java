@@ -349,10 +349,12 @@ public class NatTestWindow {
 	boolean hasMetrics = Utils.hasShellMetricsConfig( "NatTestWindow.metrics" );
 	
 	Utils.linkShellMetricsToConfig( shell, "NatTestWindow.metrics" );
-	
+		
 	if ( !hasMetrics ){
 		
-		shell.pack();
+		shell.setSize( 600, 400 );
+		
+		//shell.pack();
 		
 		Utils.centreWindow(shell);
 	}
