@@ -128,6 +128,39 @@ BlockedIpsWindow
     Label	bannedInfo = new Label(window, SWT.NULL);
     Messages.setLanguageText(bannedInfo,"ConfigView.section.ipfilter.bannedinfo");
 
+    	// manual ban
+    
+    Label	lblBan	= new Label(window,SWT.NULL );
+    Messages.setLanguageText(lblBan,"ConfigView.section.ipfilter.ban");
+
+    Text	textBan	= new Text(window,SWT.BORDER );
+
+    Button btnBan = new Button(window,SWT.PUSH);
+    Messages.setLanguageText(btnBan,"label.ban");
+
+    btnBan.addListener(SWT.Selection, (ev)->{
+    	IpFilter filter = core.getIpFilterManager().getIPFilter();
+    	BadIps badIPs = core.getIpFilterManager().getBadIps();
+
+    	String[] ips = textBan.getText().replace(';',',' ).split( "," );
+    	for ( String ip: ips ){
+    		ip = ip.trim();
+    		if ( !ip.isEmpty()){
+    			filter.ban(ip, MessageText.getString( "manual.mode"), true );
+				textBanned.append( ip + " " + MessageText.getString( "ConfigView.section.ipfilter.list.banned" ) + "\n");
+    		}
+    	}
+    	textBanned.setSelection(textBanned.getText().length());
+    });
+
+    textBan.addListener( SWT.Modify, (ev)->{
+    	btnBan.setEnabled( !textBan.getText().trim().isEmpty());
+    });
+    
+    btnBan.setEnabled( false );
+    
+    	// manual unban
+    
     Label	lblUnban	= new Label(window,SWT.NULL );
     Messages.setLanguageText(lblUnban,"ConfigView.section.ipfilter.unban");
 
@@ -211,10 +244,28 @@ BlockedIpsWindow
     formData.left = new FormAttachment(0,0);
     formData.right = new FormAttachment(100,0);
     formData.top = new FormAttachment(btnClear);
-    formData.bottom = new FormAttachment(btnUnban);
+    formData.bottom = new FormAttachment(btnBan);
 
     textBanned.setLayoutData(formData);
 
+    	// ban line
+    
+    formData = new FormData();
+    formData.left = new FormAttachment(0,0);
+    formData.top = new FormAttachment(btnBan,0,SWT.CENTER);
+    lblBan.setLayoutData(formData);
+
+    formData = new FormData();
+    formData.left = new FormAttachment(lblBan,100);
+    formData.right = new FormAttachment(btnBan);
+    formData.top = new FormAttachment(btnBan,0,SWT.CENTER);
+    textBan.setLayoutData(formData);
+
+    formData = new FormData();
+    formData.right = new FormAttachment(btnOk);
+    formData.bottom = new FormAttachment(btnUnban);
+    btnBan.setLayoutData(formData);
+    
     	// unban line
 
     formData = new FormData();
@@ -223,7 +274,7 @@ BlockedIpsWindow
     lblUnban.setLayoutData(formData);
 
     formData = new FormData();
-    formData.left = new FormAttachment(lblUnban);
+    formData.left = new FormAttachment(textBan,0,SWT.LEFT);
     formData.right = new FormAttachment(btnUnban);
     formData.top = new FormAttachment(btnUnban,0,SWT.CENTER);
     textUnban.setLayoutData(formData);
@@ -264,7 +315,7 @@ BlockedIpsWindow
     textBlocked.setSelection(textBlocked.getText().length());
     textBanned.setSelection(textBanned.getText().length());
 
-    Utils.makeButtonsEqualWidth( btnUnban, btnClear, btnReset, btnOk );
+    Utils.makeButtonsEqualWidth( btnBan, btnUnban, btnClear, btnReset, btnOk );
 
     window.setDefaultButton( btnOk );
 
