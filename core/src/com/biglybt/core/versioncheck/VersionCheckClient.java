@@ -1486,14 +1486,14 @@ public class VersionCheckClient {
 	constructVersionCheckMessage(
 		String reason )
 	{
-
-		//only send if anonymous-check flag is not set
-
-		boolean send_info = COConfigurationManager.getBooleanParameter( "Send Version Info" );
+		int last_send_time = COConfigurationManager.getIntParameter( "Send Version Info Last Time", -1 );
+		int current_send_time = (int)(SystemTime.getCurrentTime()/1000);
+		COConfigurationManager.setParameter( "Send Version Info Last Time", current_send_time );
 
 		Map<String,Object> message = new HashMap<>();
 
-		//always send
+			// always send
+		
 		message.put( "appid",   SystemProperties.getApplicationIdentifier());
 		message.put( "appname", SystemProperties.getApplicationName());
 		message.put( "version", Constants.BIGLYBT_VERSION );
@@ -1521,74 +1521,53 @@ public class VersionCheckClient {
 		message.put( "os_arch", Constants.OSArch );   //see http://lopica.sourceforge.net/os.html
 		message.put( "os_arch_dm", System.getProperty( "sun.arch.data.model" ) );  // might be needed to openjdk on osx
 
-		boolean using_phe = COConfigurationManager.getBooleanParameter( "network.transport.encrypted.require" );
-		message.put( "using_phe", using_phe ? new Long(1) : new Long(0) );
-
 		message.put( "imode", COConfigurationManager.getStringParameter( "installer.mode", "" ));
 
-		//swt stuff
-		try {
-			Class c = Class.forName( "com.biglybt.ui.swt.Utils" );
+		if ( Constants.isAndroid ){
 
+				// Android update process doesn't use version server
 			
-			String swt_platform = (String)c.getMethod( "getSWTPlatform", new Class[]{} ).invoke( null, new Object[]{} );
-			message.put( "swt_platform", swt_platform );
-
-			Integer swt_version = (Integer)c.getMethod( "getSWTVersion", new Class[]{} ).invoke( null, new Object[]{} );
-			message.put( "swt_version", new Long( swt_version.longValue() ) );
-			
-			Integer swt_revision = (Integer)c.getMethod( "getSWTRevision", new Class[]{} ).invoke( null, new Object[]{} );
-			message.put( "swt_revision", new Long( swt_revision.longValue() ) );
-		}
-		
-		catch( ClassNotFoundException e ) {  /* ignore */ }
-		catch( NoClassDefFoundError er ) {  /* ignore */ }
-		catch( InvocationTargetException err ) {  /* ignore */ }
-		catch( Throwable t ) {  t.printStackTrace();  }
-
-
-		int last_send_time = COConfigurationManager.getIntParameter( "Send Version Info Last Time", -1 );
-		int current_send_time = (int)(SystemTime.getCurrentTime()/1000);
-		COConfigurationManager.setParameter( "Send Version Info Last Time", current_send_time );
-
-
-		String id = COConfigurationManager.getStringParameter( "ID", null );
-
-		if( id != null && send_info ) {
-			message.put( "id", id );
-
-			try{
-				byte[] id2 = CryptoManagerFactory.getSingleton().getSecureID();
-
-				message.put( "id2", id2 );
-
-			}catch( Throwable e ){
-			}
-
-			if ( last_send_time != -1 && last_send_time < current_send_time ){
-				// time since last
-				message.put( "tsl", new Long(current_send_time-last_send_time));
-			}
-
-			message.put( "reason", reason );
-
-			String  java_version = Constants.JAVA_VERSION;
-			if ( java_version == null ){  java_version = "unknown";  }
-			message.put( "java", java_version );
-
-
-			String  java_vendor = System.getProperty( "java.vm.vendor" );
-			if ( java_vendor == null ){   java_vendor = "unknown";  }
-			message.put( "javavendor", java_vendor );
-
 			int  api_level = Constants.API_LEVEL;
 			if ( api_level > 0 ){
 				message.put( "api_level", api_level );
 			}
 
-			long  max_mem = Runtime.getRuntime().maxMemory()/(1024*1024);
-			message.put( "javamx", new Long( max_mem ) );
+		}else{
+			
+				// stuff required for the update process
+					
+				// swt stuff
+			
+			try{
+				Class c = Class.forName( "com.biglybt.ui.swt.Utils" );
 
+				
+				String swt_platform = (String)c.getMethod( "getSWTPlatform", new Class[]{} ).invoke( null, new Object[]{} );
+				message.put( "swt_platform", swt_platform );
+
+				Integer swt_version = (Integer)c.getMethod( "getSWTVersion", new Class[]{} ).invoke( null, new Object[]{} );
+				message.put( "swt_version", new Long( swt_version.longValue() ) );
+				
+				Integer swt_revision = (Integer)c.getMethod( "getSWTRevision", new Class[]{} ).invoke( null, new Object[]{} );
+				message.put( "swt_revision", new Long( swt_revision.longValue() ) );
+			}
+			
+			catch( ClassNotFoundException e ) {  /* ignore */ }
+			catch( NoClassDefFoundError er ) {  /* ignore */ }
+			catch( InvocationTargetException err ) {  /* ignore */ }
+			catch( Throwable t ) {  t.printStackTrace();  }
+
+				// java stuff
+			
+			String  java_version = Constants.JAVA_VERSION;
+			if ( java_version == null ){  java_version = "unknown";  }
+			message.put( "java", java_version );
+	
+	
+			String  java_vendor = System.getProperty( "java.vm.vendor" );
+			if ( java_vendor == null ){   java_vendor = "unknown";  }
+			message.put( "javavendor", java_vendor );
+		
 			String java_rt_name = System.getProperty("java.runtime.name");
 			if (java_rt_name != null) {
 				message.put( "java_rt_name", java_rt_name);
@@ -1599,64 +1578,8 @@ public class VersionCheckClient {
 				message.put( "java_rt_version", java_rt_version);
 			}
 
-			OverallStats	stats = StatsFactory.getStats();
-
-			if ( stats != null ){
-
-				//long total_bytes_downloaded 	= stats.getDownloadedBytes();
-				//long total_bytes_uploaded		= stats.getUploadedBytes();
-				long total_uptime 			= stats.getTotalUpTime();
-
-				//removed due to complaints about anonymous stats collection
-				//message.put( "total_bytes_downloaded", new Long( total_bytes_downloaded ) );
-				//message.put( "total_bytes_uploaded", new Long( total_bytes_uploaded ) );
-				message.put( "total_uptime", new Long( total_uptime ) );
-				//message.put( "dlstats", stats.getDownloadStats());
-			}
-
-			try{
-				int	port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
-
-				message.put( "dht", port );
-
-			}catch( Throwable e ){
-
-				Debug.out( e );
-			}
-
-			try{
-				NetworkAdminASN current_asn = NetworkAdmin.getSingleton().getCurrentASN();
-
-				message.put( "ip_as", current_asn.getAS());
-
-				String	asn = current_asn.getASName();
-
-				if ( asn.length() > 64 ){
-
-					asn = asn.substring( 0, 64 );
-				}
-
-				message.put( "ip_asn", asn );
-
-			}catch( Throwable e ){
-
-				Debug.out( e );
-			}
-
-			// send locale, so we can determine which languages need attention
-			message.put("locale", Locale.getDefault().toString());
-			String originalLocale = System.getProperty("user.language") + "_"
-			+ System.getProperty("user.country");
-			String variant = System.getProperty("user.variant");
-			if (variant != null && variant.length() > 0) {
-				originalLocale += "_" + variant;
-			}
-			message.put("orig_locale", originalLocale);
-
-			// We may want to reply differently if the user is in Beginner mode vs Advanced
-			message.put("user_mode",
-					COConfigurationManager.getIntParameter("User Mode", -1));
-
+				// plugin stuff
+			
 			try{
 				if ( CoreFactory.isCoreAvailable() &&
 						CoreFactory.getSingleton().getPluginManager().isInitialized()){
@@ -1735,8 +1658,98 @@ public class VersionCheckClient {
 
 				Debug.out( e );
 			}
-		}
+			
+			
+			String id = COConfigurationManager.getStringParameter( "ID", null );
+	
+			boolean send_info = COConfigurationManager.getBooleanParameter( "Send Version Info" );
 
+			if ( id != null && send_info ){
+				
+					// stuff not required for managing updates but required for stats
+				
+				message.put( "id", id );
+	
+				try{
+					byte[] id2 = CryptoManagerFactory.getSingleton().getSecureID();
+	
+					message.put( "id2", id2 );
+	
+				}catch( Throwable e ){
+				}
+	
+				if ( last_send_time != -1 && last_send_time < current_send_time ){
+					// time since last
+					message.put( "tsl", new Long(current_send_time-last_send_time));
+				}
+	
+				message.put( "reason", reason );
+	
+				long  max_mem = Runtime.getRuntime().maxMemory()/(1024*1024);
+				message.put( "javamx", new Long( max_mem ) );
+		
+				OverallStats	stats = StatsFactory.getStats();
+	
+				if ( stats != null ){
+	
+					//long total_bytes_downloaded 	= stats.getDownloadedBytes();
+					//long total_bytes_uploaded		= stats.getUploadedBytes();
+					long total_uptime 			= stats.getTotalUpTime();
+	
+					//removed due to complaints about anonymous stats collection
+					//message.put( "total_bytes_downloaded", new Long( total_bytes_downloaded ) );
+					//message.put( "total_bytes_uploaded", new Long( total_bytes_uploaded ) );
+					message.put( "total_uptime", new Long( total_uptime ) );
+					//message.put( "dlstats", stats.getDownloadStats());
+				}
+	
+				boolean using_phe = COConfigurationManager.getBooleanParameter( "network.transport.encrypted.require" );
+				message.put( "using_phe", using_phe ? new Long(1) : new Long(0) );
+
+				try{
+					int	port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
+	
+					message.put( "dht", port );
+	
+				}catch( Throwable e ){
+	
+					Debug.out( e );
+				}
+	
+				try{
+					NetworkAdminASN current_asn = NetworkAdmin.getSingleton().getCurrentASN();
+	
+					message.put( "ip_as", current_asn.getAS());
+	
+					String	asn = current_asn.getASName();
+	
+					if ( asn.length() > 64 ){
+	
+						asn = asn.substring( 0, 64 );
+					}
+	
+					message.put( "ip_asn", asn );
+	
+				}catch( Throwable e ){
+	
+					Debug.out( e );
+				}
+	
+				// send locale, so we can determine which languages need attention
+				message.put("locale", Locale.getDefault().toString());
+				String originalLocale = System.getProperty("user.language") + "_"
+				+ System.getProperty("user.country");
+				String variant = System.getProperty("user.variant");
+				if (variant != null && variant.length() > 0) {
+					originalLocale += "_" + variant;
+				}
+				message.put("orig_locale", originalLocale);
+	
+				// We may want to reply differently if the user is in Beginner mode vs Advanced
+				message.put("user_mode",
+						COConfigurationManager.getIntParameter("User Mode", -1));
+			}
+		}
 
 		return message;
 	}
