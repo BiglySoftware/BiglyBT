@@ -3304,7 +3304,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		
 		private volatile String		last_bind_fail = null;
 		
-		private boolean		destroyed;
+		private volatile boolean		destroyed;
 
 		private
 		ChatInstance(
@@ -3440,8 +3440,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		
 		protected void
 		addReference()
-		{
+		{			
 			synchronized( chat_lock ){
+
+				if ( isDestroyed()){
+					
+					Debug.out( "Adding reference to a destroyed chat..." );
+				}
 
 				if ( virtual_reference_count > 0 ){
 					
@@ -6480,7 +6485,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		public boolean
 		isDestroyed()
-		{
+		{				
 			return( destroyed );
 		}
 
@@ -6494,6 +6499,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		destroy(
 			boolean		force )
 		{
+			boolean do_destroy;
+
 			synchronized( chat_lock ){
 
 				if ( force ){
@@ -6513,86 +6520,94 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						return;
 					}
 				}
+				
+				if ( !( keep_alive || (have_interest && !is_private_chat ))){
+
+					do_destroy = !destroyed;
+					
+					if ( do_destroy ){
+					
+						destroyed = true;
+					}
+				}else{
+					
+					do_destroy = false;
+				}
 			}
 
-			if ( !( keep_alive || (have_interest && !is_private_chat ))){
+			if ( do_destroy ){
+				
+				for ( ChatListener l: listeners ){
 
-				if ( !destroyed ) {
-					
-					destroyed = true;
+					try{
+						l.stateChanged( false );
+
+					}catch( Throwable e ){
+
+						Debug.out( e );
+					}
+				}
+				
+				try{
+					if ( handler != null ){
 	
-					for ( ChatListener l: listeners ){
+						if ( is_private_chat ){
+	
+							Map<String,Object>		flags = new HashMap<>();
+	
+							flags.put( FLAGS_MSG_STATUS_KEY, FLAGS_MSG_STATUS_CHAT_QUIT );
+	
+							sendMessageSupport( "", flags, new HashMap<String, Object>());
+						}
+	
+						Map<String,Object>		options = new HashMap<>();
 
-						try{
-							l.stateChanged( false );
+						options.put( "handler", handler );
+	
+						Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "removeMessageHandler", new Object[]{ options } );
+					}
+				}catch( Throwable e ){
 
-						}catch( Throwable e ){
+					Debug.out( e );
 
-							Debug.out( e );
+				}finally{
+
+					String meta_key = network + ":" + key;
+
+					ChatInstance	removed = null;
+
+					synchronized( chat_instances_map ){
+
+						ChatInstance inst = chat_instances_map.remove( meta_key );
+
+						if ( inst != null ){
+
+							removed = inst;
+
+							chat_instances_list.remove( inst );
+						}
+
+						if ( chat_instances_map.size() == 0 ){
+
+							if ( timer != null ){
+
+								timer.cancel();
+
+								timer = null;
+							}
 						}
 					}
-					
-					try{
-						if ( handler != null ){
-		
-							if ( is_private_chat ){
-		
-								Map<String,Object>		flags = new HashMap<>();
-		
-								flags.put( FLAGS_MSG_STATUS_KEY, FLAGS_MSG_STATUS_CHAT_QUIT );
-		
-								sendMessageSupport( "", flags, new HashMap<String, Object>());
-							}
-		
-							Map<String,Object>		options = new HashMap<>();
-	
-							options.put( "handler", handler );
-		
-							Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "removeMessageHandler", new Object[]{ options } );
-						}
-					}catch( Throwable e ){
-	
-						Debug.out( e );
-	
-					}finally{
-	
-						String meta_key = network + ":" + key;
 
-						ChatInstance	removed = null;
+					if ( removed != null ){
 
-						synchronized( chat_instances_map ){
+						for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
 
-							ChatInstance inst = chat_instances_map.remove( meta_key );
+							try{
+								l.chatRemoved( removed );
 
-							if ( inst != null ){
+							}catch( Throwable e ){
 
-								removed = inst;
-
-								chat_instances_list.remove( inst );
-							}
-
-							if ( chat_instances_map.size() == 0 ){
-
-								if ( timer != null ){
-
-									timer.cancel();
-
-									timer = null;
-								}
-							}
-						}
-
-						if ( removed != null ){
-
-							for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
-
-								try{
-									l.chatRemoved( removed );
-
-								}catch( Throwable e ){
-
-									Debug.out( e );
-								}
+								Debug.out( e );
 							}
 						}
 					}

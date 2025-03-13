@@ -34,6 +34,8 @@ import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
@@ -258,7 +260,31 @@ public class SBC_ChatOverview
 				options.put( PopOutManager.OPT_ON_TOP, on_top );
 				options.put( PopOutManager.OPT_CAN_MINIMIZE, true );
 				
-				mdi.popoutEntryByID("Chat_", chat, options );
+				ChatInstance clone = null;
+				
+				try{
+						// unfortunately the popup process can create an intermediate mdi chat view
+						// that gets destroyed before the popup opens so we need to retain a reference
+						// to the chat during this process :(
+					
+					clone = chat.getClone();
+				
+					mdi.popoutEntryByID("Chat_", chat, options );
+					
+				}finally{
+					
+					if ( clone != null ){
+						
+						ChatInstance fclone = clone;
+						
+						SimpleTimer.addEvent( 
+							"chatdestroy", 
+							SystemTime.getOffsetTime( 10*1000 ), 
+							(ev)->{
+								fclone.destroy();
+							});
+					}
+				}
 			}
 		}catch( Throwable e ){
 
