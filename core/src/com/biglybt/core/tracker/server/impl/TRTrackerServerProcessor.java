@@ -23,6 +23,7 @@ package com.biglybt.core.tracker.server.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
@@ -366,6 +367,9 @@ TRTrackerServerProcessor
 
 					if ( torrent == null ){
 
+						/* Changed this 2025/03/12 to not create a new external torrent just for
+						 * a scrape operation, only on an announce...
+						 * 
 						if ( !COConfigurationManager.getBooleanParameter( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE )){
 
 							continue;
@@ -388,47 +392,60 @@ TRTrackerServerProcessor
 								continue;
 							}
 						}
-					}
+						*/
+						
+							// dummy entry
+						
+						Map<String, Object> hash_entry 			= new TreeMap<>();
+						
+						hash_entry.put( "complete", new Long( 0 ));
+						hash_entry.put( "incomplete", new Long( 0 ));
+						hash_entry.put( "downloaded", new Long(0 ));
+						
+						files.put( str_hash, hash_entry );
+						
+					}else{
 
-					long	interval = server.getScrapeRetryInterval( torrent );
-
-					if ( interval > max_interval ){
-
-						max_interval	= interval;
-					}
-
-					if ( scrape_chars != null && ( QUEUE_TEST || !( loopback || ip_override ))){
-
-							// note, 'Q' is complete+queued so we set seed true below
-
-						if ( scrape_chars[i] == 'Q' ){
-
-							torrent.peerQueued(  client_ip_address, port, udp_port, http_port, crypto_level, az_ver, (int)interval, true );
+						long	interval = server.getScrapeRetryInterval( torrent );
+	
+						if ( interval > max_interval ){
+	
+							max_interval	= interval;
 						}
-					}
-
-					if ( torrent.getRedirects() != null ){
-
-						if ( hashes.length > 1 ){
-
-								// just drop this from the set. this will cause the client to revert
-								// to single-hash scrapes and subsequently pick up the redirect
-
-							continue;
+	
+						if ( scrape_chars != null && ( QUEUE_TEST || !( loopback || ip_override ))){
+	
+								// note, 'Q' is complete+queued so we set seed true below
+	
+							if ( scrape_chars[i] == 'Q' ){
+	
+								torrent.peerQueued(  client_ip_address, port, udp_port, http_port, crypto_level, az_ver, (int)interval, true );
+							}
 						}
+	
+						if ( torrent.getRedirects() != null ){
+	
+							if ( hashes.length > 1 ){
+	
+									// just drop this from the set. this will cause the client to revert
+									// to single-hash scrapes and subsequently pick up the redirect
+	
+								continue;
+							}
+						}
+	
+						server.preProcess( new lightweightPeer(client_ip_address,port,peer_id), torrent, request_type, request, null );
+	
+						// we don't cache local scrapes as if we do this causes the hosting of
+						// torrents to retrieve old values initially. Not a fatal error but not
+						// the best behaviour as the (local) seed isn't initially visible.
+	
+						Map	hash_entry = torrent.exportScrapeToMap( request, client_ip_address, !local_scrape );
+	
+							// System.out.println( "tracker - encoding: " + ByteFormatter.nicePrint(torrent_hash) + " -> " + ByteFormatter.nicePrint( str_hash.getBytes( Constants.BYTE_ENCODING )));
+	
+						files.put( str_hash, hash_entry );
 					}
-
-					server.preProcess( new lightweightPeer(client_ip_address,port,peer_id), torrent, request_type, request, null );
-
-					// we don't cache local scrapes as if we do this causes the hosting of
-					// torrents to retrieve old values initially. Not a fatal error but not
-					// the best behaviour as the (local) seed isn't initially visible.
-
-					Map	hash_entry = torrent.exportScrapeToMap( request, client_ip_address, !local_scrape );
-
-						// System.out.println( "tracker - encoding: " + ByteFormatter.nicePrint(torrent_hash) + " -> " + ByteFormatter.nicePrint( str_hash.getBytes( Constants.BYTE_ENCODING )));
-
-					files.put( str_hash, hash_entry );
 				}
 
 				if ( hashes.length > 1 ){
