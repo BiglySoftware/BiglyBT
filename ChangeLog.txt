@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2025.xx.yy | BiglyBT 3.8.0.3
+
 2025.03.09 | BiglyBT 3.8.0.2
 
 FEATURE: Tag   | Added Peer Set execute-on-assign option to ban peers [Parg]
