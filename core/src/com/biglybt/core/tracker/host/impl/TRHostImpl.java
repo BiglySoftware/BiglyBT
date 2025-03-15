@@ -57,21 +57,24 @@ TRHostImpl
 	private static final int URL_DEFAULT_PORT_SSL	= 443;	// port to use if none in announce URL
 
 	public static final int STATS_PERIOD_SECS		= 60;
-	private static final int TICK_PERIOD_SECS			= 10;
+	
+	private static final int TICK_PERIOD_SECS		= 10;
+	private static final int TIDY_START_SECS		= 60*60;
 	private static final int TICKS_PER_STATS_PERIOD	= STATS_PERIOD_SECS/TICK_PERIOD_SECS;
+	private static final int TICKS_BEFORE_TIDY		= TIDY_START_SECS/TICK_PERIOD_SECS;
 
 	private static TRHostImpl	singleton;
 	private static final AEMonitor 	class_mon 	= new AEMonitor( "TRHost:class" );
 
 	private TRHostConfigImpl		config;
 
-	private final Hashtable				server_map 	= new Hashtable();
+	private final Hashtable<String,TRTrackerServer>				server_map 	= new Hashtable<>();
 
-	final List	host_torrents			= new ArrayList();
-	private final Map	host_torrent_hash_map	= new HashMap();
+	private final List<TRHostTorrent>				host_torrents			= new ArrayList<>();
+	private final Map<HashWrapper,TRHostTorrent>	host_torrent_hash_map	= new HashMap<>();
 
-	private final Map	host_torrent_map		= new HashMap();
-	private final Map	tracker_client_map		= new HashMap();
+	private final Map<TOTorrent,TRHostTorrent>		host_torrent_map		= new HashMap<>();
+	private final Map<TOTorrent,TRTrackerAnnouncer>	tracker_client_map		= new HashMap<>();
 
 	private static final int LDT_TORRENT_ADDED			= 1;
 	private static final int LDT_TORRENT_REMOVED		= 2;
@@ -168,125 +171,151 @@ TRHostImpl
 
 			TRTrackerAnnouncerFactory.addListener( this );
 
-			Thread t = new AEThread("TRHost::stats.loop")
-						{
-							private int	tick_count = 0;
+			AEThread2 t = 
+				new AEThread2("TRHost::stats.loop")
+				{
+					private int	tick_count = 0;
 
-							private final Set	failed_ports = new HashSet();
+					private final Set<Integer>	failed_ports = new HashSet<>();
 
-							@Override
-							public void
-							runSupport()
-							{
-								while(true){
+					@Override
+					public void
+					run()
+					{
+						while(true){
 
-									try{
+							try{
 
-										URL[][]	url_sets = TRTrackerUtils.getAnnounceURLs();
+								URL[][]	url_sets = TRTrackerUtils.getAnnounceURLs();
 
-										for (int i=0;i<url_sets.length;i++){
+								for (int i=0;i<url_sets.length;i++){
 
-											URL[]	urls = url_sets[i];
+									URL[]	urls = url_sets[i];
 
-											for (int j=0;j<urls.length;j++){
+									for (int j=0;j<urls.length;j++){
 
-												URL	url = urls[j];
+										URL	url = urls[j];
 
-												int port = url.getPort();
+										int port = url.getPort();
 
-												if ( port == -1 ){
+										if ( port == -1 ){
 
-													port = url.getDefaultPort();
-												}
-
-												String	protocol = url.getProtocol().toLowerCase();
-
-												try{
-													if ( protocol.equals( "http" )){
-
-														startServer( TRTrackerServerFactory.PR_TCP, port, false );
-
-													}else if ( protocol.equals( "udp" )){
-
-														startServer( TRTrackerServerFactory.PR_UDP, port, false );
-
-													}else if ( protocol.equals( "https" )){
-
-														startServer( TRTrackerServerFactory.PR_TCP, port, true );
-
-													}else{
-
-														Debug.out( "Unknown protocol '" + protocol + "'" );
-													}
-
-												}catch( Throwable e ){
-
-													Integer port_i = new Integer(port);
-
-													if ( !failed_ports.contains(port_i)){
-
-														failed_ports.add( port_i );
-
-														Logger.log(
-																new LogEvent(LOGID,
-																"Tracker Host: failed to start server", e));
-													}
-												}
-											}
+											port = url.getDefaultPort();
 										}
 
-										Thread.sleep( TICK_PERIOD_SECS*1000 );
+										String	protocol = url.getProtocol().toLowerCase();
 
-										if ( closed ){
+										try{
+											if ( protocol.equals( "http" )){
 
-											break;
-										}
+												startServer( TRTrackerServerFactory.PR_TCP, port, false );
 
-										if ( tick_count % TICKS_PER_STATS_PERIOD == 0 ){
+											}else if ( protocol.equals( "udp" )){
 
-											try{
-												this_mon.enter();
+												startServer( TRTrackerServerFactory.PR_UDP, port, false );
 
-												for (int i=0;i<host_torrents.size();i++){
+											}else if ( protocol.equals( "https" )){
 
-													TRHostTorrent	ht = (TRHostTorrent)host_torrents.get(i);
+												startServer( TRTrackerServerFactory.PR_TCP, port, true );
 
-													if ( ht instanceof TRHostTorrentHostImpl ){
+											}else{
 
-														((TRHostTorrentHostImpl)ht).updateStats();
-
-													}else{
-
-														((TRHostTorrentPublishImpl)ht).updateStats();
-
-													}
-												}
-											}finally{
-
-												this_mon.exit();
+												Debug.out( "Unknown protocol '" + protocol + "'" );
 											}
 
-											config.saveConfig( true );
+										}catch( Throwable e ){
 
-										}else{
+											Integer port_i = new Integer(port);
 
-											config.saveConfig( false );
+											if ( !failed_ports.contains(port_i)){
+
+												failed_ports.add( port_i );
+
+												Logger.log(
+														new LogEvent(LOGID,
+														"Tracker Host: failed to start server", e));
+											}
 										}
-
-									}catch( InterruptedException e ){
-
-										Debug.printStackTrace( e );
-
-										break;
-									}finally{
-
-										tick_count++;
 									}
 								}
-							}
-						};
 
-			t.setDaemon(true);
+								Thread.sleep( TICK_PERIOD_SECS*1000 );
+
+								if ( closed ){
+
+									break;
+								}
+
+								if ( tick_count % TICKS_PER_STATS_PERIOD == 0 ){
+
+									long now = SystemTime.getCurrentTime();
+									
+									boolean do_tidy = tick_count >= TICKS_BEFORE_TIDY;
+									
+									try{
+										this_mon.enter();
+
+										List<TRHostTorrentHostImpl> to_remove = new ArrayList<>();
+										
+										for ( TRHostTorrent ht: host_torrents ){
+
+											if ( ht instanceof TRHostTorrentHostImpl ){
+
+												TRHostTorrentHostImpl hth = (TRHostTorrentHostImpl)ht;
+												
+												hth.updateStats();
+
+												if ( do_tidy ){
+													
+													try{
+														if ( hth.isExternal() && hth.isDead( now ) && hth.canBeRemoved()){
+															
+															to_remove.add( hth );
+														}
+													}catch( Throwable e ){
+													}
+												}
+											}else{
+
+												((TRHostTorrentPublishImpl)ht).updateStats();
+
+											}
+										}
+										
+										for ( TRHostTorrentHostImpl hth: to_remove ){
+											
+											try{
+												hth.remove();
+												
+												Logger.log( new LogEvent(LOGID, "Remove external torrent '" + new String(hth.getTorrent().getName()) + "' due to inactivity" ));
+												
+											}catch( Throwable e ){
+											}
+										}
+									}finally{
+
+										this_mon.exit();
+									}
+
+									config.saveConfig( true );
+
+								}else{
+
+									config.saveConfig( false );
+								}
+
+							}catch( InterruptedException e ){
+
+								Debug.printStackTrace( e );
+
+								break;
+							}finally{
+
+								tick_count++;
+							}
+						}
+					}
+				};
 
 				// try to ensure that the tracker stats are collected reasonably
 				// regularly
