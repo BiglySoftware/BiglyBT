@@ -12,6 +12,7 @@ package com.biglybt.ui.console.commands;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.console.ConsoleInput;
@@ -48,6 +50,7 @@ public class Hack extends TorrentCommand
 		subCommands.add(new HackUploads());
 		subCommands.add(new HackCategory());
 		subCommands.add(new HackTag());
+		subCommands.add(new HackOptions());
 
 	}
 
@@ -513,6 +516,82 @@ public class Hack extends TorrentCommand
 				}else{
 
 					ci.out.println("> Command 'hack': Invalid parameters for '" + getCommandName() + "'");
+					return false;
+				}
+			}catch( Throwable e ){
+
+				ci.out.println( "Command failed: " + Debug.getNestedExceptionMessage(e));
+
+				return false;
+			}
+
+			return true;
+		}
+	}
+	
+	private static class HackOptions extends TorrentSubCommand
+	{
+		public HackOptions()
+		{
+			super("options", "options");
+		}
+
+		@Override
+		public String getCommandDescriptions() {
+			return "options set <name> <value>\t\tset option to a value";
+		}
+
+	
+		@Override
+		public boolean performCommand(ConsoleInput ci, DownloadManager dm, List<String> args)
+		{
+			if (args.size() < 3) {
+				ci.out.println("> Command 'options': Not enough parameters for subcommand '" + getCommandName() + "'");
+				return false;
+			}
+
+			try{
+				String op 		= args.get(0);
+				String name		= args.get(1);
+				String value	= args.get(2);
+
+				if ( op.equals( "set" )){
+
+					if ( name.equals( "networks" )){
+
+						boolean ok = true;
+						
+						String[] nets = value.split( ",");
+						
+						List<String> list = new ArrayList<>();
+						
+						for ( String net: nets ){
+							
+							String n = AENetworkClassifier.internalise( net );
+									
+							if ( n == null ){
+								ci.out.println("> Invalid network '" + net + "'" );
+								ok = false;
+							}else{
+								list.add(n);
+							}
+						}
+						
+						if ( ok ){
+						
+							dm.getDownloadState().setNetworks( list.toArray(new String[0]) );
+							
+						}else{
+							
+							return( false  );
+						}
+					}else{
+						ci.out.println("> Command 'options': Invalid parameters for '" + getCommandName() + "'");
+						return false;
+					}
+				}else{
+
+					ci.out.println("> Command 'options': Invalid parameters for '" + getCommandName() + "'");
 					return false;
 				}
 			}catch( Throwable e ){

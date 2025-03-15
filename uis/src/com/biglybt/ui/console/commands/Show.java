@@ -436,6 +436,8 @@ public class Show extends IConsoleCommand {
 			}
 		}
 		out.println("Tags: " + tags_str);
+		out.println("Networks: " + getString( dm.getDownloadState().getNetworks()));
+		out.println("Peer Sources: " + getString( dm.getDownloadState().getPeerSources()));
 		out.println("- Tracker Info -");
 		TRTrackerAnnouncer trackerclient = dm.getTrackerClient();
 		if (trackerclient != null) {
@@ -658,5 +660,18 @@ public class Show extends IConsoleCommand {
 
 			e.printStackTrace( ci.out );
 		}
+	}
+	
+	private static String
+	getString(
+		String[] strs )
+	{
+		String res = "";
+		
+		for ( String str: strs ){
+			res += (res.isEmpty()?"":",") + str;
+		}
+		
+		return( res );
 	}
 }

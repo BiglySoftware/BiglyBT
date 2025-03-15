@@ -35,6 +35,7 @@ import com.biglybt.pif.installer.InstallablePlugin;
 import com.biglybt.pif.installer.PluginInstallationListener;
 import com.biglybt.pif.installer.PluginInstaller;
 import com.biglybt.pif.installer.StandardPlugin;
+import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.update.Update;
 import com.biglybt.pif.update.UpdateCheckInstance;
 import com.biglybt.pif.update.UpdateCheckInstanceListener;
@@ -83,7 +84,7 @@ public class Plugin extends IConsoleCommand {
 
 		String subcmd = (String)args.get(0);
 		if (!java.util.Arrays.asList(new String[] {
-				"location", "list", "listall", "status", "startup", "install", "uninstall", "update"
+				"location", "list", "listall", "status", "startup", "install", "uninstall", "update", "set",
 			}).contains(subcmd)) {
 			ci.out.println("Invalid subcommand: " + subcmd);
 			ci.out.println();
@@ -602,6 +603,42 @@ public class Plugin extends IConsoleCommand {
 
 				ci.out.println( "Uninstall failed: " + Debug.getNestedExceptionMessage( e ));
 
+			}
+		}
+		
+		if ( subcmd.equals( "set" )){
+	
+			if (args.size() < 3 ){
+				
+				ci.out.println( "Insufficient parameters" );
+
+				return;
+			}
+			
+			PluginInterface pi = plugin_manager.getPluginInterfaceByID( plugin_id, false );
+
+			if (  pi == null ){
+
+				ci.out.println( "Plugin '" + plugin_id + "' is not installed" );
+
+				return;
+			}
+			
+			String name = (String)args.get(2);
+			
+			if ( name.equals( "forcelogs" )){
+				
+				LoggerChannel[] channels = pi.getLogger().getChannels();
+				
+				for ( LoggerChannel channel: channels ){
+					
+					channel.setDiagnostic();
+					
+					ci.out.println( "    Log '" + channel.getName() + "' set to diagnostic" );
+				}
+			}else{
+				
+				ci.out.println( "Invalid option name '" + name + "'" );
 			}
 		}
 	}
