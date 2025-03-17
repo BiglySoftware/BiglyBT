@@ -7470,7 +7470,7 @@ DownloadManagerImpl
 									return(
 										MessageText.getString(
 											"tps.incoming.details",
-											new String[]{ String.valueOf( tcp ), String.valueOf( udp + utp ), String.valueOf( total )} ));
+											new String[]{ String.valueOf( tcp ), utp + "/" + udp, String.valueOf( total )} ));
 								}
 							}
 

@@ -2759,17 +2759,26 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				if(pc.isIncoming() && !pc.isLANLocal()){
 
-					if(pc.isTCP()){
+					String protocol = pc.getProtocol();
 
-						if(pc.getNetwork() == AENetworkClassifier.AT_PUBLIC){
+					if (pc.isTCP()){
 
-							new_tcp_incoming++;
+						if (pc.getNetwork() == AENetworkClassifier.AT_PUBLIC){
+
+								// anomaly here - uTP is classified as TCP rather than UDP (expected elsewhere unfortunately)
+							
+							if ( protocol.equals( "TCP" )){
+								
+								new_tcp_incoming++;
+								
+							}else{
+								
+								new_utp_incoming++;
+							}
 						}
 					}else{
 
-						String protocol = pc.getProtocol();
-
-						if(protocol.equals("UDP")){
+						if (protocol.equals("UDP")){
 
 							new_udp_incoming++;
 
