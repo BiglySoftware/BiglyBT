@@ -294,6 +294,7 @@ TRHostTorrentHostImpl
 			if (	stats.getSeedCount() == 0 &&
 					stats.getLeecherCount() == 0 &&
 					stats.getCompletedCount() == 0  &&
+					stats.getUploaded() == 0  &&
 					stats.getDownloaded() == 0 ){
 				
 				return( true );
