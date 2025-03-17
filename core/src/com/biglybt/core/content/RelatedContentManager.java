@@ -23,6 +23,7 @@ package com.biglybt.core.content;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -3138,32 +3139,40 @@ RelatedContentManager
 
 						byte[] from_hash = to_info.getRelatedToHash();
 
-						ArrayList<DownloadInfo> links = content_cache.related_content_map.get( from_hash );
-
-						if ( links == null ){
-
-							links = new ArrayList<>(1);
-
-							content_cache.related_content_map.put( from_hash, links );
-						}
-
-						links.add( target_info );
-
-						links.trimToSize();
-
-						target_info.setPublic( content_cache );
-
-						if ( secondary_lookups.size() < SECONDARY_LOOKUP_CACHE_MAX ){
-
-							byte[]	hash 	= target_info.getHash();
-							int		level	= target_info.getLevel();
-
-							if ( hash != null && level < max_search_level ){
-
-								secondary_lookups.add( new SecondaryLookup( hash, level, target_info.getNetworksInternal()));
+							// if we are importing content then related hash will be null
+						
+						if ( from_hash != null ){
+							
+							ArrayList<DownloadInfo> links = content_cache.related_content_map.get( from_hash );
+	
+							if ( links == null ){
+	
+								links = new ArrayList<>(1);
+	
+								content_cache.related_content_map.put( from_hash, links );
 							}
+	
+							links.add( target_info );
+	
+							links.trimToSize();
+	
+							target_info.setPublic( content_cache );
+	
+							if ( secondary_lookups.size() < SECONDARY_LOOKUP_CACHE_MAX ){
+	
+								byte[]	hash 	= target_info.getHash();
+								int		level	= target_info.getLevel();
+	
+								if ( hash != null && level < max_search_level ){
+	
+									secondary_lookups.add( new SecondaryLookup( hash, level, target_info.getNetworksInternal()));
+								}
+							}
+						}else{
+							
+							target_info.setPublic( content_cache );
 						}
-
+						
 						new_content = true;
 
 					}else{
@@ -4059,6 +4068,72 @@ RelatedContentManager
 		}
 	}
 
+	public void
+	exportToFile(
+		File		file )
+	{
+		try{
+			Map<String,Object>	root = new HashMap<>();
+			
+			List<Map> list = new ArrayList<>();
+			
+			root.put( "content", list );
+			
+			synchronized( rcm_lock ){
+	
+				ContentCache	content_cache = loadRelatedContent();
+	
+				Collection<DownloadInfo> content = content_cache.related_content.values();
+			
+				for ( DownloadInfo c: content ){
+				
+					Map<String,Object> map = serialiseDI( c, null );
+					
+					list.add( map );
+				}
+			}
+			
+			String json = BEncoder.encodeToJSON( root );
+			
+			FileUtil.writeStringAsFile( file, json );
+	
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	public void
+	importFromFile(
+		File		file )
+	{
+		try{
+			String json = FileUtil.readFileAsString( file, -1 );
+			
+			Map<String,Object> map = BDecoder.decodeFromJSON( json );
+			
+			List<Map> list = (List<Map>)map.get( "content" );
+			
+			synchronized( rcm_lock ){
+				
+				ContentCache	content_cache = loadRelatedContent();
+
+				for ( Map m: list ){
+					
+					DownloadInfo di = deserialiseDI( m, content_cache );
+					
+					if ( di != null ){
+						
+						analyseResponse( di, null );
+					}
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
 	void
 	deleteRelatedContent()
 	{
