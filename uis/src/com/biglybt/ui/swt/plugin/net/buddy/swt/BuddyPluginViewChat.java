@@ -173,7 +173,7 @@ BuddyPluginViewChat
 
 					}else if ( buddy.isOnline( false )){
 
-						item.setForeground( 0, Colors.black );
+						item.setForeground( 0, Utils.isDarkAppearanceNative()?Colors.white:Colors.black );
 
 					}else{
 
@@ -252,7 +252,7 @@ BuddyPluginViewChat
 
 		for (int i=0;i<history.length;i++){
 
-			logChatMessage( history[i].getNickName(), Colors.blue, history[i].getMessage());
+			logChatMessage( history[i].getNickName(), Colors.blues[Colors.FADED_DARKEST], history[i].getMessage());
 		}
 
 		chat.addListener( this );
@@ -383,7 +383,7 @@ BuddyPluginViewChat
 							}
 
 							try{
-								logChatMessage( participant.getName(), Colors.blue, msg );
+								logChatMessage( participant.getName(), Colors.blues[Colors.FADED_DARKEST], msg );
 
 							}catch( Throwable e ){
 
