@@ -1330,7 +1330,7 @@ BuddyPluginNetwork
 					
 					if ( authorised && !buddy.isAuthorised()){
 
-						log( buddy, "Buddy " + buddy.getString() + ": no authorised" );
+						log( buddy, "Buddy " + buddy.getString() + ": now authorised" );
 
 						buddy.setAuthorised( true );
 
@@ -1388,7 +1388,7 @@ BuddyPluginNetwork
 			}
 		}
 		
-		return( addBuddy( key, SUBSYSTEM_AZ2, true, true ));
+		return( addBuddy( key, SUBSYSTEM_AZ2, false, true ));
 	}
 	
 	protected void

@@ -6824,8 +6824,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					
 					buddy.getProfileInfo(
 						(profile_info)->{
-														
-							setProfileData( profile_info );
+								
+							if ( profile_info != null ){
+								
+								setProfileData( profile_info );
+							}
 							
 							if ( buddy.isTransient()){
 							

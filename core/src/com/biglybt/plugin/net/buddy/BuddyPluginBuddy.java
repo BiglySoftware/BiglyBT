@@ -1043,6 +1043,8 @@ BuddyPluginBuddy
 							
 							profile_info_outstanding = false;
 						}
+						
+						informer.received( null );
 					}
 				});
 			
@@ -1052,6 +1054,8 @@ BuddyPluginBuddy
 				
 				profile_info_outstanding = false;
 			}
+			
+			informer.received( null );
 		}
 	}
 	
