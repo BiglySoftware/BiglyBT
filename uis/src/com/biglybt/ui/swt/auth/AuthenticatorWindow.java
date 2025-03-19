@@ -439,7 +439,7 @@ AuthenticatorWindow
 				return;
 			}
 
-	 		shell = ShellFactory.createMainShell(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+	 		shell = ShellFactory.createMainShell( SWT.DIALOG_TRIM ); // removed model due to user request | SWT.APPLICATION_MODAL);
 
 	 		Utils.setShellIcon(shell);
 		 	Messages.setLanguageText(shell, "authenticator.title");
