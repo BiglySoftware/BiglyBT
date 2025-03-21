@@ -1390,14 +1390,62 @@ public class TorrentOpenOptions
 			return;
 		}
 		
+			// take into account unallocated downloads...
+		
+		List<DownloadManager> managers = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
+
+		Set<String>	toAvoid = new HashSet<>();
+		
+		try{
+			for ( DownloadManager manager: managers ){
+				
+				File f = manager.getSaveLocation();
+				
+				if ( !f.exists()){
+					
+					toAvoid.add( f.getAbsolutePath());
+				}
+			}
+			
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+			
+			if ( uif != null ){
+				
+				List<TorrentOpenOptions> opts = uif.getTorrentOptions();
+				
+				for ( TorrentOpenOptions opt: opts ){
+					
+					if ( opt == this ){
+						
+						continue;
+					}
+					
+					if ( opt.isSimpleTorrent()){
+						
+						TorrentOpenFileOptions[] fileInfos = opt.getFiles();
+						
+						toAvoid.add( fileInfos[0].getDestFileFullName().getAbsolutePath());
+						
+					}else{
+					
+						toAvoid.add( opt.getDataDir());
+					}
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
 		if (!torrent.isSimpleTorrent()) {
-			if (FileUtil.newFile(getDataDir()).isDirectory()) {
+			String dataDir = getDataDir();
+			if (FileUtil.newFile(dataDir).isDirectory() || toAvoid.contains(dataDir)) {
 				File f;
 				int idx = 0;
 				do {
 					idx++;
-					f = FileUtil.newFile(getDataDir() + "-" + idx);
-				} while (f.isDirectory());
+					f = FileUtil.newFile(dataDir + "-" + idx);
+				} while (f.isDirectory() || toAvoid.contains(f.getAbsolutePath()));
 
 				sDestSubDir = f.getName();
 			}
@@ -1409,10 +1457,9 @@ public class TorrentOpenOptions
 
 				File file = info.getDestFileFullName();
 				int idx = 0;
-				while (file.exists()) {
+				while (file.exists() || toAvoid.contains(  file.getAbsolutePath())) {
 					idx++;
-					file = FileUtil.newFile(info.getDestPathName(), idx + "-"
-							+ info.getDestFileName());
+					file = FileUtil.newFile(info.getDestPathName(), idx + "-" + info.getDestFileName());
 				}
 
 				info.setDestFileName(file.getName(),false);

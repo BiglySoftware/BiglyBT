@@ -18,6 +18,7 @@ package com.biglybt.ui;
 
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.CoreComponent;
@@ -222,6 +223,9 @@ public interface UIFunctions
 
 	public boolean addTorrentWithOptions(TorrentOpenOptions torrentOptions, Map<String,Object> addOptions );
 
+	public List<TorrentOpenOptions>
+	getTorrentOptions();
+	
 	public void showErrorMessage(String keyPrefix, String details, String[] textParams);
 
 	public void showCreateTagDialog(TagReturner tagReturner);

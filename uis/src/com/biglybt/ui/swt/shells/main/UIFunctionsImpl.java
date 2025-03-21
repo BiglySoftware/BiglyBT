@@ -1698,6 +1698,14 @@ public class UIFunctionsImpl
 		}
 	}
 
+	@Override
+	public 
+	List<TorrentOpenOptions> 
+	getTorrentOptions()
+	{
+		return( OpenTorrentOptionsWindow.getActiveTorrentOptions());
+	}
+	
 	/* (non-Javadoc)
 	 * @see UIFunctionsSWT#openTorrentWindow()
 	 */

@@ -2195,7 +2195,9 @@ DiskManagerUtil
 					public String[] 
 					getAffectedFileSystems()
 					{
-						return( FileUtil.getFileStoreNames( download_manager.getAbsoluteSaveLocation(), destination ));
+						File save_loc = download_manager.getAbsoluteSaveLocation();
+						
+						return( FileUtil.getFileStoreNames( save_loc, destination==null?save_loc:destination ));
 					}
 
 					private ProgressCallback callback = 

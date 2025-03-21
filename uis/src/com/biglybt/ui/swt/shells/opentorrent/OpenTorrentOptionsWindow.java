@@ -498,6 +498,31 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
+	public static List<TorrentOpenOptions>
+	getActiveTorrentOptions()
+	{
+		List<TorrentOpenOptions> result = new ArrayList<>();
+		 
+		synchronized( active_windows ){
+			
+			List<Map<String,Object>>	oto_list = new ArrayList<>();
+			
+			for ( OpenTorrentOptionsWindow w: active_windows.values()){
+			
+				List<OpenTorrentInstance> instances = w.getInstances();
+				
+				for ( OpenTorrentInstance instance: instances ){
+					
+					TorrentOpenOptions opts = instance.getOptions();
+					
+					result.add( opts );
+				}
+			}
+		}
+		
+		return( result );
+	}
+	
 	private final int window_id = window_id_next.incrementAndGet();
 	
 	private SkinnedDialog 			dlg;
