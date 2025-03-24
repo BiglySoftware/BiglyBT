@@ -66,7 +66,9 @@ AENetworkClassifier
 
 		int len = str.length();
 
-		if ( len < 7 ){
+			// .[i2p|onion]
+		
+		if ( len < 4 ){
 
 			return( AT_PUBLIC );
 		}
@@ -94,7 +96,9 @@ AENetworkClassifier
 
 			return( AT_PUBLIC );
 
-		}else if ( last_char == 'n' || last_char == 'N') {
+				// .onion
+			
+		}else if ( len >= 6 && last_char == 'n' || last_char == 'N') {
 
 			if ( chars[len-6] == '.' ){
 
@@ -103,6 +107,54 @@ AENetworkClassifier
 				if ( temp.equals( "onio" )){
 
 					return( AT_TOR );
+				}
+			}
+				// .[i2p|onion].alt
+			
+		}else if ( len >= 8 && ( last_char == 't' || last_char == 'T')) {
+
+			if ( chars[len-4] == '.' ){
+				
+				char c1 = chars[len-3];
+				char c2 = chars[len-2];
+				
+				if ( ( c1 == 'a' || c1 == 'A' ) && ( c2 == 'l' || c2 == 'L' )){
+					
+					len -= 4;
+					
+					last_char = chars[len-1];
+
+					if ( last_char >= '0' && last_char <= '9' ){
+
+						return( AT_PUBLIC );
+
+					}else if ( last_char == 'p' || last_char == 'P' ){
+
+						if ( 	chars[len-2] == '2' &&
+								chars[len-4] == '.' ){
+
+							char c = chars[len-3];
+
+							if ( c == 'i' || c == 'I' ){
+
+								return( AT_I2P );
+							}
+						}
+
+						return( AT_PUBLIC );
+
+					}else if ( len >= 6 && ( last_char == 'n' || last_char == 'N')) {
+
+						if ( chars[len-6] == '.' ){
+
+							String temp = new String( chars, len-5, 4 ).toLowerCase( Locale.US );
+
+							if ( temp.equals( "onio" )){
+
+								return( AT_TOR );
+							}
+						}
+					}
 				}
 			}
 		}
@@ -267,11 +319,24 @@ AENetworkClassifier
 		String[] tests = {
 			null,
 			"12345",
+			"5.alt",
+			"12345.at",
+			"12345.salt",
 			"192.168.1.2",
-			"fred.i2p",
-			"fred.i2",
-			"bill.onion",
-			"bill.onio"
+			
+			"f.i2",
+			".i2p",
+			"f.i2p",
+			".i2p.alt",
+			"f.i2.alt",
+			"f.i2p.alt",
+			
+			"b.onio",
+			".onion",
+			"b.onion",
+			".onion.alt",
+			"b.onion.alt",
+			"b.onio.alt"
 		};
 
 		for ( String str: tests ){

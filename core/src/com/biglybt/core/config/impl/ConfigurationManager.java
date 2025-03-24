@@ -1369,7 +1369,7 @@ ConfigurationManager
 
 		if ( value instanceof String ){
 
-			if (((String)value).toLowerCase( Locale.US ).endsWith( ".b32.i2p" )){
+			if ( AENetworkClassifier.categoriseAddress((String)value) != AENetworkClassifier.AT_PUBLIC ){
 
 				return( true );
 			}

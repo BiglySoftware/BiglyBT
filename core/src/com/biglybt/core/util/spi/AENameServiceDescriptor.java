@@ -345,19 +345,24 @@ AENameServiceDescriptor
 					// get quite a few of these from 3rd party libs :(
 					// new Exception("Bad DNS lookup: " + host_name).printStackTrace();
 
-				}else if ( host_name.endsWith( ".i2p" )){
+				}else{
+					
+					String host_net = AENetworkClassifier.categoriseAddress( host_name );
+					
+					if ( host_net == AENetworkClassifier.AT_I2P ){
 
-					//new Exception( "Prevented DNS leak for " + host_name ).printStackTrace();
-
-					checkI2PInstall( host_name );
-
-					throw( new UnknownHostException( host_name ));
-
-				}else if ( host_name.endsWith( ".onion" )){
-
-					//new Exception( "Prevented DNS leak for " + host_name ).printStackTrace();
-
-					throw( new UnknownHostException( host_name ));
+						//new Exception( "Prevented DNS leak for " + host_name ).printStackTrace();
+	
+						checkI2PInstall( host_name );
+	
+						throw( new UnknownHostException( host_name ));
+	
+					}else if (host_net == AENetworkClassifier.AT_TOR ){
+	
+						//new Exception( "Prevented DNS leak for " + host_name ).printStackTrace();
+	
+						throw( new UnknownHostException( host_name ));
+					}
 				}
 
 				// System.out.println( "DNS: " + host_name );

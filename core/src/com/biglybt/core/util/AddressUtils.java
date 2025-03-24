@@ -773,7 +773,11 @@ AddressUtils
 			if ( address.endsWith( ".i2p" )){
 
 				to_decode = address.substring( 0, address.length() - 4 );
+				
+			}else if ( address.endsWith( ".i2p.alt" )){
 
+				to_decode = address.substring( 0, address.length() - 8 );
+				
 			}else if ( address.indexOf( '.' ) == -1 ){
 
 				to_decode = address;

@@ -331,7 +331,9 @@ AEProxySelectorImpl
 
 			if ( host != null ){
 
-				if ( host.endsWith( ".i2p" ) || host.endsWith( ".onion" )){
+				String host_net = AENetworkClassifier.categoriseAddress( host );
+				
+				if ( host_net != AENetworkClassifier.AT_PUBLIC ){
 
 					List<Proxy> trimmed = new ArrayList<>(result.size());
 
