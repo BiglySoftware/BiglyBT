@@ -302,12 +302,30 @@ public class TableColumnSetupWindow
 			}
 		});
 		
-		final ExpandBar expandFilters = new ExpandBar(cPickArea, SWT.NONE);
-		expandFilters.setSpacing(1);
-
-		final Composite cFilterArea = new Composite(expandFilters, SWT.NONE);
-		cFilterArea.setLayout(new FormLayout());
-
+		final ExpandBar expandFilters;
+		final Composite cFilterArea;
+		
+			// disposal of this window is causing crashes on linux if an expandbar is used
+			// https://github.com/BiglySoftware/BiglyBT/issues/3512
+		
+		boolean USE_EXPAND_BAR = !Constants.isLinux;
+		
+		if ( USE_EXPAND_BAR ){
+			
+			expandFilters = new ExpandBar(cPickArea, SWT.NONE);
+			expandFilters.setSpacing(1);
+	
+			cFilterArea = new Composite(expandFilters, SWT.NONE);
+			cFilterArea.setLayout(new FormLayout());
+			
+		}else{
+			
+			expandFilters = null;
+			
+			cFilterArea = new Composite(cPickArea, SWT.NONE);
+			cFilterArea.setLayout(new FormLayout());
+		}
+		
 		Group cResultArea = Utils.createSkinnedGroup(shell, SWT.NONE);
 		Messages.setLanguageText(cResultArea, "ColumnSetup.chosencolumns");
 		cResultArea.setLayout(new FormLayout());
@@ -540,40 +558,42 @@ public class TableColumnSetupWindow
 			comboFilter.select(0);
 		}
 
-		final ExpandItem expandItemFilters = new ExpandItem(expandFilters, SWT.NONE);
-		expandItemFilters.setText(MessageText.getString("ColumnSetup.filters"));
-		expandItemFilters.setControl(cFilterArea);
-		expandFilters.addListener(SWT.Resize, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				expandItemFilters.setHeight(cFilterArea.computeSize(
-						expandFilters.getSize().x, SWT.DEFAULT).y + 3);
-			}
-		});
-
-		expandFilters.addListener(SWT.Expand, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Utils.execSWTThreadLater(Constants.isLinux ? 250 : 0, new AERunnable() {
-					@Override
-					public void runSupport() {
-						shell.layout(true, true);
-					}
-				});
-			}
-		});
-		expandFilters.addListener(SWT.Collapse, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Utils.execSWTThreadLater(Constants.isLinux ? 250 : 0, new AERunnable() {
-					@Override
-					public void runSupport() {
-						shell.layout(true, true);
-					}
-				});
-			}
-		});
-
+		if ( expandFilters != null ){
+			
+			final ExpandItem expandItemFilters = new ExpandItem(expandFilters, SWT.NONE);
+			expandItemFilters.setText(MessageText.getString("ColumnSetup.filters"));
+			expandItemFilters.setControl(cFilterArea);
+			expandFilters.addListener(SWT.Resize, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					expandItemFilters.setHeight(cFilterArea.computeSize(
+							expandFilters.getSize().x, SWT.DEFAULT).y + 3);
+				}
+			});
+	
+			expandFilters.addListener(SWT.Expand, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					Utils.execSWTThreadLater(Constants.isLinux ? 250 : 0, new AERunnable() {
+						@Override
+						public void runSupport() {
+							shell.layout(true, true);
+						}
+					});
+				}
+			});
+			expandFilters.addListener(SWT.Collapse, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					Utils.execSWTThreadLater(Constants.isLinux ? 250 : 0, new AERunnable() {
+						@Override
+						public void runSupport() {
+							shell.layout(true, true);
+						}
+					});
+				}
+			});
+		}
 
 		// <<<<<<< Buttons
 
@@ -1064,12 +1084,23 @@ public class TableColumnSetupWindow
   			fd.bottom = new FormAttachment(100, -3);
   			cPickArea.setLayoutData(fd);
   			
-  			fd = new FormData();
-  			fd.bottom = new FormAttachment(100, 0);
-  			fd.left = new FormAttachment(0, 0);
-  			fd.right = new FormAttachment(btnOk, -3);
-  			expandFilters.setLayoutData(fd);
-
+  			if ( expandFilters != null ){
+  				
+	  			fd = new FormData();
+	  			fd.bottom = new FormAttachment(100, 0);
+	  			fd.left = new FormAttachment(0, 0);
+	  			fd.right = new FormAttachment(btnOk, -3);
+	  			expandFilters.setLayoutData(fd);
+	  			
+  			}else{
+  				
+	  			fd = new FormData();
+	  			fd.bottom = new FormAttachment(100, 0);
+	  			fd.left = new FormAttachment(0, 0);
+	  			fd.right = new FormAttachment(btnOk, -3);
+	  			cFilterArea.setLayoutData(fd);
+  			}
+  			
   			btnCancel.setVisible( false );
   			btnDefault.setVisible( false );
   			
@@ -1111,11 +1142,22 @@ public class TableColumnSetupWindow
 			fd.bottom = new FormAttachment(100, -3);
 			cPickArea.setLayoutData(fd);
 			
-			fd = new FormData();
-			fd.bottom = new FormAttachment(100, 0);
-			fd.left = new FormAttachment(0, 0);
-			fd.right = new FormAttachment(100, 0);
-			expandFilters.setLayoutData(fd);
+			if ( expandFilters != null ){
+				
+				fd = new FormData();
+				fd.bottom = new FormAttachment(100, 0);
+				fd.left = new FormAttachment(0, 0);
+				fd.right = new FormAttachment(100, 0);
+				expandFilters.setLayoutData(fd);
+				
+			}else{
+				
+				fd = new FormData();
+				fd.bottom = new FormAttachment(100, 0);
+				fd.left = new FormAttachment(0, 0);
+				fd.right = new FormAttachment(100, 0);
+				cFilterArea.setLayoutData(fd);
+			}
   		}
 
 		// <<<<<<<<< Chosen
@@ -1158,7 +1200,7 @@ public class TableColumnSetupWindow
 		fd.top = new FormAttachment(0, 3);
 		fd.left = new FormAttachment(0, 3);
 		fd.right = new FormAttachment(100, -3);
-		fd.bottom = new FormAttachment(expandFilters, -3);
+		fd.bottom = new FormAttachment(expandFilters!=null?expandFilters:cFilterArea, -3);
 		cTableAvail.setLayoutData(fd);
 
 
