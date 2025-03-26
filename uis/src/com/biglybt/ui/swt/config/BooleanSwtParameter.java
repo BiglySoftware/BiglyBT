@@ -201,9 +201,9 @@ public class BooleanSwtParameter
 				if ( Constants.isLinux ){
 						// Text getting truncated, don't care, hack fix, someone else can worry one day
 					if (numExtraIndent > 0) {
-						checkBox.setText( text + "  " );
+						checkBox.setText( text + "\u00a0\u00a0\u00a0\u00a0" );
 					} else {
-						checkBox.setText( MessageText.getString(labelKey) + "  " );
+						checkBox.setText( MessageText.getString(labelKey) + "\u00a0\u00a0\u00a0\u00a0" );
 					}
 				}else{
 					if (numExtraIndent > 0) {
