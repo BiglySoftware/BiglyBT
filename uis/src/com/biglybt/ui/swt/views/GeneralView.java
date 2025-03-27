@@ -1831,9 +1831,13 @@ public class GeneralView
     final String 	_comment,
 	final String 	_creation_date,
 	final String 	_user_comment,
-	final String 	isPrivateAndSource) {
+	final String 	isPrivateAndSource) 
+  {
     if (display == null || display.isDisposed())
 			return;
+    
+    	String[] fs = FileUtil.getFileStoreNames( FileUtil.newFile( _path ));
+    	
 		Utils.execSWTThread(new AERunnable()
 		{
 			@Override
@@ -1849,6 +1853,7 @@ public class GeneralView
 				}
 				torrentStatus.setForeground(_statusIsError?Colors.red:null);
 				saveIn.setText(_path);
+				saveIn.setToolTipText((fs.length==0?"":fs[0]));
 				hash.setText(_hash);
 				pieceNumber.setText(_pieceData); //$NON-NLS-1$
 				pieceSize.setText(_pieceLength);

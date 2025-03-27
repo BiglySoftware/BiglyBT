@@ -23,7 +23,12 @@ import com.biglybt.core.diskmanager.file.impl.FMFileAccessController.FileAccesso
 
 import java.io.*;
 import java.net.URI;
+import java.nio.file.FileStore;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 @SuppressWarnings("MethodMayBeStatic")
@@ -231,5 +236,22 @@ public class FileHandler
 		}
 
 		return( null );
+	}
+	
+	public List<Object>
+	getFileStores()
+	{
+		List<Object> result = new ArrayList<>();
+		
+		try{
+			Iterable<FileStore> it = FileSystems.getDefault().getFileStores();
+			
+			it.forEach(result::add);
+			
+		}catch( Throwable e ){
+			
+		}
+		
+		return( result );
 	}
 }

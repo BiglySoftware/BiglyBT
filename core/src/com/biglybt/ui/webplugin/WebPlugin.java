@@ -1748,7 +1748,9 @@ WebPlugin
 										}
 									}
 								}
-																
+									
+								String client_net = AENetworkClassifier.categoriseAddress( client_address );
+								
 								result = false;
 																
 								String msg	= "";
@@ -1760,6 +1762,27 @@ WebPlugin
 								for ( String a: allowed ){
 								
 									a = a.trim();
+									
+									if ( a.equalsIgnoreCase( "I2P" )){
+									
+											// allow all I2P
+											// if you have specific I2P client addresses then add them to whitelist explicitly (with explicit port of 80)
+										
+										if ( client_net == AENetworkClassifier.AT_I2P ){
+										
+											result = true;
+										
+											break;
+										}
+									}else if ( a.equalsIgnoreCase( "Tor" )){
+										
+										// no idea of the client's identity as we just get a local connection on localhost/bind address
+										// so authorise these via localhost/bind address details...
+										
+										// result = true;
+										
+										// break;
+									}
 									
 									int explicit_port = -1;
 									

@@ -22,7 +22,9 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.InfoParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
@@ -31,6 +33,8 @@ import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 
 import static com.biglybt.core.config.ConfigKeys.File.*;
+
+import java.util.Date;
 
 public class ConfigSectionFilePerformance
 		extends ConfigSectionImpl {
@@ -82,6 +86,21 @@ public class ConfigSectionFilePerformance
 		add(new BooleanParameterImpl(
 				BCFG_DISKMANAGER_MOVE_SMALLESTFIRST,
 				"ConfigView.section.file.move.smallestfirst"));
+				
+		InfoParameterImpl param_fs_names = new InfoParameterImpl(null,	"label.current.file.systems", "{ " + MessageText.getString( "PeersView.state.pending" ) + "... }");
+		add( param_fs_names );	
+		
+		FileUtil.getFileStoreNames((names)->{
+			String fsStr = "";
+			
+			for ( String f: names ){
+				
+				fsStr += (fsStr.isEmpty()?"":", " ) + ( "\"" + f  + "\"" );
+			}
+			
+			param_fs_names.setValue(fsStr);
+		});
+		
 		
 		BooleanParameterImpl one_per_fs = 
 			add(new BooleanParameterImpl(

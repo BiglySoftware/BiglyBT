@@ -33,6 +33,7 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -74,6 +75,24 @@ public class FileUtil {
 
   private static AEDiagnosticsLogger file_logger;
   
+  static {
+
+	  AEDiagnostics.addEvidenceGenerator((writer)->{
+
+		  /*
+			  String[] fs =  getFileStoreNames();
+
+			  String str = "";
+
+			  for( String f: fs ){
+				  str += (str.isEmpty()?"":", ") + ("\""+ f + "\"");
+			  }
+
+			  writer.println( "File Stores: " + str );
+		   */
+	  });
+  }
+					
   private static final ThreadLocal<IdentityHashSet<CoreOperationTask>>		tls	=
 	new ThreadLocal<IdentityHashSet<CoreOperationTask>>()
 	{
@@ -2615,7 +2634,93 @@ public class FileUtil {
     		}
     	}
     }
-
+    
+    private static String[]			fs_names			= null;
+    private static long				fs_names_last		= -1;
+    private static Object			fs_names_lock		= new Object();
+    private static AsyncDispatcher	fs_names_dispatcher = new AsyncDispatcher();
+    
+    static{
+    		// preload
+    	
+    	getFileStoreNames();
+    }
+    
+    public static void
+    getFileStoreNames(
+    	Consumer<String[]>	callback )
+    {
+    	long now = SystemTime.getMonotonousTime();
+    	
+    	final String[]	existing_result;
+    	boolean			update			= false;
+    	
+    	synchronized( fs_names_lock ){
+    		
+    		existing_result = fs_names;
+    		
+    		if ( existing_result == null || now - fs_names_last >= 30*1000 ){
+    			
+    			fs_names_last = now;
+    			
+    			update = true;
+    		}
+    	}
+    	
+    	if ( existing_result != null ){
+    		
+    		try{
+    			callback.accept( existing_result );
+    			
+    		}catch( Throwable e ){
+    			
+    			Debug.out( e );
+    		}
+    	}
+    	
+    	if ( update ){
+    		
+	    	fs_names_dispatcher.dispatch(()->{
+	    		
+	    		String[] new_result = {};
+	    		
+	    		try{
+			    	List<Object> fs = fileHandling.getFileStores();
+			    	
+			    	new_result = new String[fs.size()];
+			    	
+			    	int pos = 0;
+			    	
+			    	for ( Object f: fs ){
+			    	
+			    		new_result[pos++] = String.valueOf( f );
+			    	}
+	    		}catch( Throwable e ){
+	    			
+	    			Debug.out( e );
+	    		
+	    		}finally{
+	    			
+	    			synchronized( fs_names_lock ){
+			    	
+	    				fs_names = new_result;
+			    	}
+	    			
+	    			if ( existing_result == null || !Arrays.deepEquals( existing_result, new_result )){
+	    				
+	    				try{    					
+	    					callback.accept( new_result );
+	    					
+	    				}catch( Throwable e ){
+	    					
+	    					Debug.out( e );
+	    				}
+	    			}
+	    		}
+	    	});
+	    }
+    }
+    
     public static Object
     getFileStore(
     	File		file )
