@@ -2640,6 +2640,10 @@ public class FileUtil {
     private static Object			fs_names_lock		= new Object();
     private static AsyncDispatcher	fs_names_dispatcher = new AsyncDispatcher();
     
+    private static boolean			fs_updating;
+    
+    private static List<Consumer<String[]>>	fs_pending_callbacks = new ArrayList<>();
+    
     static{
     		// preload
     	
@@ -2650,20 +2654,24 @@ public class FileUtil {
     getFileStoreNames(
     	Consumer<String[]>	callback )
     {
-    	long now = SystemTime.getMonotonousTime();
-    	
     	final String[]	existing_result;
-    	boolean			update			= false;
+    	
+    	boolean	do_update			= false;
     	
     	synchronized( fs_names_lock ){
     		
     		existing_result = fs_names;
     		
-    		if ( existing_result == null || now - fs_names_last >= 30*1000 ){
+    		if ( existing_result == null || SystemTime.getMonotonousTime() - fs_names_last >= 30*1000 ){
     			
-    			fs_names_last = now;
+    			fs_pending_callbacks.add( callback );
     			
-    			update = true;
+    			if ( !fs_updating ){
+     				
+    				fs_updating = true;
+    			
+    				do_update = true;
+    			}
     		}
     	}
     	
@@ -2678,7 +2686,7 @@ public class FileUtil {
     		}
     	}
     	
-    	if ( update ){
+    	if ( do_update ){
     		
 	    	fs_names_dispatcher.dispatch(()->{
 	    		
@@ -2701,19 +2709,32 @@ public class FileUtil {
 	    		
 	    		}finally{
 	    			
+	    			List<Consumer<String[]>>	callbacks;
+	    			
 	    			synchronized( fs_names_lock ){
 			    	
 	    				fs_names = new_result;
+	    				
+	    				fs_names_last = SystemTime.getMonotonousTime();
+	    				
+	    				callbacks = fs_pending_callbacks;
+	    				
+	    				fs_pending_callbacks = new ArrayList<>();
+	    				
+	    				fs_updating = false;
 			    	}
 	    			
 	    			if ( existing_result == null || !Arrays.deepEquals( existing_result, new_result )){
 	    				
-	    				try{    					
-	    					callback.accept( new_result );
+	    				for ( Consumer<String[]> cb: callbacks ){
 	    					
-	    				}catch( Throwable e ){
-	    					
-	    					Debug.out( e );
+		    				try{    					
+		    					cb.accept( new_result );
+		    					
+		    				}catch( Throwable e ){
+		    					
+		    					Debug.out( e );
+		    				}
 	    				}
 	    			}
 	    		}
