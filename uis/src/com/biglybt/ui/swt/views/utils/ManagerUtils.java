@@ -4231,7 +4231,9 @@ public class ManagerUtils {
 
 									if ( general_candidates != null ){
 
-										if ( general_candidates.size() > 0 ){
+										int initial_gc_size = general_candidates.size();
+										
+										if ( initial_gc_size > 0 ){
 
 											// remove any incomplete files from existing downloads
 
@@ -4303,7 +4305,18 @@ public class ManagerUtils {
 											}
 										}
 
-										if ( dm_candidates.size() > 0 ){
+										int dm_c_size = dm_candidates.size();
+										
+										if ( test_only && initial_gc_size > 0 && dm_c_size == 0 ){
+											
+											TOTorrentFile to_file = file.getTorrentFile();
+
+											logLine( 
+												viewer, file_indent,
+												to_file.getRelativePath() + " had " + initial_gc_size + " candidates but all have been ignored as incomplete/skipped");
+										}
+										
+										if ( dm_c_size > 0 ){
 
 											boolean	matched = false;
 

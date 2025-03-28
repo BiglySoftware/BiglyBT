@@ -1378,9 +1378,9 @@ GlobalManagerFileMerger
 
 			for ( SameSizeFileWrapper file: file_wrappers ){
 
-				msg += file.getDownloadManager().getDisplayName() + " - " + file.getFile().getTorrentFile().getRelativePath() + "\n";
+				msg += "    " + file.getDownloadManager().getDisplayName() + " - " + file.getFile().getTorrentFile().getRelativePath() + "\n";
 			}
-			msg += "\nToo many hash fails in " + failed.getDownloadManager().getDisplayName();
+			msg += "\n    - too many hash fails in " + failed.getDownloadManager().getDisplayName();
 
 			abandon_reason = msg;
 			
