@@ -2362,6 +2362,8 @@ public class OpenTorrentOptionsWindow
 
 		private SWTSkin skin;
 
+		private boolean nativeExpandBar;
+		
 		/* prevents loop of modifications */
 		protected boolean bSkipDataDirModify = false;
 
@@ -2618,6 +2620,20 @@ public class OpenTorrentOptionsWindow
 						"com/biglybt/ui/skin", "skin3_dlg_opentorrent_options_instance.properties" );
 
 			skin.initialize( parent, "expandview");
+			
+			SWTSkinObjectExpandBar eb =(SWTSkinObjectExpandBar)skin.getSkinObject( "expand-bar" );
+			
+			nativeExpandBar = eb.isNative();
+			
+			if ( !nativeExpandBar ){
+				
+				if ( !Utils.isDarkAppearanceNative()) {
+					
+					skin.getShell().setBackground( Colors.white );
+					
+					skin.getShell().setBackgroundMode( SWT.INHERIT_FORCE );
+				}
+			}
 			
 			if ( isSingleOptions ){
 				SWTSkinObject so = skin.getSkinObject("filearea-table");
@@ -5623,9 +5639,12 @@ public class OpenTorrentOptionsWindow
 
 		}
 
-		private void setupStartOptions(SWTSkinObjectExpandItem so) {
-			soStartOptionsExpandItem = so;
-			Composite cTorrentOptions = so.getComposite();
+		private void setupStartOptions(SWTSkinObjectExpandItem expandItem) {
+			soStartOptionsExpandItem = expandItem;
+			
+			SWTSkinObjectContainer container = (SWTSkinObjectContainer)skin.getSkinObject("start-options-container");
+			
+			Composite cTorrentOptions = container==null?expandItem.getComposite():container.getComposite();
 
 			Composite cTorrentModes = new Composite(cTorrentOptions, SWT.NONE);
 			GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -5714,8 +5733,17 @@ public class OpenTorrentOptionsWindow
 				gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
 				Messages.setLanguageText(label, "label.initial_tags");
 
-				Composite sc = Utils.createScrolledComposite( tagRight, so.getExpandItem().getParent().getParent());
-
+				Composite sc;
+				
+				if ( nativeExpandBar ){
+				
+					sc = Utils.createScrolledComposite( tagRight, soStartOptionsExpandItem.getParentComposite());
+					
+				}else{
+					
+					sc = tagRight;
+				}
+				
 				if ( Constants.isWindows ){
 					sc.setBackground( Colors.white );
 					sc.setBackgroundMode( SWT.INHERIT_DEFAULT );
@@ -6144,7 +6172,7 @@ public class OpenTorrentOptionsWindow
 			
 				// without this the expando sometimes get stuck with the wrong height and therefore a truncated view
 			
-			soStartOptionsExpandItem.getExpandItem().setHeight( soStartOptionsExpandItem.getComposite().computeSize( SWT.DEFAULT,  SWT.DEFAULT).y );
+			soStartOptionsExpandItem.setHeight( soStartOptionsExpandItem.getComposite().computeSize( SWT.DEFAULT,  SWT.DEFAULT).y );
 		}
 
 		private boolean removeInitialTag(List<Tag> tags, Tag tag) {

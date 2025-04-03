@@ -1599,10 +1599,16 @@ public class SWTSkin
 				skinObject = createTabFolder(properties, sID, sConfigID, sTypeParams,
 						parentSkinObject);
 			} else if (sType.equals("expandbar")) {
-				skinObject = createExpandBar(properties, sID, sConfigID, sTypeParams,
+				skinObject = createExpandBar1(properties, sID, sConfigID, sTypeParams,
 						parentSkinObject);
 			} else if (sType.equals("expanditem")) {
-				skinObject = createExpandItem(properties, sID, sConfigID, sTypeParams,
+				skinObject = createExpandItem1(properties, sID, sConfigID, sTypeParams,
+						parentSkinObject);
+			} else if (sType.equals("expandbar2")) {
+				skinObject = createExpandBar2(properties, sID, sConfigID, sTypeParams,
+						parentSkinObject);
+			} else if (sType.equals("expanditem2")) {
+				skinObject = createExpandItem2(properties, sID, sConfigID, sTypeParams,
 						parentSkinObject);
 			} else {
 				System.err.println(sConfigID + ": Invalid type of " + sType);
@@ -1676,7 +1682,7 @@ public class SWTSkin
 		return skinObject;
 	}
 
-	private SWTSkinObject createExpandBar(SWTSkinProperties properties, String id,
+	private SWTSkinObject createExpandBar1(SWTSkinProperties properties, String id,
 			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
 		String[] sItems = properties.getStringArray(configID + ".widgets");
 
@@ -1685,7 +1691,7 @@ public class SWTSkin
 					+ properties.getStringValue(configID + ".widgets"));
 		}
 
-		SWTSkinObject skinObject = new SWTSkinObjectExpandBar(this, properties, id,
+		SWTSkinObject skinObject = new SWTSkinObjectExpandBar1(this, properties, id,
 				configID, parentSkinObject);
 		addToControlMap(skinObject);
 
@@ -1697,7 +1703,28 @@ public class SWTSkin
 		return skinObject;
 	}
 
-	private SWTSkinObject createExpandItem(SWTSkinProperties properties, String id,
+	private SWTSkinObject createExpandBar2(SWTSkinProperties properties, String id,
+			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
+		String[] sItems = properties.getStringArray(configID + ".widgets");
+
+		if (DEBUGLAYOUT) {
+			System.out.println("createExpandBar: " + id + ";"
+					+ properties.getStringValue(configID + ".widgets"));
+		}
+
+		SWTSkinObject skinObject = new SWTSkinObjectExpandBar2(this, properties, id,
+				configID, parentSkinObject);
+		addToControlMap(skinObject);
+
+		if (sItems != null) {
+			addContainerChildren(skinObject, sItems, properties);
+		}
+
+
+		return skinObject;
+	}
+	
+	private SWTSkinObject createExpandItem1(SWTSkinProperties properties, String id,
 			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
 		String[] sItems = properties.getStringArray(configID + ".widgets");
 
@@ -1706,7 +1733,7 @@ public class SWTSkin
 					+ properties.getStringValue(configID + ".widgets"));
 		}
 
-		SWTSkinObject skinObject = new SWTSkinObjectExpandItem(this, properties, id,
+		SWTSkinObject skinObject = new SWTSkinObjectExpandItem1(this, properties, id,
 				configID, parentSkinObject);
 		addToControlMap(skinObject);
 
@@ -1717,6 +1744,25 @@ public class SWTSkin
 		return skinObject;
 	}
 
+	private SWTSkinObject createExpandItem2(SWTSkinProperties properties, String id,
+			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
+		String[] sItems = properties.getStringArray(configID + ".widgets");
+
+		if (DEBUGLAYOUT) {
+			System.out.println("createExpandItem2: " + id + ";"
+					+ properties.getStringValue(configID + ".widgets"));
+		}
+
+		SWTSkinObject skinObject = new SWTSkinObjectExpandItem2(this, properties, id,
+				configID, parentSkinObject);
+		addToControlMap(skinObject);
+
+		if (sItems != null) {
+			addContainerChildren(skinObject, sItems, properties);
+		}
+
+		return skinObject;
+	}
 
 	private SWTSkinObject createTextbox(SWTSkinProperties properties, String id,
 			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
