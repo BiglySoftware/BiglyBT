@@ -65,7 +65,16 @@ public class SWTSkinObjectExpandItem2
 				
 				String lastExpandStateID = "ui.skin." + sConfigID + ".expanded";
 
-				setExpanded( COConfigurationManager.getBooleanParameter(lastExpandStateID, true ));
+				if ( COConfigurationManager.hasParameter(lastExpandStateID, true )){
+					
+					boolean lastExpandState = COConfigurationManager.getBooleanParameter( lastExpandStateID, false);
+					
+					setExpanded( lastExpandState );
+					
+				}else{
+					
+					setExpanded( properties.getBooleanValue( sConfigID + ".expanded", false ));
+				}
 
 				getHeader().getControl().addListener(
 					SWT.MouseUp,(ev)->{
