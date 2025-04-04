@@ -1633,8 +1633,10 @@ implements PEPeerTransport
 	{
 			// seed implicitly means *something* to send (right?)
 
-		if (peerHavePieces !=null && nbPieces >0){
-			setSeed((peerHavePieces.nbSet ==nbPieces));
+		BitFlags bitFlags = peerHavePieces;
+		
+		if (bitFlags !=null && nbPieces >0){
+			setSeed((bitFlags.nbSet ==nbPieces));
 		}else{
 			setSeed(false);
 		}
@@ -1645,7 +1647,7 @@ implements PEPeerTransport
 		}else if(manager.isSeeding() && (relativeSeeding & RELATIVE_SEEDING_UPLOAD_ONLY_INDICATED) != 0){
 			// peer indicated upload-only, we're seeding so he's a relative seed
 			relativeSeeding |= RELATIVE_SEEDING_UPLOAD_ONLY_SEED;
-		}else if(peerHavePieces !=null && nbPieces > 0){
+		}else if(bitFlags !=null && nbPieces > 0){
 
 			int piecesDone = manager.getPiecePicker().getNbPiecesDone();
 			DiskManagerPiece[] dmPieces = diskManager.getPieces();
@@ -1657,26 +1659,26 @@ implements PEPeerTransport
 				 * as relative seed. Useful to disconnect not-useful pseudo-seeds during downloading
 				 */
 
-				for (int i = peerHavePieces.start;i <= peerHavePieces.end;i++){
+				for (int i = bitFlags.start;i <= bitFlags.end;i++){
 
 						// relative seed if peer doesn't have the piece, we already have it or we don't need it
 
-					couldBeSeed &= !peerHavePieces.flags[i] || dmPieces[i].isDone() || !dmPieces[i].isNeeded();
+					couldBeSeed &= !bitFlags.flags[i] || dmPieces[i].isDone() || !dmPieces[i].isNeeded();
 
 					if (!couldBeSeed){
 
 						break;
 					}
 				}
-			}else if ( manager.isSeeding() && piecesDone <= peerHavePieces.nbSet ){
+			}else if ( manager.isSeeding() && piecesDone <= bitFlags.nbSet ){
 
 					// we're seeding, check if peer has all the data we have (and more), flag as relative seed if so
 
-				for (int i = peerHavePieces.start;i <= peerHavePieces.end;i++){
+				for (int i = bitFlags.start;i <= bitFlags.end;i++){
 
 						// relative seed if we don't have the piece or we have it and the peer has it too
 
-					couldBeSeed &= !(dmPieces[i].isDone()) || peerHavePieces.flags[i];
+					couldBeSeed &= !(dmPieces[i].isDone()) || bitFlags.flags[i];
 
 					if( !couldBeSeed ){
 
