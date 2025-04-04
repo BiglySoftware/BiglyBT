@@ -7415,7 +7415,7 @@ public class OpenTorrentOptionsWindow
 						LocaleUtilDecoder decoder = LocaleTorrentUtil.getTorrentEncoding(torrent);
 						String s = decoder.decodeString(torrent.getComment());
 						
-						s = MessageText.getString("GeneralView.label.comment") + " " + s;
+						s = MessageText.getString("GeneralView.label.comment") + " " + (s==null?"":s);
 						((SWTSkinObjectText) so).setText(s);
 					} catch (UnsupportedEncodingException e) {
 					} catch (TOTorrentException e) {

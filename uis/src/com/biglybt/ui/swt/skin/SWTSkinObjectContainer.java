@@ -304,6 +304,9 @@ public class SWTSkinObjectContainer
 		Utils.execSWTThreadLater(0, new AERunnable() {
 			@Override
 			public void runSupport() {
+				if ( getComposite().isDisposed()){
+					return;
+				}
 				SWTSkinObject[] children = getChildren();
 				if (children.length == 0) {
 					return;
