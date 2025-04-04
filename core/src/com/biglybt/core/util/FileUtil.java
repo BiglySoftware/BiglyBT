@@ -2742,11 +2742,18 @@ public class FileUtil {
 	    }
     }
     
-    public static Object
-    getFileStore(
+    public static String
+    getFileStoreName(
     	File		file )
     {
-    	return fileHandling.getFileStore(file);
+    	Object obj = fileHandling.getFileStore(file);
+    	
+    	if ( obj == null ){
+    		
+    		return( null );
+    	}
+    	
+    	return( String.valueOf( obj ));
     }
     
     public static String[]
@@ -2767,11 +2774,11 @@ public class FileUtil {
     			continue;
     		}
     		
-    		Object fs = getFileStore( f );
+    		String fs = getFileStoreName( f );
     		
     		if ( fs != null ){
     			
-    			result.add( String.valueOf( fs ));
+    			result.add( fs );
     		}
     	}
     	   

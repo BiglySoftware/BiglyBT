@@ -104,6 +104,17 @@ public class LocaleTorrentUtil
 		return getTorrentEncoding(torrent, true, false);
 	}
 
+	public static boolean
+	canChangeTorrentEncoding( 
+		TOTorrent torrent )
+	{
+		String encoding = torrent.getAdditionalStringProperty("encoding");
+		if (TOTorrent.ENCODING_ACTUALLY_UTF8_KEYS.equals(encoding)) {
+			return( false );
+		}else{
+			return( true );
+		}
+	}
 	static public LocaleUtilDecoder getTorrentEncoding(TOTorrent torrent,
 			boolean saveToFileAllowed, boolean forcePrompt)
 			throws TOTorrentException

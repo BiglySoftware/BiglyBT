@@ -7398,7 +7398,12 @@ public class OpenTorrentOptionsWindow
 			if ( torrent != null ){
 				so = skin.getSkinObject("torrentinfo-trackername");
 				if (so instanceof SWTSkinObjectText) {
-					((SWTSkinObjectText) so).setText(TrackerNameItem.getTrackerName(torrent) + ((torrent==null||!torrent.getPrivate())?"":(" (private)")));
+					String trackerName = 
+							MessageText.getString( "label.tracker" ) + ": " +
+							TrackerNameItem.getTrackerName(torrent) + 
+							((torrent==null||!torrent.getPrivate())?"":(" (" + MessageText.getString( "label.private" ) + ")"));
+					
+					((SWTSkinObjectText) so).setText(trackerName);
 				}
 
 				so = skin.getSkinObject("torrentinfo-comment");
@@ -7407,6 +7412,8 @@ public class OpenTorrentOptionsWindow
 					try {
 						LocaleUtilDecoder decoder = LocaleTorrentUtil.getTorrentEncoding(torrent);
 						String s = decoder.decodeString(torrent.getComment());
+						
+						s = MessageText.getString("GeneralView.label.comment") + " " + s;
 						((SWTSkinObjectText) so).setText(s);
 					} catch (UnsupportedEncodingException e) {
 					} catch (TOTorrentException e) {
@@ -7416,6 +7423,8 @@ public class OpenTorrentOptionsWindow
 				so = skin.getSkinObject("torrentinfo-createdon");
 				if (so instanceof SWTSkinObjectText) {
 					String creation_date = DisplayFormatters.formatDate(torrent.getCreationDate() * 1000l);
+					
+					creation_date = MessageText.getString( "GeneralView.label.creationdate" ) + " " + creation_date;
 					((SWTSkinObjectText) so).setText(creation_date);
 				}
 
@@ -7486,6 +7495,8 @@ public class OpenTorrentOptionsWindow
 					mi.setText( MessageText.getString( "LocaleUtil.title" ));
 					
 					mi.addListener( SWT.Selection, (ev)->chooseEncoding.run());
+					
+					mi.setEnabled( LocaleTorrentUtil.canChangeTorrentEncoding(torrent));
 					
 					mi = new MenuItem( menu, SWT.PUSH );
 					
@@ -8234,11 +8245,21 @@ public class OpenTorrentOptionsWindow
 				diskFreeInfoRefreshRunning = true;
 				diskFreeInfoRefreshPending = false;
 
-				final HashSet FSroots = new HashSet(Arrays.asList(Utils.listFileRootsWithTimeout()));
+				File[] FSfiles = Utils.listFileRootsWithTimeout();
+				
+				final HashMap<File,String> FSroots = new HashMap<>();
+						
+				for ( File f: FSfiles ){
+					
+					FSroots.put(f, f.getPath());
+				}
+				
 				final HashMap<String,Partition> partitions = new HashMap();
 
 				for ( TorrentOpenOptions too: torrentOptionsMulti ){
+					
 					TorrentOpenFileOptions[] files = too.getFiles();
+					
 					for (int j = 0; j < files.length; j++) {
 						TorrentOpenFileOptions file = files[j];
 						if (!file.isToDownload())
@@ -8251,22 +8272,32 @@ public class OpenTorrentOptionsWindow
 						
 						Partition part = partitions.get(parentToRootCache.get(parentKey));
 
-						if (part == null) {
+						if ( part == null ){
+							
 							File next;
-							while (true) {
+							
+							while (true){
+								
 								rootFile = rootFile.getParentFile();
+								
 								next = rootFile.getParentFile();
-								if (next == null)
+								
+								if ( next == null ){
+									
 									break;
-
-								// bubble up until we hit an existing directory
-								if (!getCachedExistsStat(rootFile) || !rootFile.isDirectory())
+								}
+								
+									// bubble up until we hit an existing directory
+								
+								if (!getCachedExistsStat(rootFile) || !rootFile.isDirectory()){
+									
 									continue;
-
-								// check for mount points (different free space) or simple loops in the directory structure
-								if (FSroots.contains(rootFile) || rootFile.equals(next)
-										|| getCachedDirFreeSpace(next) != getCachedDirFreeSpace(rootFile))
+								}
+								
+								if ( FSroots.containsKey(rootFile) || rootFile.equals(next)){
+									
 									break;
+								}
 							}
 
 							String rootStr = StringInterner.intern( rootFile.getAbsolutePath());
@@ -8275,7 +8306,8 @@ public class OpenTorrentOptionsWindow
 
 							part = partitions.get(rootStr);
 
-							if (part == null) {
+							if ( part == null ){
+								
 								part = new Partition(rootFile);
 								
 								partitions.put(rootStr, part);
@@ -8305,10 +8337,19 @@ public class OpenTorrentOptionsWindow
 							DisplayFormatters.formatByteCountToKiBEtc(part.freeSpace.freeSpace)
 						});
 
+						File root = part.root;
+						
+						String rootStr = FSroots.get( root );
+						
+						if ( rootStr == null ){
+							
+							rootStr = root.getPath();
+						}
+							
 						Label l;
 						l = new Label(diskspaceComp, SWT.NONE);
 						l.setForeground(filesTooBig ? Colors.colorError : null);
-						l.setText(part.root.getPath());
+						l.setText( rootStr );
 						l.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
 
 						l = new Label(diskspaceComp, SWT.NONE);
