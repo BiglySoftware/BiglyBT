@@ -2576,6 +2576,8 @@ public class OpenTorrentOptionsWindow
 			
 			changeListener		= _changeListener;
 
+			diskFreeInfoRefreshPending = true;
+			
 			shell = parent.getShell();
 		}
 
@@ -8247,11 +8249,11 @@ public class OpenTorrentOptionsWindow
 
 				File[] FSfiles = Utils.listFileRootsWithTimeout();
 				
-				final HashMap<File,String> FSroots = new HashMap<>();
+				final HashMap<File,File> FSroots = new HashMap<>();
 						
 				for ( File f: FSfiles ){
 					
-					FSroots.put(f, f.getPath());
+					FSroots.put( f, f );
 				}
 				
 				final HashMap<String,Partition> partitions = new HashMap();
@@ -8260,8 +8262,10 @@ public class OpenTorrentOptionsWindow
 					
 					TorrentOpenFileOptions[] files = too.getFiles();
 					
-					for (int j = 0; j < files.length; j++) {
+					for ( int j = 0; j < files.length; j++){
+						
 						TorrentOpenFileOptions file = files[j];
+						
 						if (!file.isToDownload())
 							continue;
 
@@ -8284,6 +8288,13 @@ public class OpenTorrentOptionsWindow
 								
 								if ( next == null ){
 									
+									File rf = FSroots.get( rootFile );
+									
+									if ( rf != null ){
+										
+										rootFile = rf;
+									}
+									
 									break;
 								}
 								
@@ -8294,7 +8305,16 @@ public class OpenTorrentOptionsWindow
 									continue;
 								}
 								
-								if ( FSroots.containsKey(rootFile) || rootFile.equals(next)){
+								File rf = FSroots.get( rootFile );
+								
+								if ( rf != null ){
+									
+									rootFile = rf;
+									
+									break;
+								}
+								
+								if ( rootFile.equals( next )){
 									
 									break;
 								}
@@ -8339,12 +8359,14 @@ public class OpenTorrentOptionsWindow
 
 						File root = part.root;
 						
-						String rootStr = FSroots.get( root );
+						File rootFile = FSroots.get( root );
 						
-						if ( rootStr == null ){
+						if ( rootFile == null ){
 							
-							rootStr = root.getPath();
+							rootFile = root;
 						}
+						
+						String rootStr = rootFile.getPath();
 							
 						Label l;
 						l = new Label(diskspaceComp, SWT.NONE);
