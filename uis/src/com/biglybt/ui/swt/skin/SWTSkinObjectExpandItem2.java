@@ -19,18 +19,25 @@
 package com.biglybt.ui.swt.skin;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.CompositeMinSize;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
 
 public class SWTSkinObjectExpandItem2
 	extends SWTSkinObjectContainer
 	implements SWTSkinObjectExpandItem
 {
+	static Boolean	canUseExpanderUnicode = null;
+	
 	private SWTSkinObjectExpandBar2		bar;
 	private Composite					composite;
 	
@@ -108,10 +115,45 @@ public class SWTSkinObjectExpandItem2
 		return((SWTSkinObjectContainer)kids[1]);
 	}
 	
+	private String
+	fixupExpander(
+		String	text )
+	{
+		String arrowRight	= "\u2B9E"; // " \uD83D\uDF82";
+		String arrowDown	= "\u2B9F"; // "\uD83D\uDF83";
+			
+		if ( canUseExpanderUnicode == null ){
+			
+			SWTSkinObjectText header = getHeader();
+			
+			canUseExpanderUnicode = Utils.canDisplayCharacter( header.getControl().getFont(), arrowRight.charAt(0));
+		}
+		
+		if ( canUseExpanderUnicode ){
+			
+			if ( text.startsWith( arrowRight )){
+				
+				text = text.substring(arrowRight.length());
+				
+			}else if ( text.startsWith( arrowDown )){
+				
+				text = text.substring(arrowDown.length());
+			}
+	
+			return( (expanded?arrowDown:arrowRight) + " " + text.trim());
+			
+		}else{
+			
+			return( text );
+		}
+	}
+	
 	public void
 	setText(
 		String		text )
 	{
+		text = fixupExpander( text );
+		
 		SWTSkinObjectText header = getHeader();
 		
 		header.setText(text);
@@ -131,6 +173,16 @@ public class SWTSkinObjectExpandItem2
 	{	
 		expanded = b;
 			
+		SWTSkinObjectText header = getHeader();
+		
+		String text = header.getText();
+		
+		text = fixupExpander( text );
+				
+		header.setText(text);
+		
+		header.relayout();
+		
 		String lastExpandStateID = "ui.skin." + sConfigID + ".expanded";
 		
 		COConfigurationManager.setParameter( lastExpandStateID, expanded);

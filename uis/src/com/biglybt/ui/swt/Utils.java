@@ -91,6 +91,7 @@ import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTStatusEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -7374,5 +7375,91 @@ public class Utils
 					}
 				}
 			});
+	}
+	
+	public static boolean
+	canDisplayCharacter(
+		Font		font,
+		char		character )
+	{
+		String goodString	= String.valueOf( character );
+		String badString	= "\uD83D"; 
+		
+		Image newImage1 = null;
+		Image newImage2 = null;
+
+		GC gc1 = null;
+		GC gc2 = null;
+		
+		try{
+			newImage1 = new Image(Utils.getDisplay(),100,100);
+			newImage2 = new Image(Utils.getDisplay(),100,100);
+			
+			gc1 = new GC(newImage1);
+			gc2 = new GC(newImage2);
+			
+			gc1.setFont(font);
+			gc2.setFont(font);
+			
+			Point p1 = GCStringPrinter.stringExtent(gc1,goodString);
+			Point p2 = GCStringPrinter.stringExtent(gc2,badString);
+			
+			boolean same = p1.equals(p2);
+			
+			if ( same ){
+				
+				Rectangle rect = new Rectangle( 0, 0, p1.x + 10, p1.y + 10 );
+				
+				GCStringPrinter.printString( gc1, goodString, rect);
+				GCStringPrinter.printString( gc2, badString, rect );
+			
+				gc1.dispose();
+				
+				gc1 = null;
+				
+				gc2.dispose();
+				
+				gc2 = null;
+
+				ImageData id1 = newImage1.getImageData();
+				ImageData id2 = newImage2.getImageData();
+				
+				for ( int x=0; x<p1.x && same ; x++ ){
+					
+					for ( int y=0; y<p1.y; y++ ){
+
+						if ( id1.getPixel( x, y ) != id2.getPixel( x, y )){
+							
+							same = false;
+							
+							break;
+						}
+					}
+				}
+			}
+				
+			return( !same );
+			
+		}catch( Throwable e ){
+		
+			Debug.out( e );
+			
+			return( false );
+			
+		}finally{
+			
+			if ( gc1 != null){
+				gc1.dispose();
+			}
+			if ( gc2 != null){
+				gc2.dispose();
+			}
+			if ( newImage1 != null){
+				newImage1.dispose();
+			}
+			if ( newImage2 != null){
+				newImage2.dispose();
+			}
+		}
 	}
 }
