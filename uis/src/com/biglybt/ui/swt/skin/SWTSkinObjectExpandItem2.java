@@ -19,18 +19,13 @@
 package com.biglybt.ui.swt.skin;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.CompositeMinSize;
-import com.biglybt.ui.swt.shells.GCStringPrinter;
 
 public class SWTSkinObjectExpandItem2
 	extends SWTSkinObjectContainer
@@ -126,7 +121,11 @@ public class SWTSkinObjectExpandItem2
 			
 			SWTSkinObjectText header = getHeader();
 			
-			canUseExpanderUnicode = Utils.canDisplayCharacter( header.getControl().getFont(), arrowRight.charAt(0));
+			canUseExpanderUnicode = 
+				Utils.canDisplayCharacters( 
+					header.getControl().getFont(), 
+					arrowRight.charAt(0),
+					arrowDown.charAt(0));
 		}
 		
 		if ( canUseExpanderUnicode ){

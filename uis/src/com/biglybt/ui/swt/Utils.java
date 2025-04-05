@@ -7377,13 +7377,20 @@ public class Utils
 			});
 	}
 	
+		/**
+		 * Test if characters are displayable. Both should be different and equally likely to
+		 * display within the font (e.g. in same unicode block)
+		 * If they both render to the same thing then it is assumed that neither can be displayed...
+		 */
+	
 	public static boolean
-	canDisplayCharacter(
+	canDisplayCharacters(
 		Font		font,
-		char		character )
+		char		character1,
+		char		character2 )
 	{
-		String goodString	= String.valueOf( character );
-		String badString	= "\uD83D"; 
+		String str1	= String.valueOf( character1 );
+		String str2	= String.valueOf( character2 );
 		
 		Image newImage1 = null;
 		Image newImage2 = null;
@@ -7401,8 +7408,8 @@ public class Utils
 			gc1.setFont(font);
 			gc2.setFont(font);
 			
-			Point p1 = GCStringPrinter.stringExtent(gc1,goodString);
-			Point p2 = GCStringPrinter.stringExtent(gc2,badString);
+			Point p1 = GCStringPrinter.stringExtent(gc1,str1);
+			Point p2 = GCStringPrinter.stringExtent(gc2,str2);
 			
 			boolean same = p1.equals(p2);
 			
@@ -7410,8 +7417,8 @@ public class Utils
 				
 				Rectangle rect = new Rectangle( 0, 0, p1.x + 10, p1.y + 10 );
 				
-				GCStringPrinter.printString( gc1, goodString, rect);
-				GCStringPrinter.printString( gc2, badString, rect );
+				GCStringPrinter.printString( gc1, str1, rect);
+				GCStringPrinter.printString( gc2, str2, rect );
 			
 				gc1.dispose();
 				
