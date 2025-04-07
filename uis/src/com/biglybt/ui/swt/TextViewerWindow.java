@@ -54,8 +54,9 @@ public class TextViewerWindow {
   private Button ok;
   private Button cancel;
   
-  private boolean	ok_is_apply;
-  private boolean	cancel_enabled;
+  private boolean	ok_is_apply		= false;
+  private boolean	ok_enabled		= true;
+  private boolean	cancel_enabled	= false;
   
   private Font	np_font;
   
@@ -307,6 +308,8 @@ public class TextViewerWindow {
 		  ok = new Button(buttonArea, SWT.PUSH);
 	  }
 	  
+	  ok.setEnabled( ok_enabled );
+	  
 	  ok.setText(MessageText.getString( ok_is_apply?"Button.apply":"Button.ok"));
 
 	  Utils.makeButtonsEqualWidth( Arrays.asList( refresh, ok, cancel ));
@@ -442,7 +445,9 @@ public class TextViewerWindow {
   setOKEnabled(
 	boolean	enabled )
   {
-	  ok.setEnabled( enabled );
+	  ok_enabled = enabled;
+	  
+	  ok.setEnabled( ok_enabled );
   }
   
   public void
