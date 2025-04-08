@@ -7,5 +7,5 @@ Icon=${installer:dir.main}/biglybt.svg
 Terminal=false
 Type=Application
 MimeType=x-scheme-handler/magnet;application/x-bittorrent;application/x-biglybt;x-scheme-handler/biglybt;
-Categories=Application;Network;FileTransfer;P2P;GTK;Java;
+Categories=Network;FileTransfer;P2P;GTK;Java;
 StartupWMClass=BiglyBT
