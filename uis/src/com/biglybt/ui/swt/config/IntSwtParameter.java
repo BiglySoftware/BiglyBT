@@ -36,6 +36,7 @@ import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.widgets.LabelWithMinMaxWidth;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
@@ -218,6 +219,13 @@ public class IntSwtParameter
 
 		if (doGridData(composite)) {
 			GridData gridData = new GridData();
+			
+				// without a width hint small min/max values result in a messy look due to varying widths
+			
+			if ( minValue > -100000 || maxValue < 100000 ){
+				int w = (int) (FontUtils.getCharacterWidth(spinner.getFont()) * 8);
+				gridData.widthHint=w;
+			}
 			spinner.setLayoutData(gridData);
 		}
 
