@@ -955,6 +955,21 @@ public class Utils
 		return( 100 );
 	}
 	
+	public static int
+	getNativeDeviceZoom()
+	{
+		if ( hasDPIUtils ){
+			
+			try{
+				return( DPIUtil.getNativeDeviceZoom());
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+		
+		return( 100 );
+	}
 	public static void
 	setUIVisible(
 		boolean	visible )

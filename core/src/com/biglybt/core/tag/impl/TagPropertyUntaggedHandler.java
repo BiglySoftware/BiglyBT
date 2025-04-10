@@ -205,7 +205,10 @@ TagPropertyUntaggedHandler
 								
 								if ( time != null && SystemTime.getMonotonousTime() - time < 5000 ){
 									
-									Debug.out( "Addition ignored as pending removal" );
+									if ( Constants.IS_CVS_VERSION ){
+
+										Debug.out( "Taggable '" + tagged.getTaggableName() + "' add to '" + tag.getTagName( true ) + "' ignored as pending removal" );
+									}
 									
 									return;
 								}
