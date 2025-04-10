@@ -51,7 +51,6 @@ import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
@@ -72,7 +71,6 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
-import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.platform.PlatformManager;
@@ -114,20 +112,51 @@ import com.biglybt.pif.utils.PooledByteBuffer;
  */
 public class Utils
 {
-	static final boolean hasDPIUtils;
+	static final Method		method_DPIUTIL_getDeviceZoom;
+	static final Method		method_DPIUTIL_getNativeDeviceZoom;
 	
 	static {
 			// osx 10.7 only runs on older swt and that doesn't have DPIUtil
 		
-		boolean ok = false;
-		try {
-			DPIUtil.getDeviceZoom();
-			
-			ok = true;
+		Method	m1	= null;
+		Method	m2	= null;
+		
+		try{
+			try{
+				Class<?> claDPIUtil = Class.forName("org.eclipse.swt.internal.DPIUtil");
+				
+				try{
+					m1 = claDPIUtil.getMethod( "getDeviceZoom" );
+					
+				}catch( Throwable e ){
+					
+					if ( Constants.IS_CVS_VERSION ){
+						
+						Debug.out( "DPIUtil::getDeviceZoom unavailable" );
+					}
+				}
+				
+				if ( SWT.getVersion() >= 4968 ){
+					
+					try{
+						m2 = claDPIUtil.getMethod( "getNativeDeviceZoom" );
+						
+					}catch( Throwable e ){
+						
+						if ( Constants.IS_CVS_VERSION ){
+							
+							Debug.out( "DPIUtil::getNativeDeviceZoom unavailable" );
+						}
+					}
+				}
+				
+			}catch( Throwable e ){
+			}
 		}catch( Throwable e ) {
-			
 		}
-		hasDPIUtils = ok;
+				
+		method_DPIUTIL_getDeviceZoom		= m1;
+		method_DPIUTIL_getNativeDeviceZoom	= m2;
 	}
 	
 	public static final String GOOD_STRING = "(/|,jI~`gy";
@@ -948,8 +977,16 @@ public class Utils
 	public static int
 	getDeviceZoom()
 	{
-		if ( hasDPIUtils ) {
-			return( DPIUtil.getDeviceZoom());
+		if ( method_DPIUTIL_getDeviceZoom != null ){
+			
+			try{
+		
+				Integer res = (Integer)method_DPIUTIL_getDeviceZoom.invoke( null );
+				
+				return( res );
+				
+			}catch( Throwable e ){
+			}
 		}
 		
 		return( 100 );
@@ -958,13 +995,15 @@ public class Utils
 	public static int
 	getNativeDeviceZoom()
 	{
-		if ( hasDPIUtils ){
+		if ( method_DPIUTIL_getNativeDeviceZoom != null ){
 			
 			try{
-				return( DPIUtil.getNativeDeviceZoom());
+		
+				Integer res = (Integer)method_DPIUTIL_getNativeDeviceZoom.invoke( null );
+				
+				return( res );
 				
 			}catch( Throwable e ){
-				
 			}
 		}
 		

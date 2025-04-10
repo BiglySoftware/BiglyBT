@@ -26,13 +26,12 @@ import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
 import com.biglybt.platform.win32.access.AEWin32Manager;
 import com.biglybt.platform.win32.access.impl.AEWin32AccessInterface;
-
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.core.drivedetector.DriveDetectedInfo;
 import com.biglybt.core.drivedetector.DriveDetector;
 import com.biglybt.core.drivedetector.DriveDetectorFactory;
@@ -350,7 +349,7 @@ public class Win32UIEnhancer
 		  				null,
 		  				SWT.ICON,
 		  				fldHIcon.getLong(shfi),
-		  				DPIUtil.getNativeDeviceZoom()
+		  				Utils.getNativeDeviceZoom()
 		  			});
   			}else{
 	  			image = (Image) mImage_win32_new.invoke(null, new Object[] {
