@@ -31,7 +31,7 @@ else
 	
 	for i in "${!PARAMS[@]}"; do
 		if [ "${PARAMS[$i]}" = "updateonly" ] || [ "${PARAMS[$i]}" = "restart" ]; then
-			PARAM_IDX_APPPATH=$(( $i + 1 ))
+			PARAM_IDX_APPPATH=$(( i + 1 ))
 			break
 		fi
 	done
@@ -69,7 +69,7 @@ fi
 
 for i in "${!PARAMS[@]}"; do
 	if [ "${PARAMS[$i]}" = "updateonly" ] || [ "${PARAMS[$i]}" = "restart" ]; then
-		PARAM_IDX_USERPATH=$(( $i + 2 ))
+		PARAM_IDX_USERPATH=$(( i + 2 ))
 		break
 	fi
 done
