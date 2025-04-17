@@ -19,8 +19,8 @@ fi
 if [ $ISRERUN -eq 1 ]; then
 	PARAMS=( "${@:3}" )
 else
-	SCRIPT=`realpath $0`
-	SCRIPTPATH=`dirname $SCRIPT`
+	SCRIPT=$(realpath $0)
+	SCRIPTPATH=$(dirname $SCRIPT)
 
 	if [ "$1" = "" ]; then
 		# No params were passed in, make ones up
