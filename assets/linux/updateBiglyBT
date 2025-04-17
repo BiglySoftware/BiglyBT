@@ -51,8 +51,7 @@ else
 			fi
 		
 			echo Running as root..
-			$CMD "$SCRIPT" "rerun" "{USER" "${PARAMS[@]}"
-			if [ $? -ne 0 ]; then
+			if ! $CMD "$SCRIPT" "rerun" "$USER" "${PARAMS[@]}"; then
 				echo "Could not run with $CMD. Trying one more time with sudo"
 				sudo "$SCRIPT" "rerun" "$USER" "${PARAMS[@]}"
 			fi
