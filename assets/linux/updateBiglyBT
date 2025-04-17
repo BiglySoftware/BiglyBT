@@ -19,8 +19,8 @@ fi
 if [ $ISRERUN -eq 1 ]; then
 	PARAMS=( "${@:3}" )
 else
-	SCRIPT=$(realpath $0)
-	SCRIPTPATH=$(dirname $SCRIPT)
+	SCRIPT=$(realpath "$0")
+	SCRIPTPATH=$(dirname "$SCRIPT")
 
 	if [ "$1" = "" ]; then
 		# No params were passed in, make ones up
@@ -50,15 +50,15 @@ else
 				CMD="sudo"
 			else
 				echo "Can't get write access to ${PARAMS[${PARAM_IDX_APPPATH}]}"
-				echo "Please run ${SCRIPT} with higher access level"
+				echo "Please run $SCRIPT with higher access level"
 				exit 1
 			fi
 		
 			echo Running as root..
-			$CMD $SCRIPT "rerun" "${USER}" ${PARAMS[@]}
+			$CMD "$SCRIPT" "rerun" "{USER" "${PARAMS[@]}"
 			if [ $? -ne 0 ]; then
-				echo "Could not run with ${CMD}. Trying one more time with sudo"
-				sudo $SCRIPT "rerun" "${USER}" ${PARAMS[@]}
+				echo "Could not run with $CMD. Trying one more time with sudo"
+				sudo "$SCRIPT" "rerun" "$USER" "${PARAMS[@]}"
 			fi
 			exit
 		fi
@@ -75,11 +75,11 @@ for i in "${!PARAMS[@]}"; do
 done
 
 echo Running Updater..
-java -cp "${PARAMS[${PARAM_IDX_USERPATH}]}/plugins/azupdater/Updater.jar" ${PARAMS[@]}
+java -cp "${PARAMS[${PARAM_IDX_USERPATH}]}/plugins/azupdater/Updater.jar" "${PARAMS[@]}"
 
 if [ $ISRERUN -eq 1 ]; then
-	echo Ensuring $2 still owns ${PARAMS[${PARAM_IDX_USERPATH}]}
-	chown -R $2:$2 ${PARAMS[${PARAM_IDX_USERPATH}]}
+	echo Ensuring "$2" still owns "${PARAMS[${PARAM_IDX_USERPATH}]}"
+	chown -R "$2":"$2" "${PARAMS[${PARAM_IDX_USERPATH}]}"
 fi
 
 echo Done
