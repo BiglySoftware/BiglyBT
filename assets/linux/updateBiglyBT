@@ -60,7 +60,7 @@ if [[ ! $ISRERUN ]]; then
 fi
 
 for i in "${!PARAMS[@]}"; do
-	if [ "${PARAMS[$i]}" = "updateonly" ] || [ "${PARAMS[$i]}" = "restart" ]; then
+	if [[ "${PARAMS[$i]}" = "updateonly" || "${PARAMS[$i]}" = "restart" ]]; then
 		PARAM_IDX_USERPATH=$(( i + 2 ))
 		break
 	fi
