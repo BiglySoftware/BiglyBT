@@ -18,7 +18,7 @@ if [[ ! $ISRERUN ]]; then
 	SCRIPT=$(realpath "$0")
 	SCRIPTPATH=$(dirname "$SCRIPT")
 
-	if [ "$1" = "" ]; then
+	if [[ ! "$1" ]]; then
 		# No params were passed in, make ones up
 		PARAMS=( "com.biglybt.update.Updater" "updateonly" "${SCRIPTPATH}" "${HOME}/.biglybt" )
 	fi
