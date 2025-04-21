@@ -2638,7 +2638,7 @@ public class FileUtil {
     private static String[]			fs_names			= null;
     private static long				fs_names_last		= -1;
     private static Object			fs_names_lock		= new Object();
-    private static AsyncDispatcher	fs_names_dispatcher = new AsyncDispatcher();
+    private static AsyncDispatcher	fs_names_dispatcher = null; // can't initialise this here due to dependencies (e.g. in "portable BiglyBT setup")... new AsyncDispatcher();
     
     private static boolean			fs_updating;
     
@@ -2659,6 +2659,11 @@ public class FileUtil {
     	boolean	do_update			= false;
     	
     	synchronized( fs_names_lock ){
+    		
+    		if ( fs_names_dispatcher == null ){
+    			
+    			fs_names_dispatcher = new AsyncDispatcher();
+    		}
     		
     		existing_result = fs_names;
     		

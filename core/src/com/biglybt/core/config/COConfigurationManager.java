@@ -57,6 +57,7 @@ COConfigurationManager
 	public static final int	MAX_DATA_SOCKS_PROXIES = 3;
 	
 	private static boolean	pre_initialised;
+	private static boolean	pre_initialising;
 
 	public static synchronized void
 	preInitialise()
@@ -66,6 +67,8 @@ COConfigurationManager
 			pre_initialised	= true;
 
 			try{
+				pre_initialising = true;
+				
 				if ( System.getProperty(SystemProperties.SYSPROP_PORTABLE_ENABLE, "false" ).equalsIgnoreCase( "true" )){
 
 					try{
@@ -261,7 +264,14 @@ COConfigurationManager
 			}catch( Throwable e ){
 
 				e.printStackTrace();
+				
+			}finally{
+				
+				pre_initialising = false;
 			}
+		}else if ( pre_initialising ){
+			
+			new Exception( "Recursion during pre-init" ).printStackTrace();
 		}
 	}
 
