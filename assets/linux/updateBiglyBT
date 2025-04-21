@@ -47,7 +47,7 @@ if [[ ! $ISRERUN ]]; then
 				exit 1
 			fi
 		
-			echo Running as root..
+			echo "Running as root..."
 			if ! $CMD "$SCRIPT" "rerun" "$USER" "${PARAMS[@]}"; then
 				echo "Could not run with $CMD. Trying one more time with sudo"
 				sudo "$SCRIPT" "rerun" "$USER" "${PARAMS[@]}"
@@ -66,11 +66,11 @@ for i in "${!PARAMS[@]}"; do
 	fi
 done
 
-echo Running Updater..
+echo "Running Updater..."
 java -cp "${PARAMS[${PARAM_IDX_USERPATH}]}/plugins/azupdater/Updater.jar" "${PARAMS[@]}"
 
 if [[ $ISRERUN ]]; then
-	echo Ensuring "$2" still owns "${PARAMS[${PARAM_IDX_USERPATH}]}"
+	echo "Ensuring $2 still owns ${PARAMS[${PARAM_IDX_USERPATH}]}"
 	chown -R "$2":"$2" "${PARAMS[${PARAM_IDX_USERPATH}]}"
 fi
 
