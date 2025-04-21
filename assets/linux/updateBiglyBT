@@ -34,8 +34,7 @@ else
 
 	if [ ! -w "${PARAMS[${PARAM_IDX_APPPATH}]}" ]; then
 		# Can't write to appdir, going to need super user
-	
-		if [ "$EUID" -ne 0 ]; then
+		if (( EUID != 0 )); then
 			if exists "pkexec"; then
 				CMD="pkexec"
 			elif exists "gksudo"; then
