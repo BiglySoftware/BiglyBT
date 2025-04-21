@@ -10,19 +10,17 @@ exists () {
   type "$1" >/dev/null 2>/dev/null
 }
 
+declare PARAMS=( "${@:3}" )
 [[ "$1" = "rerun" ]] && declare -ri ISRERUN=1
 
-if [[ $ISRERUN ]]; then
-	PARAMS=( "${@:3}" )
-else
+
+if [[ ! $ISRERUN ]]; then
 	SCRIPT=$(realpath "$0")
 	SCRIPTPATH=$(dirname "$SCRIPT")
 
 	if [ "$1" = "" ]; then
 		# No params were passed in, make ones up
 		PARAMS=( "com.biglybt.update.Updater" "updateonly" "${SCRIPTPATH}" "${HOME}/.biglybt" )
-	else
-		PARAMS=( "${@}" )
 	fi
 	
 	for i in "${!PARAMS[@]}"; do
