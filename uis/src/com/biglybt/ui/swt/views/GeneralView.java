@@ -620,6 +620,7 @@ public class GeneralView
 	    		new DateWindow( 
 	    			"label.enter.date", 
 	    			millis,
+	    			false,
 	    			new DateWindow.DateReceiver(){
 						
 						@Override

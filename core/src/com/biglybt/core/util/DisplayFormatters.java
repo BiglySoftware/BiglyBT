@@ -683,6 +683,13 @@ DisplayFormatters
     private static final SimpleDateFormat ydmhm_df = new SimpleDateFormat( "yyyy/MM/dd HH:mm" );
 
     public static String
+    formatDateYMDHMS(
+    	long		time )
+    {
+    	return( abs_df.format(new Date(time)));
+    }
+    
+    public static String
     formatDateYMDHM(
     	long		time )
     {

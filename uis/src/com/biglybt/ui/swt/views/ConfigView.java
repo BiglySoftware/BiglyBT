@@ -1802,6 +1802,11 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 				swt_param = new DirectorySwtParameter(curComposite,
 						(DirectoryParameterImpl) param);
 
+			} else if (param instanceof DateTimeParameterImpl) {
+
+				swt_param = new DateTimeSwtParameter(curComposite,
+						(DateTimeParameterImpl) param);
+
 			} else if (param instanceof ActionParameterImpl) {
 
 				ActionParameterImpl _param = (ActionParameterImpl) param;

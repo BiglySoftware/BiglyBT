@@ -32,15 +32,17 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.mainwindow.Colors;
 
 public class DateWindow {
   private Shell 	shell;
 
   public
   DateWindow(
-		  String 		sTitleID,
-		  long			current,
-		  DateReceiver	receiver )
+	  String 		sTitleID,
+	  long			current,
+	  boolean		doTime,
+	  DateReceiver	receiver )
   {
    	shell = ShellFactory.createMainShell(SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MAX );
 
@@ -53,16 +55,29 @@ public class DateWindow {
     shell.setLayout(layout);
 
     DateTime calendar = new DateTime(shell, SWT.CALENDAR | SWT.LONG );
+    DateTime time;
     GridData gridData = new GridData(GridData.FILL_BOTH);
     calendar.setLayoutData(gridData);
-
+    if ( doTime ){
+    	time = new DateTime(shell, SWT.TIME | SWT.LONG );
+	    gridData = new GridData(GridData.FILL_HORIZONTAL);
+	    time.setLayoutData(gridData);
+    }else{
+    	time = null;
+    }
+    
     if ( current >= 0 ){
     	GregorianCalendar cal = new GregorianCalendar();
     	cal.setTimeInMillis( current );
     	
     	calendar.setDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+    	
+    	if ( time != null ){
+    		
+    		time.setTime(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+    	}
     }
-    
+      
     Composite panel = new Composite(shell, SWT.NULL);
     final RowLayout rLayout = new RowLayout();
     rLayout.marginTop = 0;
@@ -87,7 +102,14 @@ public class DateWindow {
        public void handleEvent(Event event) {
         	GregorianCalendar cal = new GregorianCalendar( calendar.getYear(), calendar.getMonth(), calendar.getDay());
        
-        	receiver.dateSelected(cal.getTimeInMillis());
+        	long millis = cal.getTimeInMillis();
+        	
+        	if ( time != null ){
+        		
+        		millis += ( time.getHours()*60*60 + time.getMinutes()*60 + time.getSeconds())*1000;
+        	}
+        	
+        	receiver.dateSelected(millis);
         	
             shell.dispose();
        }

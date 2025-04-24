@@ -23,6 +23,7 @@ package com.biglybt.pif;
 import java.util.List;
 import java.util.Properties;
 
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.pifimpl.local.PluginManagerDefaultsImpl;
 import com.biglybt.pifimpl.local.PluginManagerImpl;
 
@@ -257,10 +258,10 @@ PluginManager
 	public abstract boolean
 	isInitialized();
 
-	public static final String	CA_QUIT_VUZE	= "QuitVuze";
-	public static final String	CA_SLEEP		= "Sleep";
-	public static final String	CA_HIBERNATE	= "Hibernate";
-	public static final String	CA_SHUTDOWN		= "Shutdown";
+	public static final String	CA_QUIT_VUZE	= ConfigKeys.CA_QUIT_VUZE;
+	public static final String	CA_SLEEP		= ConfigKeys.CA_SLEEP;
+	public static final String	CA_HIBERNATE	= ConfigKeys.CA_HIBERNATE;
+	public static final String	CA_SHUTDOWN		= ConfigKeys.CA_SHUTDOWN;
 
 	/**
 	 * @since 5701

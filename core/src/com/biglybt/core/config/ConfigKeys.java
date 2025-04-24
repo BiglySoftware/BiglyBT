@@ -23,6 +23,12 @@ import com.biglybt.core.config.impl.ConfigurationDefaults;
 public final class ConfigKeys {
 	public static final String ICFG_USER_MODE = "User Mode";
 
+	public static final String	CA_NOTHING		= "Nothing";
+	public static final String	CA_QUIT_VUZE	= "QuitVuze";
+	public static final String	CA_SLEEP		= "Sleep";
+	public static final String	CA_HIBERNATE	= "Hibernate";
+	public static final String	CA_SHUTDOWN		= "Shutdown";
+
 	public static class BackupRestore {
 		public static final String BCFG_BACKUP_AUTO_ENABLE = "br.backup.auto.enable";
 		public static final String SCFG_BACKUP_AUTO_DIR = "br.backup.auto.dir";
@@ -308,6 +314,9 @@ public final class ConfigKeys {
 		public static final String BCFG_PAUSE_DOWNLOADS_ON_EXIT = "Pause Downloads On Exit";
 		public static final String BCFG_RESUME_DOWNLOADS_ON_START = "Resume Downloads On Start";
 		public static final String BCFG_STOP_TRIGGERS_AUTO_RESET = "Stop Triggers Auto Reset";
+		public static final String ICFG_STOP_DATE_TIME = "Stop Explicit Date Time";
+		public static final String SCFG_STOP_DATE_TIME_DO = "Stop Explicit Do";
+		public static final String SCFG_STOP_DATE_TIME_SCRIPT = "Stop Explicit Script";
 		public static final String BCFG_PROMPT_TO_ABORT_SHUTDOWN = "Prompt To Abort Shutdown";
 		public static final String ICFG_STOP_FORCE_TERMINATE_AFTER = "Force Terminate After Mins";
 		public static final String ICFG_AUTO_RESTART_WHEN_IDLE = "Auto Restart When Idle";

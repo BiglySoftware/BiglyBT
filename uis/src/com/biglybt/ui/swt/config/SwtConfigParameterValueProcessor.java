@@ -47,6 +47,7 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 	private static final Class<?>[] VALID_CLASSES = new Class[] {
 		String.class,
 		Integer.class,
+		Long.class,
 		Boolean.class,
 		byte[].class,
 		Float.class
@@ -106,8 +107,7 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 		} else if (Float.class.equals(valueType)) {
 			return (VALUETYPE) (Float) COConfigurationManager.getFloatParameter(key);
 		} else if (Boolean.class.equals(valueType)) {
-			return (VALUETYPE) (Boolean) COConfigurationManager.getBooleanParameter(
-					key);
+			return (VALUETYPE) (Boolean) COConfigurationManager.getBooleanParameter(key);
 		} else if (Long.class.equals(valueType)) {
 			return (VALUETYPE) (Long) COConfigurationManager.getLongParameter(key);
 		} else if (byte[].class.equals(valueType)) {

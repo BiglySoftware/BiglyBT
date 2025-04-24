@@ -2459,6 +2459,7 @@ CoreImpl
 			new String[]{
 					"On Downloading Complete Do",
 					"On Seeding Complete Do",
+					ConfigKeys.StartupShutdown.ICFG_STOP_DATE_TIME,
 					"Auto Restart When Idle"
 			},
 			new ParameterListener()
@@ -2472,6 +2473,8 @@ CoreImpl
 				{
 					String	dl_act = COConfigurationManager.getStringParameter( "On Downloading Complete Do" );
 					String	se_act = COConfigurationManager.getStringParameter( "On Seeding Complete Do" );
+
+					long	close_timer = COConfigurationManager.getLongParameter( ConfigKeys.StartupShutdown.ICFG_STOP_DATE_TIME );
 										
 					int		restart_after = COConfigurationManager.getIntParameter( "Auto Restart When Idle" );
 
@@ -2490,7 +2493,7 @@ CoreImpl
 							ca_last_time_seeding	= -1;
 						}
 
-						if ( dl_nothing && se_nothing && restart_after == 0 ){
+						if ( dl_nothing && se_nothing && close_timer <= 0 &&  restart_after == 0 ){
 
 							if ( timer_event != null ){
 
@@ -2939,7 +2942,7 @@ CoreImpl
 
 			if ( ca_last_time_downloading >= 0 && !is_downloading && now - ca_last_time_downloading >= 30*1000 ){
 
-				executeInternalCloseAction( true, true, dl_act, null );
+				executeInternalCloseAction( true, TT_DOWNLOADING, dl_act, null );
 			}
 		}
 
@@ -2949,8 +2952,22 @@ CoreImpl
 
 			if ( ca_last_time_seeding >= 0 && !is_seeding && now - ca_last_time_seeding >= 30*1000 ){
 
-				executeInternalCloseAction( true, false, se_act, null );
+				executeInternalCloseAction( true, TT_SEEDING, se_act, null );
 			}
+		}
+		
+		long	close_timer = COConfigurationManager.getLongParameter( ConfigKeys.StartupShutdown.ICFG_STOP_DATE_TIME );
+
+		if ( close_timer > 0 && close_timer <= SystemTime.getCurrentTime()){
+			
+				// always reset as if the user aborts we don't want to be immediately 
+				// re-triggering
+			
+			COConfigurationManager.setParameter( ConfigKeys.StartupShutdown.ICFG_STOP_DATE_TIME, 0 );
+			
+			String	ti_act = COConfigurationManager.getStringParameter( ConfigKeys.StartupShutdown.SCFG_STOP_DATE_TIME_DO );
+			
+			executeInternalCloseAction( true, TT_TIMER, ti_act, null );
 		}
 	}
 
@@ -2960,13 +2977,13 @@ CoreImpl
 		String		action,
 		String		reason )
 	{
-		executeInternalCloseAction( false, false, action, reason );
+		executeInternalCloseAction( false, TT_INTERNAL, action, reason );
 	}
 
 	private void
 	executeInternalCloseAction(
 		final boolean	obey_reset,
-		final boolean	download_trigger,
+		final int		trigger_type,
 		final String	action,
 		final String	reason )
 	{
@@ -2975,7 +2992,7 @@ CoreImpl
 		ca_last_time_downloading	= -1;
 		ca_last_time_seeding		= -1;
 
-		String type_str		= reason==null?MessageText.getString( download_trigger?"core.shutdown.dl":"core.shutdown.se"):reason;
+		String type_str		= reason==null?MessageText.getString( TT_RES_IDS[trigger_type]):reason;
 		String action_str 	= MessageText.getString( "ConfigView.label.stop." + action );
 
 		String message =
@@ -3020,13 +3037,25 @@ CoreImpl
 			}
 		}
 
-		executeCloseActionSupport( obey_reset, download_trigger, action, reason );
+		executeCloseActionSupport( obey_reset, trigger_type, action, reason );
 	}
 
+	static final int TT_DOWNLOADING	= 0;
+	static final int TT_SEEDING		= 1;
+	static final int TT_TIMER		= 2;
+	static final int TT_INTERNAL	= 3;
+	
+	static final String[] TT_RES_IDS = {
+			"core.shutdown.dl",
+			"core.shutdown.se",
+			"core.shutdown.ti",
+			"core.shutdown.in" 
+	};
+			
 	private void
 	executeCloseActionSupport(
 		final boolean	obey_reset,
-		final boolean	download_trigger,
+		final int		trigger_type,
 		final String	action,
 		final String	reason )
 	{
@@ -3039,11 +3068,11 @@ CoreImpl
 
 		if ( reset ){
 
-			if ( download_trigger ){
+			if ( trigger_type ==  TT_DOWNLOADING ){
 
 				COConfigurationManager.setParameter( "On Downloading Complete Do", "Nothing" );
 
-			}else{
+			}else if (  trigger_type ==  TT_SEEDING ){
 
 				COConfigurationManager.setParameter( "On Seeding Complete Do", "Nothing" );
 			}
@@ -3058,7 +3087,22 @@ CoreImpl
 				public void
 				runSupport()
 				{
-					Logger.log( new LogEvent(LOGID, "Executing close action '" + action + "' due to " + (download_trigger?"downloading":"seeding") + " completion" ));
+					String trigger_str;
+					
+					if ( trigger_type == TT_TIMER ){
+						
+						trigger_str = "timer expiry";
+						
+					}else if ( trigger_type == TT_INTERNAL ){
+						
+						trigger_str = "internal event";
+						
+					}else{
+					
+						trigger_str = (trigger_type==TT_DOWNLOADING?"downloading":"seeding") + " completion";
+					}
+					
+					Logger.log( new LogEvent(LOGID, "Executing close action '" + action + "' due to " + trigger_str ));
 
 						// quit vuze -> quit
 						// shutdown computer -> quit vuze + shutdown
@@ -3091,16 +3135,24 @@ CoreImpl
 
 						String script;
 
-						if ( download_trigger ){
+						if ( trigger_type ==  TT_DOWNLOADING ){
 
 							script = COConfigurationManager.getStringParameter( "On Downloading Complete Script", "" );
 
-						}else{
+						}else if (  trigger_type ==  TT_SEEDING ){
 
 							script = COConfigurationManager.getStringParameter( "On Seeding Complete Script", "" );
+							
+						}else if (  trigger_type ==  TT_TIMER ){
+							
+							script = COConfigurationManager.getStringParameter( ConfigKeys.StartupShutdown.SCFG_STOP_DATE_TIME_SCRIPT, "" );
+							
+						}else{
+							
+							script = "";
 						}
 
-						executeScript( script, action, download_trigger );
+						executeScript( script, action, trigger_type );
 
 					}else{
 
@@ -3116,7 +3168,7 @@ CoreImpl
 	executeScript(
 		String		script,
 		String		action,
-		boolean		download_trigger )
+		int			trigger_type )
 	{
 		String script_type = "";
 
@@ -3191,7 +3243,7 @@ CoreImpl
 
 						bindings.put( "intent", intent );
 
-						bindings.put( "is_downloading_complete", download_trigger);
+						bindings.put( "is_downloading_complete", (trigger_type==TT_DOWNLOADING ));
 
 						p.eval( script, bindings );
 

@@ -4570,8 +4570,16 @@ public class Utils
 	makeButtonsEqualWidth(
 		List<Button>	buttons )
 	{
-		int width = 75;
-
+		makeButtonsEqualWidth( buttons, 75 );
+	}
+	
+	public static void
+	makeButtonsEqualWidth(
+		List<Button>	buttons,
+		int				min )
+	{
+		int width = min;
+		
 		for ( Button button: buttons ){
 
 			if ( button != null ){

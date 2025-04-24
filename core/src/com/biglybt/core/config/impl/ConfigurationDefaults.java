@@ -290,9 +290,12 @@ public class ConfigurationDefaults {
 
     def.put("Pause Downloads On Exit", FALSE );
     def.put("Resume Downloads On Start", FALSE );
-    def.put("On Downloading Complete Do", "Nothing" );
-    def.put("On Seeding Complete Do", "Nothing" );
+    def.put("On Downloading Complete Do", ConfigKeys.CA_NOTHING );
+    def.put("On Seeding Complete Do", ConfigKeys.CA_NOTHING );
     def.put("Stop Triggers Auto Reset", TRUE );
+    def.put( ConfigKeys.StartupShutdown.ICFG_STOP_DATE_TIME, 0 );
+    def.put( ConfigKeys.StartupShutdown.SCFG_STOP_DATE_TIME_DO, ConfigKeys.CA_QUIT_VUZE );
+    
     def.put( ConfigKeys.StartupShutdown.ICFG_STOP_FORCE_TERMINATE_AFTER, 2 );
     def.put("Prompt To Abort Shutdown", TRUE );
     def.put("Prevent Sleep Downloading", TRUE );

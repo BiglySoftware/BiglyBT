@@ -598,7 +598,7 @@ public class ViewQuickConfig
 			Composite		comp,
 			boolean			include_script_setting )
 	{
-		String[][]	action_details = ConfigSectionStartShutdown.getActionDetails();
+		String[][]	action_details = ConfigSectionStartShutdown.getActionDetails( false );
 
 		StringListSwtParameter dc = new StringListSwtParameter(comp,
 				"On Downloading Complete Do", "ConfigView.label.stop.downcomp", null,
