@@ -65,6 +65,28 @@ PEPeerSource
 			PS_HOLE_PUNCH,
 	};
 
+	public static String
+	internalise(
+		String	str )
+	{
+		if ( str == null ){
+
+			return( null );
+
+		}else{
+
+			for ( String ps: PS_SOURCES ){
+
+				if ( str.equalsIgnoreCase( ps )){
+
+					return( ps );
+				}
+			}
+		}
+
+		return( null );
+	}
+	
 	public static boolean
 	isPeerSourceEnabledByDefault(
 		String	ps )

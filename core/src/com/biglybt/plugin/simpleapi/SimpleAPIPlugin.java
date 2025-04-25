@@ -40,6 +40,7 @@ import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManager;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
@@ -853,6 +854,87 @@ SimpleAPIPlugin
 					}
 					
 					dm.getDownloadState().setNetworks( nets );
+				}
+			}else if ( method.equals( "setpeersources" )){
+				
+				DownloadManager dm = getDownloadFromHash( args );
+
+				DownloadManagerState dms = dm.getDownloadState();
+				
+				String peersources	= args.get( "peersources" );
+									
+				if ( peersources == null ){
+			
+					throw( new Exception( "missing parameter" ));
+				}
+	
+				peersources = peersources.trim();
+				
+				if ( peersources.isEmpty()){
+					
+					dms.setPeerSources( new String[0] );
+					
+				}else if ( peersources.equalsIgnoreCase( "all" )){
+					
+					dms.setPeerSources( PEPeerSource.PS_SOURCES );
+					
+				}else{
+					
+					String[] bits = peersources.split( "," );
+					
+					List<String> pss = new ArrayList<>();
+						
+					boolean has_b = false;
+					
+					for ( int i=0;i<bits.length;i++){
+						
+						String bit = bits[i].trim();
+					
+						Boolean b = null;
+						
+						if ( bit.startsWith( "+" )){
+						
+							b = true;
+							
+						}else if ( bit.startsWith( "-" )){
+							
+							b = false;
+						}
+						
+						if ( b != null ){
+							
+							bit = bit.substring(1);
+							
+							has_b = true;
+						}
+						
+						String ps = PEPeerSource.internalise( bit );
+						
+						if ( ps == null ){
+							
+							throw( new Exception( "Invalid peer source (" + bit + ")" ));
+						}
+						
+						if ( b != null ){
+							
+							dms.setPeerSourceEnabled( ps, b );
+							
+						}else{
+						
+							pss.add( ps );
+						}
+					}
+					
+					if ( has_b ){
+						
+						if (!pss.isEmpty()){
+						
+							throw( new Exception( "Unsupported peer source options" ));
+						}
+					}else{
+					
+						dms.setPeerSources( pss.toArray( new String[0]));
+					}
 				}
 			}else if ( method.equals( "setdownloadattribute" )){
 				
