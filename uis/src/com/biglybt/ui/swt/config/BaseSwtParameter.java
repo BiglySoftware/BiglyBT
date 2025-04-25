@@ -300,11 +300,10 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				
 				if (!c.isDisposed()) {
 					c.setEnabled(enabled);
-					//noinspection ConstantConditions
-					if (c.getClass().equals(Composite.class)) {
-						// for the color of the fancy indent
-						c.redraw();
-					}
+				}
+				
+				if ( fancyPaintListener != null ){
+					fancyPaintListener.redraw();
 				}
 			}
 		});
@@ -720,7 +719,7 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 		});
 	}
 
-	protected static class IndentPaintListener
+	protected class IndentPaintListener
 		implements Listener
 	{
 		private final Control control;
@@ -752,6 +751,14 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 			Utils.execSWTThread(() -> parent.removeListener(SWT.Paint, this));
 		}
 
+		protected void
+		redraw()
+		{
+			if ( !parent.isDisposed()){
+				
+				parent.redraw();
+			}
+		}
 		@Override
 		public void handleEvent(Event event) {
 			if (parent == null || control.isDisposed()) {
@@ -778,8 +785,20 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				3,
 				2
 			});
-			gc.setForeground(display.getSystemColor(parent.isEnabled()
-					? SWT.COLOR_WIDGET_FOREGROUND : SWT.COLOR_WIDGET_LIGHT_SHADOW));
+			
+			boolean enabled = BaseSwtParameter.this.isEnabled();
+						
+			if ( Utils.isDarkAppearanceNativeWindows()){
+				
+				gc.setForeground(display.getSystemColor(enabled
+						? SWT.COLOR_WIDGET_LIGHT_SHADOW : SWT.COLOR_WIDGET_FOREGROUND));
+
+			}else{
+				
+				gc.setForeground(display.getSystemColor(enabled
+						? SWT.COLOR_WIDGET_FOREGROUND : SWT.COLOR_WIDGET_LIGHT_SHADOW));
+			}
+			
 			gc.drawLine(x, y, x, y2);
 			gc.drawLine(x, y2, x2, y2);
 
