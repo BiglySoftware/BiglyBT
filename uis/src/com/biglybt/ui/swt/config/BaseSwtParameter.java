@@ -797,7 +797,7 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				
 				gc.setForeground(
 					display.getSystemColor(
-						enabled?SWT.COLOR_WIDGET_FOREGROUND : (Utils.isDarkAppearanceNative()?SWT.COLOR_WIDGET_DISABLED_FOREGROUND:SWT.COLOR_WIDGET_LIGHT_SHADOW)));
+						enabled?SWT.COLOR_WIDGET_FOREGROUND : (Utils.isDarkAppearanceNative()?39/*SWT.COLOR_WIDGET_DISABLED_FOREGROUND*/:SWT.COLOR_WIDGET_LIGHT_SHADOW)));
 			}
 			
 			gc.drawLine(x, y, x, y2);
