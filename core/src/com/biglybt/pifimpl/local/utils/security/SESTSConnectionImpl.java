@@ -89,30 +89,23 @@ SESTSConnectionImpl
 					List<SESTSConnectionImpl>	to_close = new ArrayList<>();
 
 					synchronized( connections ){
-
+						
 						for (int i=0;i<connections.size();i++){
 
 							SESTSConnectionImpl connection = connections.get(i);
 
 							if ( connection.crypto_complete.isReleasedForever()){
-
+								
 								continue;
 							}
 
-							long	now = SystemTime.getCurrentTime();
+							long	now = SystemTime.getMonotonousTime();
 
-							if ( connection.create_time > now ){
+							int time_allowed = connection.getConnectMethodCount() * CRYPTO_SETUP_TIMEOUT;
 
-								connection.create_time = now;
+							if ( now - connection.create_time_mono > time_allowed ){
 
-							}else{
-
-								int time_allowed = connection.getConnectMethodCount() * CRYPTO_SETUP_TIMEOUT;
-
-								if ( now - connection.create_time > time_allowed ){
-
-									to_close.add( connection );
-								}
+								to_close.add( connection );
 							}
 						}
 					}
@@ -128,10 +121,10 @@ SESTSConnectionImpl
 
 	private static AsyncDispatcher	dispatcher = new AsyncDispatcher( "SESTSAsync" );
 	
-	private static final int			BLOOM_RECREATE				= 30*1000;
-	private static final int			BLOOM_INCREASE				= 500;
-	private static BloomFilter			generate_bloom				= BloomFilterFactory.createAddRemove4Bit(BLOOM_INCREASE);
-	private static long					generate_bloom_create_time	= SystemTime.getCurrentTime();
+	private static final int			BLOOM_RECREATE					= 30*1000;
+	private static final int			BLOOM_INCREASE					= 500;
+	private static BloomFilter			generate_bloom					= BloomFilterFactory.createAddRemove4Bit(BLOOM_INCREASE);
+	private static long					generate_bloom_create_time_mono	= SystemTime.getMonotonousTime();
 
 
 	private Core core;
@@ -141,7 +134,7 @@ SESTSConnectionImpl
 	private String							reason;
 	private int								block_crypto;
 
-	private long							create_time;
+	private final long						create_time_mono;
 
 	private CryptoSTSEngine	sts_engine;
 
@@ -159,7 +152,8 @@ SESTSConnectionImpl
 
 
 	private volatile boolean	failed;
-
+	private volatile boolean	closed;
+	
 	protected
 	SESTSConnectionImpl(
 		Core _core,
@@ -178,7 +172,7 @@ SESTSConnectionImpl
 		reason			= _reason;
 		block_crypto	= _block_crypto;
 
-		create_time = SystemTime.getCurrentTime();
+		create_time_mono = SystemTime.getMonotonousTime();
 
 		synchronized( connections ){
 
@@ -257,7 +251,7 @@ SESTSConnectionImpl
 
 			int	hit_count = generate_bloom.add( AddressUtils.getAddressBytes( originator ));
 
-			long	now = SystemTime.getCurrentTime();
+			long	now_mono = SystemTime.getMonotonousTime();
 
 				// allow up to 10% bloom filter utilisation
 
@@ -265,15 +259,15 @@ SESTSConnectionImpl
 
 				generate_bloom = BloomFilterFactory.createAddRemove4Bit(generate_bloom.getSize() + BLOOM_INCREASE );
 
-				generate_bloom_create_time	= now;
+				generate_bloom_create_time_mono	= now_mono;
 
 	     		Logger.log(	new LogEvent(LOGID, "STS bloom: size increased to " + generate_bloom.getSize()));
 
-			}else if ( now < generate_bloom_create_time || now - generate_bloom_create_time > BLOOM_RECREATE ){
+			}else if (now_mono - generate_bloom_create_time_mono > BLOOM_RECREATE ){
 
 				generate_bloom = BloomFilterFactory.createAddRemove4Bit(generate_bloom.getSize());
 
-				generate_bloom_create_time	= now;
+				generate_bloom_create_time_mono	= now_mono;
 			}
 
 			if ( hit_count >= 15 ){
@@ -709,6 +703,11 @@ SESTSConnectionImpl
 
 			crypto_complete.reserve();
 
+			if ( closed || failed ){
+				
+				throw( new MessageException( "Connection failed" ));
+			}
+			
 				// if the pending message couldn't be piggy backed it'll still be allocated
 
 			boolean	send_it = false;
@@ -889,12 +888,16 @@ SESTSConnectionImpl
 
 		throws MessageException
 	{
+		closed = true;
+		
 		synchronized( connections ){
 
 			connections.remove( this );
 		}
-
+		
 		connection.close();
+		
+		crypto_complete.releaseForever();
 	}
 
 	protected void
