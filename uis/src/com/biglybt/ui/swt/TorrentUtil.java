@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -5146,7 +5145,9 @@ public class TorrentUtil
 			if (dm == null) {
 				continue;
 			}
-			if ( PluginCoreUtils.wrap( dm ).canStubbify()){
+			Download dl = PluginCoreUtils.wrap( dm );
+			
+			if ( dl != null && dl.canStubbify()){
 				can_archive = true;
 			}
 		}
