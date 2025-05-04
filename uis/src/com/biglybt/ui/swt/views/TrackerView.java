@@ -290,6 +290,8 @@ public class TrackerView
 			}
 		}
 
+		DownloadManager dm = manager;
+
 		boolean	needs_sep = false;
 
 		boolean found_tracker = !found_trackers.isEmpty();
@@ -328,17 +330,17 @@ public class TrackerView
 			
 			if ( found_tracker ){
 
-				if ( manager != null ){
+				if ( dm != null ){
 					
 					boolean clearPeerCache = false;
 				
-					if ( !manager.getDownloadState().getTrackerResponseCache().isEmpty()){
+					if ( !dm.getDownloadState().getTrackerResponseCache().isEmpty()){
 						
 						clearPeerCache = true;
 						
 					}else{
 						
-						TRTrackerAnnouncer tc = manager.getTrackerClient();
+						TRTrackerAnnouncer tc = dm.getTrackerClient();
 						
 						if ( tc != null ){
 							
@@ -353,7 +355,7 @@ public class TrackerView
 					Messages.setLanguageText(itemClearPeerCache, "GeneralView.label.clearpeercache");
 					
 					itemClearPeerCache.addListener(SWT.Selection, (ev)->
-							manager.getDownloadState().clearTrackerResponseCache()
+							dm.getDownloadState().clearTrackerResponseCache()
 						);
 					
 					itemClearPeerCache.setEnabled(clearPeerCache);
@@ -372,7 +374,7 @@ public class TrackerView
 						run(
 							TableRowCore[] rows )
 						{
-							final TOTorrent torrent = manager.getTorrent();
+							final TOTorrent torrent = dm.getTorrent();
 
 							if (torrent != null) {
 
@@ -397,7 +399,7 @@ public class TrackerView
 														Debug.printStackTrace(e2);
 													}
 
-													TRTrackerAnnouncer tc = manager.getTrackerClient();
+													TRTrackerAnnouncer tc = dm.getTrackerClient();
 
 													if (tc != null) {
 
@@ -428,14 +430,14 @@ public class TrackerView
 				
 				MenuBuildUtils.addChatMenu( menu, "menu.discuss.tracker", tracker_key );
 						
-				TOTorrent torrent = manager.getTorrent();
+				TOTorrent torrent = dm.getTorrent();
 
 				edit_item.setEnabled( torrent != null && !TorrentUtils.isReallyPrivate( torrent ));
 			}
 
-			if ( found_http_seed && manager != null ){
+			if ( found_http_seed && dm != null ){
 				
-				TorrentUtil.addEditWebseeds(menu, new DownloadManager[]{ manager });
+				TorrentUtil.addEditWebseeds(menu, new DownloadManager[]{ dm });
 			}
 			
 			if ( found_trackers.size() == 1 ){
