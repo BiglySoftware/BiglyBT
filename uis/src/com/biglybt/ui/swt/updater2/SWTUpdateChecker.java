@@ -178,7 +178,11 @@ public class SWTUpdateChecker implements UpdatableComponent
 						            expected_dir = new File(expected_dir, "swt");
 					            }
 	
-					            if ( expected_dir.equals( jar_file_dir )){
+					            	// ancestor allowed to be ok as on unix, for example, the original
+					            	// jar file is in swt/J17 when Java 17+ detected
+					            
+					            if ( 	expected_dir.equals( jar_file_dir ) ||
+					            		FileUtil.isAncestorOf( expected_dir, jar_file_dir )){
 	
 			        	    			// everything looks ok
 	
