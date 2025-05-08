@@ -968,7 +968,8 @@ BuddyPluginBuddy
 	{
 		public void
 		received(
-			List<String>		profile );
+			List<String>		profile,
+			boolean				failed );
 	}
 	
 	public void
@@ -979,7 +980,7 @@ BuddyPluginBuddy
 			
 			if ( profile_info != null ){
 				
-				informer.received( profile_info );
+				informer.received( profile_info, false );
 			}
 			
 			long now = SystemTime.getMonotonousTime();
@@ -1028,7 +1029,7 @@ BuddyPluginBuddy
 							profile_info = result;
 						}
 						
-						informer.received( result );
+						informer.received( result, false );
 						
 						return( null );
 					}
@@ -1044,7 +1045,7 @@ BuddyPluginBuddy
 							profile_info_outstanding = false;
 						}
 						
-						informer.received( null );
+						informer.received( null, true );
 					}
 				});
 			
@@ -1055,7 +1056,7 @@ BuddyPluginBuddy
 				profile_info_outstanding = false;
 			}
 			
-			informer.received( null );
+			informer.received( null, true );
 		}
 	}
 	

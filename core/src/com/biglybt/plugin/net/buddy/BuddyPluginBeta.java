@@ -6822,13 +6822,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				if ( buddy != null ){
 					
+					if ( buddy.isTransient()){
+						
+							// we don't want to keep hitting a transient buddy
+							// when failing
+						
+						if ( getProfileDataAgeMillis() < 60*60*1000 ){
+							
+							buddy.remove();
+							
+							return;
+						}
+					}
+					
 					buddy.getProfileInfo(
-						(profile_info)->{
+						(profile_info, failed )->{
 								
-							if ( profile_info != null ){
-								
-								setProfileData( profile_info );
-							}
+							setProfileData( profile_info, failed );
 							
 							if ( buddy.isTransient()){
 							
@@ -6994,19 +7004,26 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		
 		public void
 		setProfileData(
-			List<String>		d )
+			List<String>		d,
+			boolean 			failed )
 		{
-			profile_data		= d;
+				// always record update time as this controls re-tries
+			
 			profile_data_set	= SystemTime.getMonotonousTime();
-			
-			profile_data_cache = null;
-			
-			if ( !isMe()){
+
+			if ( !failed ){
 				
-				setProperty( "profile", d );
+				profile_data		= d;
+						
+				profile_data_cache = null;
+				
+				if ( !isMe()){
+					
+					setProperty( "profile", d );
+				}
+				
+				chat.updated( this );
 			}
-			
-			chat.updated( this );
 		}
 		
 		private long
