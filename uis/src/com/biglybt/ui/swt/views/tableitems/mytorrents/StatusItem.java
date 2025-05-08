@@ -421,7 +421,11 @@ public class StatusItem
 
 				Color color = null;
 				if (state == DownloadManager.STATE_SEEDING) {
-					color = Colors.blues[Colors.BLUES_MIDDARK];
+					if ( Utils.isDarkAppearanceNativeWindows()){
+						color = Colors.bluesFixed[Colors.BLUES_MIDDARK];
+					}else{
+						color = Colors.blues[Colors.BLUES_MIDDARK];
+					}
 				} else if (state == DownloadManager.STATE_ERROR) {
 					color = Colors.colorError;
 				} else {
