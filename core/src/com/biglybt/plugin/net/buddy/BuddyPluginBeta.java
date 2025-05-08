@@ -6827,7 +6827,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							// we don't want to keep hitting a transient buddy
 							// when failing
 						
-						if ( getProfileDataAgeMillis() < 60*60*1000 ){
+						long age = getProfileDataAgeMillis();
+						
+						if ( age >= 0 && age < 60*60*1000 ){
 							
 							buddy.remove();
 							
