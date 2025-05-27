@@ -459,6 +459,8 @@ public class TrackerStatus {
 
 			List<TRTrackerScraperResponseImpl> activeResponses = responsesInQuery;
 
+			URL reqUrl = null;
+			
 			try {
 				// if URL already includes a query component then just append our
 				// params
@@ -569,7 +571,7 @@ public class TrackerStatus {
 					request += "&azsf=" + flags + "&azver=" + TRTrackerAnnouncer.AZ_TRACKER_VERSION_CURRENT;
 				}
 
-				URL reqUrl = new URL( request );
+				reqUrl = new URL( request );
 
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(LOGID,
@@ -663,7 +665,15 @@ public class TrackerStatus {
 
 			  			activeResponses = responsesInQuery;
 
-			  			redirect_url = scrapeHTTP(hashesInQuery,reqUrl, message);
+			  			URL[] _reqUrl = { reqUrl };
+			  			
+			  			try{
+			  				redirect_url = scrapeHTTP(hashesInQuery,_reqUrl, message);
+			  				
+			  			}finally{
+			  			
+			  				reqUrl = _reqUrl[0];
+			  			}
 			  		}
 				}finally{
 
@@ -1013,15 +1023,15 @@ public class TrackerStatus {
 					scraper.scrapeReceived(response);
 				}
 			} catch (SocketException e) {
-				setAllError(activeResponses,e);
+				setAllError(reqUrl,activeResponses,e);
 			} catch (SocketTimeoutException e) {
-				setAllError(activeResponses,e);
+				setAllError(reqUrl,activeResponses,e);
 			} catch (UnknownHostException e) {
-				setAllError(activeResponses,e);
+				setAllError(reqUrl,activeResponses,e);
 			} catch (PRUDPPacketHandlerException e) {
-				setAllError(activeResponses,e);
+				setAllError(reqUrl,activeResponses,e);
 			} catch (BEncodingException e) {
-				setAllError(activeResponses,e);
+				setAllError(reqUrl,activeResponses,e);
 			} catch (Exception e) {
 
 				// for apache we can get error 414 - URL too long. simplest solution
@@ -1038,7 +1048,7 @@ public class TrackerStatus {
 							|| error_message.contains(" 501 ")) {
 						// various errors that have a 99% chance of happening on
 						// any other scrape request
-						setAllError(activeResponses,e);
+						setAllError(reqUrl,activeResponses,e);
 						return;
 					}
 
@@ -1072,9 +1082,10 @@ public class TrackerStatus {
 
 					if (Logger.isEnabled()) {
 						HashWrapper hash = response.getHash();
+						
 						Logger.log(new LogEvent(TorrentUtils.getDownloadManager(hash), LOGID,
-								LogEvent.LT_ERROR, "Error from scrape interface " + scrapeURL
-										+ " : " + msg + " (" + e.getClass() + ")"));
+								LogEvent.LT_ERROR, formatScrapeErrorMessage( reqUrl, msg ))); 
+								
 					}
 
 					response.setNextScrapeStartTime(SystemTime.getCurrentTime()
@@ -1094,10 +1105,22 @@ public class TrackerStatus {
 		}
 	}
 
-  /**
-	 * @param e
-	 */
-	private void setAllError(List<TRTrackerScraperResponseImpl> responses, Exception e) {
+  	private String
+  	formatScrapeErrorMessage(
+  		URL			reqURL, 
+  		String		msg )
+  	{
+		if ( reqURL != null ){
+			
+				// tidy up message to remove any loopback bind mods
+			
+			msg = msg.replace(reqURL.toExternalForm(),scrapeURL);
+		}
+		
+  		return( "Error from scrape interface " + scrapeURL + " : " + msg );
+  	}
+  	
+	private void setAllError(URL reqURL, List<TRTrackerScraperResponseImpl> responses, Exception e) {
 
 		String msg;
 
@@ -1123,8 +1146,7 @@ public class TrackerStatus {
 			if (Logger.isEnabled()) {
 				HashWrapper hash = response.getHash();
 				Logger.log(new LogEvent(TorrentUtils.getDownloadManager(hash), LOGID,
-						LogEvent.LT_WARNING, "Error from scrape interface " + scrapeURL
-								+ " : " + msg));
+						LogEvent.LT_WARNING, formatScrapeErrorMessage( reqURL, msg )));
 				//e.printStackTrace();
 			}
 
@@ -1140,15 +1162,17 @@ public class TrackerStatus {
 	private URL
  	scrapeHTTP(
  		List<HashWrapper>		hashesInQuery,
- 		URL 					reqUrl,
+ 		URL[] 					_reqUrl,
  		ByteArrayOutputStream 	message )
 
  		throws Exception
  	{
+		URL reqUrl = _reqUrl[0];
+				
 		byte[]	example_hash = hashesInQuery.get(0).getBytes();
 
 		try{
-			return( scrapeHTTPSupport( reqUrl, example_hash, null, message ));
+			return( scrapeHTTPSupport( _reqUrl, example_hash, null, message ));
 
 		}catch( Exception e ){
 
@@ -1235,7 +1259,7 @@ public class TrackerStatus {
 
 					try{
 
-						URL result =  scrapeHTTPSupport( proxy.getURL(), example_hash, proxy.getProxy(), message );
+						URL result =  scrapeHTTPSupport( new URL[]{ proxy.getURL()}, example_hash, proxy.getProxy(), message );
 
 						ok = true;
 
@@ -1257,7 +1281,7 @@ public class TrackerStatus {
 
 	private URL
 	scrapeHTTPSupport(
-		URL 					reqUrl,
+		URL[] 					_reqUrl,
 		byte[]					example_hash,
 		Proxy					proxy,
 		ByteArrayOutputStream 	message )
@@ -1270,6 +1294,8 @@ public class TrackerStatus {
 
 			URL	redirect_url = null;
 
+			URL reqUrl = _reqUrl[0];
+			
 			TRTrackerUtils.checkForBlacklistedURLs( reqUrl );
 
 			reqUrl = TRTrackerUtils.adjustURLForHosting( reqUrl );
@@ -1302,6 +1328,8 @@ public class TrackerStatus {
 
 			reqUrl = (URL)http_properties.get( ClientIDGenerator.PR_URL );
 
+			_reqUrl[0] = reqUrl;
+			
 			InputStream is = null;
 
 			try{
@@ -1472,11 +1500,11 @@ public class TrackerStatus {
 						}
 					} catch (Exception e) {
 
-						if (Logger.isEnabled())
-							Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR,
-									"Error from scrape interface " + scrapeURL + " : "
-									+ Debug.getNestedExceptionMessage(e)));
-
+						if (Logger.isEnabled()){
+							String msg = Debug.getNestedExceptionMessage(e);
+							Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR,formatScrapeErrorMessage( reqUrl, msg )));
+						}
+						
 						return( null );
 					}
 				}
