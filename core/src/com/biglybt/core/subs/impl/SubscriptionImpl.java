@@ -1068,6 +1068,10 @@ SubscriptionImpl
 
 					name 	= old_name;
 					version	= old_version;
+					
+				}else{
+					
+					local_name = null;
 				}
 			}
 
