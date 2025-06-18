@@ -2790,7 +2790,7 @@ DeviceManagerUI
 				return;
 			}
 
-			DeviceView view = new DeviceView( parent, device );
+			DeviceView view = new DeviceView( new_di, parent, device );
 
 			new_di.setView( view );
 
@@ -2867,7 +2867,8 @@ DeviceManagerUI
 								
 				entry = mdi.createEntry(builder, false);
 
-				entry.setExpanded(true);
+				// not sure why we were auto expanding this, leads to config keys being created for expanded state that is then not deleted...
+				// entry.setExpanded(true);
 			}
 
 			entry.setDatasource( device );
@@ -4602,16 +4603,19 @@ DeviceManagerUI
 		extends UISWTViewMultiInstance
 		implements ViewTitleInfo
 	{
+		private final deviceItem		item;
 		private final String			parent_key;
 		private final Device			device;
 
 		private int 		last_indicator;
 
 		public 
-		DeviceView(			
+		DeviceView(		
+			deviceItem		_item,
 			String			_parent_key,
 			Device			_device )
 		{
+			item		= _item;
 			parent_key 	= _parent_key;
 			device		= _device;
 		}
@@ -4671,6 +4675,7 @@ DeviceManagerUI
 	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
 	  										@Override
 	  										public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
+	  											item.getMdiEntry().setImageLeftID( key );
 	  											ViewTitleInfoManager.refreshTitleInfo( DeviceView.this );
 	  										}	
 	  									});
