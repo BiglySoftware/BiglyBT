@@ -442,15 +442,12 @@ public class TabbedEntry
 	public void viewTitleInfoRefresh(ViewTitleInfo titleInfoToRefresh) {
 		super.viewTitleInfoRefresh(titleInfoToRefresh);
 
-		if (titleInfoToRefresh == null || this.viewTitleInfo != titleInfoToRefresh) {
-			return;
-		}
 		if (isEntryDisposed()) {
 			return;
 		}
 
 		boolean changed = false;
-		String newText = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_TEXT);
+		String newText = (String) titleInfoToRefresh.getTitleInfoProperty(ViewTitleInfo.TITLE_TEXT);
 		if (newText != null) {
 			changed = setTitleSupport(newText);
 		}
@@ -504,6 +501,7 @@ public class TabbedEntry
 			Map<String, Object> map = new HashMap<>();
 			map.put("image", image);
 			map.put("obfuscateTitle", false);
+			ViewTitleInfo viewTitleInfo = getViewTitleInfo();
 			if (isActive) {
 				triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, map);
 
@@ -513,16 +511,16 @@ public class TabbedEntry
 			}
 
 			if (isHeaderVisible) {
-  			if (viewTitleInfo instanceof ObfuscateTab) {
-  				String header = ((ObfuscateTab) viewTitleInfo).getObfuscatedHeader();
-  				if (header != null) {
-  					UIDebugGenerator.obfuscateArea(image, bounds, header);
-  				}
-  			}
+				if (viewTitleInfo instanceof ObfuscateTab) {
+					String header = ((ObfuscateTab) viewTitleInfo).getObfuscatedHeader();
+					if (header != null) {
+						UIDebugGenerator.obfuscateArea(image, bounds, header);
+					}
+				}
 
-  			if (MapUtils.getMapBoolean(map, "obfuscateTitle", false)) {
-  				UIDebugGenerator.obfuscateArea(image, bounds);
-  			}
+				if (MapUtils.getMapBoolean(map, "obfuscateTitle", false)) {
+					UIDebugGenerator.obfuscateArea(image, bounds);
+				}
 			}
 		}
 

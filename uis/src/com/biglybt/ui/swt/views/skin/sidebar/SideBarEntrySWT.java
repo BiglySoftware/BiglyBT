@@ -750,6 +750,7 @@ public class SideBarEntrySWT
 		
 		
 		//System.out.println(System.currentTimeMillis() + "] refresh " + getId() + "; " + itemBounds + ";clip=" + event.gc.getClipping() + ";eb=" + event.getBounds());
+		ViewTitleInfo viewTitleInfo = getViewTitleInfo();
 		if (viewTitleInfo != null) {
 			String textIndicator = null;
 			try {
@@ -1323,6 +1324,7 @@ public class SideBarEntrySWT
 			map.put("obfuscateTitle", false);
 			triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, map);
 
+			ViewTitleInfo viewTitleInfo = getViewTitleInfo();
 			if (viewTitleInfo instanceof ObfuscateImage) {
 				((ObfuscateImage) viewTitleInfo).obfuscatedImage(image);
 			}

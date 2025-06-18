@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.mdi;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Cursor;
@@ -66,7 +67,7 @@ import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
 
 public abstract class BaseMdiEntry
 	extends UISWTViewImpl
-	implements MdiEntrySWT, ViewTitleInfoListener, AEDiagnosticsEvidenceGenerator,
+	implements MdiEntrySWT, AEDiagnosticsEvidenceGenerator,
 		ObfuscateImage
 {
 	static{
@@ -101,6 +102,33 @@ public abstract class BaseMdiEntry
 		}
 	}
 	
+	private static ConcurrentHashMap<ViewTitleInfo,BaseMdiEntry>	vtiMap = new ConcurrentHashMap<>();
+	
+	static{
+		ViewTitleInfoManager.addListener((titleInfo)->{
+			BaseMdiEntry entry = vtiMap.get( titleInfo );
+			if ( entry != null && entry.getViewTitleInfo()==titleInfo){
+				entry.viewTitleInfoRefresh(titleInfo);
+			}
+		});
+	}
+	
+	private static void
+	setViewTitleInfoListener(
+		BaseMdiEntry		entry,
+		ViewTitleInfo		vti )
+	{
+		vtiMap.put( vti, entry );
+	}
+	
+	private static void
+	removeViewTitleInfoListener(
+		BaseMdiEntry		entry,
+		ViewTitleInfo		vti )
+	{
+		vtiMap.remove( vti, entry );
+	}
+	
 	protected static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
 
 	protected static long uniqueNumber = 0;
@@ -123,7 +151,7 @@ public abstract class BaseMdiEntry
 
 	private List<MdiAcceleratorListener> listAcceleratorListeners = null;
 	
-	protected ViewTitleInfo viewTitleInfo;
+	private ViewTitleInfo viewTitleInfo;
 
 	/** Parent MDIEntry.  Doesn't mean that this view is embedded inside the parentID */
 	private String parentEntryID;
@@ -287,7 +315,9 @@ public abstract class BaseMdiEntry
 	protected void destroyEntryAlways()
 	{
 			// we gotta always do this regardless - might be called > once
-		ViewTitleInfoManager.removeListener(this);		
+		if ( viewTitleInfo != null ){
+			removeViewTitleInfoListener(this,viewTitleInfo);
+		}
 	}
 	
 	public Object getDatasourceCore() {
@@ -295,7 +325,9 @@ public abstract class BaseMdiEntry
 	}
 
 	@Override
-	public Object getExportableDatasource() {
+	public Object 
+	getExportableDatasource() 
+	{
 		if (viewTitleInfo != null) {
 			return viewTitleInfo.getTitleInfoProperty(
 					ViewTitleInfo2.TITLE_EXPORTABLE_DATASOURCE);
@@ -611,13 +643,25 @@ public abstract class BaseMdiEntry
 	 * @see MdiEntry#setViewTitleInfo(ViewTitleInfo)
 	 */
 	@Override
-	public void setViewTitleInfo(ViewTitleInfo viewTitleInfo) {
-		if (this.viewTitleInfo == viewTitleInfo) {
+	public void 
+	setViewTitleInfo(
+		ViewTitleInfo _viewTitleInfo) 
+	{
+		if (viewTitleInfo == _viewTitleInfo) {
 			return;
 		}
-		this.viewTitleInfo = viewTitleInfo;
-		// TODO: Need to listen for viewTitleInfo triggers so we can refresh items below
+		if ( viewTitleInfo != null ){
+			removeViewTitleInfoListener( this, viewTitleInfo );
+		}
+		
+		viewTitleInfo = _viewTitleInfo;
+		
+			// TODO: Need to listen for viewTitleInfo triggers so we can refresh items below
+		
 		if (viewTitleInfo != null) {
+			
+			setViewTitleInfoListener(this,viewTitleInfo);
+
 			if (viewTitleInfo instanceof ViewTitleInfo2) {
 				ViewTitleInfo2 vti2 = (ViewTitleInfo2) viewTitleInfo;
 				try {
@@ -631,8 +675,6 @@ public abstract class BaseMdiEntry
 			if (imageID != null) {
 				setImageLeftID(imageID.length() == 0 ? null : imageID);
 			}
-
-			ViewTitleInfoManager.addListener(this);
 
 			if (getEventListener() == null && (viewTitleInfo instanceof UISWTViewEventListener)) {
 				UISWTViewEventListener listener = (UISWTViewEventListener) viewTitleInfo;
@@ -1036,19 +1078,15 @@ public abstract class BaseMdiEntry
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see ViewTitleInfoListener#viewTitleInfoRefresh(ViewTitleInfo)
-	 */
-	@Override
-	public void viewTitleInfoRefresh(ViewTitleInfo titleInfoToRefresh) {
-		if (titleInfoToRefresh == null || this.viewTitleInfo != titleInfoToRefresh) {
-			return;
-		}
+	protected void 
+	viewTitleInfoRefresh(
+		ViewTitleInfo titleInfoToRefresh )
+	{
 		if (isEntryDisposed()) {
 			return;
 		}
 
-		String imageID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_IMAGEID);
+		String imageID = (String) titleInfoToRefresh.getTitleInfoProperty(ViewTitleInfo.TITLE_IMAGEID);
 		
 			// don't overwrite any any existing (probably statically assigned) image id with a
 			// ViewTitleInfo that doesn't bother returning anything better
