@@ -55,7 +55,6 @@ import com.biglybt.ui.swt.pifimpl.*;
 import com.biglybt.ui.swt.plugin.net.buddy.swt.FriendsView;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
-import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.MapUtils;
@@ -70,6 +69,38 @@ public abstract class BaseMdiEntry
 	implements MdiEntrySWT, ViewTitleInfoListener, AEDiagnosticsEvidenceGenerator,
 		ObfuscateImage
 {
+	static{
+	
+			// hack to remove proliferation of useless config keys from device manager device discovery
+		
+		if ( !COConfigurationManager.doesParameterNonDefaultExist( "SideBar.Expanded2.tidydone" )){
+			
+			COConfigurationManager.setParameter( "SideBar.Expanded2.tidydone", true );
+			
+			try{
+				Set<String> keys = COConfigurationManager.getDefinedParameters();
+		
+				String prefix = "SideBar.Expanded2.";
+				
+				for ( String key: keys ){
+		
+					if ( key.startsWith( prefix )){
+		
+						String rem = new String(Base32.decode( key.substring(prefix.length())),Constants.UTF_8 );
+						
+						if ( rem.startsWith( "Device_device.")){
+													
+							COConfigurationManager.removeParameter( key );
+						}
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out(e);
+			}
+		}
+	}
+	
 	protected static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
 
 	protected static long uniqueNumber = 0;
@@ -905,16 +936,12 @@ public abstract class BaseMdiEntry
 	public boolean 
 	isExpanded() 
 	{
-		String configID = "SideBar.Expanded2." + Base32.encode( id.getBytes( Constants.UTF_8 ));
-
-		return isExpanded == null
-				? COConfigurationManager.getBooleanParameter(configID)
-				: isExpanded;
-			}
-
-	/* (non-Javadoc)
-	 * @see MdiEntry#setExpanded(boolean)
-	 */
+		if ( isExpanded == null ){
+			isExpanded = COConfigurationManager.getBooleanParameter("SideBar.Expanded2." + Base32.encode( id.getBytes( Constants.UTF_8 )));
+		}
+		return( isExpanded );
+	}
+	
 	@Override
 	public void 
 	setExpanded(boolean expanded) 
