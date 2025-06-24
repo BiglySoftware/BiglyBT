@@ -1743,21 +1743,30 @@ DHTTransportUDPImpl
 					}
 				}
 
-				if ( ip_filter.isInRange(
-						contact.getTransportAddress().getAddress(), "DHT", null, false,
-						logger.isEnabled( DHTLogger.LT_IP_FILTER ))){
-
-						// don't let an attacker deliberately fill up our filter so we start
-						// rejecting valid addresses
-
-					if ( bad_ip_bloom_filter.getEntryCount() >= BAD_IP_BLOOM_FILTER_SIZE/10 ){
-
-						bad_ip_bloom_filter = BloomFilterFactory.createAddOnly( BAD_IP_BLOOM_FILTER_SIZE );
+				if ( !contact.getAddressRecentlyOK()){
+					
+					if ( ip_filter.isInRange(
+							contact.getTransportAddress().getAddress(), "DHT", null, false,
+							logger.isEnabled( DHTLogger.LT_IP_FILTER ))){
+	
+						contact.setAddressRecentlyOK( false );
+						
+							// don't let an attacker deliberately fill up our filter so we start
+							// rejecting valid addresses
+	
+						if ( bad_ip_bloom_filter.getEntryCount() >= BAD_IP_BLOOM_FILTER_SIZE/10 ){
+	
+							bad_ip_bloom_filter = BloomFilterFactory.createAddOnly( BAD_IP_BLOOM_FILTER_SIZE );
+						}
+	
+						bad_ip_bloom_filter.add( addr );
+	
+						throw( new DHTUDPPacketHandlerException( "IPFilter check fails" ));
+						
+					}else{
+						
+						contact.setAddressRecentlyOK( true );
 					}
-
-					bad_ip_bloom_filter.add( addr );
-
-					throw( new DHTUDPPacketHandlerException( "IPFilter check fails" ));
 				}
 			}
 		}

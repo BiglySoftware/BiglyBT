@@ -35,6 +35,7 @@ import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDPContact;
 import com.biglybt.core.util.AERunStateHandler;
 import com.biglybt.core.util.AESemaphore;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.net.udp.uc.PRUDPPacketHandler;
 
 
@@ -93,12 +94,14 @@ DHTTransportUDPContactImpl
 	private byte[]				id;
 	private byte				protocol_version;
 	private int					instance_id;
-	private final long				skew;
+	private final long			skew;
 	private byte				generic_flags;
 
 	private int					random_id;
 	private int					node_status	= NODE_STATUS_UNKNOWN;
 
+	private int					last_address_check_ok_time = -1;
+	
 	private DHTNetworkPosition[]		network_positions;
 
 	protected
@@ -542,7 +545,7 @@ DHTTransportUDPContactImpl
 	}
 
   	@Override
-	  public DHTNetworkPosition
+	public DHTNetworkPosition
   	getNetworkPosition(
   		byte	position_type )
   	{
@@ -557,6 +560,28 @@ DHTTransportUDPContactImpl
   		return( null );
   	}
 
+  	protected boolean
+  	getAddressRecentlyOK()
+  	{
+  		int ok = last_address_check_ok_time;
+  		
+  		return( ok >= 0 && (SystemTime.getMonotonousTime()/1000) - ok < 30 );
+  	}
+  	
+  	protected void
+  	setAddressRecentlyOK(
+  		boolean		ok )
+  	{
+  		if ( ok ){
+  			
+  			last_address_check_ok_time = (int)(SystemTime.getMonotonousTime()/1000);
+  			
+  		}else{
+  			
+  			last_address_check_ok_time = -1;
+  		}
+  	}
+  	
 	@Override
 	public String
 	getString()
