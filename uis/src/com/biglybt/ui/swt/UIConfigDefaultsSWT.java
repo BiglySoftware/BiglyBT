@@ -220,7 +220,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Table.tooltip.truncate", true);
 		def.addParameter("Table.sort.intuitive", false);
 		def.addParameter("Table.filter.confusable", true );
-		def.addParameter("Table Header Gradient Fill", true);
+		def.addParameter("Table Header Gradient Fill", false);	// parg switched default to false as we don't do the "3d" l&f these days and more visible selection
 		def.addParameter("Dark Table Colors", false );
 		def.addParameter("Dark Misc Colors", false );
 		def.addParameter("Gradient Fill Selection", true );
