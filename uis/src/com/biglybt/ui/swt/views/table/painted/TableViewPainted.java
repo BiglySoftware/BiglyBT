@@ -309,6 +309,10 @@ public class TableViewPainted
 
 		// Deselect rows if user clicks on a blank spot (a spot with no row)
 		tvSWTCommon = new TableViewSWT_Common(this) {
+			
+			private boolean			mouseDown;
+			private TableRowCore	mouseDownRow;
+			
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				//updateSelectedRows(table.getSelection(), true);
@@ -319,6 +323,9 @@ public class TableViewPainted
                                 int stateMask) {
 				super.mouseUp(clickedRow, cell, button, stateMask);
 
+				mouseDown		= false;
+				mouseDownRow	= null;
+				
 				if (clickedRow == null) {
 					return;
 				}
@@ -340,6 +347,10 @@ public class TableViewPainted
 			@Override
 			public void mouseDown(TableRowSWT clickedRow, TableCellCore cell, int button,
 					int stateMask) {
+				
+				mouseDown		= true;
+				mouseDownRow	= clickedRow;
+				
 				if (clickedRow == null) {
 					return;
 				}
@@ -364,6 +375,62 @@ public class TableViewPainted
 				}
 			}
 
+			@Override
+			public void 
+			mouseMove(
+				MouseEvent e )
+			{
+				super.mouseMove(e);
+				
+				if ( mouseDown && mouseDownRow != null && ( e.stateMask & SWT.BUTTON3 ) != 0 ){
+					
+					TableRowSWT row = getTableRow(e.x, e.y, true);
+					
+					if ( row != null ){
+											
+						int start	= mouseDownRow.getIndex();
+						int end		= row.getIndex();
+						
+						int num;
+						int dir;
+						
+						if ( end >= start ){
+							
+							num = end - start + 1;
+							dir = 1;
+						}else{
+							
+							num = start - end + 1;
+							dir = -1;
+						}
+						
+						int pos = start;
+						
+						TableRowCore[] newRows = new TableRowCore[num];
+						
+						for ( int i=0;i<num;i++){
+							
+							newRows[i] = getRowQuick( pos );
+							
+							pos += dir;
+						}
+						
+						TableRowCore[] oldRows = getSelectedRows();
+						
+						if ( oldRows.length != newRows.length ){
+							setSelectedRows( newRows );
+						}else{
+							for ( int i=0;i<oldRows.length;i++){
+								if ( oldRows[i] != newRows[i] ){
+									setSelectedRows( newRows );
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			@Override
 			public void keyPressed(KeyEvent event) {
 				if ( event.keyCode == SWT.ESC ){
