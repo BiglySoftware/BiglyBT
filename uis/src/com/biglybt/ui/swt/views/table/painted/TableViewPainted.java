@@ -313,6 +313,7 @@ public class TableViewPainted
 			private boolean			mouseDown;
 			private Point			mouseDownPos;
 			private TableRowCore	mouseDownRow;
+			private int				mouseDownLastY = -1;
 			
 			@Override
 			public void widgetSelected(SelectionEvent event) {
@@ -401,7 +402,8 @@ public class TableViewPainted
 						if ( 	Math.abs( e.y - mouseDownPos.y ) >= h/2 ||
 								Math.abs( e.x - mouseDownPos.x ) >= h ){
 					
-							mouseDownPos = null;
+							mouseDownPos 	= null;
+							mouseDownLastY	= -1;
 							
 						}else{
 							
@@ -409,49 +411,76 @@ public class TableViewPainted
 						}
 					}
 					
-					TableRowSWT row = getTableRow(e.x, e.y, true);
-					
-					if ( row != null ){
-											
-						int start	= mouseDownRow.getIndex();
-						int end		= row.getIndex();
+					try{
+						TableRowSWT row = getTableRow(e.x, e.y, true);
 						
-						int num;
-						int dir;
-						
-						if ( end >= start ){
+						if ( row != null ){
+												
+							int start	= mouseDownRow.getIndex();
+							int end		= row.getIndex();
 							
-							num = end - start + 1;
-							dir = 1;
-						}else{
+							int num;
+							int selDir;
 							
-							num = start - end + 1;
-							dir = -1;
-						}
-						
-						int pos = start;
-						
-						TableRowCore[] newRows = new TableRowCore[num];
-						
-						for ( int i=0;i<num;i++){
+							if ( end >= start ){
+								
+								num		= end - start + 1;
+								selDir	= 1;
+								
+							}else{
+								
+								num		= start - end + 1;
+								selDir	= -1;
+							}
 							
-							newRows[i] = getRowQuick( pos );
+							int pos = start;
 							
-							pos += dir;
-						}
-						
-						TableRowCore[] oldRows = getSelectedRows();
-						
-						if ( oldRows.length != newRows.length ){
-							setSelectedRows( newRows );
-						}else{
-							for ( int i=0;i<oldRows.length;i++){
-								if ( oldRows[i] != newRows[i] ){
-									setSelectedRows( newRows );
-									break;
+							TableRowCore[] newRows = new TableRowCore[num];
+							
+							for ( int i=0;i<num;i++){
+								
+								newRows[i] = getRowQuick( pos );
+								
+								pos += selDir;
+							}
+							
+							TableRowCore[] oldRows = getSelectedRows();
+													
+							if ( oldRows.length != newRows.length ){
+								setSelectedRows( newRows );
+							}else{
+								for ( int i=0;i<oldRows.length;i++){
+									if ( oldRows[i] != newRows[i] ){
+										setSelectedRows( newRows );
+										break;
+									}
 								}
 							}
+							
+							TableRowCore[] vis = getVisibleRows();
+							
+							int top;
+							int bot;
+							
+							if ( vis.length > 1 ){
+								
+								top = vis[1].getVisibleRowIndex();
+								bot = vis[vis.length-2].getVisibleRowIndex();
+							}else{
+								top = vis[0].getVisibleRowIndex();
+								bot = vis[vis.length-1].getVisibleRowIndex();
+							}
+							
+							int mouseDir = (e.y >= mouseDownLastY )?1:-1;
+							
+							if (	( mouseDir == 1 && row.getVisibleRowIndex() >= bot ) ||
+									( mouseDir == -1 && row.getVisibleRowIndex() <= top )){
+								
+								scrollVertically( row.getHeight() * mouseDir );
+							}
 						}
+					}finally{
+						mouseDownLastY = e.y;
 					}
 				}
 			}
