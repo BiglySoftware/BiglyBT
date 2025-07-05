@@ -311,6 +311,7 @@ public class TableViewPainted
 		tvSWTCommon = new TableViewSWT_Common(this) {
 			
 			private boolean			mouseDown;
+			private Point			mouseDownPos;
 			private TableRowCore	mouseDownRow;
 			
 			@Override
@@ -344,6 +345,13 @@ public class TableViewPainted
 				}
 			}
 
+			@Override
+			public void mouseDown(MouseEvent e) {
+				super.mouseDown(e);
+				
+				mouseDownPos = new Point( e.x, e.y );
+			}
+			
 			@Override
 			public void mouseDown(TableRowSWT clickedRow, TableCellCore cell, int button,
 					int stateMask) {
@@ -383,6 +391,23 @@ public class TableViewPainted
 				super.mouseMove(e);
 				
 				if ( mouseDown && mouseDownRow != null && ( e.stateMask & SWT.BUTTON3 ) != 0 ){
+					
+					if ( mouseDownPos != null ){
+						
+							// don't trigger any behaviour until sufficient movement detected
+						
+						int h = mouseDownRow.getHeight();
+						
+						if ( 	Math.abs( e.y - mouseDownPos.y ) >= h/2 ||
+								Math.abs( e.x - mouseDownPos.x ) >= h ){
+					
+							mouseDownPos = null;
+							
+						}else{
+							
+							return;
+						}
+					}
 					
 					TableRowSWT row = getTableRow(e.x, e.y, true);
 					
