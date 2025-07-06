@@ -319,6 +319,9 @@ public class TableViewPainted
 			private long			lastAutoScroll	= -1;
 			private MouseEvent		lastMouseMove;
 			
+			private Map<Integer,TableRowCore>	rowsMapCache = new HashMap<>();
+			private int							rowsMapCacheMut = -1;
+			
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				//updateSelectedRows(table.getSelection(), true);
@@ -331,6 +334,9 @@ public class TableViewPainted
 
 				mouseDown		= false;
 				mouseDownRow	= null;
+				
+				rowsMapCache.clear();
+				rowsMapCacheMut = -1;
 				
 				if (clickedRow == null) {
 					return;
@@ -411,7 +417,7 @@ public class TableViewPainted
 							mouseDownPos 	= null;
 							mouseDownLastY	= -1;
 							lastAutoScroll	= -1;
-							
+																
 							TimerEventPeriodic[] ev = { null };
 							
 							ev[0] =
@@ -437,6 +443,22 @@ public class TableViewPainted
 					}
 					
 					try{
+						int mut = mutationCount.get();
+						
+						if ( mut != rowsMapCacheMut ){
+													
+							rowsMapCacheMut = mut;
+							
+							rowsMapCache.clear();
+							
+							TableRowCore[] rows = getRowsAndSubRows( false );
+							
+							for ( TableRowCore v: rows ){
+																
+								rowsMapCache.put( v.getVisibleRowIndex(), v );
+							}
+						}
+						
 						TableRowSWT row = getTableRow(e.x, e.y, true);
 						
 						if ( row != null ){
@@ -464,17 +486,9 @@ public class TableViewPainted
 								
 								TableRowCore[] newRows = new TableRowCore[num];
 								
-								TableRowCore[] allRows = getRowsAndSubRows( false );
-							
 								for ( int i=0;i<num;i++){
 									
-									for ( TableRowCore v: allRows ){
-										
-										if ( v.getVisibleRowIndex() == pos ){
-									
-											newRows[i] = v;
-										}
-									}
+									newRows[i] = rowsMapCache.get(pos );
 									
 									pos += selDir;
 								}
