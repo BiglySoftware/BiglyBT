@@ -103,6 +103,8 @@ public class TableViewPainted
 	public static final String MENUKEY_IS_HEADER = "isHeader";
 
 	public static final String MENUKEY_COLUMN = "column";
+	
+	public static final String TABLEKEY_LAST_AUTOSCROLL = "lastAutoScroll";
 
 	private Composite cTable;
 
@@ -313,7 +315,9 @@ public class TableViewPainted
 			private boolean			mouseDown;
 			private Point			mouseDownPos;
 			private TableRowCore	mouseDownRow;
-			private int				mouseDownLastY = -1;
+			private int				mouseDownLastY 	= -1;
+			private long			lastAutoScroll	= -1;
+			private MouseEvent		lastMouseMove;
 			
 			@Override
 			public void widgetSelected(SelectionEvent event) {
@@ -390,7 +394,9 @@ public class TableViewPainted
 				MouseEvent e )
 			{
 				super.mouseMove(e);
-				
+								
+				lastMouseMove = e;
+					
 				if ( mouseDown && mouseDownRow != null && ( e.stateMask & SWT.BUTTON3 ) != 0 ){
 					
 					if ( mouseDownPos != null ){
@@ -404,6 +410,25 @@ public class TableViewPainted
 					
 							mouseDownPos 	= null;
 							mouseDownLastY	= -1;
+							lastAutoScroll	= -1;
+							
+							TimerEventPeriodic[] ev = { null };
+							
+							ev[0] =
+								SimpleTimer.addPeriodicEvent(
+									"autoscroll", 100, (x)->{
+										
+										Utils.execSWTThread(()->{
+											if ( !mouseDown ){
+												
+												ev[0].cancel();
+												
+												return;
+											}
+
+											mouseMove( lastMouseMove );
+										});
+									});
 							
 						}else{
 							
@@ -416,8 +441,8 @@ public class TableViewPainted
 						
 						if ( row != null ){
 												
-							int start	= mouseDownRow.getIndex();
-							int end		= row.getIndex();
+							int start	= mouseDownRow.getVisibleRowIndex();
+							int end		= row.getVisibleRowIndex();
 							
 							int num;
 							int selDir;
@@ -433,50 +458,91 @@ public class TableViewPainted
 								selDir	= -1;
 							}
 							
-							int pos = start;
-							
-							TableRowCore[] newRows = new TableRowCore[num];
-							
-							for ( int i=0;i<num;i++){
+							if ( num > 0 ){
 								
-								newRows[i] = getRowQuick( pos );
+								int pos = start;
 								
-								pos += selDir;
-							}
+								TableRowCore[] newRows = new TableRowCore[num];
+								
+								TableRowCore[] allRows = getRowsAndSubRows( false );
 							
-							TableRowCore[] oldRows = getSelectedRows();
-													
-							if ( oldRows.length != newRows.length ){
-								setSelectedRows( newRows );
-							}else{
-								for ( int i=0;i<oldRows.length;i++){
-									if ( oldRows[i] != newRows[i] ){
-										setSelectedRows( newRows );
-										break;
+								for ( int i=0;i<num;i++){
+									
+									for ( TableRowCore v: allRows ){
+										
+										if ( v.getVisibleRowIndex() == pos ){
+									
+											newRows[i] = v;
+										}
+									}
+									
+									pos += selDir;
+								}
+								
+								TableRowCore[] oldRows = getSelectedRows();
+														
+								if ( oldRows.length != newRows.length ){
+									
+									setSelectedRows( newRows );
+									
+								}else{
+									
+									for ( int i=0;i<oldRows.length;i++){
+										
+										if ( oldRows[i] != newRows[i] ){
+											
+											setSelectedRows( newRows );
+											
+											break;
+										}
 									}
 								}
-							}
-							
-							TableRowCore[] vis = getVisibleRows();
-							
-							int top;
-							int bot;
-							
-							if ( vis.length > 1 ){
+									
+								long now = SystemTime.getMonotonousTime();
 								
-								top = vis[1].getVisibleRowIndex();
-								bot = vis[vis.length-2].getVisibleRowIndex();
-							}else{
-								top = vis[0].getVisibleRowIndex();
-								bot = vis[vis.length-1].getVisibleRowIndex();
-							}
-							
-							int mouseDir = (e.y >= mouseDownLastY )?1:-1;
-							
-							if (	( mouseDir == 1 && row.getVisibleRowIndex() >= bot ) ||
-									( mouseDir == -1 && row.getVisibleRowIndex() <= top )){
+								if ( lastAutoScroll == -1 || now - lastAutoScroll >= 200 ){
+									
+									lastAutoScroll = now;
 								
-								scrollVertically( row.getHeight() * mouseDir );
+									int top;
+									int bot;
+									
+									TableRowCore[] vis = getVisibleRows();
+									
+									if ( vis.length > 1 ){
+										
+										top = vis[1].getVisibleRowIndex();
+										
+										bot = vis[vis.length-2].getVisibleRowIndex();
+										
+									}else{
+										
+										top = vis[0].getVisibleRowIndex();
+										
+										bot = vis[vis.length-1].getVisibleRowIndex();
+									}
+									
+									int mouseDir;
+									
+									if ( e.y == mouseDownLastY ){
+										
+										mouseDir = row.getVisibleRowIndex() <= top?-1:1;
+										
+									}else{
+										
+										mouseDir = (e.y >= mouseDownLastY )?1:-1;
+									}
+									
+									if (	( mouseDir == 1 && row.getVisibleRowIndex() >= bot ) ||
+											( mouseDir == -1 && row.getVisibleRowIndex() <= top )){
+										
+										lastAutoScroll = now;
+										
+										cTable.setData( TABLEKEY_LAST_AUTOSCROLL, now );
+										
+										scrollVertically( row.getHeight() * mouseDir );
+									}
+								}
 							}
 						}
 					}finally{
@@ -3413,8 +3479,20 @@ public class TableViewPainted
 	
 						// If shell is not active, right clicking on a row will
 						// result in a MenuDetect, but not a MouseDown or MouseUp
-						if (!isSelected(row)) {
-							setSelectedRows(new TableRowCore[] { row });
+						
+						Long lastAS = (Long)cTable.getData( TABLEKEY_LAST_AUTOSCROLL );
+						
+						if ( lastAS != null && SystemTime.getMonotonousTime() - lastAS < 1000 ){
+							
+							// however, if we are right-drag-selecting with autoscroll then
+							// it is possible at the time the menu detect occurs the mouse
+							// is over a yet-to-be selected row and we don't want this code 
+							// kicking in and changing the selection
+						}else{
+						
+							if (!isSelected(row)) {
+								setSelectedRows(new TableRowCore[] { row });
+							}
 						}
 					}
 
