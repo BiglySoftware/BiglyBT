@@ -384,6 +384,13 @@ public class TableViewPainted
 					mouseDownRow = null;
 				}
 				
+					// fuck everything apart from Windows 
+				
+				if ( !Constants.isWindows ){
+					
+					mouseDownRow = null;
+				}
+				
 				int keyboardModifier = (stateMask & SWT.MODIFIER_MASK);
 				if (button == 1) {
   				if ((keyboardModifier & SWT.MOD1) != 0) {
