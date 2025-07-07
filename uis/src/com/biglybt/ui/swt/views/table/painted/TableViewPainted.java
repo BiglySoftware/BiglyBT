@@ -197,6 +197,8 @@ public class TableViewPainted
 	private boolean destroying;
 	private int rowMinHeight;
 
+	private volatile boolean	selectionIsFromDrag;
+	
 	private class
 	RefreshTableRunnable
 		extends AERunnable
@@ -373,6 +375,15 @@ public class TableViewPainted
 				if (clickedRow == null) {
 					return;
 				}
+				
+				if ( isSelected(clickedRow) && getSelectedRowsSize() > 1 && !selectionIsFromDrag ){
+					
+						// if there's an existing selection and it has been clicked on
+						// then prevent right-click drag-select from kicking in
+					
+					mouseDownRow = null;
+				}
+				
 				int keyboardModifier = (stateMask & SWT.MODIFIER_MASK);
 				if (button == 1) {
   				if ((keyboardModifier & SWT.MOD1) != 0) {
@@ -499,6 +510,12 @@ public class TableViewPainted
 									
 									setSelectedRows( newRows );
 									
+										// hack relies on uiSelectionChanged being called synchronously above
+										// otherwise we'd have to introduce a "selection initiator" and modify setSelectedRows and friends
+										// to track the fact that the selection was set by a drag operation
+									
+									selectionIsFromDrag = true;
+									
 								}else{
 									
 									for ( int i=0;i<oldRows.length;i++){
@@ -506,6 +523,8 @@ public class TableViewPainted
 										if ( oldRows[i] != newRows[i] ){
 											
 											setSelectedRows( newRows );
+											
+											selectionIsFromDrag = true;
 											
 											break;
 										}
@@ -3372,6 +3391,9 @@ public class TableViewPainted
 	@Override
 	public void uiSelectionChanged(final TableRowCore[] newlySelectedRows,
 			final TableRowCore[] deselectedRows) {
+		
+		selectionIsFromDrag = false;
+		
 		//System.out.println("Redraw " + Debug.getCompressedStackTrace());
 		Utils.execSWTThread(new AERunnable() {
 			@Override
