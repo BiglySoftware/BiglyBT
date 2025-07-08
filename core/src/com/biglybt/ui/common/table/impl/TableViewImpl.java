@@ -1735,7 +1735,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						for (TableCellCore cell : cells) {
 							cell.refresh(true);
 						}
-						TableRowCore[] subs = row.getSubRowsRecursive(true);
+						
+							// switched to not sorting the hidden rows for performance reasons
+							// can't see why we need to sort them, guess we'll find out
+							// 2025/07/06
+						
+						TableRowCore[] subs = row.getSubRowsRecursive(false);
 
 						for (TableRowCore sr : subs) {
 							cells = sr.getSortColumnCells(sColumnID);
