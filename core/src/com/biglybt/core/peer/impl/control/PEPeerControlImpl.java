@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
@@ -7077,6 +7078,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		private volatile int[] incoming_requested_pieces = {};
 		private volatile int[] outgoing_requested_pieces = {};
 
+		private AtomicLong tagMutationCounter = new AtomicLong();
+
 		private void update(){
 			if(last_active == 0){
 
@@ -7577,6 +7580,20 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return(null);
 		}
 
+		@Override
+		public long 
+		getTagMutationCount()
+		{
+			return( tagMutationCounter.get());
+		}
+		
+		@Override
+		public void 
+		updateTagMutationCount()
+		{
+			tagMutationCounter.incrementAndGet();
+		}
+		
 		@Override
 		public Object getTaggableTransientProperty(String key){
 			return null;

@@ -29,6 +29,7 @@ package com.biglybt.pifimpl.local.peers;
 
 import java.net.InetAddress;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerReadRequest;
@@ -87,6 +88,8 @@ PeerForeignDelegate
 	private Set<Object>	download_disabled_set;
 
 	private boolean	is_download_disabled;
+
+	private AtomicLong tagMutationCounter = new AtomicLong();
 
 	private volatile boolean	closed;
 
@@ -1417,6 +1420,21 @@ PeerForeignDelegate
 	}
 	@Override
 	public TaggableResolver	getTaggableResolver(){ return( null ); }
+	
+	@Override
+	public long 
+	getTagMutationCount()
+	{
+		return( tagMutationCounter.get());
+	}
+	
+	@Override
+	public void 
+	updateTagMutationCount()
+	{
+		tagMutationCounter.incrementAndGet();
+	}
+	
 	@Override
 	public Object getTaggableTransientProperty(String key) {
 		return null;

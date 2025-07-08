@@ -33,6 +33,7 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
@@ -48,6 +49,9 @@ public class TagIconsItem
        extends CoreTableColumnSWT
        implements TableCellRefreshListener, TableCellSWTPaintListener
 {
+	private static Object KEY_TAG_MUT		= new Object();
+	private static Object KEY_IMAGE_FILES	= new Object();
+
 	private static TagManager tag_manager = TagManagerFactory.getTagManager();
 
 	public static final Class DATASOURCE_TYPE = Download.class;
@@ -68,9 +72,21 @@ public class TagIconsItem
 	@Override
 	public void refresh(TableCell cell) {
 		String sTags = null;
-		DownloadManager dm = (DownloadManager)cell.getDataSource();
-		if (dm != null) {
-			List<Tag> tags = tag_manager.getTagsForTaggable( new int[]{ TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_STATE }, dm );
+		DownloadManager core_dm = (DownloadManager)cell.getDataSource();
+		if (core_dm != null) {
+						
+			long mut = core_dm.getTagMutationCount();
+			
+			Long data = (Long)cell.getData( KEY_TAG_MUT );
+			
+			if ( data != null && data == mut ){
+				
+				return;
+			}
+			
+			cell.setData( KEY_TAG_MUT, mut );
+
+			List<Tag> tags = tag_manager.getTagsForTaggable( new int[]{ TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_STATE }, core_dm );
 
 			if ( tags.size() > 0 ){
 
@@ -101,28 +117,48 @@ public class TagIconsItem
 	@Override
 	public void cellPaint(GC gc, TableCellSWT cell) {
 
-		DownloadManager dm = (DownloadManager)cell.getDataSource();
+		DownloadManager core_dm = (DownloadManager)cell.getDataSource();
 
-		List<String> files = new ArrayList<>();
+		String[] files;
 
-		if (dm != null) {
-
-			List<Tag> tags = tag_manager.getTagsForTaggable( new int[]{ TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_STATE }, dm );
-
-			tags = TagUtils.sortTagIcons( tags );
+		if ( core_dm != null ){
 			
-			for ( Tag tag: tags ){
-
-				String file = tag.getImageFile();
+			long mut = core_dm.getTagMutationCount();
+			
+			Object[] data = (Object[])cell.getData( KEY_IMAGE_FILES );
 				
-				if ( file != null ){
+			if ( data == null || (Long)data[0] != mut ){
+
+				List<Tag> tags = tag_manager.getTagsForTaggable( new int[]{ TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_STATE }, core_dm );
+	
+				tags = TagUtils.sortTagIcons( tags );
+				
+				List<String> f = new  ArrayList<>( tags.size());
+	
+				for ( Tag tag: tags ){
+	
+					String file = tag.getImageFile();
 					
-					files.add( file );
+					if ( file != null ){
+						
+						f.add( file );
+					}
 				}
+				
+				files = f.toArray( new String[f.size()] );
+				
+				cell.setData( KEY_IMAGE_FILES, new Object[]{ mut, files });
+				
+			}else{
+				
+				files = (String[])data[1];
 			}
+		}else{
+			
+			files = new String[0];
 		}
 
-		int	num_files = files.size();
+		int	num_files = files.length;
 
 		if ( num_files > 0 ){
 						

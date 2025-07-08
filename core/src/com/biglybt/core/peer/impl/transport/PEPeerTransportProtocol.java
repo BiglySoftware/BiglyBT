@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
@@ -263,6 +264,9 @@ implements PEPeerTransport
 
 	private int upload_priority_auto;
 
+	private AtomicLong tagMutationCounter = new AtomicLong();
+
+	
 	private static final class DisconnectedTransportQueue extends LinkedHashMap<HashWrapper,DisconnectedTransportQueue.QueueEntry>
 	{
 		public DisconnectedTransportQueue()
@@ -6538,6 +6542,21 @@ implements PEPeerTransport
    	}
 	@Override
 	public TaggableResolver	getTaggableResolver(){ return( null ); }
+	
+	@Override
+	public long 
+	getTagMutationCount()
+	{
+		return( tagMutationCounter.get());
+	}
+	
+	@Override
+	public void 
+	updateTagMutationCount()
+	{
+		tagMutationCounter.incrementAndGet();
+	}
+	
 	@Override
 	public Object getTaggableTransientProperty(String key) {
 		return null;

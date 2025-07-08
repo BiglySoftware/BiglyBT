@@ -106,11 +106,11 @@ TagBase
 	protected static final String	AT_AUTO_APPLY_SORT_INTERVAL		= "dl.auto.sort";
 	protected static final String	AT_WEIGHT						= "dl.weight";
 
-	private static final String[] EMPTY_STRING_LIST = {};
-
+	private static final String[]	EMPTY_STRING_LIST = {};
+			
 	final TagTypeBase	tag_type;
 
-	private final int			tag_id;
+	private final int	tag_id;
 	private String		tag_name;
 
 	private static final int TL_ADD 	= 1;
@@ -154,6 +154,7 @@ TagBase
 	private long[]	colours;
 	private String	description;
 
+	private String 	image_file;
 	private int		image_sort_order = Integer.MIN_VALUE;
 
 	private TagFeatureRateLimit		tag_rl;
@@ -592,13 +593,19 @@ TagBase
 	public String 
 	getImageFile()
 	{
-		return( readStringAttribute( AT_IMAGE_FILE, null ));
+		if ( image_file == null ){
+			image_file = readStringAttribute( AT_IMAGE_FILE, "" );
+		}
+		
+		return( image_file.isEmpty()?null:image_file );
 	}
 	
 	@Override
 	public void 
 	setImageFile(String id)
 	{
+		image_file = id==null?"":id;
+		
 		writeStringAttribute( AT_IMAGE_FILE, id );
 		
 		tag_type.fireMetadataChanged( this );

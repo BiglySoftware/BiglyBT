@@ -20,6 +20,8 @@
 
 package com.biglybt.core.tag;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public interface
 Taggable
 	extends com.biglybt.pif.tag.Taggable
@@ -27,7 +29,7 @@ Taggable
 	public static final int	TT_NONE			= 0x00000000;		
 	public static final int	TT_DOWNLOAD		= 0x00000002;		// DownloadManagers
 	public static final int	TT_PEER			= 0x00000004;		// PEPeers
-
+	
 	public int
 	getTaggableType();
 
@@ -36,6 +38,12 @@ Taggable
 
 	public String
 	getTaggableName();
+	
+	public void
+	updateTagMutationCount();
+	
+	public long
+	getTagMutationCount();
 	
 	public TaggableResolver
 	getTaggableResolver();

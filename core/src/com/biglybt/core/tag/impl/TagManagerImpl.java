@@ -1711,6 +1711,8 @@ TagManagerImpl
 		Tag			tag,
 		Taggable	tagged )
 	{
+		tagged.updateTagMutationCount();
+		
 		int tt = tag_type.getTagType();
 
 		if ( tt == TagType.TT_DOWNLOAD_MANUAL && tagged instanceof DownloadManager ){
@@ -1895,6 +1897,8 @@ TagManagerImpl
 		Tag			tag,
 		Taggable	tagged )
 	{
+		tagged.updateTagMutationCount();
+		
 		int tt = tag_type.getTagType();
 
 			// as above
