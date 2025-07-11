@@ -187,6 +187,14 @@ AEProxyFactory
 	public static final String	SP_NEW_IDENTITY		= "new-identity";
 	public static final String	SP_BIND				= "bind";
 
+	public static boolean
+	hasPluginServerProxy(
+		String					reason,
+		String					network )
+	{
+		return( AEPluginProxyHandler.hasPluginServerProxy( reason, network  ));
+	}
+	
 	public static Map<String,Object>
 	getPluginServerProxy(
 		String					reason,

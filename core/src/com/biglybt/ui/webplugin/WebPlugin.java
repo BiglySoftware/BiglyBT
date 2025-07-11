@@ -129,8 +129,14 @@ WebPlugin
 	public static final String	CONFIG_REVERSE_PROXY			= "Reverse Proxy";
 	public 				boolean	CONFIG_REVERSE_PROXY_DEFAULT	= false;
 	
+	public static final String	CONFIG_I2P_ENABLE				= "I2P Enable";
+	public 				boolean	CONFIG_I2P_ENABLE_DEFAULT		= true;
+	
+	public static final String	CONFIG_TOR_ENABLE				= "Tor Enable";
+	public 				boolean	CONFIG_TOR_ENABLE_DEFAULT		= true;
+
 	public static final String 	CONFIG_HOME_PAGE				= PR_HOME_PAGE;
-	public  		 String 	CONFIG_HOME_PAGE_DEFAULT		= "index.html";
+	public  			String 	CONFIG_HOME_PAGE_DEFAULT		= "index.html";
 
 	public static final String 	CONFIG_ROOT_DIR					= PR_ROOT_DIR;
 	public        		String 	CONFIG_ROOT_DIR_DEFAULT			= "";
@@ -171,7 +177,10 @@ WebPlugin
 
 	private StringParameter			param_access;
 
+	private BooleanParameter		param_i2p_enable;
 	private InfoParameter			param_i2p_dest;
+	
+	private BooleanParameter		param_tor_enable;
 	private InfoParameter			param_tor_dest;
 
 	private BooleanParameter		p_upnp_enable;
@@ -322,6 +331,20 @@ WebPlugin
 		if ( pr_reverse_proxy != null ){
 
 			CONFIG_REVERSE_PROXY_DEFAULT = pr_reverse_proxy.booleanValue();
+		}
+		
+		Boolean	pr_i2p_enable = (Boolean)properties.get(PR_ENABLE_I2P);
+
+		if ( pr_i2p_enable != null ){
+
+			CONFIG_I2P_ENABLE_DEFAULT = pr_i2p_enable.booleanValue();
+		}
+		
+		Boolean	pr_tor_enable = (Boolean)properties.get(PR_ENABLE_TOR);
+
+		if ( pr_tor_enable != null ){
+
+			CONFIG_TOR_ENABLE_DEFAULT = pr_tor_enable.booleanValue();
 		}
 		
 		Boolean	pr_hide_resource_config = (Boolean)properties.get( PR_HIDE_RESOURCE_CONFIG );
@@ -577,9 +600,39 @@ WebPlugin
 		param_bind.addListener( update_server_listener );
 		param_protocol.addListener( update_server_listener );
 
+		param_i2p_enable =
+				config_model.addBooleanParameter2(
+								CONFIG_I2P_ENABLE,
+								"webui.i2penable",
+								CONFIG_I2P_ENABLE_DEFAULT );
+		
+		param_i2p_enable.setVisible( false );
+		
+		network_dispatcher.dispatch(()->{
+			param_i2p_enable.setVisible( 
+					AEProxyFactory.hasPluginServerProxy(
+							plugin_interface.getPluginName(),
+							AENetworkClassifier.AT_I2P ));
+		});
+
 		param_i2p_dest = config_model.addInfoParameter2( "webui.i2p_dest", "" );
 		param_i2p_dest.setVisible( false );
 
+		param_tor_enable =
+				config_model.addBooleanParameter2(
+								CONFIG_TOR_ENABLE,
+								"webui.torenable",
+								CONFIG_TOR_ENABLE_DEFAULT );
+		
+		param_tor_enable.setVisible( false );
+		
+		network_dispatcher.dispatch(()->{
+			param_tor_enable.setVisible( 
+					AEProxyFactory.hasPluginServerProxy(
+							plugin_interface.getPluginName(),
+							AENetworkClassifier.AT_TOR ));
+		});
+		
 		param_tor_dest = config_model.addInfoParameter2( "webui.tor_dest", "" );
 		param_tor_dest.setVisible( false );
 
@@ -715,7 +768,7 @@ WebPlugin
 		config_model.createGroup(
 			"ConfigView.section.server",
 			new Parameter[]{
-				param_port, param_bind, param_protocol, param_i2p_dest, param_tor_dest, p_upnp_enable, p_reverse_proxy,
+				param_port, param_bind, param_protocol, param_i2p_enable, param_i2p_dest, param_tor_enable, param_tor_dest, p_upnp_enable, p_reverse_proxy,
 			});
 
 		param_home 		= config_model.addStringParameter2(	CONFIG_HOME_PAGE, "webui.homepage", CONFIG_HOME_PAGE_DEFAULT );
@@ -1448,9 +1501,7 @@ WebPlugin
 
 			int server_port = getServerPort();
 			
-			Boolean prop_enable_i2p = (Boolean)properties.get( PR_ENABLE_I2P );
-
-			if ( prop_enable_i2p == null || prop_enable_i2p ){
+			if ( param_i2p_enable.getValue()){
 
 				network_dispatcher.dispatch(
 					new AERunnable()
@@ -1497,9 +1548,7 @@ WebPlugin
 					});
 			}
 
-			Boolean prop_enable_tor = (Boolean)properties.get( PR_ENABLE_TOR );
-
-			if ( prop_enable_tor == null || prop_enable_tor ){
+			if ( param_tor_enable.getValue()){
 
 				network_dispatcher.dispatch(
 					new AERunnable()

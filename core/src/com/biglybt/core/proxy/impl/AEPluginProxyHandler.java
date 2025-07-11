@@ -512,6 +512,36 @@ AEPluginProxyHandler
 		return( pis );
 	}
 
+	public static boolean
+	hasPluginServerProxy(
+		String					reason,
+		String					network )
+	{
+		waitForPlugins( plugin_init_max_wait );
+
+		checkPluginInstallation( network, reason );
+
+		PluginInterface pi = getPluginProxyForNetwork( network, false );
+
+		if ( pi == null ){
+
+			return( false );
+		}
+
+		Map<String,Object> options = new HashMap<>();
+
+		try{
+			IPCInterface ipc = pi.getIPC();
+
+			return( ipc.canInvoke( "getProxyServer", new Object[]{ reason, options }));
+
+		}catch( Throwable e ){
+
+		}
+
+		return( false );
+	}
+	
 	public static Map<String,Object>
 	getPluginServerProxy(
 		String					reason,
