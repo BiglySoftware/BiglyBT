@@ -1919,6 +1919,8 @@ public class MyTorrentsView
 				listSelected.add(new SelectedContent(fileInfo.getDownloadManager(), fileInfo.getIndex()));
 			}
 		}
+		
+		
 		SelectedContent[] content = listSelected.toArray(new SelectedContent[0]);
 		SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(), content, tv);
 	}

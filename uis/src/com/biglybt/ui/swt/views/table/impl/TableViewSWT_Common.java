@@ -53,7 +53,7 @@ import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
 
 public abstract class TableViewSWT_Common
-	implements MouseListener, MouseMoveListener, SelectionListener, KeyListener, MenuDetectListener
+	implements MouseListener, MouseMoveListener, MouseTrackListener, SelectionListener, KeyListener, MenuDetectListener
 {
 
 	TableViewSWT<?> tv;
@@ -462,6 +462,16 @@ public abstract class TableViewSWT_Common
 		}
 	}
 
+	@Override
+	public void mouseEnter(MouseEvent e){
+	}
+	@Override
+	public void mouseExit(MouseEvent e){
+	}
+	@Override
+	public void mouseHover(MouseEvent e){
+	}
+	
 	@Override
 	public void widgetSelected(SelectionEvent e) {
 	}

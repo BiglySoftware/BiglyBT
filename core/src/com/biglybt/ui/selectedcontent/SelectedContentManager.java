@@ -20,6 +20,8 @@
 
 package com.biglybt.ui.selectedcontent;
 
+import java.util.*;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
@@ -80,9 +82,14 @@ public class SelectedContentManager
 		changeCurrentlySelectedContent(viewID, currentlySelectedContent, null);
 	}
 
-	public static void changeCurrentlySelectedContent(String viewID,
-			ISelectedContent[] currentlySelectedContent, TableView tv) {
-		if (changeCurrentlySelectedContentNoTrigger(viewID, currentlySelectedContent, tv)) {
+	public static void 
+	changeCurrentlySelectedContent(
+		String 				viewID,
+		ISelectedContent[] 	currentlySelectedContent, 
+		TableView 			tv ) 
+	{
+		if ( changeCurrentlySelectedContentNoTrigger(viewID, currentlySelectedContent, tv)){
+			
 			triggerSelectedContentListeners();
 		}
 	}
@@ -144,7 +151,47 @@ public class SelectedContentManager
 		return true;
 	}
 
-	public static void triggerSelectedContentListeners() {
+	private static List<SelectedContentListenersEnabler>	listenerEnablers = new ArrayList<>();
+	
+	public static class
+	SelectedContentListenersEnabler
+	{
+		public void
+		setEnabled()
+		{
+			synchronized( listenerEnablers ){
+				
+				listenerEnablers.remove( this );
+			}
+			
+			triggerSelectedContentListeners();
+		}
+	}
+	
+	public static SelectedContentListenersEnabler
+	disableSelectedContentListeners()
+	{
+		SelectedContentListenersEnabler enabler = new SelectedContentListenersEnabler();
+		
+		synchronized( listenerEnablers ){
+			
+			listenerEnablers.add( enabler );
+		}
+		
+		return( enabler );
+	}
+	
+	private static void
+	triggerSelectedContentListeners() 
+	{
+		synchronized( listenerEnablers ){
+			
+			if ( !listenerEnablers.isEmpty()){
+				
+				return;
+			}
+		}
+		
 		for( SelectedContentListener l: listeners ){
 
 			try{

@@ -197,8 +197,9 @@ public class TableViewPainted
 	private boolean destroying;
 	private int rowMinHeight;
 
-	private volatile boolean	selectionIsFromDrag;
-	
+	private volatile boolean												selectionIsFromDrag;
+	private volatile SelectedContentManager.SelectedContentListenersEnabler SCLEnabler;
+
 	private class
 	RefreshTableRunnable
 		extends AERunnable
@@ -320,7 +321,7 @@ public class TableViewPainted
 			private int				mouseDownLastY 	= -1;
 			private long			lastAutoScroll	= -1;
 			private MouseEvent		lastMouseMove;
-			
+						
 			private Map<Integer,TableRowCore>	rowsMapCache = new HashMap<>();
 			private int							rowsMapCacheMut = -1;
 			
@@ -328,10 +329,31 @@ public class TableViewPainted
 			public void widgetSelected(SelectionEvent event) {
 				//updateSelectedRows(table.getSelection(), true);
 			}
+			
+			@Override
+			public void 
+			mouseExit(
+				MouseEvent e)
+			{
+				super.mouseExit(e);
+				
+				if ( SCLEnabler != null ){
+					
+					SCLEnabler.setEnabled();
+					
+					SCLEnabler = null;
+				}
+			}
+			
 
 			@Override
-			public void mouseUp(TableRowCore clickedRow, TableCellCore cell, int button,
-                                int stateMask) {
+			public void 
+			mouseUp(
+				TableRowCore	clickedRow, 
+				TableCellCore	cell, 
+				int				button,
+                int				stateMask ) 
+			{
 				super.mouseUp(clickedRow, cell, button, stateMask);
 
 				mouseDown		= false;
@@ -340,21 +362,28 @@ public class TableViewPainted
 				rowsMapCache.clear();
 				rowsMapCacheMut = -1;
 				
+				if ( SCLEnabler != null ){
+					
+					SCLEnabler.setEnabled();
+					
+					SCLEnabler = null;
+				}
+				
 				if (clickedRow == null) {
 					return;
 				}
 				if (button == 1) {
-  				int keyboardModifier = (stateMask & SWT.MODIFIER_MASK);
-  				if ((keyboardModifier & SWT.SHIFT) != 0) {
-  					// select from focus to row
-  					selectRowsTo(clickedRow);
-  					return;
-  				} else if (keyboardModifier == 0) {
-  					setSelectedRows(new TableRowCore[] {
-  						clickedRow
-  					});
-  					return;
-  				}
+					int keyboardModifier = (stateMask & SWT.MODIFIER_MASK);
+					if ((keyboardModifier & SWT.SHIFT) != 0) {
+						// select from focus to row
+						selectRowsTo(clickedRow);
+						return;
+					} else if (keyboardModifier == 0) {
+						setSelectedRows(new TableRowCore[] {
+								clickedRow
+						});
+						return;
+					}
 				}
 			}
 
@@ -409,6 +438,11 @@ public class TableViewPainted
 					setSelectedRows(new TableRowCore[] {
 						clickedRow
 					});
+				}
+				
+				if ( mouseDownRow != null ){
+					
+					SCLEnabler = SelectedContentManager.disableSelectedContentListeners();
 				}
 			}
 
@@ -477,7 +511,18 @@ public class TableViewPainted
 							}
 						}
 						
-						TableRowSWT row = getTableRow(e.x, e.y, true);
+						int y = e.y;
+						
+						if ( y < 0 ){
+							
+							y = 0;
+							
+						}else if ( y >= clientArea.height ){
+							
+							y = clientArea.height-1;
+						}
+						
+						TableRowSWT row = getTableRow(e.x, y, true);
 						
 						if ( row != null ){
 												
@@ -1809,6 +1854,7 @@ public class TableViewPainted
 
 		cTable.addMouseListener(tvSWTCommon);
 		cTable.addMouseMoveListener(tvSWTCommon);
+		cTable.addMouseTrackListener(tvSWTCommon);
 		cTable.addKeyListener(tvSWTCommon);
 		cTable.addMenuDetectListener(tvSWTCommon);
 		//composite.addSelectionListener(tvSWTCommon);
@@ -3385,7 +3431,7 @@ public class TableViewPainted
 
 	@Override
 	public void triggerTabViewsDataSourceChanged() {
-		if (tvTabsCommon != null) {
+		if (tvTabsCommon != null && SCLEnabler == null ) {
 			tvTabsCommon.triggerTabViewsDataSourceChanged(this);
 		}
 	}
