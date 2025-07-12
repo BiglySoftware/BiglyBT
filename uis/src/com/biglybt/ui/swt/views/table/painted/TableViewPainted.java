@@ -341,6 +341,11 @@ public class TableViewPainted
 					
 					SCLEnabler.setEnabled();
 					
+					if (tvTabsCommon != null ){
+						
+						tvTabsCommon.triggerTabViewsDataSourceChanged(TableViewPainted.this);
+					}
+					
 					SCLEnabler = null;
 				}
 			}
@@ -365,6 +370,11 @@ public class TableViewPainted
 				if ( SCLEnabler != null ){
 					
 					SCLEnabler.setEnabled();
+					
+					if ( tvTabsCommon != null ){
+						
+						tvTabsCommon.triggerTabViewsDataSourceChanged(TableViewPainted.this);
+					}
 					
 					SCLEnabler = null;
 				}
