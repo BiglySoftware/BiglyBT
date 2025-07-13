@@ -269,6 +269,9 @@ Subscription
 	public void
 	remove();
 
+	public boolean
+	isRemoved();
+	
 	public SubscriptionManager
 	getManager();
 

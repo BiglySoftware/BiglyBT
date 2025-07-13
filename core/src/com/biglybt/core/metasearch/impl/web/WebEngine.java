@@ -422,15 +422,11 @@ WebEngine
 	public WebEngine
 	getClone()
 	{
-		try{
-			return((WebEngine)getMetaSearch().importFromBEncodedMap( exportToBencodedMap()));
+		MetaSearchImpl ms = getMetaSearch();			
+					
+		WebEngine result = (WebEngine)ms.cloneEngine( this );
 			
-		}catch( Throwable e ){
-			
-			Debug.out( e );
-		}
-		
-		return( null );
+		return( result );
 	}
 	
 	protected void

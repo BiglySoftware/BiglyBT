@@ -413,6 +413,30 @@ MetaSearchImpl
 		}
 	}
 
+	public EngineImpl
+	cloneEngine(
+		EngineImpl		engine )
+	{
+		try{
+			Map<String,Object> map = engine.exportToBencodedMap();
+						
+			map.remove( "id" );
+			map.remove( "uid" );
+			
+			EngineImpl result = (EngineImpl)importFromBEncodedMap( map );
+			
+			addEngine( result, false );
+			
+			return( result );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return(null );
+	}
+	
 	protected boolean
 	updateEngine(
 		EngineImpl		engine )

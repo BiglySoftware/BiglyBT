@@ -53,7 +53,7 @@ public class ColumnSubscriptionURL
 	public void refresh(TableCell cell) {
 		String str = "";
 		Subscription sub = (Subscription) cell.getDataSource();
-		if ( sub != null ){
+		if ( sub != null && !sub.isRemoved()){
 			if ( sub.isSearchTemplate() || sub.isSubscriptionTemplate()){
 				str = "";
 			}else{
