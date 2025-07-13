@@ -419,6 +419,20 @@ WebEngine
 		}
 	}
 
+	public WebEngine
+	getClone()
+	{
+		try{
+			return((WebEngine)getMetaSearch().importFromBEncodedMap( exportToBencodedMap()));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( null );
+	}
+	
 	protected void
 	init()
 	{

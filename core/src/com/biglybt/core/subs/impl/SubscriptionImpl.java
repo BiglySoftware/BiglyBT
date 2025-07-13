@@ -686,6 +686,11 @@ SubscriptionImpl
 
 			exec_on_new_result = new String( b_eonr, Constants.UTF_8 );
 		}
+		
+			// add things here -> check cloneWithNewEngine
+		
+		
+		
 	}
 
 	public ExportedDataSource
@@ -1450,6 +1455,19 @@ SubscriptionImpl
 
 				SubscriptionImpl subs = new SubscriptionImpl( manager, getName(), engine.isPublic(), isAnonymous(), null, JSONUtils.encodeToJSON(map), SubscriptionImpl.ADD_TYPE_CREATE );
 
+					// duplicate required properties
+				
+				subs.category	 	= category;
+				subs.tag_id			= tag_id;
+				subs.view_options	= view_options;
+				subs.parent			= parent;
+				
+				if ( depends_on != null ){
+					subs.depends_on	= new ArrayList<>( depends_on );
+				}
+				
+				subs.exec_on_new_result	= exec_on_new_result;
+				
 				subs = manager.addSubscription( subs );
 
 				setLocalName( getName( false ) + " (old)" );

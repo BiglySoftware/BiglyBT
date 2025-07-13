@@ -1065,7 +1065,7 @@ EngineImpl
 		return( name );
 	}
 
-	protected void
+	public void
 	setName(
 		String		n )
 	{
