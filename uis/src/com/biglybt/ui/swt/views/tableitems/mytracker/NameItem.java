@@ -20,8 +20,11 @@ package com.biglybt.ui.swt.views.tableitems.mytracker;
 
 import org.eclipse.swt.graphics.Image;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.host.TRHostTorrent;
 import com.biglybt.core.util.ByteFormatter;
@@ -44,6 +47,8 @@ import com.biglybt.ui.swt.views.table.TableCellSWT;
 public class NameItem extends CoreTableColumnSWT implements
 		TableCellRefreshListener, ObfuscateCellText
 {
+	private static GlobalManager gm;
+
 	private static boolean bShowIcon;
 
 	private ParameterListener configShowProgramIconListener = new ParameterListenerConfigShowProgramIcon();
@@ -52,7 +57,7 @@ public class NameItem extends CoreTableColumnSWT implements
 	public NameItem() {
 		super("name", POSITION_LAST, 250, TableManager.TABLE_MYTRACKER);
 		setType(TableColumn.TYPE_TEXT);
-
+		setRefreshInterval(INTERVAL_LIVE);
 		COConfigurationManager.addWeakParameterListener(
 				configShowProgramIconListener, true, "NameColumn.showProgramIcon");
 	}
@@ -67,15 +72,48 @@ public class NameItem extends CoreTableColumnSWT implements
 	@Override
 	public void refresh(TableCell cell) {
 		TRHostTorrent item = (TRHostTorrent) cell.getDataSource();
-		String name = (item == null) ? ""
-				: TorrentUtils.getLocalisedName(item.getTorrent());
+		
+		TOTorrent torrent = item==null?null:item.getTorrent();
+		
+		String name = null;
+		
+		if ( item == null ){
+			
+			name = "";
+			
+		}else{
+			
+			if ( gm == null ){
+				
+				if ( CoreFactory.isCoreRunning()) {
+			
+					gm = CoreFactory.getSingleton().getGlobalManager();
+				}
+			}
+
+			if ( gm != null ){
+			
+				DownloadManager dm = gm.getDownloadManager( torrent );
+				
+				if ( dm != null ){
+					
+					name = dm.getDisplayName();
+				}
+			}
+			
+			if ( name == null ){
+				
+				name = TorrentUtils.getLocalisedName( torrent );
+			}
+		}
+		
 		//setText returns true only if the text is updated
 
 		if (cell.setText(name) || !cell.isValid()) {
-			if (item != null && item.getTorrent() != null && bShowIcon
+			if (item != null && torrent != null && bShowIcon
 					&& (cell instanceof TableCellSWT)) {
 				try {
-	  				final TOTorrent torrent = item.getTorrent();
+	  				
 	  				final String path = torrent.getFiles()[0].getRelativePath();
 
 	  				if ( path != null ){
