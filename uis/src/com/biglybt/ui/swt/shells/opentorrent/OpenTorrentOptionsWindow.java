@@ -4558,48 +4558,81 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
-		protected void cmbDataDirChanged() {
-
-			if (bSkipDataDirModify || cmbDataDir == null) {
+		protected void 
+		cmbDataDirChanged() 
+		{
+			if ( cmbDataDir == null ){
+				
 				return;
 			}
+			
 			String dirText = cmbDataDir.getText();
 
-			File moc = null;
-			
-			for ( TorrentOpenOptions too: torrentOptionsMulti ){
-				too.setParentDir( dirText);
-				
-				moc = too.getMoveOnComplete();
-			}
-
-			checkSeedingMode();
-
-			if (!Constants.isOSX) { // See Eclipse Bug 292449
-				File file = FileUtil.newFile( dirText );
-				if (!file.isDirectory()) {
-					cmbDataDir.setBackground(Colors.colorErrorBG);
-					// make the error state visible
-					soExpandItemSaveTo.setExpanded(true);
-				} else {
-					Utils.setSkinnedBackground( cmbDataDir,(Color)null );
+			if ( !bSkipDataDirModify ){
+									
+				for ( TorrentOpenOptions too: torrentOptionsMulti ){
+					
+					too.setParentDir( dirText);
 				}
-				cmbDataDir.redraw();
-				cmbDataDir.update();
+	
+				checkSeedingMode();
+	
+				if (!Constants.isOSX) { // See Eclipse Bug 292449
+					File file = FileUtil.newFile( dirText );
+					if (!file.isDirectory()) {
+						cmbDataDir.setBackground(Colors.colorErrorBG);
+						// make the error state visible
+						soExpandItemSaveTo.setExpanded(true);
+					} else {
+						Utils.setSkinnedBackground( cmbDataDir,(Color)null );
+					}
+					cmbDataDir.redraw();
+					cmbDataDir.update();
+				}
 			}
+			
+			if ( soExpandItemSaveTo != null ){
 
-			if (soExpandItemSaveTo != null) {
+				File moc = null;
+				
+				boolean mocSame = true;
+
+				for ( TorrentOpenOptions too: torrentOptionsMulti ){
+					
+					File m = too.getMoveOnComplete();
+					
+					if ( m != moc ){
+						
+						if ( m == null || moc == null ||!m.equals( moc )){
+							
+							moc 	= m;	// so we show moc but not dir
+							mocSame = false;
+							
+							break;
+							
+						}else{
+							
+							moc = m;
+						}
+					}
+				}
+				
 				String s = MessageText.getString("OpenTorrentOptions.header.saveto",
 						new String[] { dirText });
 				
 				if ( moc != null ){
 					s += "; " + MessageText.getString( "label.move.on.comp" );
+					
+					if ( mocSame ){
+						s += ": " + moc.getAbsolutePath();
+					}
 				}
 				soExpandItemSaveTo.setText(s);
 			}
+	
 			diskFreeInfoRefreshPending = true;
 		}
-
+	
 		protected void setSelectedQueueLocation(int iLocation) {
 			for ( TorrentOpenOptions to: torrentOptionsMulti ){
 				to.setQueueLocation( iLocation );
