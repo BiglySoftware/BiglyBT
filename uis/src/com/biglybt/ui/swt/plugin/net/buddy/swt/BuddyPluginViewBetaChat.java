@@ -3399,11 +3399,7 @@ BuddyPluginViewBetaChat
 						widgetSelected(
 							SelectionEvent e )
 						{
-							String name = chat.getDisplayName();
-							
-							if ( name == null ) {
-								name = chat.getName();
-							}
+							String name = chat.getDisplayNameEx();
 							
 							UISWTInputReceiver entry = new SimpleTextEntryWindow();
 							entry.setPreenteredText(name, false );

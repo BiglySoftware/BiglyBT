@@ -3777,6 +3777,16 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			BuddyPluginBeta.this.setDisplayName( network, key, str );
 		}
 		
+		public String
+		getDisplayNameEx()
+		{
+			String str = getDisplayName();
+			if ( str == null ){
+				str = getName();
+			}
+			return( str );
+		}
+		
 		private void
 		setSpammer(
 			ChatParticipant		participant,

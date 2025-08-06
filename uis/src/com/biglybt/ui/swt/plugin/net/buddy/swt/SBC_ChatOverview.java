@@ -739,12 +739,8 @@ public class SBC_ChatOverview
 											
 											if ( chats.size() == 1 ){
 												
-												str = chat.getDisplayName();
+												str = chat.getDisplayNameEx();
 												
-												if ( str == null ){
-													
-													str = chat.getName();
-												}
 											}else if ( chats.size() == 2 ){
 												
 												str += ", ...";

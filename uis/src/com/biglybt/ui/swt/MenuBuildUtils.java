@@ -1252,6 +1252,19 @@ public class MenuBuildUtils {
 		}
 	}
 	
+	private static List<ChatInstance>
+	sortChats(
+		List<ChatInstance> chats )
+	{
+		chats = new ArrayList<>( chats );
+		
+		Comparator<String> comp = new FormattersImpl().getAlphanumericComparator(true);
+		
+		Collections.sort( chats, (c1,c2)->comp.compare(c1.getDisplayNameEx(), c2.getDisplayNameEx()));
+		
+		return( chats );
+	}
+	
 	public static void
 	addChatSelectionMenu(
 		final MenuManager		menu_manager,
@@ -1302,6 +1315,8 @@ public class MenuBuildUtils {
 					
 					List<ChatInstance> chats = BuddyPluginUtils.getChats();			
 					
+					chats = sortChats( chats );
+					
 					for ( int i=0;i<2;i++){
 						
 						MenuItem chat_menu = menu_manager.addMenuItem( chat_item, i==0?"label.public":"label.anon" );
@@ -1314,7 +1329,7 @@ public class MenuBuildUtils {
 							
 							if ( chat.getNetwork() == net ){
 								
-								mi = menu_manager.addMenuItem( chat_menu, "!" + chat.getKey() + "!" );
+								mi = menu_manager.addMenuItem( chat_menu, "!" + chat.getDisplayNameEx() + "!" );
 																
 								mi.addMultiListener(
 									new MenuItemListener()
@@ -1441,13 +1456,15 @@ public class MenuBuildUtils {
 
 									List<ChatInstance> chats = BuddyPluginUtils.getChats();
 
+									chats = sortChats( chats );
+									
 									for ( ChatInstance chat: chats ){
 										
 										if ( chat.getNetwork() == net ){
 											
 											org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem(sub_menu, SWT.RADIO);
 
-											mi.setText(chat.getKey());
+											mi.setText(chat.getDisplayNameEx());
 
 											mi.setSelection( existing_chat!=null && existing_chat.equals(chat.getNetAndKey()));
 											
