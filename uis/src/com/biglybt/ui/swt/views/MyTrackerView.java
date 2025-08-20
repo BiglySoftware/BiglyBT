@@ -363,8 +363,10 @@ public class MyTrackerView
 		  if ( seed_count != 0 ){
 			  Color fg = row.getForeground();
 
-			  if (fg== null || !fg.equals(Colors.blues[Colors.BLUES_MIDDARK])) {
-				  row.requestForegroundColor( color_requester, Colors.blues[Colors.BLUES_MIDDARK]);
+			  Color target_fg = Utils.isDarkAppearanceNativeWindows()?Colors.bluesFixed[Colors.BLUES_MIDDARK]:Colors.blues[Colors.BLUES_MIDDARK];
+			  
+			  if (fg== null || !fg.equals(target_fg)) {
+				  row.requestForegroundColor( color_requester, target_fg);
 			  }
 		  }else{
 			  row.requestForegroundColor( color_requester, null );
