@@ -26,7 +26,7 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.swt.components.shell.ShellManager;
 
-import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.common.updater.UIUpdatableAlways;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 
 /**
@@ -34,7 +34,7 @@ import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
  *
  */
 public class MiniBarManager
-implements UIUpdatable
+implements UIUpdatableAlways
 {
 
 	private boolean global;
@@ -159,50 +159,55 @@ implements UIUpdatable
 			}
 	  }
 
-		  public void close(Object context) {
-			  MiniBar bar = this.getMiniBarForObject(context);
-			  if (bar != null) {bar.close();}
-			}
+	  public void close(Object context) {
+		  MiniBar bar = this.getMiniBarForObject(context);
+		  if (bar != null) {bar.close();}
+	  }
 
-			public void closeAll() {
-				try {
-					minibars_mon.enter();
-					for (Iterator iter = new ArrayList(minibars).iterator(); iter.hasNext();) {
-						MiniBar bar = (MiniBar) iter.next();
-						bar.close();
-					}
-				}
-				finally {
-					minibars_mon.exit();
-				}
-			}
+	  public void closeAll() {
+		  try {
+			  minibars_mon.enter();
+			  for (Iterator iter = new ArrayList(minibars).iterator(); iter.hasNext();) {
+				  MiniBar bar = (MiniBar) iter.next();
+				  bar.close();
+			  }
+		  }
+		  finally {
+			  minibars_mon.exit();
+		  }
+	  }
 
-			public boolean isOpen(Object context) {
-				return this.getMiniBarForObject(context) != null;
-			}
+	  public boolean isOpen(Object context) {
+		  return this.getMiniBarForObject(context) != null;
+	  }
 
-			// @see UIUpdatable#getUpdateUIName()
-			@Override
-			public String getUpdateUIName() {
-				return "MiniBar-" + type;
-			}
+	  // @see UIUpdatable#getUpdateUIName()
+	  @Override
+	  public String getUpdateUIName() {
+		  return "MiniBar-" + type;
+	  }
 
-			// @see UIUpdatable#updateUI()
-			@Override
-			public void updateUI() {
-				try {
-					minibars_mon.enter();
+	  // @see UIUpdatable#updateUI()
+	  @Override
+	  public void updateUI() {
+		  try {
+			  minibars_mon.enter();
 
-					for (Iterator iter = minibars.iterator(); iter.hasNext();) {
-						MiniBar bar = (MiniBar) iter.next();
-						try {
-							bar.refresh();
-						} catch (Exception e) {
-							Debug.out(e);
-						}
-					}
-				} finally {
-					minibars_mon.exit();
-				}
-			}
+			  for (Iterator iter = minibars.iterator(); iter.hasNext();) {
+				  MiniBar bar = (MiniBar) iter.next();
+				  try {
+					  bar.refresh();
+				  } catch (Exception e) {
+					  Debug.out(e);
+				  }
+			  }
+		  } finally {
+			  minibars_mon.exit();
+		  }
+	  }
+
+	  @Override
+	  public void updateUI(boolean is_visible){
+		  updateUI();
+	  }
 }
