@@ -74,7 +74,7 @@ TRTrackerServerImpl
 
 	private static final Map		link_map	= new HashMap();
 
-	protected final AEMonitor class_mon 	= new AEMonitor( "TRTrackerServer:class" );
+	private static final AEMonitor	class_mon 	= new AEMonitor( "TRTrackerServer:class" );
 
 
 	static{
