@@ -2093,8 +2093,6 @@ PRUDPPacketHandlerSupport
 				}catch( Throwable e ){
 					
 					pp.setOK( true );
-					
-					Debug.out( e );
 				}
 			}
 		}
