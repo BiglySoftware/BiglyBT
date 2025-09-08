@@ -639,7 +639,7 @@ TRTrackerServerProcessorUDP
 
 				boolean ipv6 = client_address instanceof Inet6Address;
 				
-				PRUDPPacketReplyAnnounce2 reply = new PRUDPPacketReplyAnnounce2(request.getTransactionId(), ipv6 );
+				PRUDPPacketReplyAnnounce2 reply = new PRUDPPacketReplyAnnounce2(request.getTransactionId(), ipv6?PRUDPPacketReplyAnnounce2.AT_IPV6:PRUDPPacketReplyAnnounce2.AT_IPV4 );
 
 				reply.setInterval(((Long)root.get("interval")).intValue());
 

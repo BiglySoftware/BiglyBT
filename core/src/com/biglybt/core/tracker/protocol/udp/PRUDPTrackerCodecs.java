@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.net.udp.uc.*;
 
 
@@ -74,7 +75,14 @@ PRUDPTrackerCodecs
 							if ( PRUDPPacketTracker.VERSION == 1 ){
 								return( new PRUDPPacketReplyAnnounce(is, transaction_id));
 							}else{
-								return( new PRUDPPacketReplyAnnounce2(is, transaction_id, originator.getAddress() instanceof Inet6Address ));
+								int address_type;
+								if ( originator.isUnresolved() && AENetworkClassifier.categoriseAddress(originator) == AENetworkClassifier.AT_I2P ){
+									
+									address_type = PRUDPPacketReplyAnnounce2.AT_I2P;
+								}else{
+									address_type = originator.getAddress() instanceof Inet6Address?PRUDPPacketReplyAnnounce2.AT_IPV6:PRUDPPacketReplyAnnounce2.AT_IPV4;
+								}
+								return( new PRUDPPacketReplyAnnounce2(is, transaction_id, address_type ));
 							}
 						}
 						case PRUDPPacketTracker.ACT_REPLY_SCRAPE:

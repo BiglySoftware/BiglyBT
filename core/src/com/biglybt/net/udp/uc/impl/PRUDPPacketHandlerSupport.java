@@ -23,6 +23,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -36,6 +39,7 @@ import java.net.SocketTimeoutException;
 import java.nio.channels.UnsupportedAddressTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,9 +58,12 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.admin.NetworkAdminPropertyChangeListener;
+import com.biglybt.core.proxy.AEProxyFactory;
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AEPriorityMixin;
 import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AEThread2;
@@ -74,6 +81,7 @@ import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.net.udp.uc.PRUDPPacket;
 import com.biglybt.net.udp.uc.PRUDPPacketHandler;
 import com.biglybt.net.udp.uc.PRUDPPacketHandlerException;
+import com.biglybt.net.udp.uc.PRUDPPacketHandlerFactory;
 import com.biglybt.net.udp.uc.PRUDPPacketHandlerStats;
 import com.biglybt.net.udp.uc.PRUDPPacketReceiver;
 import com.biglybt.net.udp.uc.PRUDPPacketReply;
@@ -2058,10 +2066,39 @@ PRUDPPacketHandlerSupport
 	@Override
 	public PRUDPPacketHandler
 	openSession(
-		InetSocketAddress		target )
+		InetSocketAddress		target,
+		String[]				networks,
+		String					reason )
 
 		throws PRUDPPacketHandlerException
 	{
+		if ( AENetworkClassifier.categoriseAddress( target ) == AENetworkClassifier.AT_I2P ){
+			
+			Map<String,Object> opts = new HashMap<>();
+			
+			if ( networks != null ){
+				
+				opts.put( AEProxyFactory.PO_PEER_NETWORKS, networks );
+			}
+			
+			opts.put( AEProxyFactory.PO_PROTOCOL, AEProxyFactory.PO_PROTOCOL_UDP );
+			
+			PluginProxy pp = AEProxyFactory.getPluginProxy( reason, target.getHostString(), target.getPort(), opts );
+			
+			if ( pp != null ){
+				
+				try{
+					return( new PRUDPPacketHandlerPluginProxy( this, target, pp ));
+					
+				}catch( Throwable e ){
+					
+					pp.setOK( true );
+					
+					Debug.out( e );
+				}
+			}
+		}
+		
 		if ( use_socks ){
 
 			return( new PRUDPPacketHandlerSocks( target ));

@@ -2163,7 +2163,7 @@ TRTrackerBTAnnouncerImpl
  				try{
 	 	 			PRUDPPacketHandler handler = PRUDPPacketHandlerFactory.getHandler( handler_port );
 	
-	 	 			handler = handler.openSession( destination );
+	 	 			handler = handler.openSession( destination, peer_networks, "Tracker announce" );
 	
 		 			try{
 		
@@ -2347,7 +2347,9 @@ TRTrackerBTAnnouncerImpl
 					 					map.put( "complete", new Long(announce_reply.getSeeders()));
 					 					map.put( "incomplete", new Long(announce_reply.getLeechers()));
 		
-					 					if ( announce_reply.isIPV6()){
+					 					int at = announce_reply.getAddressType();
+					 					
+					 					if ( at == PRUDPPacketReplyAnnounce2.AT_IPV6 ){
 					 						
 					 						byte[] v6peers = new byte[addresses.length*18];
 					 						
@@ -2366,7 +2368,7 @@ TRTrackerBTAnnouncerImpl
 						 						
 						 						pos++;
 						 					}
-					 					}else{
+					 					}else if ( at == PRUDPPacketReplyAnnounce2.AT_IPV4 ){
 					 						
 						 					List	peers = new ArrayList();
 		
@@ -2381,6 +2383,16 @@ TRTrackerBTAnnouncerImpl
 						 						peer.put( "ip", PRHelpers.bytesToAddress(addresses[i]).getBytes());
 						 						peer.put( "port", new Long( ports[i]));
 						 					}
+					 					}else{
+					 						
+					 						byte[] peers = new byte[addresses.length*32];
+					 						
+					 						for ( int i=0;i<addresses.length;i++){
+					 							
+					 							System.arraycopy( addresses[i], 0, peers, i*32, 32 );
+					 						}
+					 						
+					 						map.put( "peers", peers );
 					 					}
 		
 					 					byte[] data = BEncoder.encode( map );
@@ -3724,10 +3736,10 @@ TRTrackerBTAnnouncerImpl
 
 						int peers_length = meta_peers.size();
 
-				  	 if (Logger.isEnabled()) {
+						if (Logger.isEnabled()) {
 								Logger.log(new LogEvent(torrent, LOGID,
 										"ANNOUNCE old style non-compact: num=" + peers_length));
-					   }
+						}
 
 						if ( crypto_flags != null && peers_length != crypto_flags.length ){
 

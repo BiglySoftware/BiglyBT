@@ -35,65 +35,111 @@ public class
 PRUDPPacketReplyAnnounce2
 	extends PRUDPPacketReply
 {
-	private final boolean	is_ipv6;
+	public static final int AT_IPV4	= 0;
+	public static final int AT_IPV6	= 1;
+	public static final int AT_I2P	= 2;
 	
-	protected int		interval;
-	protected int		leechers;
-	protected int		seeders;
+	private static final int[] BYTES_PER_ENTRY = { 4, 18, 32 };
+	
+	private final int	address_type;
+	
+	
+	private int		interval;
+	private int		leechers;
+	private int		seeders;
 
-	protected static final int BYTES_PER_ENTRY_IPV4 = 6;
-	protected static final int BYTES_PER_ENTRY_IPV6 = 18;
-	
-	protected byte[][]		addresses;
-	protected short[]		ports;
+	private byte[][]		addresses;
+	private short[]		ports;
 
 	public
 	PRUDPPacketReplyAnnounce2(
 		int			trans_id,
-		boolean		ipv6 )
+		int			_address_type )
 	{
 		super( PRUDPPacketTracker.ACT_REPLY_ANNOUNCE, trans_id );
 		
-		is_ipv6 = ipv6;
+		address_type = _address_type;
 	}
 
 	protected
 	PRUDPPacketReplyAnnounce2(
 		DataInputStream		is,
 		int					trans_id,
-		boolean				ipv6 )
+		int					_address_type )
 
 		throws IOException
 	{
 		super( PRUDPPacketTracker.ACT_REPLY_ANNOUNCE, trans_id );
 
-		is_ipv6 = ipv6;
+		address_type = _address_type;
 		
 		interval = is.readInt();
 		leechers = is.readInt();
 		seeders  = is.readInt();
 
-		int bpe = is_ipv6?BYTES_PER_ENTRY_IPV6:BYTES_PER_ENTRY_IPV4;
+		int bpe = BYTES_PER_ENTRY[address_type];
 		
 		int num = is.available()/bpe;
 		
 		addresses 	= new byte[num][];
 		ports		= new short[num];
 
-		for (int i=0;i<num;i++){
+		if ( address_type == AT_I2P ){
+		
+			for (int i=0;i<num;i++){
 
-			addresses[i] = new byte[bpe-2];
+				byte[] a = addresses[i] = new byte[bpe];
+				
+				is.read( a );
+				
+				boolean all_z = true;
+				
+				for ( int j=0; j<bpe; j++ ){
+					
+					if ( a[j] != (byte)0){
+						
+						all_z = false;
+						
+						break;
+					}
+				}
+				
+				if ( all_z ){
+					
+					num = i;
+					
+					byte[][]	t_addresses	= new byte[num][];
+					short[]		t_ports		= new short[num];
+
+					for ( int j=0; j<num; j++ ){
+						
+						t_addresses[j]	= addresses[j];
+						t_ports[j]		= ports[j];
+					}
+					
+					addresses 	= t_addresses;
+					ports		= t_ports;
+					
+					break;
+				}
+			}
+		}else{
 			
-			is.read( addresses[i] );
-			
-			ports[i]		= is.readShort();
+			for (int i=0;i<num;i++){
+				
+				addresses[i] = new byte[bpe-2];
+				
+				is.read( addresses[i] );
+				
+				ports[i]		= is.readShort();
+			}
 		}
 	}
 
-	public boolean
-	isIPV6()
+	public int
+	getAddressType()
 	{
-		return( is_ipv6 );
+		return( address_type );
 	}
 	
 	public void

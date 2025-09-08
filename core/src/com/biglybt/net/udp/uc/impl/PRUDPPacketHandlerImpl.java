@@ -271,11 +271,13 @@ PRUDPPacketHandlerImpl
 
 	public PRUDPPacketHandler
 	openSession(
-		InetSocketAddress	target )
+		InetSocketAddress	target,
+		String[]			networks,
+		String				reason )
 
 		throws PRUDPPacketHandlerException
 	{
-		return( impl.openSession(target));
+		return( impl.openSession(target, networks, reason));
 	}
 
 	public void
