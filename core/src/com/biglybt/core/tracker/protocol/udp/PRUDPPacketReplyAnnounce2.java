@@ -39,7 +39,7 @@ PRUDPPacketReplyAnnounce2
 	public static final int AT_IPV6	= 1;
 	public static final int AT_I2P	= 2;
 	
-	private static final int[] BYTES_PER_ENTRY = { 4, 18, 32 };
+	private static final int[] BYTES_PER_ENTRY = { 6, 18, 32 };
 	
 	private final int	address_type;
 	
