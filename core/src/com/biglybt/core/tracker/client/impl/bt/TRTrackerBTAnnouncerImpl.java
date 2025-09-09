@@ -2108,6 +2108,13 @@ TRTrackerBTAnnouncerImpl
  	{
  		long timeout = is_probe?10000: PRUDPPacket.DEFAULT_UDP_TIMEOUT;
 
+ 	    String	tracker_network			= AENetworkClassifier.categoriseAddress( original_reqUrl.getHost());
+
+ 		if ( tracker_network != AENetworkClassifier.AT_PUBLIC ){
+ 			
+ 			timeout *= 2;
+ 		}
+ 		
  		URL reqUrl = TRTrackerUtils.adjustURLForHosting( original_reqUrl );
 
  		if ( reqUrl != original_reqUrl ){
