@@ -577,7 +577,7 @@ public class Utils
 			
 		}catch( Throwable e ){
 			
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
