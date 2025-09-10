@@ -400,14 +400,15 @@ When creating a torrent to host using SSL, check the SSL checkbox on the "create
 		add(enable_udp);
 
 		// row
-
+		/*
 		IntParameterImpl udp_version = new IntParameterImpl(
 				ICFG_TRACKER_PORT_UDP_VERSION, "ConfigView.section.tracker.udpversion");
 		add(udp_version);
 		udp_version.setIndent(1, true);
 
 		enable_udp.addEnabledOnSelection(udp_version);
-
+		*/
+		
 		// row
 
 		add(new BooleanParameterImpl(BCFG_TRACKER_COMPACT_ENABLE,

@@ -549,7 +549,7 @@ public class ConfigurationDefaults {
     def_put( "Tracker IP", "", new IPVerifier());
 
     def.put( "Tracker Port UDP Enable", FALSE );
-    def.put( "Tracker Port UDP Version", new Long(2) );
+    //def.put( "Tracker Port UDP Version", new Long(2) );
     def.put( "Tracker Send Peer IDs", TRUE );
     def.put( "Tracker Max Peers Returned", new Long(100) );
     def.put( "Tracker Scrape Cache", new Long( TRTrackerServer.DEFAULT_SCRAPE_CACHE_PERIOD ) );

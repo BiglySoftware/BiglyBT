@@ -19,8 +19,6 @@
 
 package com.biglybt.core.tracker.protocol.udp;
 
-import com.biglybt.core.config.COConfigurationManager;
-
 /**
  * @author parg
  *
@@ -29,14 +27,17 @@ import com.biglybt.core.config.COConfigurationManager;
 public class
 PRUDPPacketTracker
 {
-	public static int VERSION = 2;
+	public static final int VERSION = 2;
 
+	/*
+	 * version 2 has been around for ages, let's kill version 1
 	static{
 		VERSION = COConfigurationManager.getIntParameter( "Tracker Port UDP Version", 2 );
 
 		// System.out.println( "UDP Version = " + VERSION );
 	}
-
+	*/
+	
 	public static final int DEFAULT_RETRY_COUNT		= 1;		// changed from 4 after advice from XTF
 
 	public static final int	ACT_REQUEST_CONNECT		= 0;

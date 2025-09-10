@@ -401,7 +401,7 @@ public final class ConfigKeys {
 		public static final String ICFG_TRACKER_NAT_CHECK_TIMEOUT = "Tracker NAT Check Timeout";
 		public static final String BCFG_TRACKER_SEND_PEER_I_DS = "Tracker Send Peer IDs";
 		public static final String BCFG_TRACKER_PORT_UDP_ENABLE = "Tracker Port UDP Enable";
-		public static final String ICFG_TRACKER_PORT_UDP_VERSION = "Tracker Port UDP Version";
+		//public static final String ICFG_TRACKER_PORT_UDP_VERSION = "Tracker Port UDP Version";
 		public static final String BCFG_TRACKER_COMPACT_ENABLE = "Tracker Compact Enable";
 		public static final String BCFG_TRACKER_LOG_ENABLE = "Tracker Log Enable";
 		public static final String BCFG_TRACKER_KEY_ENABLE_SERVER = "Tracker Key Enable Server";
