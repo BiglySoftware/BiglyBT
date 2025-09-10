@@ -1647,6 +1647,15 @@ public class TrackerStatus {
 
 		boolean all_skipped = true;
 
+		long timeout = PRUDPPacket.DEFAULT_UDP_TIMEOUT;
+
+ 	    String	tracker_network			= AENetworkClassifier.categoriseAddress( reqUrl.getHost());
+
+ 		if ( tracker_network != AENetworkClassifier.AT_PUBLIC ){
+ 			
+ 			timeout *= 2;
+ 		}
+		
 		for ( InetSocketAddress destination: url_addresses ){
 
 			if ( destination.getAddress() instanceof Inet6Address && !ipv6_enabled ){
@@ -1658,7 +1667,7 @@ public class TrackerStatus {
 			
 			String[] networks = null;
 			
-			if ( AENetworkClassifier.categoriseAddress( reqUrl.getHost() ) != AENetworkClassifier.AT_PUBLIC ){
+			if ( tracker_network != AENetworkClassifier.AT_PUBLIC ){
 
 				if ( hashesInQuery.size() == 1 ){
 
@@ -1745,7 +1754,7 @@ public class TrackerStatus {
 						try{
 							PRUDPPacket connect_request = new PRUDPPacketRequestConnect();
 
-							PRUDPPacket reply = handler.sendAndReceive( auth, connect_request, destination );
+							PRUDPPacket reply = handler.sendAndReceive( auth, connect_request, destination, timeout );
 
 							if ( reply.getAction() == PRUDPPacketTracker.ACT_REPLY_CONNECT ){
 
