@@ -2876,7 +2876,11 @@ implements PEPeerTransport
 		boolean sameIdentity = PeerIdentityManager.containsIdentity( my_peer_data_id, peer_id, getPort());
 		boolean sameIP = false;
 
-
+		if ( PEPeerControl.TEST_PERMIT_PEER_CONNECTIONS ){
+		
+			sameIdentity = false;
+		}
+		
 		//allow loopback connects for co-located proxy-based connections and testing
 		boolean same_allowed = COConfigurationManager.getBooleanParameter( "Allow Same IP Peers" ) || ip.equals( "127.0.0.1" );
 		if( !same_allowed ){
@@ -3021,11 +3025,14 @@ implements PEPeerTransport
 
 			if ( !PeerIdentityManager.addIdentity( my_peer_data_id, peer_id, getPort(), ip )){
 
-				closeConnectionInternally( "peer matches already-connected peer id", Transport.CR_DUPLICATE_PEER_ID );
+				if ( !PEPeerControl.TEST_PERMIT_PEER_CONNECTIONS ){
+				
+					closeConnectionInternally( "peer matches already-connected peer id", Transport.CR_DUPLICATE_PEER_ID );
 
-				handshake.destroy();
+					handshake.destroy();
 
-				return;
+					return;
+				}
 			}
 
 			identityAdded = true;

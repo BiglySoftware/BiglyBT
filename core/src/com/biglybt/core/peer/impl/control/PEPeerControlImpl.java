@@ -1291,6 +1291,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		String fail_reason = null;
 
+		if ( PEPeerControl.TEST_PERMIT_PEER_CONNECTIONS ){
+			
+			force = true;
+		}
+		
 		if(force || !isAlreadyConnected(peer_item)){
 
 			boolean tcp_ok = TCPNetworkManager.TCP_OUTGOING_ENABLED && tcp_port > 0;
@@ -1476,9 +1481,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			if ( rc != null ){
 				
-				// System.out.println( "Ignoring " + key + " due to " + rc );
+				if ( !PEPeerControl.TEST_PERMIT_PEER_CONNECTIONS ){
 				
-				return( "Ignoring outbound connection due to previous close_reason: " + rc );
+						// System.out.println( "Ignoring " + key + " due to " + rc );
+				
+					return( "Ignoring outbound connection due to previous close_reason: " + rc );
+				}
 				
 			}else{
 				
@@ -1539,7 +1547,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		if(!same_allowed && PeerIdentityManager.containsIPAddress(_hash, address)){
 
-			return("Already connected to IP");
+			if ( !PEPeerControl.TEST_PERMIT_PEER_CONNECTIONS ){
+			
+				return("Already connected to IP");
+			}
 		}
 
 		if(PeerUtils.ignorePeerPort(tcp_port)){

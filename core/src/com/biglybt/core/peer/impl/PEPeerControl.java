@@ -39,6 +39,10 @@ public interface
 PEPeerControl
 	extends PEPeerManager
 {
+		// enabling this allows multiple connections to be established between for the same torrent
+		
+	public static final boolean	TEST_PERMIT_PEER_CONNECTIONS		= false;
+	
 	public static final int		SNUB_MILLIS 						= 60 *1000;
 
 	public boolean
