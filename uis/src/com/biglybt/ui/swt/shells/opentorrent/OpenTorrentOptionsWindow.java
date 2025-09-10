@@ -798,7 +798,7 @@ public class OpenTorrentOptionsWindow
 				});
 		}catch( Throwable e ){
 			
-			Debug.out( e );
+			//Debug.out( e );
 		}
 	}
 	
