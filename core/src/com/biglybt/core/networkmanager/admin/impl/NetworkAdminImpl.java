@@ -2300,7 +2300,7 @@ addressLoop:
 
 				// we're doing a peek and don't want to wait
 
-			gdpa_initial_sem.reserve( 10*1000 );
+			gdpa_initial_sem.reserve( 250 );
 
 			synchronized( gdpa_lock ){
 
