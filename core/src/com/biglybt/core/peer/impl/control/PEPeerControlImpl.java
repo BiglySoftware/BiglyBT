@@ -52,6 +52,7 @@ import com.biglybt.core.peer.impl.transport.PEPeerTransportProtocol;
 import com.biglybt.core.peer.util.PeerIdentityDataID;
 import com.biglybt.core.peer.util.PeerIdentityManager;
 import com.biglybt.core.peer.util.PeerUtils;
+import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.control.PeerControlInstance;
 import com.biglybt.core.peermanager.control.PeerControlScheduler;
@@ -5260,10 +5261,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 								}
 							}
 
-							boolean tcp_ok = TCPNetworkManager.TCP_OUTGOING_ENABLED && tcp_port > 0
-									&& tcp_remaining > 0;
-							boolean udp_ok = UDPNetworkManager.UDP_OUTGOING_ENABLED && udp_port > 0
-									&& udp_remaining > 0;
+							boolean tcp_ok = TCPNetworkManager.TCP_OUTGOING_ENABLED && PeerManager.enable_public_tcp_peers &&
+												tcp_port > 0	&& tcp_remaining > 0;
+							
+							boolean udp_ok = UDPNetworkManager.UDP_OUTGOING_ENABLED && PeerManager.enable_public_udp_peers && 
+												udp_port > 0	&& udp_remaining > 0;
 
 							if(tcp_ok && !(prefer_udp_overall && udp_ok)){
 

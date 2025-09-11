@@ -92,8 +92,8 @@ public class PeerManager implements CoreStatsProvider {
 	static final Set<PeerManagerRegistrationImpl>	timer_targets = new HashSet<>();
 
 	
-	private static boolean enable_public_tcp_peers	= true;
-	private static boolean enable_public_udp_peers	= true;
+	public static boolean enable_public_tcp_peers	= true;
+	public static boolean enable_public_udp_peers	= true;
 	private static boolean socks_data				= false;
 
 	static{

@@ -45,6 +45,7 @@ import com.biglybt.core.peer.impl.PEPeerTransportFactory;
 import com.biglybt.core.peer.util.PeerIdentityDataID;
 import com.biglybt.core.peer.util.PeerIdentityManager;
 import com.biglybt.core.peer.util.PeerUtils;
+import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.messaging.MessageManager;
 import com.biglybt.core.peermanager.messaging.MessageStreamEncoder;
@@ -363,9 +364,6 @@ implements PEPeerTransport
 	private static final byte[] sessionSecret;
 
 	private static boolean enable_upload_bias;
-
-	private static boolean enable_public_tcp_peers	= true;
-	private static boolean enable_public_udp_peers	= true;
 	
 	private static boolean prefer_ipv6;
 	
@@ -393,9 +391,6 @@ implements PEPeerTransport
 						fast_unchoke_new_peers 		= COConfigurationManager.getBooleanParameter( "Peer.Fast.Initial.Unchoke.Enabled" );
 
 						enable_upload_bias 			= COConfigurationManager.getBooleanParameter( "Bias Upload Enable" );
-						
-						enable_public_tcp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE );
-						enable_public_udp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE );
 						
 						prefer_ipv6			= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_PREFER_IPV6_CONNECTIONS );
 					}
@@ -684,7 +679,7 @@ implements PEPeerTransport
 
 			}else if ( !utp_available ){
 				
-				if ( enable_public_tcp_peers ){
+				if ( PeerManager.enable_public_tcp_peers ){
 					
 					pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_TCP, endpoint_address );
 				}
@@ -694,7 +689,7 @@ implements PEPeerTransport
 
 			}else{
 
-				if ( enable_public_tcp_peers ){
+				if ( PeerManager.enable_public_tcp_peers ){
 					
 					pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_TCP, endpoint_address );
 	
@@ -738,7 +733,7 @@ implements PEPeerTransport
 				endpoint_address = InetSocketAddress.createUnresolved( ip, udp_listen_port );
 			}
 
-			if ( enable_public_udp_peers ){
+			if ( PeerManager.enable_public_udp_peers ){
 
 				pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UDP, endpoint_address );
 			}

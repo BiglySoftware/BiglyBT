@@ -22,7 +22,7 @@ package com.biglybt.core.networkmanager.impl.udp;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -30,8 +30,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.AEPriorityMixin;
-import com.biglybt.core.util.AESemaphore;
-import com.biglybt.core.util.AEThread;
+import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
 import com.biglybt.net.udp.uc.PRUDPPacketHandler;
 import com.biglybt.net.udp.uc.PRUDPPacketHandlerFactory;
@@ -48,10 +47,8 @@ NetworkGlueUDP
 
 	PRUDPPacketHandler handler;
 
-	final LinkedList	msg_queue			= new LinkedList();
-	final AESemaphore	msg_queue_sem		= new AESemaphore( "NetworkGlueUDP" );
-	final AESemaphore	msg_queue_slot_sem	= new AESemaphore( "NetworkGlueUDP", 128 );
-
+	final LinkedBlockingQueue<Object[]>		msg_queue = new LinkedBlockingQueue<>( 256 );
+	
 	private long total_packets_received;
 	private long total_bytes_received;
 	long total_packets_sent;
@@ -105,11 +102,11 @@ NetworkGlueUDP
 				}
 			});
 
-		new AEThread( "NetworkGlueUDP", true )
+		new AEThread2("NetworkGlueUDP", true )
 		{
 			@Override
 			public void
-			runSupport()
+			run()
 			{
 				while( true ){
 
@@ -117,35 +114,35 @@ NetworkGlueUDP
 					InetSocketAddress	target_address 	= null;
 					byte[]				data			= null;
 
-					msg_queue_sem.reserve();
-
-					synchronized( msg_queue ){
-
-						Object[]	entry = (Object[])msg_queue.removeFirst();
-
+					try{
+						Object[]	entry = msg_queue.take();
+	
 						target_address 	= (InetSocketAddress)entry[0];
 						data			= (byte[])entry[1];
-					}
-
-					msg_queue_slot_sem.release();
-
-					total_packets_sent++;
-					total_bytes_sent	+= data.length;
-
-					try{
-						handler.primordialSend( data, target_address );
-
-					}catch( Throwable e ){
-
-						Logger.log(new LogEvent( LOGID, "Primordial UDP send failed: " + Debug.getNestedExceptionMessage(e)));
-
-					}finally{
-
+	
+						total_packets_sent++;
+						total_bytes_sent	+= data.length;
+	
 						try{
-							Thread.sleep(3);
-
+							handler.primordialSend( data, target_address );
+	
 						}catch( Throwable e ){
-
+	
+							Logger.log(new LogEvent( LOGID, "Primordial UDP send failed: " + Debug.getNestedExceptionMessage(e)));
+	
+						}
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+						
+						try{
+							Thread.sleep( 1000 );
+							
+						}catch( Throwable f ){
+							
+							Debug.out( f );
+							
+							break;
 						}
 					}
 				}
@@ -204,14 +201,13 @@ NetworkGlueUDP
 
 		throws IOException
 	{
-		msg_queue_slot_sem.reserve();
-
-		synchronized( msg_queue ){
-
-			msg_queue.add( new Object[]{ target, data });
+		try{
+			msg_queue.put( new Object[]{ target, data });
+			
+		}catch( Throwable e ){
+			
+			throw( new IOException( "Failed to add to msg queue", e ));
 		}
-
-		msg_queue_sem.release();
 
 		return( data.length );
 	}
