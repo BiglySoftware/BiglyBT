@@ -2421,7 +2421,7 @@ TRTrackerBTAnnouncerImpl
 					 		}catch( PRUDPPacketHandlerException e ){
 		
 					 			if ( e.getMessage() == null ||
-									!e.getMessage().contains("timed out")){
+									!Debug.getNestedExceptionMessage(e).contains("timed out")){
 		
 					 				throw( e );
 					 			}
