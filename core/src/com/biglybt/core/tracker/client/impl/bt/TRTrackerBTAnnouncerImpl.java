@@ -3874,9 +3874,22 @@ TRTrackerBTAnnouncerImpl
 
 			  					byte[] i2p_id 		= new byte[32];
 			  					byte[] peer_peer_id = new byte[20];
-
+		  					
 			  					System.arraycopy( meta_peers, i, i2p_id, 0, 32 );
 			  					System.arraycopy( meta_peers, i, peer_peer_id, 0, 20 );
+			  					
+			  					boolean all_z = true;
+			  					for ( int j=0;j<i2p_id.length;j++){
+			  						if ( i2p_id[j] != 0 ){
+			  							all_z = false;
+			  							break;
+			  						}
+			  					}
+			  					
+			  					if ( all_z ){
+			  						// invalid address
+			  						continue;
+			  					}
 
 			  					String hostname = Base32.encode( i2p_id ).toLowerCase(Locale.US) + ".b32.i2p";
 
