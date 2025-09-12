@@ -477,7 +477,9 @@ public class MessageSlideShell
 		btnHideAll = new Button(cButtons, SWT.PUSH);
 		Messages.setLanguageText(btnHideAll, "popup.error.hideall");
 		btnHideAll.setVisible(false);
-		btnHideAll.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
+		if ( !Utils.isDarkAppearanceNative()){
+			btnHideAll.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
+		}
 		// XXX SWT.Selection doesn't work on latest GTK (2.8.17) & SWT3.2 for ON_TOP
 		btnHideAll.addListener(SWT.MouseUp, new Listener() {
 			@Override
@@ -490,7 +492,9 @@ public class MessageSlideShell
 
 		if (idxHistory > 0) {
 			final Button btnPrev = new Button(cButtons, SWT.PUSH);
-			btnPrev.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
+			if ( !Utils.isDarkAppearanceNative()){
+				btnPrev.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
+			}
 			btnPrev.setText(MessageText.getString("popup.previous", new String[] {
 				"" + idxHistory
 			}));
@@ -509,7 +513,9 @@ public class MessageSlideShell
 		}
 
 		btnNext = new Button(cButtons, SWT.PUSH);
-		btnNext.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
+		if ( !Utils.isDarkAppearanceNative()){
+			btnNext.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
+		}
 		int numAfter = historyList.size() - idxHistory - 1;
 		setButtonNextText(numAfter);
 
