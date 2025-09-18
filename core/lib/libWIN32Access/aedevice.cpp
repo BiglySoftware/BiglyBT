@@ -345,7 +345,7 @@ JNIEXPORT jobject JNICALL Java_com_biglybt_platform_win32_access_impl_AEWin32Acc
 	}
 
 	
-	char subkey[14];
+	char subkey[15];
 	wsprintfA(subkey, "\\DosDevices\\%C:", driveLetter);
 
 	DWORD valuesize;
