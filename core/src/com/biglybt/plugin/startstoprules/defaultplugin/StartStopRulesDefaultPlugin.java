@@ -2644,19 +2644,22 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					(	globalRateAdjustedActivelyDownloading ||
 						!bDownloading ||
 						(bDownloading && totals.maxActive != 0 && !globalRateAdjustedActivelyDownloading &&	totals.activelyCDing + totals.activelyDLing >= totals.maxActive))){
-				try
-				{
-					if (bDebugLog)
+				try{
+
+					String stopReason = ivars.numWaitingOrDLing + " waiting or downloading, when limit is " + maxDLs + "(" + maxDownloads + ")";
+					if (ivars.higherDLtoStart)
 					{
-						String s = "   stopAndQueue: " + ivars.numWaitingOrDLing + " waiting or downloading, when limit is " + maxDLs + "(" + maxDownloads + ")";
-						if (ivars.higherDLtoStart)
-						{
-							s += " and higher DL is starting";
-						}
+						stopReason += " and higher DL is starting";
+					}
+
+					if (bDebugLog){
+					
+						String s = "   stopAndQueue: " + stopReason;
+						
 						log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
 						dlData.appendTrace( s + "\n" );
 					}
-					dlData.stopAndQueue();
+					dlData.stopAndQueue( "Downloading rules: " + stopReason );
 					// reduce counts
 					ivars.numWaitingOrDLing--;
 					for (ProcessTagVarsIncomplete tvars: tagVars ){
@@ -3325,6 +3328,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			if (okToQueue || bForceStop) {
 
 				boolean okToStop = bForceStop;
+				
+				String stopReason = "";
+
 				if (!okToStop) {
 						// break up the logic into variables to make more readable
 						// parg: added the "or up-limit-prohibits & higherCD" case because if we're not starting any new
@@ -3360,27 +3366,30 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 								!dlData.isMoving() &&
 								(overLimit || rank < DefaultRankCalculator.SR_IGNORED_LESS_THAN);
 
+					if (okToStop) {
+						if (overLimit) {
+							if (cvars.higherCDtoStart) {
+								stopReason += "higherQueued (it should be seeding instead of this one)";
+							} else if (!bActivelySeeding && cvars.stalledSeeders > totals.maxSeeders) {
+								stopReason += "over stale seeds limit";
+							} else {
+								stopReason += "over limit";
+							}
+						} else if (rank < DefaultRankCalculator.SR_IGNORED_LESS_THAN)
+							stopReason += "ignoreRule met";
+
+						stopReason += " && ";
+						if (bActivelySeeding)
+							stopReason += "activelySeeding";
+						else if (!bSeeding)
+							stopReason += "not SEEDING";
+						else if (!bActivelySeeding && bSeeding)
+							stopReason += "SEEDING, but not actively";
+					}
+					
 					if (bDebugLog) {
 						if (okToStop) {
-							sDebugLine += "\n  stopAndQueue: ";
-							if (overLimit) {
-								if (cvars.higherCDtoStart) {
-									sDebugLine += "higherQueued (it should be seeding instead of this one)";
-								} else if (!bActivelySeeding && cvars.stalledSeeders > totals.maxSeeders) {
-									sDebugLine += "over stale seeds limit";
-								} else {
-									sDebugLine += "over limit";
-								}
-							} else if (rank < DefaultRankCalculator.SR_IGNORED_LESS_THAN)
-								sDebugLine += "ignoreRule met";
-
-							sDebugLine += " && ";
-							if (bActivelySeeding)
-								sDebugLine += "activelySeeding";
-							else if (!bSeeding)
-								sDebugLine += "not SEEDING";
-							else if (!bActivelySeeding && bSeeding)
-								sDebugLine += "SEEDING, but not actively";
+							sDebugLine += "\n  stopAndQueue: " + stopReason;
 						}
 					} else {
 						sDebugLine += "\n  NOT queuing: ";
@@ -3398,6 +3407,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						}
 					}
 				} else {
+					stopReason = "force stop";
+					
 					if (bDebugLog)
 						sDebugLine += "\n  Forcing a stop..";
 				}
@@ -3411,7 +3422,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 							dlog.log( "    stopping" );
 						}
 
-						dlData.stopAndQueue();
+						dlData.stopAndQueue( "Seeding rules: " + stopReason );
 
 						// okToQueue only allows READY and SEEDING state.. and in both cases
 						// we have to reduce counts

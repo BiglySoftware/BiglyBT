@@ -1215,7 +1215,13 @@ DownloadManagerController
 
 			control_mon.exit();
 
-			Logger.log(new LogEvent(this, LogIDs.CORE, "Stopped - state=" + getState() + ",error=" + getErrorType() + "/" + getErrorDetail() + "/" + getErrorFlags()));
+			Logger.log(
+				new LogEvent(
+					this, 
+					LogIDs.CORE, 
+					"Stopped - state=" + getState() +
+						" reason=" + download_manager.getStopReason() +
+						", error=" + getErrorType() + "/" + getErrorDetail() + "/" + getErrorFlags()));
 
 			download_manager.informStateChanged();
 		}

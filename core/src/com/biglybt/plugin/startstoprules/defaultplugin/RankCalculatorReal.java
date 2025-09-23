@@ -583,11 +583,14 @@ RankCalculatorReal
 	}
 	
 	public void
-	stopAndQueue()
+	stopAndQueue(
+		String reason )
 		
 		throws DownloadException
 	{
 		dl.stopAndQueue();
+		
+		dl.setStopReason(reason);
 	}
 	
 	public int

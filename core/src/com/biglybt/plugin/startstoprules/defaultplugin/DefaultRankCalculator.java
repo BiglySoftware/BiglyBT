@@ -154,7 +154,8 @@ DefaultRankCalculator
 		throws DownloadException;
 
 	public void
-	stopAndQueue()
+	stopAndQueue(
+		String reason )
 		
 		throws DownloadException;
 	

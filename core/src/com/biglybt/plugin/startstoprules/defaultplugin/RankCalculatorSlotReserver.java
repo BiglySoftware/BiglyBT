@@ -180,7 +180,8 @@ RankCalculatorSlotReserver
 	}
 
 	public void
-	stopAndQueue()
+	stopAndQueue(
+		String reason )
 		
 		throws DownloadException
 	{
