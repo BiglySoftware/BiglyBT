@@ -1220,7 +1220,7 @@ DownloadManagerController
 					this, 
 					LogIDs.CORE, 
 					"Stopped - state=" + getState() +
-						" reason=" + download_manager.getStopReason() +
+						" reason=" + download_manager.getStopReason() + "/" + download_manager.getQueueReason() +
 						", error=" + getErrorType() + "/" + getErrorDetail() + "/" + getErrorFlags()));
 
 			download_manager.informStateChanged();

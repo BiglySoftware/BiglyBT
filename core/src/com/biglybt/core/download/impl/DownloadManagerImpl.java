@@ -3022,6 +3022,16 @@ DownloadManagerImpl
 	}
 
 	@Override
+	public void setQueueReason(String reason) {
+		setUserData( UD_KEY_QUEUE_REASON, reason );
+	}
+
+	@Override
+	public String getQueueReason() {
+		return((String)getUserData( UD_KEY_QUEUE_REASON ));
+	}
+	
+	@Override
 	public void setStopReason(String reason) {
 		setUserData( UD_KEY_STOP_REASON, reason );
 	}

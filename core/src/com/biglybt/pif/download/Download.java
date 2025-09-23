@@ -201,6 +201,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
     
     public static final Object	UD_KEY_STOP_REASON	= new Object();
+    public static final Object	UD_KEY_QUEUE_REASON	= new Object();
     
 
 	/** get state from above ST_ set
@@ -298,6 +299,13 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 		throws DownloadException;
 
+	public void
+	setQueueReason(
+		String reason );
+
+	public String
+	getQueueReason();
+	
 	public void
 	setStopReason(
 		String reason );

@@ -588,9 +588,10 @@ RankCalculatorReal
 		
 		throws DownloadException
 	{
-		dl.stopAndQueue();
 		
-		dl.setStopReason(reason);
+		dl.setQueueReason(reason);
+		
+		dl.stopAndQueue();
 	}
 	
 	public int
