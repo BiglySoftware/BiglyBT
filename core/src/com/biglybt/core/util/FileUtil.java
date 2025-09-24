@@ -2650,6 +2650,32 @@ public class FileUtil {
     	getFileStoreNames();
     }
     
+    public static String[]
+    getFileStoreNames(
+    	long		timeout )
+    {
+    	AESemaphore sem = new AESemaphore( "gFSN" );
+    	
+    	String[][] result = {{}};
+    	
+    	getFileStoreNames((names)->{
+    		
+    		synchronized( result ){
+    			
+    			result[0] = names;
+    		}
+    		
+    		sem.release();
+    	});
+    	
+    	sem.reserve( timeout );
+    	
+    	synchronized( result ){
+    		
+    		return( result[0] );
+    	}
+    }
+    
     public static void
     getFileStoreNames(
     	Consumer<String[]>	callback )
@@ -4425,11 +4451,39 @@ public class FileUtil {
 					try{
 							// this can take a while if network shares are disconnected (for example)
 						
-						File[] roots = File.listRoots();
-						
-						if ( roots != null ){
+						if ( Constants.isWindows ){
 							
-							last_roots = roots;
+							File[] roots = File.listRoots();
+							
+							if ( roots != null ){
+								
+								last_roots = roots;
+							}
+						}else{
+							
+							String[] names = FileUtil.getFileStoreNames( timeout );
+							
+								// on linux at least the format is 
+								//     mount point " " (...)
+							
+							List<File> files = new ArrayList<>();
+							
+							for ( String name: names ){
+								
+								int pos = name.indexOf( " " );
+								
+								if ( pos != -1 ){
+									
+									File mount = new File( name.substring( 0, pos ));
+									
+									if ( mount.exists()){
+										
+										files.add( mount );
+									}
+								}
+							}
+							
+							last_roots = files.toArray(  new File[files.size()]);
 						}
 					}finally{
 					
