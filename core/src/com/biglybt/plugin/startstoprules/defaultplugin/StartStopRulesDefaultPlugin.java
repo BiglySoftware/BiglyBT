@@ -121,6 +121,16 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private static final Object DEBUG_LINE_KEY = new Object();
 	
+	public static boolean DROO_FEATURES_ENABLE;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener( 
+			"droo.features.enable",
+			(p)->{
+				DROO_FEATURES_ENABLE = COConfigurationManager.getBooleanParameter(p,false);
+			});
+	}
+	
 	private TagManager tag_manager;
 		
 	private volatile boolean tagsHaveDLorCDLimits;
@@ -3332,6 +3342,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				String stopReason = "";
 
 				if (!okToStop) {
+					
+					boolean bSeeding = state == Download.ST_SEEDING;
+
 						// break up the logic into variables to make more readable
 						// parg: added the "or up-limit-prohibits & higherCD" case because if we're not starting any new
 						// seeds and we're below the seed limit we will never get to stop any lower priority seeds in order
@@ -3353,27 +3366,39 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					
 					boolean overLimit = overCurrentLimit || overGlobalLimit;
 					
-					overLimit |= 	( !bActivelySeeding && cvars.stalledSeeders > maxStalledSeeding ) ||
-									(	( 	cvars.numWaitingOrSeeding >= totals.maxSeeders ||
-											totals.upLimitProhibitsNewSeeds ) && 
-										cvars.higherCDtoStart);
+					boolean inactiveAndOverStalled = !bActivelySeeding && cvars.stalledSeeders > maxStalledSeeding;
 
-					boolean bSeeding = state == Download.ST_SEEDING;
-
-						// not checking AND (at limit of seeders OR rank is set to ignore) AND
+					boolean atLimitAndHigherToStart = 
+							(cvars.numWaitingOrSeeding >= totals.maxSeeders ||	totals.upLimitProhibitsNewSeeds ) && 
+							cvars.higherCDtoStart;
+									
+					if ( DROO_FEATURES_ENABLE ){
+						
+						stopReason += "Droo enabled; ";
+						
+						overLimit |= inactiveAndOverStalled || ( atLimitAndHigherToStart && !bActivelySeeding );
+						
+					}else{
+				
+						overLimit |= inactiveAndOverStalled || atLimitAndHigherToStart;
+					}
 					
+						// not checking AND (at limit of seeders OR rank is set to ignore)
+
 					okToStop = 	!dlData.isChecking() &&
 								!dlData.isMoving() &&
 								(overLimit || rank < DefaultRankCalculator.SR_IGNORED_LESS_THAN);
-
+					
 					if (okToStop) {
 						if (overLimit) {
-							if (cvars.higherCDtoStart) {
-								stopReason += "higherQueued (it should be seeding instead of this one)";
-							} else if (!bActivelySeeding && cvars.stalledSeeders > totals.maxSeeders) {
+							if ( overGlobalLimit ){
+								stopReason += "over global limit";
+							}else if ( overCurrentLimit ){
+								stopReason += "over current limit";
+							}else if ( inactiveAndOverStalled ){
 								stopReason += "over stale seeds limit";
-							} else {
-								stopReason += "over limit";
+							}else if ( atLimitAndHigherToStart) {
+								stopReason += "higherQueued (it should be seeding instead of this one)";
 							}
 						} else if (rank < DefaultRankCalculator.SR_IGNORED_LESS_THAN)
 							stopReason += "ignoreRule met";
