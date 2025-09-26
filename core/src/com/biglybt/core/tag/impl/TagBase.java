@@ -2412,9 +2412,9 @@ TagBase
 
 				transient_properties.put( property, value );
 			}
-
-			tag_type.fireMetadataChanged( this );
 		}
+		
+		tag_type.fireMetadataChanged( this );
 	}
 
 	@Override
