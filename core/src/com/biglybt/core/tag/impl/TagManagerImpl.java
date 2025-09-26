@@ -1007,7 +1007,9 @@ TagManagerImpl
 
 									TagFeatureFileLocation tag = TagUtils.selectInitialDownloadLocation(tags);
 
-									if ( tag != null ){
+									boolean is_md = manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+
+									if ( tag != null && !is_md ){
 										
 										long	options = tag.getTagInitialSaveOptions();
 
@@ -1717,6 +1719,15 @@ TagManagerImpl
 
 		if ( tt == TagType.TT_DOWNLOAD_MANUAL && tagged instanceof DownloadManager ){
 
+			DownloadManager dm = (DownloadManager)tagged;
+
+			boolean is_md = dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+			
+			if ( is_md ){
+				
+				return;
+			}
+			
 			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
 			
 				// hack to support initial-save-location logic when a user manually assigns a tag and the download
@@ -1728,8 +1739,6 @@ TagManagerImpl
 					File save_loc = fl.getTagInitialSaveFolder();
 
 					if ( save_loc != null ){
-
-						DownloadManager dm = (DownloadManager)tagged;
 
 						if ( dm.getState() == DownloadManager.STATE_STOPPED ){
 
@@ -1791,9 +1800,7 @@ TagManagerImpl
 					File ass_loc = fl.getTagMoveOnAssignFolder();
 		
 					if ( ass_loc != null ){
-		
-						DownloadManager dm = (DownloadManager)tagged;
-		
+				
 						TOTorrent torrent = dm.getTorrent();
 	
 						if ( torrent != null ){

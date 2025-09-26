@@ -450,6 +450,7 @@ TagDownloadWithState
 		DownloadManager			dm,
 		TagFeatureFileLocation	fl )
 	{
+		
 		move_dispatcher.dispatch(
 			new AERunnable()
 			{
@@ -579,9 +580,11 @@ TagDownloadWithState
 
 				super.addTaggable( t );
 
+				boolean is_md = dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+
 				int actions = getSupportedActions();
 
-				if ( actions != TagFeatureExecOnAssign.ACTION_NONE ){
+				if ( actions != TagFeatureExecOnAssign.ACTION_NONE && !is_md ){
 
 					if ( 	isActionEnabled( TagFeatureExecOnAssign.ACTION_START ) ||
 							isActionEnabled( TagFeatureExecOnAssign.ACTION_RESUME )){
