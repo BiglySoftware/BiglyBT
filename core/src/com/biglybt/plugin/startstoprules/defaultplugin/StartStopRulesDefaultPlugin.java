@@ -205,8 +205,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private boolean bAutoReposition;
 
-	private long minTimeAlive;
-
 	private boolean bAutoStart0Peers;
 
 	private boolean bStopOnceBandwidthMet = false;
@@ -1021,7 +1019,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			bMaxDownloadIgnoreChecking	= plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxDownloadIgnoreChecking" );
 
 			bAutoReposition = plugin_config.getUnsafeBooleanParameter("StartStopManager_bAutoReposition");
-			minTimeAlive = plugin_config.getUnsafeIntParameter("StartStopManager_iMinSeedingTime") * 1000;
 			bDebugLog = plugin_config.getUnsafeBooleanParameter("StartStopManager_bDebugLog");
 
 			bAutoStart0Peers = plugin_config.getUnsafeBooleanParameter("StartStopManager_bAutoStart0Peers");
@@ -1855,7 +1852,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				if (dlData.isForceStart()) {
 					if (state == Download.ST_STOPPED || state == Download.ST_QUEUED) {
 						try {
-							dlData.restart();
+							dlData.restart( "Force start" );
 							
 							if (bDebugLog){
 								String s = "restart: isForceStart";
@@ -1870,7 +1867,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 					if (state == Download.ST_READY) {
 						try {
-							dlData.start();
+							dlData.start( "Force start" );
 							
 							if (bDebugLog){
 								String s = "Start: isForceStart";
@@ -2721,7 +2718,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
 						dlData.appendTrace( s + "\n" );
 					}
-					dlData.start();
+					dlData.start( "Start: downloading < max" );
 
 					// adjust counts
 					totals.waitingToDL--;
@@ -2757,7 +2754,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 							log.log(LoggerChannel.LT_INFORMATION, s);
 							dlData.appendTrace( s + "\n" );
 						}
-						dlData.restart();
+						dlData.restart( "Restart: downloading < max" );
 	
 						// increase counts
 						ivars.numWaitingOrDLing++;
@@ -2908,7 +2905,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					try {
 						if (bDebugLog)
 							sDebugLine += "\nrestart() 0Peers";
-						dlData.restart(); // set to Waiting
+						dlData.restart( "Restart: 0 peers" ); // set to Waiting
 						totals.waitingToSeed++;
 						cvars.numWaitingOrSeeding++;
 						
@@ -2920,7 +2917,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						if (state == Download.ST_READY) {
 							if (bDebugLog)
 								sDebugLine += "\nstart(); 0Peers";
-							dlData.start();
+							dlData.start( "Start: 0 peers" );
 							totals.activelyCDing++;
 						}
 					} catch (Exception ignore) {/*ignore*/
@@ -2930,7 +2927,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					try {
 						if (bDebugLog)
 							sDebugLine += "\nstart(); 0Peers";
-						dlData.start();
+						dlData.start( "Start: 0 peers" );
 						totals.activelyCDing++;
 						cvars.numWaitingOrSeeding++;
 						
@@ -2943,7 +2940,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				return;
 			}
 
-			int rank = dlData.getSeedingRank();
+			final int rank = dlData.getSeedingRank();
 
 			// Short Circuit: if rank is set to IGNORED, we can skip everything
 			// except when:
@@ -3121,7 +3118,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				
 				long timeAlive = (SystemTime.getCurrentTime() - dlData.getTimeStarted());
 				
-				okToQueue = (timeAlive >= minTimeAlive);
+				long minTimeAlive = dlData.getMinTimeSeedingMillis();
+				
+				okToQueue = (timeAlive >= minTimeAlive );
 
 				if (!okToQueue && bDebugLog)
 					sDebugLine += "\n  Torrent can't be stopped yet, timeAlive("
@@ -3210,7 +3209,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 							 * Really I'm not sure if force-start should count at all... 
 							 */
 						
-						dlData.restart(); // set to Waiting
+						dlData.restart( "Restart: slot available (rank=" + rank + ")" ); // set to Waiting
 						
 						okToQueue = false;
 
@@ -3313,7 +3312,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 									+ totals.activelyCDing + ") < maxSeeders("
 									+ totals.maxSeeders + ")";
 
-						dlData.start();
+						dlData.start( "Start: seeders < max (rank=" + rank +")");
 						okToQueue = false;
 					} catch (Exception ignore) {
 						/*ignore*/
@@ -3439,6 +3438,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				}
 
 				if (okToStop) {
+					stopReason += " (rank=" + rank + ")";
 					try {
 						if (state == Download.ST_READY)
 							totals.waitingToSeed--;

@@ -377,6 +377,17 @@ DownloadImpl
 		}
 	}
 
+	
+	@Override
+	public void setStartReason(String reason) {
+		setUserData( UD_KEY_START_REASON, reason );
+	}
+
+	@Override
+	public String getStartReason() {
+		return((String)getUserData( UD_KEY_START_REASON ));
+	}
+	
 	@Override
 	public void setStopReason(String reason) {
 		setUserData( UD_KEY_STOP_REASON, reason );

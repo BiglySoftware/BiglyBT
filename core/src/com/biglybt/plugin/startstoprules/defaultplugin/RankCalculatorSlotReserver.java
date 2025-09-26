@@ -164,7 +164,8 @@ RankCalculatorSlotReserver
 	}
 
 	public void
-	start()
+	start(
+		String reason )
 	
 		throws DownloadException
 	{
@@ -172,7 +173,8 @@ RankCalculatorSlotReserver
 	}
 	
 	public void
-	restart()
+	restart(
+		String reason )
 	
 		throws DownloadException
 	{
@@ -204,6 +206,13 @@ RankCalculatorSlotReserver
 	getSeedingRank()
 	{
 		return( SR_TIMED_QUEUED_ENDS_AT + 2 );
+	}
+	
+	@Override
+	public long 
+	getMinTimeSeedingMillis()
+	{
+		return( RankCalculatorReal.minTimeAlive );
 	}
 	
 	public boolean

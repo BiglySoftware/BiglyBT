@@ -41,7 +41,7 @@ PEPeerControl
 {
 		// enabling this allows multiple connections to be established between for the same torrent
 		
-	public static final boolean	TEST_PERMIT_PEER_CONNECTIONS		= false;
+	public static final boolean	TEST_PERMIT_PEER_CONNECTIONS		= true;
 	
 	public static final int		SNUB_MILLIS 						= 60 *1000;
 

@@ -422,14 +422,21 @@ public class StartStopConfigModel
 		BasicPluginConfigModel model = manager.createBasicPluginConfigModel(
 				SECTION_ID_Q, SECTION_ID_Q_SEEDING);
 
-		// Seeding Automation Setup
+			// Seeding Automation Setup
 
-		// General Seeding Options
+			// General Seeding Options
 
+			// min seeding time
+		
 		model.addIntParameter2("StartStopManager_iMinSeedingTime",
 				"ConfigView.label.minSeedingTime", 60 * 10, 0, Integer.MAX_VALUE);
 
-		// don't start more seeds
+		IntParameter minSeedingActive = model.addIntParameter2("StartStopManager_iMinSeedingTimeWhenActive",
+				"Minimum when uploading (scaled by global-vs-dm upload rate)", 60 * 10, 0, Integer.MAX_VALUE);
+
+		minSeedingActive.setIndent(1, true);
+		
+			// don't start more seeds
 
 		BooleanParameter dontStartMore = model.addBooleanParameter2(
 				"StartStopManager_bStartNoMoreSeedsWhenUpLimitMet",
