@@ -550,15 +550,18 @@ public abstract class TableCellSWTBase
 
 	@Override
 	public void invokeToolTipListeners(int type) {
-		if (tableColumnCore == null)
+		
+		TableColumnCore tc = tableColumnCore;
+		
+		if (tc == null)
 			return;
 
-		tableColumnCore.invokeCellToolTipListeners(this, type);
+		tc.invokeCellToolTipListeners(this, type);
 
 		if (tooltipListeners == null || tooltipErrLoopCount > 2)
 			return;
 
-		int iErrCount = tableColumnCore.getConsecutiveErrCount();
+		int iErrCount = tc.getConsecutiveErrCount();
 		if (iErrCount > 10)
 			return;
 
@@ -573,7 +576,7 @@ public abstract class TableCellSWTBase
 			tooltipErrLoopCount = 0;
 		} catch (Throwable e) {
 			tooltipErrLoopCount++;
-			tableColumnCore.setConsecutiveErrCount(++iErrCount);
+			tc.setConsecutiveErrCount(++iErrCount);
 			pluginError(e);
 			if (tooltipErrLoopCount > 2)
 				Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR,
@@ -921,15 +924,20 @@ public abstract class TableCellSWTBase
 	}
 
 	@Override
-	public boolean setSortValue(Comparable valueToSort) {
-		if ( tableColumnCore == null ){
+	public boolean 
+	setSortValue(
+		Comparable valueToSort) 
+	{
+		TableColumnCore tc = tableColumnCore;
+		
+		if ( tc == null ){
 			return( false );
 		}
-		if (!tableColumnCore.isSortValueLive()) {
+		if (!tc.isSortValueLive()) {
 			// objects that can't change aren't live
 			if (!(valueToSort instanceof Number) && !(valueToSort instanceof String)
 					&& !(valueToSort instanceof TableColumnSortObject)) {
-				tableColumnCore.setSortValueLive(true);
+				tc.setSortValueLive(true);
 			}
 		}
 		return _setSortValue(valueToSort);
