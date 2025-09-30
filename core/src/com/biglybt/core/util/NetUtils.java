@@ -574,7 +574,7 @@ NetUtils
 			return Collections.enumeration(list);
 		}
 
-		collectNetworkInterfacesByName(list);
+		collectNetworkInterfacesByCommonNames(list);
 		if (!list.isEmpty()) {
 			return Collections.enumeration(list);
 		}
@@ -605,9 +605,9 @@ NetUtils
 
 
 	/**
-	 * Best effort strategy of querying network interfaces by querying common names.
+	 * Best effort strategy of querying network interfaces by common names.
 	 */
-	private static void collectNetworkInterfacesByName(List<NetworkInterface> list) {
+	private static void collectNetworkInterfacesByCommonNames(List<NetworkInterface> list) {
 		final String[] commonNames = {
 			"lo",
 			"eth",
