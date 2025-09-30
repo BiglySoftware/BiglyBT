@@ -615,12 +615,16 @@ NetUtils
 		throw se;
 	}
 
+	/**
+	 * Best effort strategy of querying network interfaces by guessing OS assigned index.
+	 * There's no guarantee of finding all interfaces, or stability across reboots.
+	 */
 	private static void collectNetworkInterfacesByIndex(List<NetworkInterface> list) {
 		int i = 0;
 		do {
 			NetworkInterface nif = null;
 			try {
-				nif = NetworkInterface.getByIndex(i);
+				nif = NetworkInterface.getByIndex(i); //No guarantee of contiguity, some numbers may be skipped
 			} catch (SocketException ignore) {
 			}
 			if (nif != null) {
