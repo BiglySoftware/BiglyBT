@@ -59,7 +59,7 @@ NetUtils
 	{
 		return( getNetworkInterfaces( false ));
 	}
-
+	
 	public static List<NetworkInterface>
 	getNetworkInterfaces(
 		boolean	up_only )
@@ -133,22 +133,22 @@ NetUtils
 								Debug.out( "Network interface enumeration took " + elapsed_millis + ": " + (old_period<current_check_millis?"increased":"decreased" ) + " refresh frequency to " + current_check_millis + "ms" );
 							}
 							*/
-
+							
 							if ( nis != null ){
 
 								while( nis.hasMoreElements()){
 
 									NetworkInterface ni = nis.nextElement();
-
+									
 									result_all.add( ni );
-
+									
 									try{
 										if ( ni.isUp()){
-
+											
 											result_up.add( ni );
 										}
 									}catch( Throwable e ){
-
+										
 									}
 								}
 							}
@@ -178,12 +178,12 @@ NetUtils
 									check_in_progress		= false;
 									current_all_interfaces 	= result_all;
 									current_up_interfaces	= result_up;
-
+									
 									last_ni_check	= SystemTime.getMonotonousTime();
 									
 									try{
 										changed = SESecurityManager.filterNetworkInterfaces( result_all );
-
+										
 									}catch( Throwable e ){
 																															
 										Debug.out( e );
@@ -640,32 +640,31 @@ NetUtils
 			}
 		}
 	}
-
+		
 	public static List<String>
 	getTestDomains()
 	{
 		List<String>	result = new ArrayList<>();
-
+		
 		try{
 			String domains = COConfigurationManager.getStringParameter( ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN );
-
+			
 			String[] bits = domains.split("[,;]");
-
+			
 			for ( String bit: bits ){
-
+				
 				bit = bit.trim();
-
+				
 				if ( !bit.isEmpty()){
-
+					
 					result.add( bit );
 				}
 			}
 		}catch( Throwable e ){
-
+			
 			Debug.out( e );
 		}
-
+		
 		return( result );
 	}
-
 }
