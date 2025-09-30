@@ -576,6 +576,41 @@ NetUtils
 		}
 
 		// Worst case, try some common interface names
+		collectNetworkInterfacesByName(list);
+
+		if (!list.isEmpty()) {
+			return Collections.enumeration(list);
+		}
+
+		throw se;
+	}
+
+	/**
+	 * Best effort strategy of querying network interfaces by guessing OS assigned index.
+	 * There's no guarantee of finding all interfaces, or stability across reboots.
+	 */
+	private static void collectNetworkInterfacesByIndex(List<NetworkInterface> list) {
+		int i = 0;
+		do {
+			NetworkInterface nif = null;
+			try {
+				nif = NetworkInterface.getByIndex(i); //No guarantee of contiguity, some numbers may be skipped
+			} catch (SocketException ignore) {
+			}
+			if (nif != null) {
+				list.add(nif);
+			} else if (i > 0) {
+				break;
+			}
+			i++;
+		} while (true);
+	}
+
+
+	/**
+	 * Best effort strategy of querying network interfaces by querying common names.
+	 */
+	private static void collectNetworkInterfacesByName(List<NetworkInterface> list) {
 		final String[] commonNames = {
 			"lo",
 			"eth",
@@ -607,33 +642,6 @@ NetUtils
 			} catch (Throwable ignore) {
 			}
 		}
-
-		if (!list.isEmpty()) {
-			return Collections.enumeration(list);
-		}
-
-		throw se;
-	}
-
-	/**
-	 * Best effort strategy of querying network interfaces by guessing OS assigned index.
-	 * There's no guarantee of finding all interfaces, or stability across reboots.
-	 */
-	private static void collectNetworkInterfacesByIndex(List<NetworkInterface> list) {
-		int i = 0;
-		do {
-			NetworkInterface nif = null;
-			try {
-				nif = NetworkInterface.getByIndex(i); //No guarantee of contiguity, some numbers may be skipped
-			} catch (SocketException ignore) {
-			}
-			if (nif != null) {
-				list.add(nif);
-			} else if (i > 0) {
-				break;
-			}
-			i++;
-		} while (true);
 	}
 
 	public static List<String>
