@@ -570,14 +570,11 @@ NetUtils
 		final List<NetworkInterface> list = new ArrayList<>();
 
 		collectNetworkInterfacesByIndex(list);
-
 		if (!list.isEmpty()) {
 			return Collections.enumeration(list);
 		}
 
-		// Worst case, try some common interface names
 		collectNetworkInterfacesByName(list);
-
 		if (!list.isEmpty()) {
 			return Collections.enumeration(list);
 		}
