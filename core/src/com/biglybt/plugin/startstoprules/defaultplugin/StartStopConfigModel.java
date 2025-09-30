@@ -37,7 +37,9 @@ import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 
 public class StartStopConfigModel
 {
-
+	private static final int MIN_SEEDING_TIME_SECS_DEFAULT				= 5*60;
+	private static final int MIN_SEEDING_TIME_WHEN_ACTIVE_SECS_DEFAULT	= 15*60;
+	
 	public static final String SECTION_ID_Q = "queue";
 
 	public static final String SECTION_ID_Q_SEEDING = "queue.seeding";
@@ -429,11 +431,11 @@ public class StartStopConfigModel
 			// min seeding time
 		
 		model.addIntParameter2("StartStopManager_iMinSeedingTime",
-				"ConfigView.label.minSeedingTime", 60 * 10, 0, Integer.MAX_VALUE);
+				"ConfigView.label.minSeedingTime", MIN_SEEDING_TIME_SECS_DEFAULT, 0, Integer.MAX_VALUE);
 
 		IntParameter minSeedingActive = model.addIntParameter2("StartStopManager_iMinSeedingTimeWhenActive",
-				"Minimum when uploading (scaled by global-vs-dm upload rate)", 60 * 10, 0, Integer.MAX_VALUE);
-
+				"ConfigView.label.minSeedingTimeWhenActive", MIN_SEEDING_TIME_WHEN_ACTIVE_SECS_DEFAULT, 0, Integer.MAX_VALUE);
+		
 		minSeedingActive.setIndent(1, true);
 		
 			// don't start more seeds

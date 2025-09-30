@@ -2290,7 +2290,13 @@ RankCalculatorReal
 				sText = "ERR" + sr;
 			}
 			// Add a Star if it's before minTimeAlive
-			if (SystemTime.getCurrentTime() - dl.getStats().getTimeStartedSeeding() < getMinTimeSeedingMillis()){
+			
+			long seedingTime = SystemTime.getCurrentTime() - dl.getStats().getTimeStartedSeeding();
+			
+			long minSeedingTime = getMinTimeSeedingMillis();
+			
+			if ( seedingTime < minSeedingTime){
+				
 				if ( verbose ){
 				
 					sText = "< " + MessageText.getString( "ConfigView.label.minSeedingTime" ) + "; " + sText;
