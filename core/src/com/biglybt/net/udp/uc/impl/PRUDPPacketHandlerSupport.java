@@ -834,6 +834,16 @@ PRUDPPacketHandlerSupport
 
 				new_socket.setSoTimeout( 1000 );
 
+				try{
+					new_socket.setSendBufferSize( 4*1024*1024 );
+					
+					new_socket.setReceiveBufferSize( 4*1024*1024 );
+					
+				}catch( Throwable e ){
+					
+					Debug.out(e);
+				}
+				
 				Thread.currentThread().setName( "PRUDPPacketReciever:" + port + ":" + new_socket.getLocalAddress());
 				
 					// only make the socket public once fully configured
