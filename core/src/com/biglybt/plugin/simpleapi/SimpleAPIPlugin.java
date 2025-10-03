@@ -57,6 +57,7 @@ import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadStub;
 import com.biglybt.pif.download.DownloadStub.DownloadStubEx;
@@ -71,6 +72,12 @@ import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.HyperlinkParameter;
 import com.biglybt.pif.ui.config.StringParameter;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+import com.biglybt.pif.update.Update;
+import com.biglybt.pif.update.UpdateCheckInstance;
+import com.biglybt.pif.update.UpdateCheckInstanceListener;
+import com.biglybt.pif.update.UpdateManager;
+import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
+import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderAdapter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -1604,6 +1611,96 @@ SimpleAPIPlugin
 					
 					throw( new Exception( "invalid file/magnet/url parameter '" + original_target + "'" ));
 				}
+			}else if ( method.equals( "restart" )){
+				
+				CoreFactory.getSingleton().restart();
+				
+			}else if ( method.equals( "shutdown" )){
+				
+				CoreFactory.getSingleton().stop();
+				
+			}else if ( method.equals( "update" )){
+				
+				PluginManager plugin_manager = CoreFactory.getSingleton().getPluginManager();
+				
+				UpdateManager update_manager = plugin_manager.getDefaultPluginInterface().getUpdateManager();
+
+				final UpdateCheckInstance	checker = update_manager.createUpdateCheckInstance();
+
+				checker.addListener(
+					new UpdateCheckInstanceListener()
+					{
+						@Override
+						public void
+						cancelled(
+							UpdateCheckInstance		instance )
+						{
+
+						}
+
+						@Override
+						public void
+						complete(
+							UpdateCheckInstance		instance )
+						{
+							Update[] 	updates = instance.getUpdates();
+
+							try{
+								for ( Update update: updates ){
+
+									log_channel.log( "Updating " + update.getName());
+
+									for ( ResourceDownloader rd: update.getDownloaders()){
+
+										rd.addListener(
+											new ResourceDownloaderAdapter()
+											{
+												@Override
+												public void
+												reportActivity(
+													ResourceDownloader	downloader,
+													String				activity )
+												{
+													log_channel.log( "\t" + activity );
+												}
+
+												@Override
+												public void
+												reportPercentComplete(
+													ResourceDownloader	downloader,
+													int					percentage )
+												{
+													log_channel.log( "\t" + percentage + "%" );
+												}
+											});
+
+										rd.download();
+									}
+								}
+
+								boolean	restart_required = false;
+
+								for (int i=0;i<updates.length;i++){
+
+									if ( updates[i].getRestartRequired() == Update.RESTART_REQUIRED_YES ){
+
+										restart_required = true;
+									}
+								}
+
+								if ( restart_required ){
+
+									log_channel.log( "**** Restart required to complete update ****" );
+								}
+							}catch( Throwable e ){
+
+								log_channel.log( "Update failed: " + Debug.getNestedExceptionMessage( e ));
+							}
+						}
+					});
+
+				checker.start();
+
 			}else{
 				throw( new Exception( "unsupported method '" + method + "'" ));
 			}
