@@ -1691,6 +1691,9 @@ SimpleAPIPlugin
 								if ( restart_required ){
 
 									log_channel.log( "**** Restart required to complete update ****" );
+									
+									CoreFactory.getSingleton().restart();
+									
 								}
 							}catch( Throwable e ){
 
