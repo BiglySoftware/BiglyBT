@@ -937,11 +937,23 @@ public class Utils
 		}
 	}
 	
+	public static Color
+	getLinkForegroundColor()
+	{
+		if ( isDarkAppearanceNativeWindows()){
+		
+			return( Colors.blues[Colors.FADED_DARKEST] );
+		}
+		
+		
+		return( Colors.getSystemColor( display,SWT.COLOR_LINK_FOREGROUND ));
+	}
+	
 	public static void
 	setLinkForeground(
 		Control		label )
 	{
-		Utils.setSkinnedForeground( label, Colors.getSystemColor( label.getDisplay(), SWT.COLOR_LINK_FOREGROUND), true );
+		Utils.setSkinnedForeground( label, getLinkForegroundColor(), true );
 	}
 	public static int
 	getDragDetectModifiers()
@@ -6790,7 +6802,7 @@ public class Utils
 				
 				range.start 		= result.length();
 				range.length		= t.length();
-				range.foreground	= text.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND);
+				range.foreground	= getLinkForegroundColor();
 				range.data			= url;
 				
 				ranges.add( range );

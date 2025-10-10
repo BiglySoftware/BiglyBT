@@ -913,7 +913,7 @@ public class MessageBoxShell
 					Rectangle area = canvas.getClientArea();
 					sp = new GCStringPrinter(e.gc, text, area, true, false, SWT.WRAP
 							| SWT.TOP);
-					sp.setUrlColor(e.gc.getDevice().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+					sp.setUrlColor(Utils.getLinkForegroundColor());
 					if (urlColor != null) {
 						sp.setUrlColor(urlColor);
 					}
