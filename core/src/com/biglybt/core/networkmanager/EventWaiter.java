@@ -52,6 +52,15 @@ EventWaiter
 		
 		synchronized( this ){
 			
+			ec = event_count.get();
+			
+			if ( ec != last_event_count ){
+							
+				last_event_count = ec;
+				
+				return( false );
+			}
+			
 			try{
 				sleeping	= true;
 
