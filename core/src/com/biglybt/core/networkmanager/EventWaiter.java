@@ -26,11 +26,11 @@ import com.biglybt.core.util.Debug;
 public class
 EventWaiter
 {
-	private final AtomicInteger	event_count = new AtomicInteger(0);
+	private final AtomicInteger	counter = new AtomicInteger(0);
 	
 	private boolean	sleeping;
 	
-	private int last_event_count = 0;
+	private int last_counter = 0;
 
 	public
 	EventWaiter()
@@ -41,26 +41,28 @@ EventWaiter
 	waitForEvent(
 		long	timeout )
 	{
-		int ec = event_count.get();
+		int c = counter.get();
 		
-		if ( ec != last_event_count ){
+		if ( c != last_counter ){
 						
-			last_event_count = ec;
+			last_counter = c;
 			
 			return( false );
 		}
 		
 		synchronized( this ){
 			
-			ec = event_count.get();
+			c = counter.get();
 			
-			if ( ec != last_event_count ){
+			if ( c != last_counter ){
 							
-				last_event_count = ec;
+				last_counter = c;
 				
 				return( false );
 			}
-			
+
+			last_counter = c;
+
 			try{
 				sleeping	= true;
 
@@ -74,17 +76,17 @@ EventWaiter
 
 				sleeping	= false;
 			}
-
+			
 			return( true );
 		}
 	}
 
 	public void
 	eventOccurred()
-	{
-		event_count.incrementAndGet();
-		
+	{		
 		synchronized( this ){
+			
+			counter.incrementAndGet();
 
 			if ( sleeping ){
 
