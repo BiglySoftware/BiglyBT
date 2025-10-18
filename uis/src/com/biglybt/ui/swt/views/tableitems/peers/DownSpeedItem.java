@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.views.tableitems.peers;
 
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.util.DisplayFormatters;
 
 import com.biglybt.pif.ui.tables.TableCell;
@@ -60,8 +61,11 @@ public class DownSpeedItem
     long prot_value	= 0;
 
     if ( peer != null ){
-    	data_value = peer.getStats().getDataReceiveRate();
-       	prot_value = peer.getStats().getProtocolReceiveRate();
+    	PEPeerStats stats = peer.getStats();
+    	if ( stats != null ){
+    		data_value = stats.getDataReceiveRate();
+    		prot_value = stats.getProtocolReceiveRate();
+    	}
     }
     long	sort_value = ( data_value<<32 ) + prot_value;
 

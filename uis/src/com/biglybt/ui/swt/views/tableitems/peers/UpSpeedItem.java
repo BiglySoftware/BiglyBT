@@ -25,6 +25,7 @@ package com.biglybt.ui.swt.views.tableitems.peers;
 import com.biglybt.core.util.DisplayFormatters;
 
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -57,8 +58,11 @@ public class UpSpeedItem
     long prot_value	= 0;
 
     if ( peer != null ){
-    	data_value = peer.getStats().getDataSendRate();
-       	prot_value = peer.getStats().getProtocolSendRate();
+    	PEPeerStats stats = peer.getStats();
+    	if ( stats != null ){
+	    	data_value = stats.getDataSendRate();
+	       	prot_value = stats.getProtocolSendRate();
+    	}
     }
     long	sort_value = ( data_value<<32 ) + prot_value;
 
