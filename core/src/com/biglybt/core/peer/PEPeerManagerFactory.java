@@ -27,6 +27,7 @@ package com.biglybt.core.peer;
 
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.peer.impl.PEPeerControlFactory;
+import com.biglybt.core.util.RandomUtils;
 
 public class
 PEPeerManagerFactory
@@ -37,7 +38,7 @@ PEPeerManagerFactory
 		PEPeerManagerAdapter	adapter,
 	  	DiskManager 			diskManager )
 	{
-  		return( create( peer_id, adapter, diskManager, 0 ));
+  		return( create( peer_id, adapter, diskManager, RandomUtils.nextInt( 64 )));
 	}
 
 	public static PEPeerManager

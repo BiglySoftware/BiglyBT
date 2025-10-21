@@ -718,7 +718,7 @@ public class ConfigurationDefaults {
     def.put( "network.control.read.idle.time", new Long(50));
     def.put( "network.control.read.aggressive", FALSE );
     def.put( "network.control.read.processor.count", new Long(1));
-    def.put( "network.control.write.processor.count", new Long(1));
+    def.put( "network.control.write.processor.count", new Long(4));
     def.put( "peermanager.schedule.time", new Long(100));
     def.put( "enable_small_osx_fonts", TRUE );
     def.put( "Play Download Finished Announcement", FALSE);

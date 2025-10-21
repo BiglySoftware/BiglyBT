@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.AEMonitor;
@@ -281,7 +282,9 @@ public class PeerIdentityManager {
 
     		}else{
 
-    			Debug.out( "id not present: id=" + peerID.getString());
+    			if ( !PEPeerControl.TEST_PERMIT_PEER_CONNECTIONS ){
+    				Debug.out( "id not present: id=" + peerID.getString());
+    			}
     		}
     	}
     }finally{

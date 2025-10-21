@@ -117,7 +117,8 @@ public class EntityHandler {
    */
   public boolean 
   cancelPeerConnection( 
-	NetworkConnectionBase connection ) 
+	NetworkConnectionBase 	connection,
+	int						partition_id ) 
   {
 	  try{  
 		  lock.enter();
@@ -137,7 +138,7 @@ public class EntityHandler {
 				  
 				  if ( upload_entity != null ){
 					  
-					  return( net_man.removeWriteEntity( upload_entity ));  //cancel from write processing
+					  return( net_man.removeWriteEntity( upload_entity, partition_id ));  //cancel from write processing
 				  }
 			  }else{
 				  
@@ -151,7 +152,7 @@ public class EntityHandler {
 				  
 				  if ( download_entity != null ){
 					  
-					  return( net_man.removeReadEntity( download_entity ));  //cancel from read processing
+					  return( net_man.removeReadEntity( download_entity, partition_id ));  //cancel from read processing
 				  }
 			  }else{
 				  
@@ -217,7 +218,8 @@ public class EntityHandler {
    */
   public void 
   downgradePeerConnection( 
-	NetworkConnectionBase connection ) 
+	NetworkConnectionBase	connection,
+	int						partition_id ) 
   {
 	  try {  
 		  lock.enter();
@@ -235,7 +237,7 @@ public class EntityHandler {
 			  
 			  if( upload_entity != null ){
 				  
-				  net_man.removeWriteEntity( upload_entity );  //cancel from write processing
+				  net_man.removeWriteEntity( upload_entity, partition_id );  //cancel from write processing
 				  
 			  }else{
 				  
@@ -250,7 +252,7 @@ public class EntityHandler {
 			  
 			  if( download_entity != null ){
 				  
-				  net_man.removeReadEntity( download_entity );  //cancel from read processing
+				  net_man.removeReadEntity( download_entity, partition_id );  //cancel from read processing
 				  
 			  }else{
 				  

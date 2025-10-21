@@ -162,7 +162,7 @@ public class NetworkManager {
 
 	 for (int i=0;i<num_read;i++){
 
-		 read_controllers.add( new ReadController());
+		 read_controllers.add( new ReadController( i+1 ));
 	 }
 
 	 int	num_write = COConfigurationManager.getIntParameter( "network.control.write.processor.count" );
@@ -171,7 +171,7 @@ public class NetworkManager {
 
 	 for (int i=0;i<num_write;i++){
 
-		 write_controllers.add( new WriteController());
+		 write_controllers.add( new WriteController( i+1 ));
 	 }
 	 
 	  upload_processor = new TransferProcessor(
@@ -502,20 +502,16 @@ public class NetworkManager {
    * Remove an upload entity from write processing.
    * @param entity to remove
    */
-  public boolean removeWriteEntity( RateControlledEntity entity ) {
-	  if ( write_controllers.size() == 1 ){
-		  return( write_controllers.get(0).removeWriteEntity( entity ));
+  public boolean removeWriteEntity( RateControlledEntity entity, int partition_id ) {
+	  if ( write_controllers.size() == 1 || partition_id < 0 ){
+
+		  return( write_controllers.get(0).removeWriteEntity(entity));
+
 	  }else{
-		  boolean found = false;
-		  
-		  for (WriteController write_controller: write_controllers ){
-			  if ( write_controller.removeWriteEntity( entity )){
-				  
-				  found = true;
-			  }
-		  }
-		  
-		  return( found );
+
+		  WriteController controller = write_controllers.get((partition_id%(write_controllers.size()-1))+1 );
+
+		  return( controller.removeWriteEntity( entity ));
 	  }
   }
 
@@ -542,19 +538,16 @@ public class NetworkManager {
    * Remove a download entity from read processing.
    * @param entity to remove
    */
-  public boolean removeReadEntity( RateControlledEntity entity ) {
-	  if ( read_controllers.size() == 1 ){
-		  return( read_controllers.get(0).removeReadEntity( entity ));
+  public boolean removeReadEntity( RateControlledEntity entity, int partition_id ) {
+	  if ( read_controllers.size() == 1 || partition_id < 0 ){
+
+		  return( read_controllers.get(0).removeReadEntity(entity));
+
 	  }else{
-		  boolean found = false;
-		  
-		  for (ReadController read_controller: read_controllers ){
-			  if ( read_controller.removeReadEntity( entity )){
-				  found = true;
-			  }
-		  }
-		  
-		  return( found );
+
+		  ReadController controller = read_controllers.get((partition_id%(write_controllers.size()-1))+1 );
+
+		  return( controller.removeReadEntity( entity ));
 	  }
   }
 
@@ -604,14 +597,14 @@ public class NetworkManager {
    * Cancel network upload and download handling for the given connection.
    * @param peer_connection to cancel
    */
-  public void stopTransferProcessing( NetworkConnectionBase peer_connection ) {
+  public void stopTransferProcessing( NetworkConnectionBase peer_connection, int partition_id ) {
   	if( lan_upload_processor.isRegistered( peer_connection )) {
-  		lan_upload_processor.deregisterPeerConnection( peer_connection );
-  		lan_download_processor.deregisterPeerConnection( peer_connection );
+  		lan_upload_processor.deregisterPeerConnection( peer_connection, partition_id );
+  		lan_download_processor.deregisterPeerConnection( peer_connection, partition_id );
   	}
   	else {
-  		upload_processor.deregisterPeerConnection( peer_connection );
-  		download_processor.deregisterPeerConnection( peer_connection );
+  		upload_processor.deregisterPeerConnection( peer_connection, partition_id );
+  		download_processor.deregisterPeerConnection( peer_connection, partition_id );
   	}
   }
 
@@ -635,14 +628,14 @@ public class NetworkManager {
    * Downgrade the given connection back to a normal-speed network transfer handling.
    * @param peer_connection to downgrade
    */
-  public void downgradeTransferProcessing( NetworkConnectionBase peer_connection ) {
+  public void downgradeTransferProcessing( NetworkConnectionBase peer_connection, int partition_id ) {
 	  if( lan_upload_processor.isRegistered( peer_connection )) {
-  		lan_upload_processor.downgradePeerConnection( peer_connection );
-  		lan_download_processor.downgradePeerConnection( peer_connection );
+  		lan_upload_processor.downgradePeerConnection( peer_connection, partition_id );
+  		lan_download_processor.downgradePeerConnection( peer_connection, partition_id );
   	}
   	else {
-  		upload_processor.downgradePeerConnection( peer_connection );
-  		download_processor.downgradePeerConnection( peer_connection );
+  		upload_processor.downgradePeerConnection( peer_connection, partition_id );
+  		download_processor.downgradePeerConnection( peer_connection, partition_id );
   	}
   }
 

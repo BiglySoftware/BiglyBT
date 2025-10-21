@@ -102,10 +102,13 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   /**
    * Create a new write controller.
    */
-  public WriteController() {
+  public 
+  WriteController( 
+		int partition_id ) 
+  {
 
     //start write handler processing
-    AEThread2 write_processor_thread = new AEThread2( "WriteController:WriteProcessor" ) {
+    AEThread2 write_processor_thread = new AEThread2( "WriteController:WriteProcessor - " + partition_id ) {
       @Override
       public void run() {
         writeProcessorLoop();

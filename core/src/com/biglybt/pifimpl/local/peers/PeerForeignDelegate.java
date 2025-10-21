@@ -188,7 +188,7 @@ PeerForeignDelegate
 	protected void
 	stop()
 	{
-		NetworkManager.getSingleton().stopTransferProcessing( network_connection );
+		NetworkManager.getSingleton().stopTransferProcessing( network_connection, manager.getPartitionID());
 	}
 
     /**

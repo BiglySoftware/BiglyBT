@@ -254,7 +254,7 @@ TransferProcessor
    * Cancel upload handling for the given peer connection.
    * @param connection to cancel
    */
-  public boolean deregisterPeerConnection( NetworkConnectionBase connection ) {
+  public boolean deregisterPeerConnection( NetworkConnectionBase connection, int partition_id ) {
     try{ connections_mon.enter();
       ConnectionData conn_data = (ConnectionData)connections.remove( connection );
 
@@ -282,7 +282,7 @@ TransferProcessor
     finally{ connections_mon.exit(); }
 
 
-    return( main_controller.cancelPeerConnection( connection ));
+    return( main_controller.cancelPeerConnection( connection, partition_id ));
   }
 
   public void
@@ -645,7 +645,7 @@ TransferProcessor
    * Downgrade the given connection back to a normal-speed transfer handler.
    * @param connection to downgrade
    */
-  public void downgradePeerConnection( NetworkConnectionBase connection ) {
+  public void downgradePeerConnection( NetworkConnectionBase connection, int partition_id ) {
     ConnectionData conn_data = null;
 
     try{ connections_mon.enter();
@@ -654,7 +654,7 @@ TransferProcessor
     finally{ connections_mon.exit(); }
 
     if( conn_data != null && conn_data.state == ConnectionData.STATE_UPGRADED ) {
-      main_controller.downgradePeerConnection( connection );
+      main_controller.downgradePeerConnection( connection, partition_id );
       conn_data.state = ConnectionData.STATE_NORMAL;
     }
   }

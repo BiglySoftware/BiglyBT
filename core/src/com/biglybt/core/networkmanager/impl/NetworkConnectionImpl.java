@@ -226,7 +226,7 @@ NetworkConnectionImpl
 
   @Override
   public void close(String reason ) {
-  	NetworkManager.getSingleton().stopTransferProcessing( this );
+  	NetworkManager.getSingleton().stopTransferProcessing( this, enhanced_partition_id );
   	closed	= true;
     if ( connection_attempt != null ){
     	connection_attempt.abandon();
@@ -284,7 +284,7 @@ NetworkConnectionImpl
     }else{
     	enhanced_partition_id = -1;
     	
-    	NetworkManager.getSingleton().downgradeTransferProcessing( this );
+    	NetworkManager.getSingleton().downgradeTransferProcessing( this, partition_id );
     }
   }
 
@@ -373,7 +373,7 @@ NetworkConnectionImpl
 									
 			if ( started ){
 				
-				nm.stopTransferProcessing( this );
+				nm.stopTransferProcessing( this, enhanced_partition_id );
 			}
 			
 			is_lan_local = AddressUtils.LAN_LOCAL_MAYBE;

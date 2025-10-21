@@ -75,10 +75,10 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 
   private int			entity_count;
 
-  public ReadController() {
+  public ReadController( int partion_id ) {
 
     //start read handler processing
-    AEThread2 read_processor_thread = new AEThread2( "ReadController:ReadProcessor" ) {
+    AEThread2 read_processor_thread = new AEThread2( "ReadController:ReadProcessor - " + partion_id) {
       @Override
       public void run() {
         readProcessorLoop();
