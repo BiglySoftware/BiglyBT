@@ -1431,6 +1431,8 @@ public class PeerManager implements CoreStatsProvider {
 				}
 			};
 			
+			PeerIdentityDataID data_id = PeerIdentityManager.createDataID(getHash());
+			
 			public int
 			getUID()
 			{
@@ -1489,7 +1491,7 @@ public class PeerManager implements CoreStatsProvider {
 			public PeerIdentityDataID
 			getPeerIdentityDataID()
 			{ 
-				log(); return( null ); 
+				return( data_id );
 			}
 
 			public byte[]
@@ -1624,7 +1626,7 @@ public class PeerManager implements CoreStatsProvider {
 			public long getLastRemoteConnectionTime(){ log(); return( 0 ); }
 			
 			public int
-			getMaxNewConnectionsAllowed( String network ){ log(); return( 0 ); }
+			getMaxNewConnectionsAllowed( String network ){ return( 0 ); }
 
 			public boolean
 			hasPotentialConnections(){ log(); return( false ); }
@@ -1892,13 +1894,13 @@ public class PeerManager implements CoreStatsProvider {
 				int		ct_def ){ log(); return( 0 ); }
 
 			public int[]
-			getMaxConnections(){ log(); return( null ); }
+			getMaxConnections(){ return( new int[2] ); }
 
 			public boolean
 			doOptimisticDisconnect(
 					boolean pending_lan_local_peer,
 					boolean	force,
-					String	network ){ log(); return( false ); }
+					String	network ){ return( false ); }
 
 			public int getNbActivePieces(){ log(); return( 0 ); }
 

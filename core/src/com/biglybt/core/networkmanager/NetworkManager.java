@@ -545,7 +545,7 @@ public class NetworkManager {
 
 	  }else{
 
-		  ReadController controller = read_controllers.get((partition_id%(write_controllers.size()-1))+1 );
+		  ReadController controller = read_controllers.get((partition_id%(read_controllers.size()-1))+1 );
 
 		  return( controller.removeReadEntity( entity ));
 	  }
