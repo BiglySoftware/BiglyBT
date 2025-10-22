@@ -626,6 +626,16 @@ public class MultiPeerUploader implements RateControlledEntity {
 	@Override
 	public boolean getPriorityBoost(){ return false; }
 
+	private String
+	getString(
+		int[]	a )
+	{
+		String str = "";
+		for ( int i:a ){
+			str += (str.isEmpty()?"":"/") + i;
+		}
+		return( str );
+	}
 	@Override
 	public String
 	getString()
@@ -634,8 +644,8 @@ public class MultiPeerUploader implements RateControlledEntity {
 
 		str.append("MPU (").append(waiting_connections.size()).append("/").append(ready_connections.size()).append("): ");
 
-		str.append("can_process=").append(canProcess(null)).append(",bytes_allowed=").append(rate_handler.getCurrentNumBytesAllowed())
-		.append(", waiting=");
+		str.append("can_process=").append(canProcess(null)).append(",bytes_allowed=").append(getString(rate_handler.getCurrentNumBytesAllowed()))
+		.append(", waiting=[");
 
 		try {
 			lists_lock.enter();
@@ -653,7 +663,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 				str.append( conn.getString());
 			}
 
-			str.append( ": ready=" );
+			str.append( "], ready=[" );
 
 			num = 0;
 
@@ -667,6 +677,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 
 				str.append( conn.getString());
 			}
+			str.append("]");
 		}finally{
 
 			lists_lock.exit();

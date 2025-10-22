@@ -123,9 +123,10 @@ AEDiagnostics
 	
 	protected static boolean	loggers_disabled;	// all these stupid vars.
 
-	private static final List<AEDiagnosticsEvidenceGenerator>		evidence_generators	= new ArrayList<>();
-	private static final Map<AEDiagnosticsEvidenceGenerator, Void>		weak_evidence_generators	= new WeakHashMap<>();
-
+	private static final List<AEDiagnosticsEvidenceGenerator>			evidence_generators			= new ArrayList<>();
+	private static final Map<AEDiagnosticsEvidenceGenerator, Integer>	weak_evidence_generators	= new WeakHashMap<>();
+	private static int	weg_next = 0;
+	
 	private static final AESemaphore	dump_check_done_sem = new AESemaphore( "dumpcheckcomplete" );
 
 	public static synchronized void
@@ -780,7 +781,7 @@ AEDiagnostics
 	{
 		synchronized( evidence_generators ){
 
-			weak_evidence_generators.put( gen, null );
+			weak_evidence_generators.put( gen, weg_next++ );
 		}
 	}
 
@@ -822,11 +823,19 @@ AEDiagnostics
 					e.printStackTrace(_writer);
 				}
 			}
+			
+			List<Map.Entry<AEDiagnosticsEvidenceGenerator,Integer>> wegs = new ArrayList<>( weak_evidence_generators.entrySet());
 
-			for (AEDiagnosticsEvidenceGenerator gen : weak_evidence_generators.keySet()) {
+			Collections.sort(
+				wegs,
+				(e1,e2)->{
+					return( e1.getValue() - e2.getValue());
+				});
+			
+			for (Map.Entry<AEDiagnosticsEvidenceGenerator,Integer> entry: wegs ) {
 
 				try {
-					gen.generate(writer);
+					entry.getKey().generate(writer);
 
 				} catch (Throwable e) {
 

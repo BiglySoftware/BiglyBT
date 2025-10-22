@@ -444,7 +444,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 		StringBuilder str = new StringBuilder();
 
 		str.append("MPD (").append(connections_cow.size()).append("/").append(active_connections.size()).append("/")
-			.append(idle_connections.size()).append(": ");
+			.append(idle_connections.size()).append("): con=[");
 
 		int	num = 0;
 
@@ -458,6 +458,8 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 			str.append( connection.getString());
 		}
 
+		str.append( "]");
+		
 		return( str.toString());
 	}
 

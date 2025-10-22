@@ -57,6 +57,8 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 			});
 	}
 
+  final int partition_id;
+	
   volatile ArrayList<RateControlledEntity> normal_priority_entities = new ArrayList<>();  //copied-on-write
   volatile ArrayList<RateControlledEntity> high_priority_entities 	= new ArrayList<>();  //copied-on-write
   private final AEMonitor entities_mon = new AEMonitor( "ReadController:EM" );
@@ -75,10 +77,12 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 
   private int			entity_count;
 
-  public ReadController( int partion_id ) {
+  public ReadController( int _partition_id ) {
 
+	  partition_id = _partition_id;
+	  
     //start read handler processing
-    AEThread2 read_processor_thread = new AEThread2( "ReadController:ReadProcessor - " + partion_id) {
+    AEThread2 read_processor_thread = new AEThread2( "ReadController:ReadProcessor - " + partition_id) {
       @Override
       public void run() {
         readProcessorLoop();
@@ -110,7 +114,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 	generate(
 			IndentWriter writer )
 	{
-		writer.println( "Read Controller" );
+		writer.println( "Read Controller - " + partition_id );
 
 		try{
 			writer.indent();

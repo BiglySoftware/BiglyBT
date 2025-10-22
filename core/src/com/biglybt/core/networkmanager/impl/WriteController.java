@@ -61,7 +61,10 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				}
 			});
 	}
+	
+  final int partition_id;
 
+	  
   volatile ArrayList<RateControlledEntity> normal_priority_entities = new ArrayList<>();  //copied-on-write
   volatile ArrayList<RateControlledEntity> boosted_priority_entities = new ArrayList<>();  //copied-on-write
   volatile ArrayList<RateControlledEntity> high_priority_entities = new ArrayList<>();  //copied-on-write
@@ -104,9 +107,9 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
    */
   public 
   WriteController( 
-		int partition_id ) 
+		int _partition_id ) 
   {
-
+	  partition_id = _partition_id;
     //start write handler processing
     AEThread2 write_processor_thread = new AEThread2( "WriteController:WriteProcessor - " + partition_id ) {
       @Override
@@ -162,7 +165,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 	generate(
 			IndentWriter writer )
 	{
-		writer.println( "Write Controller" );
+		writer.println( "Write Controller - " + partition_id );
 
 		try{
 			writer.indent();
