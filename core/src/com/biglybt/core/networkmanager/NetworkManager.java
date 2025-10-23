@@ -28,9 +28,7 @@ import java.util.Set;
 import com.biglybt.core.Core;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
-import com.biglybt.core.global.GlobalManagerListener;
 import com.biglybt.core.networkmanager.impl.*;
 import com.biglybt.core.networkmanager.impl.http.HTTPNetworkManager;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
@@ -51,6 +49,14 @@ public class NetworkManager {
 
   public static final int UNLIMITED_RATE = 1024 * 1024 * 100; //100 mbyte/s
 
+  	// default partitioning is by download so all connections for a given download will end up on
+  	// the same read/write processor. So, for example, if there is a single download active then it
+  	// will not benefit from having multiple processors. The alternative is simply to partition by
+  	// connection, distributing a download's connections across the processors.
+  	// 
+  
+  private static final boolean PARTITION_BY_CONNECTION = true;
+  
   private static final NetworkManager instance = new NetworkManager();
 
   static int max_download_rate_bps;
@@ -484,7 +490,10 @@ public class NetworkManager {
    * Add an upload entity for write processing.
    * @param entity to add
    */
-  public void addWriteEntity( RateControlledEntity entity, int partition_id ) {
+  public void addWriteEntity( RateControlledEntity entity, int _partition_id ) {
+	  
+	  int partition_id = PARTITION_BY_CONNECTION?entity.getPartitionID():_partition_id;
+	  
 	  if ( write_controllers.size() == 1 || partition_id < 0 ){
 
 		  write_controllers.get(0).addWriteEntity(entity);
@@ -502,7 +511,10 @@ public class NetworkManager {
    * Remove an upload entity from write processing.
    * @param entity to remove
    */
-  public boolean removeWriteEntity( RateControlledEntity entity, int partition_id ) {
+  public boolean removeWriteEntity( RateControlledEntity entity, int _partition_id ) {
+	  
+	  int partition_id = PARTITION_BY_CONNECTION?entity.getPartitionID():_partition_id;
+
 	  if ( write_controllers.size() == 1 || partition_id < 0 ){
 
 		  return( write_controllers.get(0).removeWriteEntity(entity));
@@ -520,7 +532,10 @@ public class NetworkManager {
    * Add a download entity for read processing.
    * @param entity to add
    */
-  public void addReadEntity( RateControlledEntity entity, int partition_id ) {
+  public void addReadEntity( RateControlledEntity entity, int _partition_id ) {
+	  
+	  int partition_id = PARTITION_BY_CONNECTION?entity.getPartitionID():_partition_id;
+
 	  if ( read_controllers.size() == 1 || partition_id < 0 ){
 
 		  read_controllers.get(0).addReadEntity(entity);
@@ -538,7 +553,10 @@ public class NetworkManager {
    * Remove a download entity from read processing.
    * @param entity to remove
    */
-  public boolean removeReadEntity( RateControlledEntity entity, int partition_id ) {
+  public boolean removeReadEntity( RateControlledEntity entity, int _partition_id ) {
+	  
+	  int partition_id = PARTITION_BY_CONNECTION?entity.getPartitionID():_partition_id;
+
 	  if ( read_controllers.size() == 1 || partition_id < 0 ){
 
 		  return( read_controllers.get(0).removeReadEntity(entity));

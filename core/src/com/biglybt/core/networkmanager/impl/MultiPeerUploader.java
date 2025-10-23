@@ -73,6 +73,13 @@ public class MultiPeerUploader implements RateControlledEntity {
 		return( rate_handler );
 	}
 
+	@Override
+	public int 
+	getPartitionID()
+	{
+		return( -1 );
+	}
+	
 	/**
 	 * Checks the connections in the waiting list to see if it's time to be force-flushed.
 	 */

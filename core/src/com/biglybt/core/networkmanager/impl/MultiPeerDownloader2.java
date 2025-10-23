@@ -77,6 +77,13 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 		return( main_handler );
 	}
 
+	@Override
+	public int 
+	getPartitionID()
+	{
+		return( -1 );
+	}
+	
 	/**
 	 * Add the given connection to the downloader.
 	 * @param connection to add

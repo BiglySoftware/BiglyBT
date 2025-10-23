@@ -42,6 +42,9 @@ RateControlledEntity {
 	 * @return true if it can process >0 bytes, false if not ready
 	 */
 	
+	public int
+	getPartitionID();
+	
 	public boolean 
 	canProcess(  
 		EventWaiter waiter );

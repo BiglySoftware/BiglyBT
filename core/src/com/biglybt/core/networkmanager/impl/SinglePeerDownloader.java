@@ -33,7 +33,7 @@ import com.biglybt.core.util.Debug;
  * A fast read entity backed by a single peer connection.
  */
 public class SinglePeerDownloader implements RateControlledEntity {
-
+  
   private final NetworkConnectionBase connection;
   private final RateHandler rate_handler;
 
@@ -50,6 +50,13 @@ public class SinglePeerDownloader implements RateControlledEntity {
 		return( rate_handler );
 	}
 
+	@Override
+	public int 
+	getPartitionID()
+	{
+		return( connection.getPartitionID());
+	}
+	
 	@Override
 	public boolean 
 	canProcess(

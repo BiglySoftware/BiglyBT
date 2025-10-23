@@ -50,6 +50,13 @@ public class SinglePeerUploader implements RateControlledEntity {
 		return( rate_handler );
 	}
 
+	@Override
+	public int 
+	getPartitionID()
+	{
+		return( connection.getPartitionID());
+	}
+	
 ////////////////RateControlledWriteEntity implementation ////////////////////
 
 	@Override

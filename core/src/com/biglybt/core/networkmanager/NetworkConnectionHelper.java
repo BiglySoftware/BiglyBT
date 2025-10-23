@@ -20,10 +20,23 @@
 
 package com.biglybt.core.networkmanager;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class
 NetworkConnectionHelper
 	implements NetworkConnectionBase
 {
+	private static final AtomicInteger	next_partition_id = new AtomicInteger();
+	
+	private final int partition_id = next_partition_id.incrementAndGet();
+	
+	@Override
+	public int 
+	getPartitionID()
+	{
+		return( partition_id );
+	}
+	
 	  int	upload_limit;
 
 	  private final LimitedRateGroup upload_limiter = new LimitedRateGroup() {
