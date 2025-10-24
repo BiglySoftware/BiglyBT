@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.AERunnableObject;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 
@@ -221,6 +220,7 @@ public class SWTSkinObjectSash
 						try {
 							int l = NumberFormat.getInstance().parse(sPos).intValue();
 							sash.setData("PX", new Long(l));
+							saveSashPosition();
 							// FALL THROUGH
 							e.type = SWT.Show;
 						} catch (Exception ex) {
@@ -287,7 +287,8 @@ public class SWTSkinObjectSash
 						aboveNewSize = above.getBounds().height + (sash.getSize().y / 2.0);
 					}
 					sash.setData("PX", new Long((long) aboveNewSize));
-
+					
+					saveSashPosition();
 				}
 			}
 		};
@@ -298,13 +299,23 @@ public class SWTSkinObjectSash
 		handleShow();
 	}
 
-	@Override
-	public void dispose() {
+	private void
+	saveSashPosition()
+	{
 		Long px = (Long) sash.getData("PX");
 		if (px != null && px.longValue() != 0) {
 			COConfigurationManager.setParameter("v3." + sID + ".splitAtPX",
 					px.longValue());
 		}
+	}
+	
+	@Override
+	public void dispose() {
+
+			// this isn't being called on closedown anymore hence calls to save it on change
+		
+		saveSashPosition();
+		
 		super.dispose();
 	}
 
@@ -336,6 +347,8 @@ public class SWTSkinObjectSash
 			
 			sash.setData("PX", px );
 
+			saveSashPosition();
+			
 			setBelowSize( px.intValue());
 			
 			return;
@@ -441,6 +454,9 @@ public class SWTSkinObjectSash
 					wantAboveSize = 0;
 				}
 				sash.setData("PX", new Long(wantAboveSize));
+				
+				saveSashPosition();
+				
 				handleShow();
 			}
 		});
