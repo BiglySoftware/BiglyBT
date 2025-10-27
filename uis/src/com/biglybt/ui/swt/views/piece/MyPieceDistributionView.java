@@ -18,6 +18,9 @@
 package com.biglybt.ui.swt.views.piece;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerPeerListener;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
@@ -34,6 +37,44 @@ import com.biglybt.util.DataSourceUtils;
 public class MyPieceDistributionView
 	extends PieceDistributionView
 {
+	private DownloadManagerPeerListener pl = 
+		new DownloadManagerPeerListener()
+		{
+			public void
+			peerManagerWillBeAdded(
+				PEPeerManager	manager )
+			{
+			}
+	
+			public void
+			peerManagerAdded(
+				PEPeerManager	manager )
+			{
+				pem = manager;
+			}
+	
+			public void
+			peerManagerRemoved(
+				PEPeerManager	manager )
+			{
+				//pem = null;
+			}
+	
+			public void
+			peerAdded(
+				PEPeer 	peer )
+			{
+			}
+	
+			public void
+			peerRemoved(
+				PEPeer	peer )
+			{
+			}
+		};
+	
+	private DownloadManager dm;
+
 	public MyPieceDistributionView()
 	{
 		isMe = true;
@@ -54,7 +95,12 @@ public class MyPieceDistributionView
 		}
 
 		if (newDataSource instanceof DownloadManager) {
-			pem = ((DownloadManager) newDataSource).getPeerManager();
+			if ( dm != null ){
+				dm.removePeerListener(pl);
+			}
+			dm = (DownloadManager)newDataSource;
+			dm.addPeerListener(pl);
+			pem = dm.getPeerManager();
 		} else if (newDataSource instanceof PEPiece) {
 			PEPiece piece = (PEPiece) newDataSource;
 			pem = piece.getManager();
@@ -68,5 +114,17 @@ public class MyPieceDistributionView
 				refresh();
 			}
 		});
+	}
+	
+	@Override
+	protected void 
+	delete()
+	{
+		if ( dm != null ){
+			
+			dm.removePeerListener(pl);
+		}
+	
+		super.delete();
 	}
 }

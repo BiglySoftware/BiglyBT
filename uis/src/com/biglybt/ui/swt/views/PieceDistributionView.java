@@ -81,7 +81,9 @@ public abstract class PieceDistributionView
 			@Override
 			public void handleEvent(Event event) {
 				if ( pem==null || pem.isDestroyed()){
-					event.gc.setBackground(Utils.isDarkAppearanceNative()?pieceDistCanvas.getBackground():null);
+					if ( Utils.isDarkAppearanceNative()){
+						event.gc.setBackground(pieceDistCanvas.getBackground());
+					}
 					event.gc.fillRectangle(event.x, event.y, event.width, event.height);
 				}else{
 					if (imgToPaint != null && !imgToPaint.isDisposed()) {
@@ -284,7 +286,7 @@ public abstract class PieceDistributionView
 		return comp;
 	}
 
-	private void delete() {
+	protected void delete() {
 		if (!initialized)
 			return;
 		initialized = false;
