@@ -71,8 +71,10 @@ DHTTrackerPluginAlt
 
 	private AsyncDispatcher		dispatcher = new AsyncDispatcher();
 
-	private volatile long	lookup_count;
-	private volatile long	hit_count;
+	private volatile long	lookup_count_v4;
+	private volatile long	lookup_count_v6;
+	private volatile long	hit_count_v4;
+	private volatile long	hit_count_v6;
 
 	private volatile long	packets_out;
 	private volatile long	packets_in;
@@ -387,9 +389,8 @@ DHTTrackerPluginAlt
 		final boolean				no_seeds,
 		final LookupListener		listener )
 	{
-		List<DHTTransportAlternativeContact> contacts;
-
-		boolean v4;
+		List<DHTTransportAlternativeContact> contacts_v4;
+		List<DHTTransportAlternativeContact> contacts_v6;
 		
 		while( true ){
 
@@ -398,32 +399,18 @@ DHTTrackerPluginAlt
 				return;
 			}
 
-			List<DHTTransportAlternativeContact> contactsv4 = DHTUDPUtils.getAlternativeContacts( DHTTransportAlternativeNetwork.AT_MLDHT_IPV4, 16 );
+			contacts_v4 = DHTUDPUtils.getAlternativeContacts( DHTTransportAlternativeNetwork.AT_MLDHT_IPV4, 16 );
 			
-			if ( !NetworkAdmin.getSingleton().hasDHTIPV6()){
-				
-				contacts = contactsv4;
-				
-				v4 = true;
+			if ( NetworkAdmin.getSingleton().hasDHTIPV6()){
+	
+				contacts_v6 = DHTUDPUtils.getAlternativeContacts( DHTTransportAlternativeNetwork.AT_MLDHT_IPV6, 16 );
 				
 			}else{
-				List<DHTTransportAlternativeContact> contactsv6 = DHTUDPUtils.getAlternativeContacts( DHTTransportAlternativeNetwork.AT_MLDHT_IPV6, 16 );
-	
-				if ( contactsv4.size() > contactsv6.size() || ( contactsv4.size() == contactsv6.size() && RandomUtils.nextInt(2) == 1 )){
-					
-					contacts = contactsv4;
 				
-					v4 = true;
-					
-				}else{
-					
-					contacts = contactsv6;
-					
-					v4 = false;
-				}
+				contacts_v6 = Collections.emptyList();
 			}
 			
-			if ( contacts.isEmpty()){
+			if ( contacts_v4.isEmpty() && contacts_v6.isEmpty()){
 
 				long now = SystemTime.getMonotonousTime();
 
@@ -447,16 +434,79 @@ DHTTrackerPluginAlt
 			}
 		}
 
-		DatagramSocket	server = getServer( v4 );
-
-		if ( server == null ){
-
-			return;
+		LookupListener task_listener;
+		
+		if ( contacts_v4.isEmpty() || contacts_v6.isEmpty()){
+		
+			task_listener = listener;
+			
+		}else{
+			
+			task_listener= 
+				new LookupListener(){
+				
+					private int complete_count = 0;
+				
+					@Override
+					public boolean 
+					isComplete()
+					{
+						return( listener.isComplete());
+					}
+					
+					@Override
+					public void 
+					foundPeer(
+						InetSocketAddress address)
+					{
+						listener.foundPeer(address);
+					}
+					
+					@Override
+					public void 
+					completed()
+					{
+						boolean done;
+						
+						synchronized( this ){
+						
+							complete_count++;
+							
+							done = complete_count == 2;
+						}
+						
+						if ( done ){
+							
+							listener.completed();
+						}
+					}
+				};
 		}
+		
+		if ( !contacts_v4.isEmpty()){
+			
+			DatagramSocket	server = getServer( true );
+	
+			if ( server != null ){
+	
+				lookup_count_v4++;
+				
+				new GetPeersTask( server, contacts_v4, hash, no_seeds, task_listener );
+			}
+		}
+		
+		if ( !contacts_v6.isEmpty()){
+			
+			DatagramSocket	server = getServer( false );
+	
+			if ( server != null ){
+	
+				lookup_count_v6++;
+				
+				new GetPeersTask( server, contacts_v6, hash, no_seeds, task_listener );
+			}
 
-		lookup_count++;
-
-		new GetPeersTask( server, contacts, hash, no_seeds, listener );
+		}
 	}
 
 	private byte[]
@@ -609,7 +659,7 @@ DHTTrackerPluginAlt
 	protected String
 	getString()
 	{
-		return( "lookups=" + lookup_count + ", hits=" + hit_count +
+		return( "lookups=" + lookup_count_v4 + "/" + lookup_count_v6 + ", hits=" + hit_count_v4 + "/" + hit_count_v6 +
 				", out=" + packets_out + "/" + DisplayFormatters.formatByteCountToKiBEtc( bytes_out ) +
 				", in=" + packets_in + "/" + DisplayFormatters.formatByteCountToKiBEtc( bytes_in ) +
 				(last_server_error_v4==null?"":(", error4=" + Debug.getNestedExceptionMessage( last_server_error_v4 ))) +
@@ -961,7 +1011,9 @@ DHTTrackerPluginAlt
 
 						int	port = bb.getShort()&0xffff;
 
-						InetSocketAddress addr = new InetSocketAddress( InetAddress.getByAddress(address), port );
+						InetAddress ia = InetAddress.getByAddress(address);
+						
+						InetSocketAddress addr = new InetSocketAddress( ia, port );
 
 						synchronized( this ){
 
@@ -975,7 +1027,11 @@ DHTTrackerPluginAlt
 
 						// System.out.println("Found peer: " + addr );
 						
-						hit_count++;
+						if ( ia instanceof Inet4Address ){
+							hit_count_v4++;
+						}else{
+							hit_count_v6++;
+						}
 
 						listener.foundPeer( addr );
 
