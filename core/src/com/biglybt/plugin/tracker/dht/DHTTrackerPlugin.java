@@ -1876,12 +1876,14 @@ DHTTrackerPlugin
 		final long[]	max_retry = { 0 };
 
 		boolean metadata_download = download.getFlag( Download.FLAG_METADATA_DOWNLOAD );
-		
+				
 		boolean do_alt = 
 			alt_lookup_handler != null &&
 				(	metadata_download || 
 					(! ( download.getFlag( Download.FLAG_LOW_NOISE ) || download.getFlag( Download.FLAG_LIGHT_WEIGHT ))));
 	
+		boolean fast = do_alt && ( SystemTime.getCurrentTime() - download.getStats().getTimeStarted() < 60*1000 );
+
 		int	num_done = 0;
 
 		for (int i=0;i<targets.length;i++){
@@ -1933,6 +1935,7 @@ DHTTrackerPlugin
 								alt_lookup_handler.get(
 										target.getHash(),
 										is_complete,
+										fast,
 										new DHTTrackerPluginAlt.LookupListener()
 										{
 											@Override
@@ -1947,7 +1950,7 @@ DHTTrackerPlugin
 											public boolean
 											isComplete()
 											{
-												return( complete && addresses.size() > 5 );
+												return( complete && addresses.size() > 16 );
 											}
 
 											@Override
@@ -1983,7 +1986,7 @@ DHTTrackerPlugin
 
 								if ( complete ){
 
-									try_injection |= addresses.size() < 5;
+									try_injection |= addresses.size() < 16;
 
 								}else{
 
@@ -4881,7 +4884,7 @@ DHTTrackerPlugin
 						{
 							alt_lookup_handler.get(
 									torrent.getHash(),
-									false,
+									false, true,
 									new DHTTrackerPluginAlt.LookupListener()
 									{
 										@Override
