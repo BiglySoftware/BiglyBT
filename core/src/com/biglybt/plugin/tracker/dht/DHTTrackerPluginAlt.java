@@ -44,10 +44,10 @@ DHTTrackerPluginAlt
 	private static final int	startup_grace	= 60*1000;
 
 	private static final int INITAL_DELAY_FAST	= 250;
-	private static final int INITAL_DELAY_SLOW	= 5*1000;
+	private static final int INITAL_DELAY_SLOW	= 2500;
 	
-	private static final int RPC_TIMEOUT	= 15*1000;
-	private static final int LOOKUP_TIMEOUT	= 90*1000;
+	private static final int RPC_TIMEOUT	= 10*1000;
+	private static final int LOOKUP_TIMEOUT	= 30*1000;
 	private static final int LOOKUP_LINGER	= 5*1000;
 
 	private static final int CONC_LOOKUPS	= 8;
