@@ -3324,9 +3324,10 @@ DownloadManagerStateImpl
 			for ( DownloadManagerStateAttributeListener l: write_listeners.getList()){
 
 				try{
-
-					l.attributeEventOccurred(download_manager, attribute_name, DownloadManagerStateAttributeListener.WRITTEN);
-
+					if ( changed || l.alwaysInform()){
+					
+						l.attributeEventOccurred(download_manager, attribute_name, DownloadManagerStateAttributeListener.WRITTEN);
+					}
 				}catch (Throwable t){
 
 					Debug.printStackTrace(t);
@@ -3413,7 +3414,10 @@ DownloadManagerStateImpl
 					if ( value == null ){
 						Debug.out( "Inconsistent" );
 					}else{
-						value.decrementAndGet();
+						if ( value.decrementAndGet() < 0 ){
+							Debug.out( "Inconsistent" );
+							value.incrementAndGet();
+						}
 					}
 				}
 			}
