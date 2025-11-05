@@ -23,6 +23,8 @@ import java.io.*;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -294,6 +296,8 @@ DownloadManagerStateImpl
 
 	private final CopyOnWriteMap<String,CopyOnWriteList<DownloadManagerStateAttributeListener>> listeners_read_map_cow  = new CopyOnWriteMap<>();
 	private final CopyOnWriteMap<String,CopyOnWriteList<DownloadManagerStateAttributeListener>> listeners_write_map_cow = new CopyOnWriteMap<>();
+
+	private final ConcurrentHashMap<String,AtomicInteger> write_always_inform_set = new ConcurrentHashMap<>();
 
 
 	private Map			parameters;
@@ -968,7 +972,7 @@ DownloadManagerStateImpl
 	{
 			// get any listeners to pick up new values as their defaults are based on core params
 
-		informWritten( AT_PARAMETERS );
+		informWritten( AT_PARAMETERS, true );
 	}
 
 	@Override
@@ -1660,12 +1664,14 @@ DownloadManagerStateImpl
 			new_value = old_value & ~flag;
 		}
 		
-		if ( old_value != new_value ){
+		boolean changed = old_value != new_value;
+		
+		if ( changed ){
 			
 			transient_flags = (int)new_value;
-			
-			informWritten( AT_TRANSIENT_FLAGS );
 		}
+		
+		informWritten( AT_TRANSIENT_FLAGS, changed );
 	}
 
 	public boolean
@@ -2766,10 +2772,10 @@ DownloadManagerStateImpl
 			this_mon.exit();
 		}
 
+		informWritten( attribute_name, changed );
+
 		if ( changed ){
 
-			informWritten( attribute_name );
-			
 			if ( attribute_name.equals( AT_CANONICAL_SD_DMAP )){
 			
 				setAttribute( AT_PRIMARY_FILE_PATH, null );
@@ -2874,10 +2880,7 @@ DownloadManagerStateImpl
 			this_mon.exit();
 		}
 
-		if ( changed ){
-
-			informWritten( attribute_name );
-		}
+		informWritten( attribute_name, changed );
 	}
 
 	@Override
@@ -3069,10 +3072,7 @@ DownloadManagerStateImpl
 			this_mon.exit();
 		}
 
-		if ( changed ){
-
-			informWritten( attribute_name );
-		}
+		informWritten( attribute_name, changed );
 	}
 
 	private BEncodableObject
@@ -3122,11 +3122,8 @@ DownloadManagerStateImpl
 
 			this_mon.exit();
 		}
-		
-		if ( !cache_only ){
-		
-			informWritten( attribute_name );
-		}
+				
+		informWritten( attribute_name, !cache_only );
 	}
 	
 	@Override
@@ -3154,15 +3151,6 @@ DownloadManagerStateImpl
 	setMapAttribute(
 		final String	attribute_name,
 		final Map		attribute_value )
-	{
-		setMapAttribute( attribute_name, attribute_value, false );
-	}
-
-	protected void
-	setMapAttribute(
-		final String	attribute_name,
-		final Map		attribute_value,
-		boolean			disable_change_notification )
 	{
 		boolean	changed	= false;
 
@@ -3213,10 +3201,7 @@ DownloadManagerStateImpl
 			this_mon.exit();
 		}
 
-		if ( changed && !disable_change_notification ){
-
-			informWritten( attribute_name );
-		}
+		informWritten( attribute_name, changed );
 	}
 
 	@Override
@@ -3260,10 +3245,7 @@ DownloadManagerStateImpl
 			this_mon.exit();
 		}
 		
-		if ( changed ){
-
-			informWritten( attribute_name );
-		}
+		informWritten( attribute_name, changed );
 	}
 	
 	// These methods just use long attributes to store data into.
@@ -3310,10 +3292,21 @@ DownloadManagerStateImpl
 		return( new nullState(dm));
 	}
 
-	protected void
+	private void
 	informWritten(
-		final String		attribute_name )
+		final String		attribute_name,
+		boolean				changed )
 	{
+		if ( !changed ){
+			
+			AtomicInteger value = write_always_inform_set.get( attribute_name );
+			
+			if ( value == null || value.get() <= 0 ){
+				
+				return;
+			}
+		}
+		
 			// don't make any of this async as the link management code for cache files etc
 			// relies on callbacks here being synchronous...
 
@@ -3342,7 +3335,7 @@ DownloadManagerStateImpl
 		}
 	}
 
-	protected void
+	private void
 	informWillRead(
 		final String		attribute_name )
 	{
@@ -3401,15 +3394,32 @@ DownloadManagerStateImpl
 			map_to_use.put(attribute, lst);
 		}
 		lst.add(l);
+		if (event_type == DownloadManagerStateAttributeListener.WRITTEN && l.alwaysInform()){
+						
+			write_always_inform_set.putIfAbsent(attribute, new AtomicInteger());
+			
+			write_always_inform_set.get( attribute ).incrementAndGet();
+		}
 	}
 
 	@Override
 	public void removeListener(DownloadManagerStateAttributeListener l, String attribute, int event_type) {
 		CopyOnWriteMap<String,CopyOnWriteList<DownloadManagerStateAttributeListener>> map_to_use = (event_type == DownloadManagerStateAttributeListener.WILL_BE_READ) ? this.listeners_read_map_cow : this.listeners_write_map_cow;
 		CopyOnWriteList<DownloadManagerStateAttributeListener> lst = map_to_use.get(attribute);
-		if (lst != null) {lst.remove(l);}
+		if (lst != null){
+			if (lst.remove(l)){
+				if (event_type == DownloadManagerStateAttributeListener.WRITTEN && l.alwaysInform()){
+					AtomicInteger value = write_always_inform_set.get( attribute );
+					if ( value == null ){
+						Debug.out( "Inconsistent" );
+					}else{
+						value.decrementAndGet();
+					}
+				}
+			}
+		}
 	}
-
+	
 	public static void
 	addGlobalListener(
 		DownloadManagerStateAttributeListener l, String attribute, int event_type)
@@ -3421,6 +3431,9 @@ DownloadManagerStateImpl
 			map_to_use.put(attribute, lst);
 		}
 		lst.add(l);
+		if (event_type == DownloadManagerStateAttributeListener.WRITTEN && l.alwaysInform()){
+			Debug.out( "Not supported" );
+		}
 	}
 
 	public static void
@@ -3429,7 +3442,13 @@ DownloadManagerStateImpl
 	{
 		CopyOnWriteMap<String,CopyOnWriteList<DownloadManagerStateAttributeListener>> map_to_use = (event_type == DownloadManagerStateAttributeListener.WILL_BE_READ) ? global_listeners_read_map_cow : global_listeners_write_map_cow;
 		CopyOnWriteList<DownloadManagerStateAttributeListener> lst = (CopyOnWriteList)map_to_use.get(attribute);
-		if (lst != null) {lst.remove(l);}
+		if (lst != null){
+			if ( lst.remove(l)){
+				if (event_type == DownloadManagerStateAttributeListener.WRITTEN && l.alwaysInform()){
+					Debug.out( "Not supported" );
+				}
+			}
+		}
 	}
 
 	@Override

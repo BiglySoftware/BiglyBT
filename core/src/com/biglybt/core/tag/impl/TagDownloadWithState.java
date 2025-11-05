@@ -584,141 +584,79 @@ TagDownloadWithState
 
 				int actions = getSupportedActions();
 
-				if ( actions != TagFeatureExecOnAssign.ACTION_NONE && !is_md ){
+				if ( actions != TagFeatureExecOnAssign.ACTION_NONE ){
 
-					if ( 	isActionEnabled( TagFeatureExecOnAssign.ACTION_START ) ||
-							isActionEnabled( TagFeatureExecOnAssign.ACTION_RESUME )){
-
-						int	dm_state = dm.getState();
-
-						if ( 	dm_state == DownloadManager.STATE_STOPPED ||
-								dm_state == DownloadManager.STATE_ERROR ){
-
-							rs_async.dispatch(
-								new AERunnable()
-								{
-									@Override
-									public void
-									runSupport()
+					if ( !is_md ){
+						
+						if ( 	isActionEnabled( TagFeatureExecOnAssign.ACTION_START ) ||
+								isActionEnabled( TagFeatureExecOnAssign.ACTION_RESUME )){
+	
+							int	dm_state = dm.getState();
+	
+							if ( 	dm_state == DownloadManager.STATE_STOPPED ||
+									dm_state == DownloadManager.STATE_ERROR ){
+	
+								rs_async.dispatch(
+									new AERunnable()
 									{
-										if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_START )){
-
-											dm.setStateQueued();
-
-										}else{
-
-											dm.resume();
-										}
-									}
-								});
-						}
-
-					}else if ( 	isActionEnabled( TagFeatureExecOnAssign.ACTION_STOP ) ||
-								isActionEnabled( TagFeatureExecOnAssign.ACTION_PAUSE ) ||
-								isActionEnabled( TagFeatureExecOnAssign.ACTION_QUEUE )){
-
-						int	dm_state = dm.getState();
-
-						if ( 	dm_state != DownloadManager.STATE_STOPPED &&
-								dm_state != DownloadManager.STATE_STOPPING &&
-								dm_state != DownloadManager.STATE_ERROR ){
-
-							rs_async.dispatch(
-								new AERunnable()
-								{
-									@Override
-									public void
-									runSupport()
-									{
-										if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_STOP )){
-
-											dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
-
-										}else if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_QUEUE )){
-
-											dm.stopIt( DownloadManager.STATE_QUEUED, false, false );
-
-										}else{
-
-											dm.pause( true );
-										}
-
-										// recheck here in case it is an 'archive' action that requires
-										// download to be stopped
-
-										checkMaximumTaggables();
-
-									}
-								});
-						}
-					}
-
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_FORCE_START )){
-
-						rs_async.dispatch(
-							new AERunnable()
-							{
-								@Override
-								public void
-								runSupport()
-								{
-									dm.setForceStart( true);
-								}
-							});
-
-					}else if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_NOT_FORCE_START )){
-
-						rs_async.dispatch(
-							new AERunnable()
-							{
-								@Override
-								public void
-								runSupport()
-								{
-									dm.setForceStart( false );
-								}
-							});
-					}
-
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT )){
-
-						final String script = getActionScript();
-
-						if ( script.length() > 0 ){
-
-							synchronized( batch ){
-								
-								if ( batch_depth > 0 ){
-							
-									batch.add( dm );
-									
-								}else{
-							
-									rs_async.dispatch(
-										new AERunnable()
+										@Override
+										public void
+										runSupport()
 										{
-											@Override
-											public void
-											runSupport()
-											{
-												TagManagerImpl.getSingleton().evalScript(
-													TagDownloadWithState.this,
-													script,
-													Arrays.asList( dm ),
-													"execAssign" );
+											if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_START )){
+	
+												dm.setStateQueued();
+	
+											}else{
+	
+												dm.resume();
 											}
-										});
-								}
+										}
+									});
+							}
+	
+						}else if ( 	isActionEnabled( TagFeatureExecOnAssign.ACTION_STOP ) ||
+									isActionEnabled( TagFeatureExecOnAssign.ACTION_PAUSE ) ||
+									isActionEnabled( TagFeatureExecOnAssign.ACTION_QUEUE )){
+	
+							int	dm_state = dm.getState();
+	
+							if ( 	dm_state != DownloadManager.STATE_STOPPED &&
+									dm_state != DownloadManager.STATE_STOPPING &&
+									dm_state != DownloadManager.STATE_ERROR ){
+	
+								rs_async.dispatch(
+									new AERunnable()
+									{
+										@Override
+										public void
+										runSupport()
+										{
+											if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_STOP )){
+	
+												dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+	
+											}else if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_QUEUE )){
+	
+												dm.stopIt( DownloadManager.STATE_QUEUED, false, false );
+	
+											}else{
+	
+												dm.pause( true );
+											}
+	
+											// recheck here in case it is an 'archive' action that requires
+											// download to be stopped
+	
+											checkMaximumTaggables();
+	
+										}
+									});
 							}
 						}
-					}
-
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI )){
-
-						String chat = getPostMessageChannel();
-
-						if ( chat.length() > 0 ){
-
+	
+						if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_FORCE_START )){
+	
 							rs_async.dispatch(
 								new AERunnable()
 								{
@@ -726,63 +664,129 @@ TagDownloadWithState
 									public void
 									runSupport()
 									{
-										String[] bits = chat.split( ":", 2 );
-										
-										String net = bits[0].startsWith( "Public")?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
-										
-										String key = bits[1].trim();
-										
-										SimpleTimer.addEvent(
-											"EOS:PM",
-											SystemTime.getOffsetTime( 250 ),
-											new TimerEventPerformer(){
+										dm.setForceStart( true);
+									}
+								});
+	
+						}else if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_NOT_FORCE_START )){
+	
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										dm.setForceStart( false );
+									}
+								});
+						}
+	
+						if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI )){
+	
+							String chat = getPostMessageChannel();
+	
+							if ( chat.length() > 0 ){
+	
+								rs_async.dispatch(
+									new AERunnable()
+									{
+										@Override
+										public void
+										runSupport()
+										{
+											String[] bits = chat.split( ":", 2 );
 											
-												final private long start = SystemTime.getMonotonousTime();
+											String net = bits[0].startsWith( "Public")?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+											
+											String key = bits[1].trim();
+											
+											SimpleTimer.addEvent(
+												"EOS:PM",
+												SystemTime.getOffsetTime( 250 ),
+												new TimerEventPerformer(){
 												
-												@Override
-												public void perform(TimerEvent event){
-														
-													ChatInstance chat = BuddyPluginUtils.getChat(net, key);
+													final private long start = SystemTime.getMonotonousTime();
 													
-													if ( chat != null ){
-														
-														try{
-															if ( chat.isAvailable()){
+													@Override
+													public void perform(TimerEvent event){
 															
-																chat.sendMessage(  PluginCoreUtils.wrap( dm ));
-																
-															}else{
+														ChatInstance chat = BuddyPluginUtils.getChat(net, key);
 														
-																if ( SystemTime.getMonotonousTime() - start >= 10*60*1000 ){
-																	
-																	Debug.out( "EOS:PM Abandoned sending of magnet to " + chat );
+														if ( chat != null ){
+															
+															try{
+																if ( chat.isAvailable()){
+																
+																	chat.sendMessage(  PluginCoreUtils.wrap( dm ));
 																	
 																}else{
-																
-																	SimpleTimer.addEvent( "EOS:PM", SystemTime.getOffsetTime( 5000 ), this );
+															
+																	if ( SystemTime.getMonotonousTime() - start >= 10*60*1000 ){
+																		
+																		Debug.out( "EOS:PM Abandoned sending of magnet to " + chat );
+																		
+																	}else{
+																	
+																		SimpleTimer.addEvent( "EOS:PM", SystemTime.getOffsetTime( 5000 ), this );
+																	}
 																}
-															}
-														}finally{
-															
-															if ( chat.getReferenceCount() > 1 ){
-															
-																chat.destroy();
+															}finally{
+																
+																if ( chat.getReferenceCount() > 1 ){
+																
+																	chat.destroy();
+																}
 															}
 														}
 													}
-												}
-											});
-										
-									}
-								});
+												});
+											
+										}
+									});
+							}
 						}
-					}
-				
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE )){
+					
+						if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE )){
+		
+							OptionsTemplateHandler handler = getOptionsTemplateHandler();
+		
+							if ( handler.isActive()){
+								rs_async.dispatch(
+									new AERunnable()
+									{
+										@Override
+										public void
+										runSupport()
+										{
+											handler.applyTo( dm );
+										}
+									});
+							}
+						}
+						
+						if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC )){
+						
+							if ( getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+								
+								TagFeatureFileLocation fl = (TagFeatureFileLocation)this;
+								
+								if ( fl.supportsTagInitialSaveFolder()){
+									
+									File f = fl.getTagInitialSaveFolder();
+									
+									if ( f != null ){
+										
+										moveDownload( dm, fl );
+									}
+								}
+							}
+						}
+						
+
 	
-						OptionsTemplateHandler handler = getOptionsTemplateHandler();
+						if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_HOST )){
 	
-						if ( handler.isActive()){
 							rs_async.dispatch(
 								new AERunnable()
 								{
@@ -790,29 +794,39 @@ TagDownloadWithState
 									public void
 									runSupport()
 									{
-										handler.applyTo( dm );
+										try{
+											CoreFactory.getSingleton().getTrackerHost().hostTorrent( dm.getTorrent(), true, false);
+											
+										}catch( Throwable e ){
+											
+											Debug.out( e );
+										}
+									}
+								});
+						}
+						
+						if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_PUBLISH )){
+	
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										try{
+											CoreFactory.getSingleton().getTrackerHost().publishTorrent( dm.getTorrent());
+											
+										}catch( Throwable e ){
+											
+											Debug.out( e );
+										}
 									}
 								});
 						}
 					}
 					
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC )){
-					
-						if ( getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
-							
-							TagFeatureFileLocation fl = (TagFeatureFileLocation)this;
-							
-							if ( fl.supportsTagInitialSaveFolder()){
-								
-								File f = fl.getTagInitialSaveFolder();
-								
-								if ( f != null ){
-									
-									moveDownload( dm, fl );
-								}
-							}
-						}
-					}
+						// these actions are allowed for magnet downloads
 					
 					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS )){
 						
@@ -863,45 +877,38 @@ TagDownloadWithState
 								});
 						}
 					}
-
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_HOST )){
-
-						rs_async.dispatch(
-							new AERunnable()
-							{
-								@Override
-								public void
-								runSupport()
-								{
-									try{
-										CoreFactory.getSingleton().getTrackerHost().hostTorrent( dm.getTorrent(), true, false);
-										
-									}catch( Throwable e ){
-										
-										Debug.out( e );
-									}
-								}
-							});
-					}
 					
-					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_PUBLISH )){
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT )){
+						
+						final String script = getActionScript();
 
-						rs_async.dispatch(
-							new AERunnable()
-							{
-								@Override
-								public void
-								runSupport()
-								{
-									try{
-										CoreFactory.getSingleton().getTrackerHost().publishTorrent( dm.getTorrent());
-										
-									}catch( Throwable e ){
-										
-										Debug.out( e );
-									}
+						if ( script.length() > 0 ){
+
+							synchronized( batch ){
+								
+								if ( batch_depth > 0 ){
+							
+									batch.add( dm );
+									
+								}else{
+							
+									rs_async.dispatch(
+										new AERunnable()
+										{
+											@Override
+											public void
+											runSupport()
+											{
+												TagManagerImpl.getSingleton().evalScript(
+													TagDownloadWithState.this,
+													script,
+													Arrays.asList( dm ),
+													"execAssign" );
+											}
+										});
 								}
-							});
+							}
+						}
 					}
 				}
 			}

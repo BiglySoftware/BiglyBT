@@ -29,6 +29,7 @@ import java.util.*;
 
 import com.biglybt.core.category.Category;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.PEPeer;
@@ -46,6 +47,7 @@ import com.biglybt.pif.download.DownloadAttributeListener;
 import com.biglybt.pif.download.DownloadManager;
 import com.biglybt.pif.download.DownloadManagerListener;
 import com.biglybt.pif.download.DownloadPeerListener;
+import com.biglybt.pif.download.DownloadWillBeAddedListener;
 import com.biglybt.pif.peers.*;
 import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -56,6 +58,15 @@ MagnetPluginMDDownloader
 	final private static Object			ACTIVE_SET_LOCK = new Object();
 	
 	final private static Set<String>	active_set = new HashSet<>();
+
+ 	private static final ThreadLocal<Boolean>	networks_changing =
+ 		new ThreadLocal<Boolean>()
+	 	{
+	 		@Override
+	 		protected Boolean initialValue(){
+	 			return Boolean.FALSE;
+	 		}
+	 	};
 
 	final private Object			INSTANCE_LOCK = new Object();
 
@@ -81,6 +92,8 @@ MagnetPluginMDDownloader
 	private boolean		run_complete;
 	private AESemaphore complete_sem 	= new AESemaphore( "MPMDD:comp" );
 
+	private volatile boolean networks_set_externally = false;
+	
 	protected
 	MagnetPluginMDDownloader(
 		MagnetPlugin		_plugin,
@@ -150,6 +163,48 @@ MagnetPluginMDDownloader
 		return( core_dm );
 	}
 		
+	void
+	setNetworkEnabled(
+		DownloadManagerState	state,
+		String					network,
+		boolean					enabled )
+	{
+		if ( networks_set_externally ){
+			
+			return;
+		}
+		
+		try{
+			networks_changing.set( true );
+			
+			state.setNetworkEnabled(network, enabled);
+			
+		}finally{
+			
+			networks_changing.set( false );
+		}
+	}
+	
+	protected Set<String>
+	getExplicitNetworks()
+	{
+		if ( networks_set_externally ){
+		
+			com.biglybt.core.download.DownloadManager dm = core_dm;
+			
+			if ( dm != null ){
+				
+				Set<String> result = new HashSet<>();
+				
+				result.addAll( Arrays.asList( dm.getDownloadState().getNetworks()));
+				
+				return( result );
+			}
+		}
+		
+		return( null );
+	}	
+	
 	private class
 	DownloadActivity
 	{
@@ -400,8 +455,79 @@ MagnetPluginMDDownloader
 		
 					download_manager.clearNonPersistentDownloadState( hash );
 		
-					download = download_manager.addNonPersistentDownloadStopped( PluginCoreUtils.wrap( meta_torrent ), torrent_file, data_file);
+					DownloadWillBeAddedListener dwbal = 
+							new DownloadWillBeAddedListener(){
+								
+								@Override
+								public void 
+								initialised(
+									Download download)
+								{
+									try{
+										if ( Arrays.equals( download.getTorrentHash(), hash )){
+
+											com.biglybt.core.download.DownloadManager dm = PluginCoreUtils.unwrap( download );
+											
+											DownloadManagerState state = dm.getDownloadState();
+											
+											state.addListener(
+													new DownloadManagerStateAttributeListener()
+													{
+														@Override
+														public void
+														attributeEventOccurred(
+															com.biglybt.core.download.DownloadManager 	download,
+															String 										attribute,
+															int 										event_type )
+														{
+															if ( !networks_changing.get()){
+																
+																networks_set_externally = true;
+															}
+
+															/*
+															String str = "";
+															for ( String n: state.getNetworks()){
+																
+																str += (str.isEmpty()?"":",") + n;
+															}
+																														
+															Debug.out( "set to " + str);
+															*/
+														}
+														
+														@Override
+														public boolean 
+														alwaysInform()
+														{
+																// we want to know if, for example, a Tag 'execute on assign' explicitly sets the networks
+																// even if they happen to be the same as the default
+															
+															return( true );
+														}
+													},
+													DownloadManagerState.AT_NETWORKS,
+													DownloadManagerStateAttributeListener.WRITTEN );
+											
+										}
+									}catch( Throwable e ){
+										
+										Debug.out(e );
+									}
+								}
+							};
+							
+					download_manager.addDownloadWillBeAddedListener(dwbal);
+					
+					try{
+					
+						download = download_manager.addNonPersistentDownloadStopped( PluginCoreUtils.wrap( meta_torrent ), torrent_file, data_file);
 			
+					}finally{
+						
+						download_manager.removeDownloadWillBeAddedListener(dwbal);
+					}
+					
 					core_dm = PluginCoreUtils.unwrap( download );
 					
 					DownloadManagerState state = core_dm.getDownloadState();
@@ -430,21 +556,21 @@ MagnetPluginMDDownloader
 		
 						for ( String network: AENetworkClassifier.AT_NETWORKS ){
 		
-							state.setNetworkEnabled( network, true );
+							setNetworkEnabled( state, network, true );
 						}
 		
 					}else{
 		
 						for ( String network: networks ){
 		
-							state.setNetworkEnabled( network, true );
+							setNetworkEnabled( state, network, true );
 						}
 		
 							// disable public network if no explicit trackers are public ones
 		
 						if ( !networks.contains( AENetworkClassifier.AT_PUBLIC )){
 		
-							state.setNetworkEnabled( AENetworkClassifier.AT_PUBLIC, false );
+							setNetworkEnabled( state, AENetworkClassifier.AT_PUBLIC, false );
 						}
 					}
 		
@@ -453,7 +579,7 @@ MagnetPluginMDDownloader
 		
 					if ( !plugin.isNetworkEnabled( AENetworkClassifier.AT_PUBLIC )){
 		
-						state.setNetworkEnabled( AENetworkClassifier.AT_PUBLIC, false );
+						setNetworkEnabled( state, AENetworkClassifier.AT_PUBLIC, false );
 					}
 		
 					final List<InetSocketAddress>	peers_to_inject = new ArrayList<>();

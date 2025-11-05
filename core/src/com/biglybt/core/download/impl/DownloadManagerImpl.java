@@ -1092,7 +1092,15 @@ DownloadManagerImpl
 			});
 	}
 	
-
+ 	private static final ThreadLocal<Boolean>	links_changing =
+ 			new ThreadLocal<Boolean>()
+ 			{
+ 				@Override
+			  protected Boolean initialValue(){
+ 					return Boolean.FALSE;
+ 				}
+ 			};
+ 			
 	private void
 	readTorrent(
 		String		torrent_save_dir,
@@ -1133,15 +1141,6 @@ DownloadManagerImpl
 				 DownloadManagerStateAttributeListener attr_listener =
 					 new DownloadManagerStateAttributeListener()
 				 	 {
-					 	private final ThreadLocal<Boolean>	links_changing =
-					 			new ThreadLocal<Boolean>()
-					 			{
-					 				@Override
-								  protected Boolean initialValue(){
-					 					return Boolean.FALSE;
-					 				}
-					 			};
-
 					 	@Override
 					 	public void
 					 	attributeEventOccurred(

@@ -3366,6 +3366,18 @@ MagnetPlugin
 
 			networks.addAll( networks_enabled );
 			networks.addAll( additional_networks );
+
+			if ( mdd != null ){
+				
+				Set<String> explicits = mdd.getExplicitNetworks();
+				
+				if ( explicits != null ){
+					
+					networks.clear();
+					
+					networks.addAll( explicits );
+				}
+			}
 			
 			dm = mdd==null?null:mdd.getDownloadManager();
 		}

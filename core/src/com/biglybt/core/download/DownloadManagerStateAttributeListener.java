@@ -27,4 +27,16 @@ public interface DownloadManagerStateAttributeListener {
 	public static final int	WRITTEN = DownloadAttributeListener.WRITTEN;
 	public static final int	WILL_BE_READ = DownloadAttributeListener.WILL_BE_READ;
 	public void attributeEventOccurred(DownloadManager download, String attribute, int event_type);
+	
+		/**
+		 * Return true if all write attempts should be informed, even if they result in no change to the value
+		 * It is essential that the method always returns the same value
+		 * @return
+		 */
+	
+	public default boolean
+	alwaysInform()
+	{
+		return( false );
+	}
 }
