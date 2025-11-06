@@ -28,8 +28,8 @@ public class
 ByteBucketST
 	implements ByteBucket
 {
-	  private int rate;
-	  private int burst_rate;
+	  private long rate;
+	  private long burst_rate;
 	  private long avail_bytes;
 	  private long prev_update_time;
 
@@ -40,7 +40,7 @@ ByteBucketST
 	   * Burst rate is set to default 1.2X of given fill rate.
 	   * @param rate_bytes_per_sec fill rate
 	   */
-	  public ByteBucketST( int rate_bytes_per_sec ) {
+	  public ByteBucketST( long rate_bytes_per_sec ) {
 	    this( rate_bytes_per_sec, rate_bytes_per_sec + (rate_bytes_per_sec/5) );
 	  }
 
@@ -50,7 +50,7 @@ ByteBucketST
 	   * @param rate_bytes_per_sec fill rate
 	   * @param burst_rate max rate
 	   */
-	  private ByteBucketST( int rate_bytes_per_sec, int burst_rate ) {
+	  private ByteBucketST( long rate_bytes_per_sec, long burst_rate ) {
 	    this.rate = rate_bytes_per_sec;
 	    this.burst_rate = burst_rate;
 	    avail_bytes = 0; //start bucket empty
@@ -64,12 +64,12 @@ ByteBucketST
 	   * @return number of free bytes
 	   */
 	  @Override
-	  public int getAvailableByteCount() {
+	  public long getAvailableByteCount() {
 		if ( avail_bytes < NetworkManager.UNLIMITED_RATE ){
 			update_avail_byte_count();
 		}
 
-	    return (int)avail_bytes;
+	    return avail_bytes;
 	  }
 
 
@@ -78,7 +78,7 @@ ByteBucketST
 	   * @param bytes_used
 	   */
 	  @Override
-	  public void setBytesUsed(int bytes_used ) {
+	  public void setBytesUsed(long bytes_used ) {
 		if ( avail_bytes >= NetworkManager.UNLIMITED_RATE ){
 		  return;
 		}
@@ -97,14 +97,14 @@ ByteBucketST
 	   * @return guaranteed rate in bytes per sec
 	   */
 	  @Override
-	  public int getRate() {  return rate;  }
+	  public long getRate() {  return rate;  }
 
 
 	  /**
 	   * Get the configured burst rate.
 	   * @return burst rate in bytes per sec
 	   */
-	  public int getBurstRate() {  return burst_rate;  }
+	  public long getBurstRate() {  return burst_rate;  }
 
 
 	  /**
@@ -112,7 +112,7 @@ ByteBucketST
 	   * @param rate_bytes_per_sec
 	   */
 	  @Override
-	  public void setRate(int rate_bytes_per_sec ) {
+	  public void setRate(long rate_bytes_per_sec ) {
 	    setRate( rate_bytes_per_sec, rate_bytes_per_sec + (rate_bytes_per_sec/5));
 	  }
 
@@ -122,7 +122,7 @@ ByteBucketST
 	   * @param rate_bytes_per_sec
 	   * @param burst_rate
 	   */
-	  public void setRate( int rate_bytes_per_sec, int burst_rate ) {
+	  public void setRate( long rate_bytes_per_sec, long burst_rate ) {
 	    if( rate_bytes_per_sec < 0 ) {
 	      Debug.out("rate_bytes_per_sec [" +rate_bytes_per_sec+ "] < 0");
 	      rate_bytes_per_sec = 0;
@@ -152,6 +152,12 @@ ByteBucketST
 
 	  private void update_avail_byte_count() {
 		  if ( frozen ){
+			  return;
+		  }
+		  if ( rate == NetworkManager.UNLIMITED_RATE ){
+			  if ( avail_bytes < NetworkManager.UNLIMITED_RATE ){
+				  avail_bytes = NetworkManager.UNLIMITED_RATE;
+			  }
 			  return;
 		  }
 	      final long now =SystemTime.getSteppedMonotonousTime();

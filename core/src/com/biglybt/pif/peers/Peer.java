@@ -118,13 +118,13 @@ Peer
 		 * @return
 		 */
 
-	public int
+	public long
 	readBytes(
-		int	max );
+		long	max );
 
-	public int
+	public long
 	writeBytes(
-		int	max );
+		long	max );
 
 	/**
 	 * This is much list isTransferAvailable(), except is more comprehensive.

@@ -32,9 +32,9 @@ public interface LimitedRateGroup {
    * rate limiters implement logical disablement via other means (e.g. a download can implement it by disabling individual peers....)
    */
 
-  public int getRateLimitBytesPerSecond();
+  public long getRateLimitBytesPerSecond();
 
-  public void updateBytesUsed( int num );
+  public void updateBytesUsed( long num );
 
   /**
    * Best way to check if rate limiter is effectively disabled

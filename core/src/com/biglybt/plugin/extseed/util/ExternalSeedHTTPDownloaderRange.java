@@ -366,11 +366,11 @@ redirect_loop:
 
 					int	to_read = buffer_len - buffer_pos;
 
-					int	permitted = listener.getPermittedBytes();
+					long	permitted = listener.getPermittedBytes();
 
 					if ( permitted < to_read ){
 
-						to_read	= permitted;
+						to_read	= (int)permitted;
 					}
 
 					int	len = is.read( buffer, buffer_pos, to_read );
@@ -675,11 +675,11 @@ redirect_loop:
 
 						int	to_read = buffer_len - buffer_pos;
 
-						int	permitted = listener.getPermittedBytes();
+						long	permitted = listener.getPermittedBytes();
 
 						if ( permitted < to_read ){
 
-							to_read	= permitted;
+							to_read	= (int)permitted;
 						}
 
 						int	len = is.read( buffer, buffer_pos, to_read );
@@ -904,7 +904,7 @@ redirect_loop:
 		        	}
 
 		        	@Override
-			        public int
+			        public long
 		        	getPermittedBytes()
 
 		        		throws ExternalSeedException

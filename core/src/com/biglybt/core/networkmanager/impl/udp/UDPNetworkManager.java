@@ -64,11 +64,11 @@ UDPNetworkManager
 
 	public static void
 	refreshRates(
-		int		min_rate )
+		long		min_rate )
 	{
 		udp_mss_size = COConfigurationManager.getIntParameter( "network.udp.mtu.size" ) - 40;
 
-	    if( udp_mss_size > min_rate )  udp_mss_size = min_rate - 1;
+	    if( udp_mss_size > min_rate )  udp_mss_size = (int)min_rate - 1;
 
 	    if( udp_mss_size < MIN_MSS )  udp_mss_size = MIN_MSS;
 

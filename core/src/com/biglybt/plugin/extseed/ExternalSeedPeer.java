@@ -846,11 +846,11 @@ ExternalSeedPeer
 	}
 
 	@Override
-	public int
+	public long
 	readBytes(
-		int	max )
+		long	max )
 	{
-		int	res = reader.readBytes( max );
+		long	res = reader.readBytes( max );
 
 		if ( res > 0 ){
 
@@ -861,9 +861,9 @@ ExternalSeedPeer
 	}
 
 	@Override
-	public int
+	public long
 	writeBytes(
-		int	max )
+		long	max )
 	{
 		throw( new RuntimeException( "Not supported" ));
 	}

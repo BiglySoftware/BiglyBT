@@ -106,7 +106,7 @@ PEPeerManagerStatsImpl
 	}
 
 	@Override
-	public void dataBytesReceived(PEPeer peer, int length) {
+	public void dataBytesReceived(PEPeer peer, long length) {
 	  total_data_bytes_received += length;
 	  if ( peer.isLANLocal()){
 		  total_data_bytes_received_lan += length;
@@ -121,7 +121,7 @@ PEPeerManagerStatsImpl
 	}
 
   @Override
-  public void protocolBytesReceived(PEPeer peer, int length) {
+  public void protocolBytesReceived(PEPeer peer, long length) {
     total_protocol_bytes_received += length;
 	  if ( peer.isLANLocal()){
 		  total_protocol_bytes_received_lan += length;
@@ -133,7 +133,7 @@ PEPeerManagerStatsImpl
 
 
 	@Override
-	public void dataBytesSent(PEPeer peer, int length ) {
+	public void dataBytesSent(PEPeer peer, long length ) {
 	  total_data_bytes_sent += length;
 	  if ( peer.isLANLocal()){
 		  total_data_bytes_sent_lan += length;
@@ -148,7 +148,7 @@ PEPeerManagerStatsImpl
 	}
 
   @Override
-  public void protocolBytesSent(PEPeer peer, int length) {
+  public void protocolBytesSent(PEPeer peer, long length) {
     total_protocol_bytes_sent += length;
 	  if ( peer.isLANLocal()){
 		  total_protocol_bytes_sent_lan += length;
@@ -311,7 +311,7 @@ PEPeerManagerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToReceive()
 	{
 		return( adapter.getPermittedBytesToReceive());
@@ -326,7 +326,7 @@ PEPeerManagerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToSend()
 	{
 		return( adapter.getPermittedBytesToSend());

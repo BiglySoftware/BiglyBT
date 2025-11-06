@@ -96,11 +96,11 @@ GlobalManagerStats
 
 		// set methods
 
-	public void	dataBytesSent( int bytes, boolean LAN );
-	public void protocolBytesSent( int bytes, boolean LAN );
+	public void	dataBytesSent( long bytes, boolean LAN );
+	public void protocolBytesSent( long bytes, boolean LAN );
 
-	public void dataBytesReceived( int bytes, boolean LAN );
-	public void protocolBytesReceived( int bytes, boolean LAN );
+	public void dataBytesReceived( long bytes, boolean LAN );
+	public void protocolBytesReceived( long bytes, boolean LAN );
 
 	public void
 	discarded(

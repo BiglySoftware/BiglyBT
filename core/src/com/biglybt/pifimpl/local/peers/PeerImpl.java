@@ -574,17 +574,17 @@ PeerImpl
 	}
 
 	@Override
-	public int
+	public long
 	readBytes(
-		int	max )
+		long	max )
 	{
 		throw( new RuntimeException( "not supported"));
 	}
 
 	@Override
-	public int
+	public long
 	writeBytes(
-		int	max )
+		long	max )
 	{
 		throw( new RuntimeException( "not supported"));
 	}

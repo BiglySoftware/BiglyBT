@@ -70,7 +70,7 @@ public class SinglePeerDownloader implements RateControlledEntity {
 				return false;  //underlying transport not ready
 			}
 
-			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+			long[] allowed = rate_handler.getCurrentNumBytesAllowed();
 
 			if ( allowed[0] < 1 ){ // Not yet fully supporting free-protocol for downloading  && allowed[1] == 0 ) {
 
@@ -88,7 +88,7 @@ public class SinglePeerDownloader implements RateControlledEntity {
 	}
 
 	@Override
-	public int 
+	public long 
 	doProcessing(
 		EventWaiter waiter, 
 		int max_bytes ) 
@@ -101,9 +101,9 @@ public class SinglePeerDownloader implements RateControlledEntity {
 				return 0;
 			}
 	
-			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+			long[] allowed = rate_handler.getCurrentNumBytesAllowed();
 	
-			int num_bytes_allowed = allowed[0];
+			long num_bytes_allowed = allowed[0];
 	
 			boolean protocol_is_free = allowed[1] > 0;
 	
@@ -121,13 +121,13 @@ public class SinglePeerDownloader implements RateControlledEntity {
 			//int mss = NetworkManager.getTcpMssSize();
 			//if( num_bytes_allowed > mss )  num_bytes_allowed = mss;
 	
-			int bytes_read = 0;
+			long bytes_read = 0;
 	
-			int data_bytes_read		= 0;
-			int protocol_bytes_read	= 0;
+			long data_bytes_read		= 0;
+			long protocol_bytes_read	= 0;
 	
 			try {
-				int[] read = connection.getIncomingMessageQueue().receiveFromTransport( num_bytes_allowed, protocol_is_free );
+				long[] read = connection.getIncomingMessageQueue().receiveFromTransport( num_bytes_allowed, protocol_is_free );
 	
 				data_bytes_read 		= read[0];
 				protocol_bytes_read	= read[1];
@@ -220,11 +220,11 @@ public class SinglePeerDownloader implements RateControlledEntity {
   public String
   getString()
   {
-	  int[] temp = rate_handler.getCurrentNumBytesAllowed();
+	  long[] temp = rate_handler.getCurrentNumBytesAllowed();
 	  
 	  String ba = "";
 	  
-	  for ( int t: temp ){
+	  for ( long t: temp ){
 		  ba += (ba.isEmpty()?"":",") + t;
 	  }
 	  

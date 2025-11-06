@@ -153,7 +153,7 @@ OutgoingMessageQueue
    * @return number of bytes delivered as [data, protocol]
    * @throws IOException on delivery error
    */
-  public int[] deliverToTransport( int max_bytes, boolean protocol_is_free, boolean manual_listener_notify ) throws IOException;
+  public int[] deliverToTransport( long max_bytes, boolean protocol_is_free, boolean manual_listener_notify ) throws IOException;
 
 
   /**

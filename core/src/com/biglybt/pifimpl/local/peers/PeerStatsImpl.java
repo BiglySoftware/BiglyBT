@@ -106,7 +106,7 @@ PeerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToReceive()
 	{
 		return( delegate.getPermittedBytesToReceive());
@@ -123,7 +123,7 @@ PeerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToSend()
 	{
 		return( delegate.getPermittedBytesToSend());
@@ -142,7 +142,7 @@ PeerStatsImpl
 	@Override
 	public void
 	received(
-		int		bytes )
+		long		bytes )
 	{
 		delegate.dataBytesReceived( bytes );
 
@@ -152,7 +152,7 @@ PeerStatsImpl
 	@Override
 	public void
 	sent(
-		int		bytes )
+		long		bytes )
 	{
 		delegate.dataBytesSent( bytes );
 

@@ -455,7 +455,7 @@ ExternalSeedReaderGetRight
 			        	}
 
 			        	@Override
-				        public int
+				        public long
 			        	getPermittedBytes()
 
 			        		throws ExternalSeedException

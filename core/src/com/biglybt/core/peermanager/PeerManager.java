@@ -1396,7 +1396,7 @@ public class PeerManager implements CoreStatsProvider {
 				}
 
 				@Override
-				public int getRateLimitBytesPerSecond(){
+				public long getRateLimitBytesPerSecond(){
 					return(-1);
 				}
 
@@ -1406,7 +1406,7 @@ public class PeerManager implements CoreStatsProvider {
 				}
 
 				@Override
-				public void updateBytesUsed(int used){
+				public void updateBytesUsed(long used){
 				}
 			};
 
@@ -1417,7 +1417,7 @@ public class PeerManager implements CoreStatsProvider {
 				}
 
 				@Override
-				public int getRateLimitBytesPerSecond(){
+				public long getRateLimitBytesPerSecond(){
 					return(0);
 				}
 
@@ -1427,7 +1427,7 @@ public class PeerManager implements CoreStatsProvider {
 				}
 
 				@Override
-				public void updateBytesUsed(int used){
+				public void updateBytesUsed(long used){
 				}
 			};
 			
@@ -1631,18 +1631,18 @@ public class PeerManager implements CoreStatsProvider {
 			public boolean
 			hasPotentialConnections(){ log(); return( false ); }
 
-			public void	dataBytesReceived( PEPeer peer, int	l ){log(); }
+			public void	dataBytesReceived( PEPeer peer, long	l ){log(); }
 
-			public void	dataBytesSent( PEPeer peer, int	l ){log(); }
+			public void	dataBytesSent( PEPeer peer, long	l ){log(); }
 
 			public void 
 			protocolBytesSent( 
-				PEPeer peer, int length )
+				PEPeer peer, long length )
 			{
 				
 			}
 
-			public void protocolBytesReceived( PEPeer peer, int length ){}
+			public void protocolBytesReceived( PEPeer peer, long length ){}
 
 			public void
 			discarded(

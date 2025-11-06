@@ -329,9 +329,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 		}
 	}
 
-
-
-	private int write( EventWaiter waiter, int num_bytes_to_write, boolean protocol_is_free ) {  //TODO: model this class after the simplicity of MultiPeerDownloader
+	private long write( EventWaiter waiter, long num_bytes_to_write, boolean protocol_is_free ) {  //TODO: model this class after the simplicity of MultiPeerDownloader
 		if ( num_bytes_to_write < 1 ){
 
 			if ( !protocol_is_free ){
@@ -347,7 +345,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 		HashMap connections_to_notify_of_exception = new HashMap();
 		ArrayList manual_notifications = new ArrayList();
 
-		int num_bytes_remaining = num_bytes_to_write;
+		long num_bytes_remaining = num_bytes_to_write;
 
 		int data_bytes_written 		= 0;
 		int protocol_bytes_written	= 0;
@@ -376,7 +374,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 				}
 
 				int mss_size = conn.getMssSize();
-				int num_bytes_allowed = num_bytes_remaining > mss_size ? mss_size : num_bytes_remaining;  //allow a single full packet at most
+				long num_bytes_allowed = num_bytes_remaining > mss_size ? mss_size : num_bytes_remaining;  //allow a single full packet at most
 				int num_bytes_available = total_size > mss_size ? mss_size : total_size;  //allow a single full packet at most
 
 				if( num_bytes_allowed >= num_bytes_available ) { //we're allowed enough (for either a full packet or to drain any remaining data)
@@ -461,7 +459,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 			conn.notifyOfException( exception );
 		}
 
-		int num_bytes_written = num_bytes_to_write - num_bytes_remaining;
+		long num_bytes_written = num_bytes_to_write - num_bytes_remaining;
 		if( num_bytes_written > 0 ) {
 			rate_handler.bytesProcessed( data_bytes_written, protocol_bytes_written );
 		}
@@ -583,7 +581,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 
 			if( ready_connections.isEmpty() )  return false;  //no data to send
 
-			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+			long[] allowed = rate_handler.getCurrentNumBytesAllowed();
 
 			if( allowed[0] < 1 && allowed[1] == 0 )  return false;
 			
@@ -598,15 +596,15 @@ public class MultiPeerUploader implements RateControlledEntity {
 	}
 
 	@Override
-	public int 
+	public long 
 	doProcessing(
 		EventWaiter waiter, 
 		int max_bytes ) 
 	{
 		try{
-			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+			long[] allowed = rate_handler.getCurrentNumBytesAllowed();
 	
-			int 	num_bytes_allowed 	= allowed[0];
+			long 	num_bytes_allowed 	= allowed[0];
 			boolean	protocol_is_free 	= allowed[1] > 0;
 	
 			if( num_bytes_allowed < 1 )  return 0;
@@ -635,10 +633,10 @@ public class MultiPeerUploader implements RateControlledEntity {
 
 	private String
 	getString(
-		int[]	a )
+		long[]	a )
 	{
 		String str = "";
-		for ( int i:a ){
+		for ( long i:a ){
 			str += (str.isEmpty()?"":"/") + i;
 		}
 		return( str );

@@ -123,7 +123,7 @@ ExternalSeedReaderImpl
 
 	private AESemaphore			rate_sem = new AESemaphore( "ExternalSeedReaderRequest" );
 	private int					rate_bytes_read;
-	private int					rate_bytes_permitted;
+	private long				rate_bytes_permitted;
 
 	private volatile CopyOnWriteSet<MutableInteger>		bad_pieces = new CopyOnWriteSet<>(true);
 
@@ -835,16 +835,16 @@ ExternalSeedReaderImpl
 		 */
 
 	@Override
-	public int
+	public long
 	readBytes(
-		int		max )
+		long		max )
 	{
 			// permission to read a bunch of bytes
 
 			// we're out of step here due to multiple threads so we have to report what
 			// has already happened and prepare for what will
 
-		int	res = 0;
+		long	res = 0;
 
 		synchronized( rate_sem ){
 
@@ -860,7 +860,7 @@ ExternalSeedReaderImpl
 				rate_bytes_read -= res;
 			}
 
-			int	rem = max - res;
+			long	rem = max - res;
 
 			if ( rem > rate_bytes_permitted ){
 
@@ -883,7 +883,7 @@ ExternalSeedReaderImpl
 		return( res );
 	}
 
-	public int
+	public long
 	getPermittedBytes()
 
 		throws ExternalSeedException
@@ -1160,7 +1160,7 @@ ExternalSeedReaderImpl
    	        	}
 
    	        	@Override
-	            public int
+	            public long
    	        	getPermittedBytes()
 
    	        		throws ExternalSeedException

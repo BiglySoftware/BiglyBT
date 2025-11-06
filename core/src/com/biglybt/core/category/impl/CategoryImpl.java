@@ -72,7 +72,7 @@ CategoryImpl
 			  return( "cat_up: " + sName);
 		  }
 		  @Override
-		  public int
+		  public long
 		  getRateLimitBytesPerSecond()
 		  {
 			  return( upload_speed );
@@ -85,7 +85,7 @@ CategoryImpl
 		  @Override
 		  public void
 		  updateBytesUsed(
-				int	used )
+				long	used )
 		  {
 
 		  }
@@ -101,7 +101,7 @@ CategoryImpl
 		  return( "cat_down: " + sName);
 	  }
 	  @Override
-	  public int
+	  public long
 	  getRateLimitBytesPerSecond()
 	  {
 		  return( download_speed );
@@ -113,7 +113,7 @@ CategoryImpl
 	  @Override
 	  public void
 	  updateBytesUsed(
-			int	used )
+			long	used )
 	  {
 
 	  }

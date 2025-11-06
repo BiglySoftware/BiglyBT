@@ -32,8 +32,8 @@ public class NetworkManagerUtilities {
    * @param group to use
    * @return rate real limit in bytes per second
    */
-  public static int getGroupRateLimit( LimitedRateGroup group ) {
-    int limit = group.getRateLimitBytesPerSecond();
+  public static long getGroupRateLimit( LimitedRateGroup group ) {
+    long limit = group.getRateLimitBytesPerSecond();
     if( limit == 0 ) {  //unlimited
       limit = NetworkManager.UNLIMITED_RATE;
     }

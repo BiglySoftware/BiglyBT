@@ -334,7 +334,7 @@ ExternalSeedHTTPDownloaderLinear
 
 						while( !destroyed ){
 
-							int	permitted = listener.getPermittedBytes();
+							long	permitted = listener.getPermittedBytes();
 
 								// idle if no reqs
 
@@ -345,7 +345,7 @@ ExternalSeedHTTPDownloaderLinear
 								Thread.sleep( 100 );
 							}
 
-							int	len = is.read( buffer, 0, Math.min( permitted, buffer.length ));
+							int	len = is.read( buffer, 0, (int)Math.min( permitted, buffer.length ));
 
 							if ( len <= 0 ){
 

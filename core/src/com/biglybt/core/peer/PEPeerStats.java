@@ -36,25 +36,25 @@ PEPeerStats
    * The given number of data (payload) bytes have been sent to the peer.
    * @param num_bytes
    */
-  public void dataBytesSent( int num_bytes );
+  public void dataBytesSent( long num_bytes );
 
   /**
    * The given number of protocol (overhead) bytes have been sent to the peer.
    * @param num_bytes
    */
-  public void protocolBytesSent( int num_bytes );
+  public void protocolBytesSent( long num_bytes );
 
   /**
    * The given number of data (payload) bytes have been received from the peer.
    * @param num_bytes
    */
-  public void dataBytesReceived( int num_bytes );
+  public void dataBytesReceived( long num_bytes );
 
   /**
    * The given number of protocol (overhead) bytes have been received from the peer.
    * @param num_bytes
    */
-  public void protocolBytesReceived( int num_bytes );
+  public void protocolBytesReceived( long num_bytes );
 
 
   /**
@@ -181,10 +181,10 @@ PEPeerStats
 
   	// external rate control
 
-  public int getPermittedBytesToSend();
+  public long getPermittedBytesToSend();
   public void permittedSendBytesUsed( int num );
 
-  public int getPermittedBytesToReceive();
+  public long getPermittedBytesToReceive();
   public void permittedReceiveBytesUsed( int num );
 
 }

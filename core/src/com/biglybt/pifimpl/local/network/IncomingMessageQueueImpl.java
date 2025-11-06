@@ -77,10 +77,10 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue {
         }
 
         @Override
-        public void protocolBytesReceived(int byte_count ) {  listener.bytesReceived( byte_count );  }
+        public void protocolBytesReceived(long byte_count ) {  listener.bytesReceived( byte_count );  }
 
         @Override
-        public void dataBytesReceived(int byte_count ) {  listener.bytesReceived( byte_count );  }
+        public void dataBytesReceived(long byte_count ) {  listener.bytesReceived( byte_count );  }
 
         @Override
         public boolean

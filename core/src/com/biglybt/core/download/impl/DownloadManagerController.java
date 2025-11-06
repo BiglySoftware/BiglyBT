@@ -2652,7 +2652,7 @@ DownloadManagerController
 		// by adding them to all peers as peer-limits. So for the moment we stick with global (non-lan) limits
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToReceive()
 	{
 		return( NetworkManager.getSingleton().getRateHandler( false, false ).getCurrentNumBytesAllowed()[0]);
@@ -2667,7 +2667,7 @@ DownloadManagerController
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToSend()
 	{
 		return( NetworkManager.getSingleton().getRateHandler( true, false ).getCurrentNumBytesAllowed()[0]);
@@ -2897,7 +2897,7 @@ DownloadManagerController
 	public void
 	protocolBytesReceived(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 		if ( global_stats != null ){
 
@@ -2909,7 +2909,7 @@ DownloadManagerController
 	public void
 	dataBytesReceived(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 		if ( global_stats != null ){
 
@@ -2921,7 +2921,7 @@ DownloadManagerController
 	public void
 	protocolBytesSent(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 		if ( global_stats != null ){
 
@@ -2933,7 +2933,7 @@ DownloadManagerController
 	public void
 	dataBytesSent(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 		if ( global_stats != null ){
 

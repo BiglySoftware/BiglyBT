@@ -53,7 +53,7 @@ RateControlledEntity {
 	 * @return true if >0 bytes were processed (success), false if 0 bytes were processed (failure)
 	 */
 	
-	public int 
+	public long 
 	doProcessing( 
 		EventWaiter waiter, 
 		int max_bytes_permitted );

@@ -501,7 +501,7 @@ OutgoingMessageQueueImpl
    * @throws IOException on delivery error
    */
    @Override
-   public int[] deliverToTransport(int max_bytes, boolean protocol_is_free, boolean manual_listener_notify ) throws IOException {
+   public int[] deliverToTransport(long max_bytes, boolean protocol_is_free, boolean manual_listener_notify ) throws IOException {
 	  if( max_bytes < 1 ) {
 		  if ( !protocol_is_free ){
 			  Debug.out( "max_bytes < 1: " +max_bytes );
@@ -613,7 +613,7 @@ outer:
 
 			  if ( total_sofar_excluding_free > max_bytes ){
 
-				  int reduce_by = total_sofar_excluding_free - max_bytes;
+				  int reduce_by = (int)( total_sofar_excluding_free - max_bytes );
 
 				  last_buff.limit( orig_last_limit - reduce_by );
 

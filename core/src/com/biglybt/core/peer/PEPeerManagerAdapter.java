@@ -142,22 +142,22 @@ PEPeerManagerAdapter
 	public void
 	protocolBytesReceived(
 		PEPeer		peer,
-		int			bytes );
+		long		bytes );
 
 	public void
 	dataBytesReceived(
 		PEPeer		peer,
-		int			bytes );
+		long		bytes );
 
 	public void
 	protocolBytesSent(
 		PEPeer		peer,
-		int			bytes );
+		long		bytes );
 
 	public void
 	dataBytesSent(
 		PEPeer		peer,
-		int			bytes );
+		long		bytes );
 
 	public void
 	statsRequest(
@@ -206,10 +206,10 @@ PEPeerManagerAdapter
 	public boolean
 	hasPriorityConnection();
 
-	public int getPermittedBytesToReceive();
+	public long getPermittedBytesToReceive();
 	public void permittedReceiveBytesUsed( int bytes );
 
-	public int getPermittedBytesToSend();
+	public long getPermittedBytesToSend();
 	public void	permittedSendBytesUsed(	int bytes );
 	
 	public void

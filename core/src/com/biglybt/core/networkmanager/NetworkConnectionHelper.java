@@ -47,7 +47,7 @@ NetworkConnectionHelper
 				return( "per_con_up: " + getString());
 			}
 			@Override
-			public int getRateLimitBytesPerSecond()
+			public long getRateLimitBytesPerSecond()
 			{
 				return upload_limit;
 			}
@@ -60,7 +60,7 @@ NetworkConnectionHelper
 			@Override
 			public void
 			updateBytesUsed(
-					int	used )
+				long	used )
 			{
 			}
 	  };
@@ -77,7 +77,7 @@ NetworkConnectionHelper
 				return( "per_con_down: " + getString());
 			}
 			@Override
-			public int getRateLimitBytesPerSecond() {  return download_limit;  }
+			public long getRateLimitBytesPerSecond() {  return download_limit;  }
 			@Override
 			public boolean
 			isDisabled()
@@ -87,7 +87,7 @@ NetworkConnectionHelper
 			@Override
 			public void
 			updateBytesUsed(
-					int	used )
+				long	used )
 			{
 			}
 	  };

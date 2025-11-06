@@ -110,7 +110,7 @@ TagDownloadWithState
 			}
 
 			@Override
-			public int
+			public long
 			getRateLimitBytesPerSecond()
 			{
 				int	res = upload_rate_limit;
@@ -131,7 +131,7 @@ TagDownloadWithState
 			@Override
 			public void
 			updateBytesUsed(
-				int	used )
+				long	used )
 			{
 				session_up += used;
 			}
@@ -155,7 +155,7 @@ TagDownloadWithState
 			}
 
 			@Override
-			public int
+			public long
 			getRateLimitBytesPerSecond()
 			{
 				int	res = download_rate_limit;
@@ -178,7 +178,7 @@ TagDownloadWithState
 			@Override
 			public void
 			updateBytesUsed(
-					int	used )
+				long	used )
 			{
 				session_down += used;
 			}

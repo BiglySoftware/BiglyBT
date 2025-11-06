@@ -219,11 +219,11 @@ PeerForeignNetworkConnection
 		}
 
 		@Override
-		public int []
+		public long []
 		receiveFromTransport(
-			int max_bytes, boolean protocol_is_free ) throws IOException
+			long max_bytes, boolean protocol_is_free ) throws IOException
 		{
-			return( new int[]{ peer.readBytes( delegate.isDownloadDisabled()?0:max_bytes ), 0 });
+			return( new long[]{ peer.readBytes( delegate.isDownloadDisabled()?0:max_bytes ), 0 });
 		}
 
 		@Override
@@ -404,7 +404,7 @@ PeerForeignNetworkConnection
 		@Override
 		public int[]
 		deliverToTransport(
-			int 		max_bytes,
+			long 		max_bytes,
 			boolean		protocol_is_free,
 			boolean 	manual_listener_notify )
 

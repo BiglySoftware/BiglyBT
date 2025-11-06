@@ -110,11 +110,11 @@ TCPNetworkManager
 
 	public static void
 	refreshRates(
-		int		min_rate )
+		long		min_rate )
 	{
 		 tcp_mss_size = COConfigurationManager.getIntParameter( "network.tcp.mtu.size" ) - 40;
 
-	    if( tcp_mss_size > min_rate )  tcp_mss_size = min_rate - 1;
+	    if( tcp_mss_size > min_rate )  tcp_mss_size = (int)min_rate - 1;
 
 	    if( tcp_mss_size < 512 )  tcp_mss_size = 512;
 	}

@@ -224,7 +224,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 
 		public void
 		updateBytesUsed(
-			int	used )
+			long	used )
 		{
 			total += used;
 		}

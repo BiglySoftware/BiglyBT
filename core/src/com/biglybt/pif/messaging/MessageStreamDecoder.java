@@ -36,7 +36,7 @@ public interface MessageStreamDecoder {
    * @return number of bytes decoded
    * @throws IOException on decoding error
    */
-  public int performStreamDecode( Transport transport, int max_bytes ) throws IOException;
+  public long performStreamDecode( Transport transport, long max_bytes ) throws IOException;
 
   /**
    * Get the messages decoded from the transport, if any, from the last decode op.

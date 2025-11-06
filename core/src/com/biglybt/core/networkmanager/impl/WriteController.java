@@ -429,7 +429,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   doNormalPriorityWrite(
 	 int tick_count )
   {
-    int result = processNextReadyNormalPriorityEntity( tick_count );
+	long result = processNextReadyNormalPriorityEntity( tick_count );
 
     if ( result > 0 ){
 
@@ -491,7 +491,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   }
 
 
-  private int
+  private long
   processNextReadyNormalPriorityEntity(
 		int	tick_count )
   {
@@ -555,7 +555,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  booster_normal_written 	= 0;
 				  booster_boost_written		= 0;
 				  
-				  int max_normal 	= 0;
+				  long max_normal 	= 0;
 				  int normal_data	= 0;
 				  
 				  for ( RateControlledEntity e: normal_ref ){
@@ -564,7 +564,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 						  
 						  normal_data += e.getBytesReadyToWrite();
 						  
-						  int max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
+						  long max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
 						  
 						  if ( max > max_normal ){
 							  
@@ -576,7 +576,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  booster_normal_data_average.update( normal_data );
 				  booster_normal_avail_average.update( max_normal );
 				  
-				  int max_booster 	= 0;
+				  long max_booster 	= 0;
 				  int booster_data	= 0;
 				  
 				  for ( RateControlledEntity e: boosted_ref ){
@@ -585,7 +585,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 						  
 						  booster_data += e.getBytesReadyToWrite();
 						  
-						  int max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
+						  long max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
 						  
 						  if ( max > max_booster ){
 							  
@@ -612,7 +612,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  
 			  if ( entity.canProcess( write_waiter )){ 
 				  
-				  int boosted = entity.doProcessing( write_waiter, 0 );
+				  long boosted = entity.doProcessing( write_waiter, 0 );
 				  
 				  if ( boosted > 0 ){
 					  
@@ -649,7 +649,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 					  num_checked++;
 					  if ( entity.canProcess( write_waiter )){
 
-						  int gift_used = entity.doProcessing( write_waiter, gift_remaining );
+						  long gift_used = entity.doProcessing( write_waiter, gift_remaining );
 
 						  if ( gift_used > 0 ){
 							  
@@ -691,7 +691,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  next_boost_position++;
 				  num_checked++;
 				  if( entity.canProcess( write_waiter ) ) {  //is ready
-					  int boosted = entity.doProcessing( write_waiter, 0 );
+					  long boosted = entity.doProcessing( write_waiter, 0 );
 					  	
 					  	// if no progress is made we give others a chance otherwise this non-progress
 					  	// can prevent us from ever getting onto the normal entities below
@@ -727,7 +727,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  next_normal_position++;
 			  num_checked++;
 			  if( entity.canProcess( write_waiter ) ) {  //is ready
-				  int bytes = entity.doProcessing( write_waiter, 0 );
+				  long bytes = entity.doProcessing( write_waiter, 0 );
 
 				  if ( bytes > 0 ){
 

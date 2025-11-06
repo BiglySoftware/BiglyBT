@@ -100,7 +100,7 @@ PeerManagerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToReceive()
 	{
 		return( stats.getPermittedBytesToReceive());
@@ -115,7 +115,7 @@ PeerManagerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToSend()
 	{
 		return( stats.getPermittedBytesToSend());

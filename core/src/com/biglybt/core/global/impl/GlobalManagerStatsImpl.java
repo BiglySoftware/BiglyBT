@@ -285,7 +285,7 @@ GlobalManagerStatsImpl
 	}
 
 	@Override
-	public void dataBytesReceived(int length, boolean LAN){
+	public void dataBytesReceived(long length, boolean LAN){
 		total_data_bytes_received += length;
 		if ( !LAN ){
 			data_receive_speed_no_lan.addValue(length);
@@ -295,7 +295,7 @@ GlobalManagerStatsImpl
 
 
 	@Override
-	public void protocolBytesReceived(int length, boolean LAN ){
+	public void protocolBytesReceived(long length, boolean LAN ){
 		total_protocol_bytes_received += length;
 		if ( !LAN ){
 			protocol_receive_speed_no_lan.addValue(length);
@@ -304,7 +304,7 @@ GlobalManagerStatsImpl
 	}
 
 	@Override
-	public void dataBytesSent(int length, boolean LAN) {
+	public void dataBytesSent(long length, boolean LAN) {
 		total_data_bytes_sent += length;
 		if ( !LAN ){
 			data_send_speed_no_lan.addValue(length);
@@ -313,7 +313,7 @@ GlobalManagerStatsImpl
 	}
 
 	@Override
-	public void protocolBytesSent(int length, boolean LAN) {
+	public void protocolBytesSent(long length, boolean LAN) {
 		total_protocol_bytes_sent += length;
 		if ( !LAN ){
 			protocol_send_speed_no_lan.addValue(length);

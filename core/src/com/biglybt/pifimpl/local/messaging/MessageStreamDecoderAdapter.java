@@ -41,7 +41,7 @@ public class MessageStreamDecoderAdapter implements com.biglybt.core.peermanager
 
 
   @Override
-  public int performStreamDecode(com.biglybt.core.networkmanager.Transport transport, int max_bytes ) throws IOException {
+  public long performStreamDecode(com.biglybt.core.networkmanager.Transport transport, long max_bytes ) throws IOException {
     return plug_decoder.performStreamDecode( new TransportImpl( transport ), max_bytes );
   }
 

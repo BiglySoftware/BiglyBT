@@ -28,11 +28,11 @@ PEPeerManagerStats
 	public void discarded(PEPeer peer, int length);
 	public void hashFailed(int length);
 
-	public void dataBytesReceived(PEPeer peer, int length);
-	public void protocolBytesReceived(PEPeer peer, int length);
+	public void dataBytesReceived(PEPeer peer, long length);
+	public void protocolBytesReceived(PEPeer peer, long length);
 
-	public void dataBytesSent(PEPeer peer, int length);
-	public void protocolBytesSent(PEPeer peer, int length);
+	public void dataBytesSent(PEPeer peer, long length);
+	public void protocolBytesSent(PEPeer peer, long length);
 
   	public void haveNewPiece(int pieceLength);
 
@@ -73,9 +73,9 @@ PEPeerManagerStats
 	public int getTotalIncomingConnections();
 	public int getTotalOutgoingConnections();
 
-	public int getPermittedBytesToReceive();
+	public long getPermittedBytesToReceive();
 	public void permittedReceiveBytesUsed( int bytes );
 
-	public int getPermittedBytesToSend();
+	public long getPermittedBytesToSend();
 	public void	permittedSendBytesUsed(	int bytes );
 }

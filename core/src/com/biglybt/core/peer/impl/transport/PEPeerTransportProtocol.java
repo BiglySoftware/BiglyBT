@@ -4940,14 +4940,14 @@ implements PEPeerTransport
 				}
 
 				@Override
-				public final void protocolBytesReceived(int byte_count ) {
+				public final void protocolBytesReceived(long byte_count ) {
 					//update stats
 					peer_stats.protocolBytesReceived( byte_count );
 					manager.protocolBytesReceived( PEPeerTransportProtocol.this, byte_count );
 				}
 
 				@Override
-				public final void dataBytesReceived(int byte_count ) {
+				public final void dataBytesReceived(long byte_count ) {
 					// Observe that the peer is sending data so that if theyre so slow that the whole
 					// data block times out, we don't think theyre not sending anything at all
 					

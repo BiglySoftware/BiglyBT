@@ -92,7 +92,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
    * @throws IOException on receive error
    */
   @Override
-  public int[] receiveFromTransport(int max_bytes, boolean protocol_is_free ) throws IOException {
+  public long[] receiveFromTransport(long max_bytes, boolean protocol_is_free ) throws IOException {
     if( max_bytes < 1 ) {
 
     	// Not yet fully supporting free-protocol for downloading
@@ -102,7 +102,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
     	  Debug.out( "max_bytes < 1: " +max_bytes );
       }
 
-      return new int[2];
+      return new long[2];
     }
 
     if( listeners.isEmpty() ) {
@@ -110,7 +110,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
       throw new IOException( "no queue listeners registered!" );
     }
 
-    int bytes_read;
+    long bytes_read;
 
     try{
 	    	//perform decode op
@@ -158,7 +158,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
       }
     }
 
-    int protocol_read = stream_decoder.getProtocolBytesDecoded();
+    long protocol_read = stream_decoder.getProtocolBytesDecoded();
     if( protocol_read > 0 ) {
       ArrayList listeners_ref = listeners;  //copy-on-write
       for( int i=0; i < listeners_ref.size(); i++ ) {
@@ -167,7 +167,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
       }
     }
 
-    int data_read = stream_decoder.getDataBytesDecoded();
+    long data_read = stream_decoder.getDataBytesDecoded();
     if( data_read > 0 ) {
       ArrayList listeners_ref = listeners;  //copy-on-write
       for( int i=0; i < listeners_ref.size(); i++ ) {
@@ -188,7 +188,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
     	data_read		= 0;
     }
 
-    return( new int[]{ data_read, protocol_read });
+    return( new long[]{ data_read, protocol_read });
   }
 
 

@@ -20,6 +20,8 @@
 
 package com.biglybt.core.networkmanager.impl;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
@@ -28,10 +30,10 @@ public class
 ByteBucketMT
 	implements ByteBucket
 {
-	  private int rate;
-	  private int burst_rate;
+	  private long rate;
+	  private long burst_rate;
 	  private volatile long avail_bytes;
-	  private volatile long prev_update_time;
+	  private AtomicLong prev_update_time = new AtomicLong( SystemTime.getSteppedMonotonousTime());
 
 	  private volatile boolean frozen;
 
@@ -40,7 +42,7 @@ ByteBucketMT
 	   * Burst rate is set to default 1.2X of given fill rate.
 	   * @param rate_bytes_per_sec fill rate
 	   */
-	  public ByteBucketMT( int rate_bytes_per_sec ) {
+	  public ByteBucketMT( long rate_bytes_per_sec ) {
 	    this( rate_bytes_per_sec, rate_bytes_per_sec + (rate_bytes_per_sec/5) );
 	  }
 
@@ -50,11 +52,10 @@ ByteBucketMT
 	   * @param rate_bytes_per_sec fill rate
 	   * @param burst_rate max rate
 	   */
-	  private ByteBucketMT( int rate_bytes_per_sec, int burst_rate ) {
+	  private ByteBucketMT( long rate_bytes_per_sec, long burst_rate ) {
 	    this.rate = rate_bytes_per_sec;
 	    this.burst_rate = burst_rate;
 	    avail_bytes = 0; //start bucket empty
-	    prev_update_time = SystemTime.getMonotonousTime();
 	    ensureByteBucketMinBurstRate();
 	  }
 
@@ -64,12 +65,12 @@ ByteBucketMT
 	   * @return number of free bytes
 	   */
 	  @Override
-	  public int getAvailableByteCount() {
+	  public long getAvailableByteCount() {
 		if ( avail_bytes < NetworkManager.UNLIMITED_RATE ){
 			update_avail_byte_count();
 		}
 
-	    int res = (int)avail_bytes;
+	    long res = avail_bytes;
 
 	    if ( res < 0 ){
 	    	res = 0;
@@ -83,7 +84,7 @@ ByteBucketMT
 	   * @param bytes_used
 	   */
 	  @Override
-	  public void setBytesUsed(int bytes_used ) {
+	  public void setBytesUsed(long bytes_used ) {
 		if ( avail_bytes >= NetworkManager.UNLIMITED_RATE ){
 		  return;
 		}
@@ -98,14 +99,14 @@ ByteBucketMT
 	   * @return guaranteed rate in bytes per sec
 	   */
 	  @Override
-	  public int getRate() {  return rate;  }
+	  public long getRate() {  return rate;  }
 
 
 	  /**
 	   * Get the configured burst rate.
 	   * @return burst rate in bytes per sec
 	   */
-	  public int getBurstRate() {  return burst_rate;  }
+	  public long getBurstRate() {  return burst_rate;  }
 
 
 	  /**
@@ -113,7 +114,7 @@ ByteBucketMT
 	   * @param rate_bytes_per_sec
 	   */
 	  @Override
-	  public void setRate(int rate_bytes_per_sec ) {
+	  public void setRate(long rate_bytes_per_sec ) {
 	    setRate( rate_bytes_per_sec, rate_bytes_per_sec + (rate_bytes_per_sec/5));
 	  }
 
@@ -130,7 +131,7 @@ ByteBucketMT
 	   * @param rate_bytes_per_sec
 	   * @param burst_rate
 	   */
-	  public void setRate( int rate_bytes_per_sec, int burst_rate ) {
+	  public void setRate( long rate_bytes_per_sec, long burst_rate ) {
 	    if( rate_bytes_per_sec < 0 ) {
 	      Debug.out("rate_bytes_per_sec [" +rate_bytes_per_sec+ "] < 0");
 	      rate_bytes_per_sec = 0;
@@ -152,19 +153,35 @@ ByteBucketMT
 		  if ( frozen ){
 			  return;
 		  }
-		  synchronized( this ){
-		      final long now =SystemTime.getMonotonousTime();
-		      if (prev_update_time <now) {
-		          avail_bytes +=((now -prev_update_time) * rate) / 1000;
-		          prev_update_time =now;
-		          if( avail_bytes > burst_rate ) avail_bytes = burst_rate;
-		          else if( avail_bytes < 0 ){
-		        	  //Debug.out("ERROR: avail_bytes < 0: " + avail_bytes);
-		          }
+		  if ( rate == NetworkManager.UNLIMITED_RATE ){
+			  if ( avail_bytes < NetworkManager.UNLIMITED_RATE ){
+				  avail_bytes = NetworkManager.UNLIMITED_RATE;
+			  }
+			  return;
+		  }
+		  long now;
+		  long put;
+		  
+		  do{
+			  now = SystemTime.getSteppedMonotonousTime();
+			  
+			  put = prev_update_time.get();
+			  
+		  }while( put < now && !prev_update_time.compareAndSet( put, now ));
+
+		  if ( put < now ){
+		          
+			  avail_bytes +=((now - put) * rate) / 1000;
+		         
+		      if ( avail_bytes > burst_rate ){
+		    	  
+		    	  avail_bytes = burst_rate;
+		    	  
+		      //}else if( avail_bytes < 0 ){
+		       //Debug.out("ERROR: avail_bytes < 0: " + avail_bytes);
 		      }
 		  }
 	  }
-
 
 	  /**
 	   * Make sure the bucket's burst rate is at least MSS-sized,

@@ -102,9 +102,9 @@ ExternalSeedReader
 	public List<PeerReadRequest>
 	getRequests();
 
-	public int
+	public long
 	readBytes(
-		int	max );
+		long	max );
 
 	public int[]
 	getCurrentIncomingRequestProgress();

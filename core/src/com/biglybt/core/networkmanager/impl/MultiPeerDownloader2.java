@@ -177,7 +177,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 		EventWaiter waiter )
 	{
 		try{
-			int[] allowed = main_handler.getCurrentNumBytesAllowed();
+			long[] allowed = main_handler.getCurrentNumBytesAllowed();
 	
 			if ( allowed[0] < 1 ){ // Not yet fully supporting free-protocol for downloading && allowed[1] == 0 ){
 	
@@ -236,7 +236,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 	}
 
 	@Override
-	public int
+	public long
 	doProcessing(
 		EventWaiter waiter,
 		int			max_bytes )
@@ -246,9 +246,9 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 			// System.out.println( "MPD: do process - " + connections_cow.size() + "/" + active_connections.size() + "/" + idle_connections.size());
 
-			int[] bytes_allowed = main_handler.getCurrentNumBytesAllowed();
+			long[] bytes_allowed = main_handler.getCurrentNumBytesAllowed();
 
-			int num_bytes_allowed = bytes_allowed[0];
+			long num_bytes_allowed = bytes_allowed[0];
 
 			boolean protocol_is_free = bytes_allowed[1] > 0;
 
@@ -326,7 +326,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 			// process the active set
 
-			int num_bytes_remaining = num_bytes_allowed;
+			long num_bytes_remaining = num_bytes_allowed;
 
 			int	data_bytes_read		= 0;
 			int protocol_bytes_read = 0;
@@ -356,12 +356,12 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 					int	mss = connection.getMssSize();
 
-					int allowed = num_bytes_remaining > mss ? mss : num_bytes_remaining;
+					long allowed = num_bytes_remaining > mss ? mss : num_bytes_remaining;
 
-					int bytes_read = 0;
+					long bytes_read = 0;
 
 					try{
-						int[] read = connection.getIncomingMessageQueue().receiveFromTransport( allowed, protocol_is_free );
+						long[] read = connection.getIncomingMessageQueue().receiveFromTransport( allowed, protocol_is_free );
 
 						data_bytes_read 	+= read[0];
 						protocol_bytes_read	+= read[1];
@@ -418,7 +418,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 				entry = next;
 			}
 
-			int total_bytes_read = num_bytes_allowed - num_bytes_remaining;
+			long total_bytes_read = num_bytes_allowed - num_bytes_remaining;
 
 			if ( total_bytes_read > 0 ){
 

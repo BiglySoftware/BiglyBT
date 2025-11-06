@@ -62,7 +62,7 @@ PeerManagerStats
 	 * @return
 	 */
 
-	public int getPermittedBytesToReceive();
+	public long getPermittedBytesToReceive();
 
 	/**
 	 * The given number of data (payload) bytes have been received.
@@ -85,7 +85,7 @@ PeerManagerStats
 	 * @return
 	 */
 
-	public int getPermittedBytesToSend();
+	public long getPermittedBytesToSend();
 
 	/**
 	 * The given number of data (payload) bytes have been sent.

@@ -62,10 +62,10 @@ GenericMessageDecoder
 	}
 
 	@Override
-	public int
+	public long
 	performStreamDecode(
 		Transport 	transport,
-		int 		max_bytes )
+		long 		max_bytes )
 
 		throws IOException
 	{
@@ -164,7 +164,7 @@ GenericMessageDecoder
 			throw( new IOException( "decoder has been destroyed" ));
 		}
 
-		return((int) total_read );
+		return( total_read );
 	}
 
 	@Override

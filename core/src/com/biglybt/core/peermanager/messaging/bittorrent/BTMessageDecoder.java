@@ -76,12 +76,12 @@ public class BTMessageDecoder implements MessageStreamDecoder {
 
 
   @Override
-  public int performStreamDecode(Transport transport, int max_bytes ) throws IOException {
+  public long performStreamDecode(Transport transport, long max_bytes ) throws IOException {
 	try{
 	    protocol_bytes_last_read = 0;
 	    data_bytes_last_read = 0;
 
-	    int bytes_remaining = max_bytes;
+	    long bytes_remaining = max_bytes;
 
 	    while( bytes_remaining > 0 ) {
 
@@ -97,7 +97,7 @@ public class BTMessageDecoder implements MessageStreamDecoder {
 	        break;
 	      }
 
-	      int bytes_possible = preReadProcess( bytes_remaining );
+	      long bytes_possible = preReadProcess( bytes_remaining );
 
 	      if( bytes_possible < 1 ) {
 	        Debug.out( "ERROR BT: bytes_possible < 1" );
@@ -265,7 +265,7 @@ public class BTMessageDecoder implements MessageStreamDecoder {
 
 
 
-  private int preReadProcess( int allowed ) {
+  private long preReadProcess( long allowed ) {
     if( allowed < 1 ) {
       Debug.out( "allowed < 1" );
     }
@@ -301,7 +301,7 @@ public class BTMessageDecoder implements MessageStreamDecoder {
         }
 
         if( remaining > allowed ) {  //read only part of this buffer
-          bb.limit( bb.position() + allowed );  //limit current buffer
+          bb.limit( (int)( bb.position() + allowed ));  //limit current buffer
           bytes_available += bb.remaining();
           shrink_remaining_buffers = true;  //shrink any tail buffers
         }

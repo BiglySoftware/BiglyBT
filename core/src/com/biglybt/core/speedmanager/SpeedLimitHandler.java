@@ -4303,21 +4303,21 @@ SpeedLimitHandler
 
 	private String
 	formatUp(
-		int	rate )
+		long	rate )
 	{
 		return( "Up=" + format( rate ));
 	}
 
 	private String
 	formatDown(
-		int	rate )
+		long	rate )
 	{
 		return( "Down=" + format( rate ));
 	}
 
 	private String
 	format(
-		int		rate )
+		long		rate )
 	{
 		if ( rate < 0 ){
 

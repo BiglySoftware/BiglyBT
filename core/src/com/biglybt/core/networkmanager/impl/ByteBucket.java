@@ -28,19 +28,19 @@ package com.biglybt.core.networkmanager.impl;
 public interface
 ByteBucket
 {
-	public int
+	public long
 	getRate();
 
 	public void
 	setRate(
-		int rate_bytes_per_sec );
+		long rate_bytes_per_sec );
 
-	public int
+	public long
 	getAvailableByteCount();
 
 	public void
 	setBytesUsed(
-		int bytes_used );
+		long bytes_used );
 
 	public void
 	setFrozen(

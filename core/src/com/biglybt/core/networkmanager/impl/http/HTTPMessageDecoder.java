@@ -76,10 +76,10 @@ HTTPMessageDecoder
 	}
 
 	@Override
-	public int
+	public long
 	performStreamDecode(
 		Transport 	transport,
-		int 		max_bytes )
+		long 		max_bytes )
 
 		throws IOException
 	{
@@ -114,7 +114,7 @@ HTTPMessageDecoder
 			return( len );
 
 		}else{
-			int	rem = max_bytes;
+			long	rem = max_bytes;
 
 			byte[]	bytes = new byte[1];
 

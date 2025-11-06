@@ -753,7 +753,7 @@ NetStatusProtocolTesterBT
 					@Override
 					public final void
 					protocolBytesReceived(
-						int byte_count )
+						long byte_count )
 
 					{
 					}
@@ -761,7 +761,7 @@ NetStatusProtocolTesterBT
 					@Override
 					public final void
 					dataBytesReceived(
-						int byte_count )
+						long byte_count )
 					{
 					}
 

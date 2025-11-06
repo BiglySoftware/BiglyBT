@@ -55,7 +55,7 @@ public interface IncomingMessageQueue {
    * @return number of bytes received as [data, protocol]
    * @throws IOException on receive error
    */
-  public int[] receiveFromTransport( int max_bytes, boolean protocol_is_free ) throws IOException;
+  public long[] receiveFromTransport( long max_bytes, boolean protocol_is_free ) throws IOException;
 
 
   /**
@@ -114,13 +114,13 @@ public interface IncomingMessageQueue {
      * The given number of protocol (overhead) bytes read from the connection.
      * @param byte_count number of protocol bytes
      */
-    public void protocolBytesReceived( int byte_count );
+    public void protocolBytesReceived( long byte_count );
 
     /**
      * The given number of (piece) data bytes read from the connection.
      * @param byte_count number of data bytes
      */
-    public void dataBytesReceived( int byte_count );
+    public void dataBytesReceived( long byte_count );
 
     public boolean
     isPriority();

@@ -135,10 +135,10 @@ LWSPeerManagerAdapter
 	}
 	
 	@Override
-	public int
+	public long
 	getPermittedBytesToReceive()
 	{
-		return( Integer.MAX_VALUE );
+		return( NetworkManager.UNLIMITED_RATE );
 	}
 
 	@Override
@@ -149,10 +149,10 @@ LWSPeerManagerAdapter
 	}
 
 	@Override
-	public int
+	public long
 	getPermittedBytesToSend()
 	{
-		return( Integer.MAX_VALUE );
+		return( NetworkManager.UNLIMITED_RATE );
 	}
 
 	@Override
@@ -394,7 +394,7 @@ LWSPeerManagerAdapter
 	public void
 	protocolBytesReceived(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 	}
 
@@ -402,7 +402,7 @@ LWSPeerManagerAdapter
 	public void
 	dataBytesReceived(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 	}
 
@@ -410,7 +410,7 @@ LWSPeerManagerAdapter
 	public void
 	protocolBytesSent(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 	}
 
@@ -418,7 +418,7 @@ LWSPeerManagerAdapter
 	public void
 	dataBytesSent(
 		PEPeer		peer,
-		int			bytes )
+		long		bytes )
 	{
 	}
 

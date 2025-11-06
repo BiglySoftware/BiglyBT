@@ -39,7 +39,7 @@ ExternalSeedHTTPDownloaderListener
 	public int
 	getBufferLength();
 
-	public int
+	public long
 	getPermittedBytes()
 
 		throws ExternalSeedException;

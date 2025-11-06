@@ -172,7 +172,7 @@ public class MainStatusBar
 
 	private String lastSRimageID = null;
 
-	private int last_dl_limit;
+	private long last_dl_limit;
 
 	private long last_rec_data = - 1;
 
@@ -1384,7 +1384,7 @@ public class MainStatusBar
 
 			int kinb = DisplayFormatters.getKinB();
 			
-			int dl_limit = NetworkManager.getMaxDownloadRateBPS() / kinb;
+			long dl_limit = NetworkManager.getMaxDownloadRateBPS2() / kinb;
 			long rec_data = stats.getDataReceiveRate();
 			long rec_prot = stats.getProtocolReceiveRate();
 
@@ -1400,15 +1400,15 @@ public class MainStatusBar
 			boolean auto_up = TransferSpeedValidator.isAutoSpeedActive(gm)
 					&& TransferSpeedValidator.isAutoUploadAvailable(core);
 
-			int ul_limit_norm = NetworkManager.getMaxUploadRateBPSNormal() / kinb;
+			long ul_limit_norm = NetworkManager.getMaxUploadRateBPSNormal2() / kinb;
 
 			String seeding_only;
 			if (NetworkManager.isSeedingOnlyUploadRate()) {
-				int ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly() / kinb;
+				long ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly2() / kinb;
 				if (ul_limit_seed == 0) {
 					seeding_only = "+" + Constants.INFINITY_STRING + "K";
 				} else {
-					int diff = ul_limit_seed - ul_limit_norm;
+					long diff = ul_limit_seed - ul_limit_norm;
 					seeding_only = (diff >= 0 ? "+" : "") + diff + "K";
 				}
 			} else {

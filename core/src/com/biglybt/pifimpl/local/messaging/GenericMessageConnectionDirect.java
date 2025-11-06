@@ -551,14 +551,14 @@ GenericMessageConnectionDirect
 	    			@Override
 				    public void
 	    			protocolBytesReceived(
-	    				int byte_count )
+	    					long byte_count )
 	    			{
 	    			}
 
 	    			@Override
 				    public void
 	    			dataBytesReceived(
-	    				int byte_count )
+	    				long byte_count )
 	    			{
 	    			}
 

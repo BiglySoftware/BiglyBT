@@ -1972,7 +1972,7 @@ UtilitiesImpl
 		}
 
 		@Override
-		public int
+		public long
 		getRateLimitBytesPerSecond()
 		{
 			int	value = limiter.getRateLimitBytesPerSecond();
@@ -2045,7 +2045,7 @@ UtilitiesImpl
 		@Override
 		public void
 		updateBytesUsed(
-			int	used )
+			long	used )
 		{
 			if ( plimiter != null ){
 

@@ -84,26 +84,26 @@ PEPeerStatsImpl
 	}
 
     @Override
-    public void dataBytesSent(int num_bytes ) {
+    public void dataBytesSent(long num_bytes ) {
       total_data_bytes_sent += num_bytes;
       data_send_speed.addValue( num_bytes );
     }
 
     @Override
-    public void protocolBytesSent(int num_bytes ) {
+    public void protocolBytesSent(long num_bytes ) {
       total_protocol_bytes_sent += num_bytes;
       protocol_send_speed.addValue( num_bytes );
     }
 
     @Override
-    public void dataBytesReceived(int num_bytes ) {
+    public void dataBytesReceived(long num_bytes ) {
       total_data_bytes_received += num_bytes;
       data_receive_speed.addValue( num_bytes );
       receive_speed_for_choking.addValue( num_bytes );
     }
 
     @Override
-    public void protocolBytesReceived(int num_bytes ) {
+    public void protocolBytesReceived(long num_bytes ) {
       total_protocol_bytes_received += num_bytes;
       protocol_receive_speed.addValue( num_bytes );
       //dont count protocol overhead towards a peer's choke/unchoke value, only piece data
@@ -247,7 +247,7 @@ PEPeerStatsImpl
     public int getDownloadRateLimitBytesPerSecond(){return owner.getDownloadRateLimitBytesPerSecond();}
 
     @Override
-    public int
+    public long
     getPermittedBytesToSend()
     {
     	Connection plugin_con = owner.getPluginConnection();
@@ -276,7 +276,7 @@ PEPeerStatsImpl
     }
 
     @Override
-    public int
+    public long
     getPermittedBytesToReceive()
     {
     	Connection plugin_con = owner.getPluginConnection();

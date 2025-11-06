@@ -101,7 +101,7 @@ public interface PeerStats
 	 * @return
 	 */
 
-	public int getPermittedBytesToReceive();
+	public long getPermittedBytesToReceive();
 
 	public void permittedReceiveBytesUsed( int bytes );
 
@@ -112,7 +112,7 @@ public interface PeerStats
 	 * @return
 	 */
 
-	public int getPermittedBytesToSend();
+	public long getPermittedBytesToSend();
 
 	public void permittedSendBytesUsed( int bytes );
 
@@ -128,7 +128,7 @@ public interface PeerStats
 	 * @since 4.4.0.7
 	 */
 
-	public void received(int bytes);
+	public void received(long bytes);
 
 	/**
 	 * The given number of data (payload) bytes have been received from the peer.
@@ -142,7 +142,7 @@ public interface PeerStats
 	 * @since 2.1.0.0
 	 */
 
-	public void sent(int bytes);
+	public void sent(long bytes);
 
 	/**
 	 * The given number of bytes received from the peer were discarded.

@@ -196,25 +196,25 @@ PEPeerManager
    * Data bytes received.
    * @param l
    */
-	public void	dataBytesReceived( PEPeer peer, int	l );
+	public void	dataBytesReceived( PEPeer peer, long	l );
 
   /**
    * Data bytes sent.
    * @param l
    */
-	public void	dataBytesSent( PEPeer peer, int	l );
+	public void	dataBytesSent( PEPeer peer, long	l );
 
   /**
    * Protocol bytes sent.
    * @param length
    */
-  public void protocolBytesSent( PEPeer peer, int length );
+  public void protocolBytesSent( PEPeer peer, long length );
 
   /**
    * Protocol bytes received.
    * @param length
    */
-  public void protocolBytesReceived( PEPeer peer, int length );
+  public void protocolBytesReceived( PEPeer peer, long length );
 
 
 

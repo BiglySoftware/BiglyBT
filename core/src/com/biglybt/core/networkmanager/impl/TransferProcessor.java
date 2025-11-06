@@ -104,14 +104,14 @@ TransferProcessor
     		final int pt = _processor_type;
 
     		@Override
-		    public int[]
+		    public long[]
     		getCurrentNumBytesAllowed()
     		{
     			if ( main_bucket.getRate() != max_rate.getRateLimitBytesPerSecond() ) { //sync rate
     				main_bucket.setRate( max_rate.getRateLimitBytesPerSecond() );
     			}
 
-    			int special;
+    			long special;
 
     			if ( pt == TYPE_UPLOAD ){
 
@@ -121,7 +121,7 @@ TransferProcessor
 
     				}else{
 
-    					special = Integer.MAX_VALUE;
+    					special = NetworkManager.UNLIMITED_RATE;
     				}
     			}else{
 
@@ -131,20 +131,20 @@ TransferProcessor
 
     				}else{
 
-    					special = Integer.MAX_VALUE;
+    					special = NetworkManager.UNLIMITED_RATE;
     				}
     			}
 
-    			return( new int[]{ main_bucket.getAvailableByteCount(), special });
+    			return( new long[]{ main_bucket.getAvailableByteCount(), special });
     		}
 
     		@Override
 		    public void
-    		bytesProcessed( int data_bytes, int protocol_bytes )
+    		bytesProcessed( long data_bytes, long protocol_bytes )
     		{
     			//System.out.println( (pt == TYPE_UPLOAD?"Up":"Down") + ": " + data_bytes + "/" + protocol_bytes );
 
-    			int num_bytes_written;
+    			long num_bytes_written;
 
     			if ( pt == TYPE_UPLOAD ){
 
@@ -197,7 +197,7 @@ TransferProcessor
 
     	  GroupData group_data = (GroupData)group_buckets.get( group );
 	      if( group_data == null ) {
-	        int limit = NetworkManagerUtilities.getGroupRateLimit( group );
+	        long limit = NetworkManagerUtilities.getGroupRateLimit( group );
 	        group_data = new GroupData( createBucket( limit ) );
 	        group_buckets.put( group, group_data );
 
@@ -320,7 +320,7 @@ TransferProcessor
 
 		      if ( group_data == null ){
 
-		    	  int limit = NetworkManagerUtilities.getGroupRateLimit( group );
+		    	  long limit = NetworkManagerUtilities.getGroupRateLimit( group );
 
 		    	  group_data = new GroupData( createBucket( limit ) );
 
@@ -471,10 +471,10 @@ TransferProcessor
     	   		final int pt = processor_type;
 
     			@Override
-			    public int[]
+			    public long[]
     			getCurrentNumBytesAllowed()
     			{
-    	   			int special;
+    	   			long special;
 
         			if ( pt == TYPE_UPLOAD ){
 
@@ -484,7 +484,7 @@ TransferProcessor
 
         				}else{
 
-        					special = Integer.MAX_VALUE;
+        					special = NetworkManager.UNLIMITED_RATE;
         				}
         			}else{
 
@@ -494,7 +494,7 @@ TransferProcessor
 
         				}else{
 
-        					special = Integer.MAX_VALUE;
+        					special = NetworkManager.UNLIMITED_RATE;
         				}
         			}
 
@@ -505,7 +505,7 @@ TransferProcessor
     					main_bucket.setRate( max_rate.getRateLimitBytesPerSecond() );
     				}
 
-    				int allowed = main_bucket.getAvailableByteCount();
+    				long allowed = main_bucket.getAvailableByteCount();
 
     					// reserve bandwidth for the general pool
 
@@ -546,7 +546,7 @@ TransferProcessor
 
     							//boolean log = group.getName().contains("parg");
 
-    							int group_rate = NetworkManagerUtilities.getGroupRateLimit(  groups[i] );
+    							long group_rate = NetworkManagerUtilities.getGroupRateLimit(  groups[i] );
 
     							ByteBucket group_bucket = group_datas[i].bucket;
 
@@ -565,7 +565,7 @@ TransferProcessor
     								group_bucket.setRate( group_rate );
     							}
 
-    							int 	group_allowed = group_bucket.getAvailableByteCount();
+    							long 	group_allowed = group_bucket.getAvailableByteCount();
 
     							if ( group_allowed < allowed ){
 
@@ -584,18 +584,18 @@ TransferProcessor
     					}
     				}
 
-    				return( new int[]{ allowed, special });
+    				return( new long[]{ allowed, special });
     			}
 
     			@Override
 			    public void
     			bytesProcessed(
-    				int data_bytes,
-    				int protocol_bytes )
+    				long data_bytes,
+    				long protocol_bytes )
     			{
         			//System.out.println( (pt == TYPE_UPLOAD?"Up":"Down") + ": " + data_bytes + "/" + protocol_bytes );
 
-    				int num_bytes_written;
+    				long num_bytes_written;
 
         			if ( pt == TYPE_UPLOAD ){
 
@@ -674,7 +674,7 @@ TransferProcessor
 
   private ByteBucket
   createBucket(
-	int	bytes_per_sec )
+	long	bytes_per_sec )
   {
 	  if ( multi_threaded ){
 

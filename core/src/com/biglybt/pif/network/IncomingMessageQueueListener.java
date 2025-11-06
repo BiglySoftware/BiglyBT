@@ -39,5 +39,5 @@ public interface IncomingMessageQueueListener {
    * The given number of bytes read from the connection.
    * @param byte_count number of protocol bytes
    */
-  public void bytesReceived( int byte_count );
+  public void bytesReceived( long byte_count );
 }
