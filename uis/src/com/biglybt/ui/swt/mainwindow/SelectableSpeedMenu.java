@@ -282,6 +282,9 @@ public class SelectableSpeedMenu {
 		java.util.List<Long> l = new java.util.ArrayList<>();
 		int delta = 0;
 		int increaseLevel = 0;
+		long d1 = (maxBandwidth <= 1024 ? 1 : maxBandwidth/256);
+		long d2 = (maxBandwidth < 1024 ? 1 : maxBandwidth/256);
+		
 		for (int i = 0; i < speedPartitions; i++) {
 			final long[] valuePair;
 			if (delta == 0) {
@@ -290,8 +293,8 @@ public class SelectableSpeedMenu {
 				};
 			} else {
 				valuePair = new long[] {
-					maxBandwidth - delta * (maxBandwidth <= 1024 ? 1 : 1024),
-					maxBandwidth + delta * (maxBandwidth < 1024 ? 1 : 1024)
+					maxBandwidth - delta * d1,
+					maxBandwidth + delta * d2
 				};
 			}
 

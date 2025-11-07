@@ -414,6 +414,11 @@ DisplayFormatters
 	}
 
 	public static int
+	getXinBBase()
+	{
+		return( force_si_values?16:(use_si_units?16:10));
+	}
+	public static int
 	getKinB()
 	{
 		return( force_si_values?1024:(use_si_units?1024:1000));

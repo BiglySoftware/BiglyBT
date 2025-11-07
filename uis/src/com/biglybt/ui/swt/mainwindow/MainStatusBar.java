@@ -1383,8 +1383,17 @@ public class MainStatusBar
 			GlobalManagerStats stats = gm.getStats();
 
 			int kinb = DisplayFormatters.getKinB();
+			int base = DisplayFormatters.getXinBBase();
 			
+			char K_str = DisplayFormatters.getUnit(DisplayFormatters.UNIT_KB ).charAt(0);
+			char M_str = DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB ).charAt(0);
+			
+			char D_str = K_str;
 			long dl_limit = NetworkManager.getMaxDownloadRateBPS() / kinb;
+			if ( dl_limit > kinb * base){
+				dl_limit /= kinb;
+				D_str = M_str;
+			}
 			long rec_data = stats.getDataReceiveRate();
 			long rec_prot = stats.getProtocolReceiveRate();
 
@@ -1393,7 +1402,7 @@ public class MainStatusBar
 				last_rec_data = rec_data;
 				last_rec_prot = rec_prot;
 
-				statusDown.setText((dl_limit == 0 ? "" : "[" + dl_limit + "K] ")
+				statusDown.setText((dl_limit == 0 ? "" : "[" + dl_limit + D_str +"] ")
 						+ DisplayFormatters.formatDataProtByteCountToKiBEtcPerSec(rec_data, rec_prot));
 			}
 
@@ -1406,10 +1415,15 @@ public class MainStatusBar
 			if (NetworkManager.isSeedingOnlyUploadRate()) {
 				long ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly() / kinb;
 				if (ul_limit_seed == 0) {
-					seeding_only = "+" + Constants.INFINITY_STRING + "K";
+					seeding_only = "+" + Constants.INFINITY_STRING + K_str;
 				} else {
 					long diff = ul_limit_seed - ul_limit_norm;
-					seeding_only = (diff >= 0 ? "+" : "") + diff + "K";
+					char X_str = K_str;
+					if ( diff > kinb * base ){
+						diff /= kinb;
+						X_str = M_str;
+					}
+					seeding_only = (diff >= 0 ? "+" : "") + diff + X_str;
 				}
 			} else {
 				seeding_only = "";
@@ -1421,8 +1435,12 @@ public class MainStatusBar
 				updateGraph(statusUp, imgSent, sent_data, max_sent);
 			}
 
-
-			statusUp.setText((ul_limit_norm == 0 ? "" : "[" + ul_limit_norm + "K"
+			char U_str = K_str;
+			if ( ul_limit_norm > kinb * base ){
+				ul_limit_norm /= kinb;
+				U_str = M_str;
+			}
+			statusUp.setText((ul_limit_norm == 0 ? "" : "[" + ul_limit_norm + U_str
 					+ seeding_only + "]")
 					+ (auto_up ? "* " : " ")
 					+ DisplayFormatters.formatDataProtByteCountToKiBEtcPerSec(
