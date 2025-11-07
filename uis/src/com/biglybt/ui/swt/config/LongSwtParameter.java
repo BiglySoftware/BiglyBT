@@ -213,8 +213,8 @@ public class LongSwtParameter
 				(cFG.getGreen() + cBG.getGreen() * 2) / 3,
 				(cFG.getBlue() + cBG.getBlue() * 2) / 3);
 		spinner.addListener(SWT.Dispose, (event) -> colorHidden.dispose());
-		spinner.setMinimum((int)minValue);
-		spinner.setMaximum((int)maxValue);
+		spinner.setMinimum(minValue <= Integer.MIN_VALUE?Integer.MIN_VALUE:(int)minValue);
+		spinner.setMaximum(maxValue >= Integer.MAX_VALUE?Integer.MAX_VALUE:(int)maxValue);
 
 		if (doGridData(composite)) {
 			GridData gridData = new GridData();
