@@ -273,7 +273,7 @@ DownloadManagerRateController
 		tick_count++;
 
 		if ( 	(!enable_limit_handling ) ||  pm_map.size() == 0 ||
-				NetworkManager.isSeedingOnlyUploadRate() ||  NetworkManager.getMaxUploadRateBPSNormal2() != 0 ||
+				NetworkManager.isSeedingOnlyUploadRate() ||  NetworkManager.getMaxUploadRateBPSNormal() != 0 ||
 				core == null || speed_manager == null || speed_manager.getSpeedTester() == null ){
 
 			rate_limit = 0;

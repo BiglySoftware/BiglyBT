@@ -264,6 +264,39 @@ BasicPluginConfigModelImpl
 	}
 
 	@Override
+	public com.biglybt.pif.ui.config.LongParameter
+	addLongParameter2(
+		String 		key,
+		String 		resource_name,
+		long	 	defaultValue )
+	{
+		LongParameterImpl res = new LongParameterImpl(resolveKey(key), resource_name );
+		COConfigurationManager.setLongDefault( res.getConfigKeyName(), defaultValue );
+		configobj.notifyParamExists(res.getConfigKeyName());
+
+		parameters.add( res );
+
+		return( res );
+	}
+
+	@Override
+	public com.biglybt.pif.ui.config.LongParameter
+	addLongParameter2(
+		String 		key,
+		String 		resource_name,
+		long	 	defaultValue,
+		long        min_value,
+		long        max_value)
+	{
+		LongParameterImpl res = new LongParameterImpl(resolveKey(key), resource_name, min_value, max_value );
+		COConfigurationManager.setLongDefault( res.getConfigKeyName(), defaultValue );
+		configobj.notifyParamExists(res.getConfigKeyName());
+
+		parameters.add( res );
+		return( res );
+	}
+	
+	@Override
 	public com.biglybt.pif.ui.config.DirectoryParameter
 	addDirectoryParameter2(
 		String 		key,

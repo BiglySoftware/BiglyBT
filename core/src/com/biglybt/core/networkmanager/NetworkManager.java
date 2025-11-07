@@ -356,34 +356,13 @@ public class NetworkManager {
   public static boolean isSeedingOnlyUploadRate() {
     return seeding_only_mode_allowed && seeding_only_mode;
   }
-
   
-  // The next three methods to be removed once i2phelperplugin updated to use the LONG versions
-  public static int getMaxUploadRateBPSNormal() {
-    if( max_upload_rate_bps_normal == UNLIMITED_RATE )  return 0;
-    return (int)max_upload_rate_bps_normal;
-  }
-
-  public static int getMaxUploadRateBPSSeedingOnly() {
-    if( max_upload_rate_bps_seeding_only == UNLIMITED_RATE )  return 0;
-    return (int)max_upload_rate_bps_seeding_only;
-  }
-
-  /**
-   * This method is for display purposes only, the internal rate limiting is 10% higher than returned by this method!
-   */
-  public static int getMaxDownloadRateBPS() {
-    if( max_download_rate_bps == UNLIMITED_RATE )  return 0;
-    return (int)external_max_download_rate_bps;
-  }
-
-  
-  public static long getMaxUploadRateBPSNormal2() {
+  public static long getMaxUploadRateBPSNormal() {
 	  if( max_upload_rate_bps_normal == UNLIMITED_RATE )  return 0;
 	  return max_upload_rate_bps_normal;
   }
 
-  public static long getMaxUploadRateBPSSeedingOnly2() {
+  public static long getMaxUploadRateBPSSeedingOnly() {
 	  if( max_upload_rate_bps_seeding_only == UNLIMITED_RATE )  return 0;
 	  return max_upload_rate_bps_seeding_only;
   }
@@ -391,7 +370,7 @@ public class NetworkManager {
   /**
    * This method is for display purposes only, the internal rate limiting is 10% higher than returned by this method!
    */
-  public static long getMaxDownloadRateBPS2() {
+  public static long getMaxDownloadRateBPS() {
 	  if( max_download_rate_bps == UNLIMITED_RATE )  return 0;
 	  return external_max_download_rate_bps;
   }

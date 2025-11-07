@@ -5055,7 +5055,7 @@ public class GlobalManagerImpl
 
 			glob.put( "auto_up", new Long(auto_up?COConfigurationManager.getLongParameter( SpeedManagerImpl.CONFIG_VERSION ):0));
 
-			long up_lim = NetworkManager.getMaxUploadRateBPSNormal2();
+			long up_lim = NetworkManager.getMaxUploadRateBPSNormal();
 
 			boolean	seeding_only = NetworkManager.isSeedingOnlyUploadRate();
 
@@ -5063,7 +5063,7 @@ public class GlobalManagerImpl
 
 			if ( seeding_only ){
 
-				up_lim = NetworkManager.getMaxUploadRateBPSSeedingOnly2();
+				up_lim = NetworkManager.getMaxUploadRateBPSSeedingOnly();
 			}
 
 			glob.put( "u_lim", new Long( up_lim ));

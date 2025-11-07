@@ -183,6 +183,20 @@ BasicPluginConfigModel
 		int         min_value,
 		int         max_value);
 
+	public LongParameter
+	addLongParameter2(
+		String 		key,
+		String 		resource_name,
+		long 		defaultValue );
+	
+	public LongParameter
+	addLongParameter2(
+		String 		key,
+		String 		resource_name,
+		long		defaultValue,
+		long        min_value,
+		long        max_value);
+	
 	/**
 	 * Displays a single label. Not linked to a config key.
 	 *
