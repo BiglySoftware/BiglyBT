@@ -922,8 +922,8 @@ public class MainWindowImpl
 
 		GlobalManagerStats stats = gm.getStats();
 
-		int down 	= stats.getDataReceiveRate() + stats.getProtocolReceiveRate();
-		int up		= stats.getDataSendRate() + stats.getProtocolSendRate();
+		long down 	= stats.getDataReceiveRate() + stats.getProtocolReceiveRate();
+		long up		= stats.getDataSendRate() + stats.getProtocolSendRate();
 
 		eta_tick_count++;
 
@@ -990,7 +990,7 @@ public class MainWindowImpl
 
 	private String
 	formatRateCompact(
-		int		rate )
+		long		rate )
 	{
 		String str = DisplayFormatters.formatCustomRate( "title.rate", rate );
 

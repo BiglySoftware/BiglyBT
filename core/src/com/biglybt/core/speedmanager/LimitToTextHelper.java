@@ -157,7 +157,7 @@ LimitToTextHelper
 
 		String	text = typeToText( type );
 
-		int	l = limit.getBytesPerSec();
+		long	l = limit.getBytesPerSec();
 
 		if ( l == 0 ){
 

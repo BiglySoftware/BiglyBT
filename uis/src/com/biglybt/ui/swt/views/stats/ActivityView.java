@@ -96,16 +96,16 @@ public class ActivityView
 
 	int kinb = DisplayFormatters.getKinB();
 	
-    downSpeedGraphic.addIntsValue(
-    	new int[]{ 	stats.getDataReceiveRate()+stats.getProtocolReceiveRate(),
+    downSpeedGraphic.addLongsValue(
+    	new long[]{ stats.getDataReceiveRate()+stats.getProtocolReceiveRate(),
     				stats.getProtocolReceiveRate(),
-    				COConfigurationManager.getIntParameter("Max Download Speed KBs") * kinb,
+    				COConfigurationManager.getLongParameter("Max Download Speed KBs") * kinb,
     				swarms_peer_speed });
 
-    upSpeedGraphic.addIntsValue(
-    	new int[]{	stats.getDataSendRate()+stats.getProtocolSendRate(),
+    upSpeedGraphic.addLongsValue(
+    	new long[]{	stats.getDataSendRate()+stats.getProtocolSendRate(),
     				stats.getProtocolSendRate(),
-    				COConfigurationManager.getIntParameter(TransferSpeedValidator.getActiveUploadParameter( manager )) * kinb,
+    				COConfigurationManager.getLongParameter(TransferSpeedValidator.getActiveUploadParameter( manager )) * kinb,
     				swarms_peer_speed });
   }
 

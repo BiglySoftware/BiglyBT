@@ -35,7 +35,7 @@ public class ScaledGraphic extends BackGroundGraphic {
   protected ValueFormater formater;
 
   protected Image bufferScale;
-  private int lastMax;
+  private long lastMax;
 
   private int update_divider_width = 0;
 
@@ -62,7 +62,7 @@ public class ScaledGraphic extends BackGroundGraphic {
   		return;
   	}
 
-  	int max = scale.getMax();
+  	long max = scale.getMax();
   	
     boolean scaleChanged = lastMax != max;
 

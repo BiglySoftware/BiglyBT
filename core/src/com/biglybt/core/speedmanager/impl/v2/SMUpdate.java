@@ -22,13 +22,13 @@ public class SMUpdate
 {
 
 
-    public final int newUploadLimit;
-    public int newDownloadLimit;
+    public final long newUploadLimit;
+    public long newDownloadLimit;
 
     public final boolean hasNewUploadLimit;
     public final boolean hasNewDownloadLimit;
 
-    public SMUpdate(int upLimit, boolean newUpLimit, int downLimit, boolean newDownLimit)
+    public SMUpdate(long upLimit, boolean newUpLimit, long downLimit, boolean newDownLimit)
     {
         newUploadLimit = upLimit;
         newDownloadLimit = downLimit;

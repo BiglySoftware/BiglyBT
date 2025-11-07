@@ -48,9 +48,9 @@ PluginConfigImpl
 
 	static{
 
-		external_to_internal_key_map.put( CORE_PARAM_INT_MAX_UPLOAD_SPEED_KBYTES_PER_SEC, 		CORE_PARAM_INT_MAX_UPLOAD_SPEED_KBYTES_PER_SEC );
-		external_to_internal_key_map.put( CORE_PARAM_INT_MAX_UPLOAD_SPEED_SEEDING_KBYTES_PER_SEC, 		"Max Upload Speed Seeding KBs" );
-		external_to_internal_key_map.put( CORE_PARAM_INT_MAX_DOWNLOAD_SPEED_KBYTES_PER_SEC, 	CORE_PARAM_INT_MAX_DOWNLOAD_SPEED_KBYTES_PER_SEC );
+		external_to_internal_key_map.put( CORE_PARAM_LONG_MAX_UPLOAD_SPEED_KBYTES_PER_SEC, 			CORE_PARAM_LONG_MAX_UPLOAD_SPEED_KBYTES_PER_SEC );
+		external_to_internal_key_map.put( CORE_PARAM_LONG_MAX_UPLOAD_SPEED_SEEDING_KBYTES_PER_SEC, 	"Max Upload Speed Seeding KBs" );
+		external_to_internal_key_map.put( CORE_PARAM_LONG_MAX_DOWNLOAD_SPEED_KBYTES_PER_SEC, 		CORE_PARAM_LONG_MAX_DOWNLOAD_SPEED_KBYTES_PER_SEC );
 		external_to_internal_key_map.put( CORE_PARAM_INT_MAX_CONNECTIONS_GLOBAL, 				"Max.Peer.Connections.Total" );
 		external_to_internal_key_map.put( CORE_PARAM_INT_MAX_CONNECTIONS_PER_TORRENT, 			"Max.Peer.Connections.Per.Torrent" );
 		external_to_internal_key_map.put( CORE_PARAM_INT_MAX_DOWNLOADS, 						"max downloads" );

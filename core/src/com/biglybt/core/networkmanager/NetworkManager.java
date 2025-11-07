@@ -109,30 +109,30 @@ public class NetworkManager {
 
     				 USE_REQUEST_LIMITING					= COConfigurationManager.getBooleanParameter("Use Request Limiting");
 
-    				 max_upload_rate_bps_normal = COConfigurationManager.getIntParameter( "Max Upload Speed KBs" ) * 1024;
+    				 max_upload_rate_bps_normal = COConfigurationManager.getLongParameter( "Max Upload Speed KBs" ) * 1024;
     				 if( max_upload_rate_bps_normal < 1024 )  max_upload_rate_bps_normal = UNLIMITED_RATE;
     				 if( max_upload_rate_bps_normal > UNLIMITED_RATE )  max_upload_rate_bps_normal = UNLIMITED_RATE;
 
-    				 max_lan_upload_rate_bps = COConfigurationManager.getIntParameter( "Max LAN Upload Speed KBs" ) * 1024;
+    				 max_lan_upload_rate_bps = COConfigurationManager.getLongParameter( "Max LAN Upload Speed KBs" ) * 1024;
     				 if( max_lan_upload_rate_bps < 1024 )  max_lan_upload_rate_bps = UNLIMITED_RATE;
     				 if( max_lan_upload_rate_bps > UNLIMITED_RATE )  max_lan_upload_rate_bps = UNLIMITED_RATE;
 
 
-    				 max_upload_rate_bps_seeding_only = COConfigurationManager.getIntParameter( "Max Upload Speed Seeding KBs" ) * 1024;
+    				 max_upload_rate_bps_seeding_only = COConfigurationManager.getLongParameter( "Max Upload Speed Seeding KBs" ) * 1024;
     				 if( max_upload_rate_bps_seeding_only < 1024 )  max_upload_rate_bps_seeding_only = UNLIMITED_RATE;
     				 if( max_upload_rate_bps_seeding_only > UNLIMITED_RATE )  max_upload_rate_bps_seeding_only = UNLIMITED_RATE;
 
     				 seeding_only_mode_allowed = COConfigurationManager.getBooleanParameter( "enable.seedingonly.upload.rate" );
 
 
-    				 external_max_download_rate_bps = max_download_rate_bps = (int)(COConfigurationManager.getIntParameter( "Max Download Speed KBs" ) * 1024); // leave 5KiB/s room for the request limiting
+    				 external_max_download_rate_bps = max_download_rate_bps = (COConfigurationManager.getLongParameter( "Max Download Speed KBs" ) * 1024); // leave 5KiB/s room for the request limiting
     				 if( max_download_rate_bps < 1024 || max_download_rate_bps > UNLIMITED_RATE)
     					 max_download_rate_bps = UNLIMITED_RATE;
     				 else if(USE_REQUEST_LIMITING && FeatureAvailability.isRequestLimitingEnabled())
     					 max_download_rate_bps += Math.max(max_download_rate_bps * 0.1, 5*1024);
 
     				 lan_rate_enabled = COConfigurationManager.getBooleanParameter("LAN Speed Enabled");
-    				 max_lan_download_rate_bps = COConfigurationManager.getIntParameter( "Max LAN Download Speed KBs" ) * 1024;
+    				 max_lan_download_rate_bps = COConfigurationManager.getLongParameter( "Max LAN Download Speed KBs" ) * 1024;
     				 if( max_lan_download_rate_bps < 1024 )  max_lan_download_rate_bps = UNLIMITED_RATE;
     				 if( max_lan_download_rate_bps > UNLIMITED_RATE )  max_lan_download_rate_bps = UNLIMITED_RATE;
 

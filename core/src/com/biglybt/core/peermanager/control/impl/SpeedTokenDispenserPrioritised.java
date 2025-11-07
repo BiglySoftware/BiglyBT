@@ -30,13 +30,13 @@ SpeedTokenDispenserPrioritised
 	implements SpeedTokenDispenser
 {
 	// crude TBF implementation
-	private int		rateKiB;
+	private long		rateKiB;
 	{
 		COConfigurationManager.addAndFireParameterListeners(new String[] { "Max Download Speed KBs", "Use Request Limiting" }, new ParameterListener()
 		{
 			@Override
 			public void parameterChanged(String parameterName) {
-				rateKiB = COConfigurationManager.getIntParameter("Max Download Speed KBs");
+				rateKiB = COConfigurationManager.getLongParameter("Max Download Speed KBs");
 				if (!COConfigurationManager.getBooleanParameter("Use Request Limiting") || !FeatureAvailability.isRequestLimitingEnabled())
 					rateKiB = 0;
 

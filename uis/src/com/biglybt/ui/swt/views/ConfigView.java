@@ -1738,6 +1738,10 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 			} else if (param instanceof IntParameterImpl) {
 
 				swt_param = new IntSwtParameter(curComposite, (IntParameterImpl) param);
+				
+			} else if (param instanceof LongParameterImpl) {
+
+				swt_param = new LongSwtParameter(curComposite, (LongParameterImpl) param);
 
 			} else if (param instanceof FloatParameterImpl) {
 

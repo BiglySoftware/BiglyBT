@@ -192,7 +192,7 @@ DownloadManagerAvailabilityImpl
 			    			}
 
 			    			@Override
-						    public int
+						    public long
 			    			getUploadSpeedKBSec(
 			    				boolean	estimate )
 			    			{

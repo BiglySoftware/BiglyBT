@@ -56,7 +56,7 @@ TRTrackerAnnouncerDataProvider
 	public int
 	getConnectedConnectionCount();
 
-	public int
+	public long
 	getUploadSpeedKBSec(
 		boolean	estimate );
 	

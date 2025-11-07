@@ -721,7 +721,7 @@ ExternalSeedPlugin
 			});
 	}
 
-	public int
+	public long
 	getGlobalDownloadRateBytesPerSec()
 	{
 		return( dm_stats.getDataAndProtocolReceiveRate());

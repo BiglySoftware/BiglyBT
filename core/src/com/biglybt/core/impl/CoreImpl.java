@@ -602,7 +602,7 @@ CoreImpl
 								}
 	
 								@Override
-								public int
+								public long
 								getCurrentDataUploadSpeed(
 									int	average_period )
 								{
@@ -632,7 +632,7 @@ CoreImpl
 		                        }
 	
 		                        @Override
-		                        public int
+		                        public long
 		                        getCurrentDataDownloadSpeed(
 		                        	int	average_period )
 		                        {
@@ -645,18 +645,18 @@ CoreImpl
 		                        }
 	
 		                        @Override
-		                        public int
+		                        public long
 								getCurrentUploadLimit()
 								{
 									String key = TransferSpeedValidator.getActiveUploadParameter( global_manager );
 	
-									int	k_per_second = COConfigurationManager.getIntParameter( key );
+									long	k_per_second = COConfigurationManager.getLongParameter( key );
 	
-									int	bytes_per_second;
+									long	bytes_per_second;
 	
 									if ( k_per_second == 0 ){
 	
-										bytes_per_second = Integer.MAX_VALUE;
+										bytes_per_second = Long.MAX_VALUE;
 	
 									}else{
 	
@@ -669,15 +669,15 @@ CoreImpl
 								@Override
 								public void
 								setCurrentUploadLimit(
-									int		bytes_per_second )
+									long		bytes_per_second )
 								{
 									if ( bytes_per_second != getCurrentUploadLimit()){
 	
 										String key = TransferSpeedValidator.getActiveUploadParameter( global_manager );
 	
-										int	k_per_second;
+										long	k_per_second;
 	
-										if ( bytes_per_second == Integer.MAX_VALUE ){
+										if ( bytes_per_second == Integer.MAX_VALUE ||  bytes_per_second == Long.MAX_VALUE){
 	
 											k_per_second	= 0;
 	
@@ -696,7 +696,7 @@ CoreImpl
 								}
 	
 								@Override
-								public int
+								public long
 								getCurrentDownloadLimit()
 								{
 									return( TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond());
@@ -705,9 +705,9 @@ CoreImpl
 								@Override
 								public void
 								setCurrentDownloadLimit(
-									int		bytes_per_second )
+									long		bytes_per_second )
 								{
-									if ( bytes_per_second == Integer.MAX_VALUE ){
+									if ( bytes_per_second == Integer.MAX_VALUE || bytes_per_second == Long.MAX_VALUE){
 	
 										bytes_per_second = 0;
 									}
@@ -730,9 +730,9 @@ CoreImpl
 									return(
 										new Object[]{
 											up_key,
-											new Integer( COConfigurationManager.getIntParameter( up_key )),
+											new Long( COConfigurationManager.getLongParameter( up_key )),
 											down_key,
-											new Integer( COConfigurationManager.getIntParameter( down_key )),
+											new Long( COConfigurationManager.getLongParameter( down_key )),
 										});
 								}
 	
@@ -759,12 +759,12 @@ CoreImpl
 	
 										if ( do_up ){
 	
-											COConfigurationManager.setParameter((String)bits[0], ((Integer)bits[1]).intValue());
+											COConfigurationManager.setParameter((String)bits[0], ((Number)bits[1]).longValue());
 										}
 	
 										if ( do_down ){
 	
-											COConfigurationManager.setParameter((String)bits[2], ((Integer)bits[3]).intValue());
+											COConfigurationManager.setParameter((String)bits[2], ((Number)bits[3]).longValue());
 										}
 	
 									}finally{

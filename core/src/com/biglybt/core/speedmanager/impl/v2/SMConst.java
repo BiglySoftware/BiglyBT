@@ -40,7 +40,7 @@ public class SMConst
      * @param rateBytesPerSec -
      * @return - "bytes/sec" rate.
      */
-    public static int checkForMinUploadValue(int rateBytesPerSec){
+    public static long checkForMinUploadValue(long rateBytesPerSec){
 
         if( rateBytesPerSec < MIN_UPLOAD_BYTES_PER_SEC ){
             return MIN_UPLOAD_BYTES_PER_SEC;
@@ -48,7 +48,7 @@ public class SMConst
         return rateBytesPerSec;
     }
 
-    public static int checkForMinDownloadValue(int rateBytesPerSec){
+    public static long checkForMinDownloadValue(long rateBytesPerSec){
         if( rateBytesPerSec < MIN_DOWNLOAD_BYTES_PER_SEC ){
             return MIN_DOWNLOAD_BYTES_PER_SEC;
         }
@@ -60,14 +60,14 @@ public class SMConst
      * @param maxBytesPerSec -
      * @return - minRate.
      */
-    public static int calculateMinUpload(int maxBytesPerSec){
+    public static long calculateMinUpload(long maxBytesPerSec){
 
-        int min = maxBytesPerSec/10;
+    	long min = maxBytesPerSec/10;
         return checkForMinUploadValue( min );
     }
 
-    public static int calculateMinDownload(int maxBytesPerSec){
-        int min = maxBytesPerSec/10;
+    public static long calculateMinDownload(long maxBytesPerSec){
+    	long min = maxBytesPerSec/10;
         return checkForMinDownloadValue( min );
     }
 
@@ -82,7 +82,7 @@ public class SMConst
     public static SpeedManagerLimitEstimate filterEstimate(SpeedManagerLimitEstimate estimate, int startValue){
 
 
-        int estBytesPerSec = filterLimit(estimate.getBytesPerSec(), startValue);
+    	long estBytesPerSec = filterLimit(estimate.getBytesPerSec(), startValue);
 
         return new FilteredLimitEstimate(estBytesPerSec,
                                         estimate.getEstimateType(),
@@ -93,8 +93,8 @@ public class SMConst
     }//filterDownEstimate
 
 
-    public static int filterLimit(int bytesPerSec, int startValue){
-        int retVal = Math.max(bytesPerSec, startValue);
+    public static long filterLimit(long bytesPerSec, int startValue){
+    	long retVal = Math.max(bytesPerSec, startValue);
 
         // Zero is unlimited. Don't filter that value.
         if( bytesPerSec==0 ){
@@ -106,13 +106,13 @@ public class SMConst
 
     static class FilteredLimitEstimate implements SpeedManagerLimitEstimate
     {
-        final int bytesPerSec;
+        final long bytesPerSec;
         final float type;
         final float metric;
         final long when;
         final String name;
 
-        public FilteredLimitEstimate(int _bytesPerSec, float _type, float _metric, long _when, String _name){
+        public FilteredLimitEstimate(long _bytesPerSec, float _type, float _metric, long _when, String _name){
             bytesPerSec = _bytesPerSec;
             type = _type;
             metric = _metric;
@@ -121,7 +121,7 @@ public class SMConst
         }
 
         @Override
-        public int getBytesPerSec() {
+        public long getBytesPerSec() {
             return bytesPerSec;
         }
 

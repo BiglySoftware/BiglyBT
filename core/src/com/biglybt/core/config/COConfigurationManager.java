@@ -35,8 +35,8 @@ import com.biglybt.core.util.protocol.AzURLStreamHandlerFactory;
 public class
 COConfigurationManager
 {
-	public static final int CONFIG_DEFAULT_MIN_MAX_UPLOAD_SPEED			= 5;
-	public static final int CONFIG_DEFAULT_MAX_DOWNLOAD_SPEED			= 0;
+	public static final long CONFIG_DEFAULT_MIN_MAX_UPLOAD_SPEED		= 5;
+	public static final long CONFIG_DEFAULT_MAX_DOWNLOAD_SPEED			= 0;
 	public static final int	CONFIG_DEFAULT_MAX_CONNECTIONS_PER_TORRENT	= 50;
 	public static final int	CONFIG_DEFAULT_MAX_CONNECTIONS_GLOBAL		= 250;
 

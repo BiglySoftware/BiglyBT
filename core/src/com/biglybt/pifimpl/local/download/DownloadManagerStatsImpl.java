@@ -64,41 +64,41 @@ DownloadManagerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getDataReceiveRate()
 	{
 		return( global_manager_stats.getDataReceiveRate());
 	}
 
 	@Override
-	public int
+	public long
 	getProtocolReceiveRate()
 	{
 		return( global_manager_stats.getProtocolReceiveRate());
 	}
 
 	@Override
-	public int
+	public long
 	getDataAndProtocolReceiveRate()
 	{
 		return( global_manager_stats.getDataAndProtocolReceiveRate());
 	}
 	@Override
-	public int
+	public long
 	getDataSendRate()
 	{
 		return( global_manager_stats.getDataSendRate());
 	}
 
 	@Override
-	public int
+	public long
 	getProtocolSendRate()
 	{
 		return( global_manager_stats.getProtocolSendRate());
 	}
 
 	@Override
-	public int
+	public long
 	getDataAndProtocolSendRate()
 	{
 		return( global_manager_stats.getDataAndProtocolSendRate());

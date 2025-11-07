@@ -51,11 +51,11 @@ public final class TransferSpeedValidator
     	UPLOAD_SEEDING_ENABLED_CONFIGKEY,
     };
 
-    private final String configKey;
-    private final Number configValue;
+    private final String	configKey;
+    private final long		configValue;
 
     static boolean auto_upload_enabled;
-		static boolean auto_upload_seeding_enabled;
+	static boolean auto_upload_seeding_enabled;
 
     static boolean seeding_upload_enabled;
 
@@ -92,7 +92,7 @@ public final class TransferSpeedValidator
      * @param configKey Configuration key; must be "Max Upload Speed KBs" or "Max Download Speed KBs"
      * @param value Configuration value to be validated
      */
-    public TransferSpeedValidator(final String configKey, final Number value)
+    public TransferSpeedValidator(final String configKey,long value)
     {
         this.configKey = configKey;
         configValue = value;
@@ -101,12 +101,8 @@ public final class TransferSpeedValidator
     /**
      * Gets the transformed value as an Integer
      */
-    private static Object validate(final String configKey, final Number value)
+    private static long validate(final String configKey, long newValue)
     {
-        //assert value instanceof Number;
-
-        int newValue = value.intValue();
-
         if(newValue < 0)
         {
             newValue = 0;
@@ -114,7 +110,7 @@ public final class TransferSpeedValidator
 
         if(configKey == UPLOAD_CONFIGKEY)
         {
-            final int downValue = COConfigurationManager.getIntParameter(DOWNLOAD_CONFIGKEY);
+            final long downValue = COConfigurationManager.getLongParameter(DOWNLOAD_CONFIGKEY);
 
             if(
                     newValue != 0 &&
@@ -128,7 +124,7 @@ public final class TransferSpeedValidator
         }
         else if(configKey == DOWNLOAD_CONFIGKEY)
         {
-            final int upValue = COConfigurationManager.getIntParameter(UPLOAD_CONFIGKEY);
+            final long upValue = COConfigurationManager.getLongParameter(UPLOAD_CONFIGKEY);
 
             if(
                     upValue != 0 &&
@@ -155,7 +151,7 @@ public final class TransferSpeedValidator
             throw new IllegalArgumentException("Invalid Configuration Key; use key for max upload and max download");
         }
 
-        return new Integer(newValue);
+        return newValue;
         //return value;
     }
 
@@ -163,7 +159,7 @@ public final class TransferSpeedValidator
      * Validates the given configuration key/value pair and returns the validated value
      * @return Modified configuration value that conforms to validation as an Integer
      */
-    public Object getValue()
+    public long getValue()
     {
         return validate(configKey, configValue);
     }
@@ -188,15 +184,15 @@ public final class TransferSpeedValidator
     	return( DOWNLOAD_CONFIGKEY );
     }
 
-	public static int
+	public static long
 	getGlobalDownloadRateLimitBytesPerSecond()
 	{
-		return( COConfigurationManager.getIntParameter( getDownloadParameter()) * 1024 );
+		return( COConfigurationManager.getLongParameter( getDownloadParameter()) * 1024 );
 	}
 
 	public static void
 	setGlobalDownloadRateLimitBytesPerSecond(
-		int		bytes_per_second )
+		long	bytes_per_second )
 	{
 		COConfigurationManager.setParameter( getDownloadParameter(), (bytes_per_second+1023)/1024 );
 	}

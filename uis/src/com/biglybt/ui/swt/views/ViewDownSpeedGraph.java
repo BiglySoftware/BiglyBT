@@ -82,10 +82,10 @@ public class ViewDownSpeedGraph
 
 		int swarms_peer_speed = (int) stats.getTotalSwarmsPeerRate(true, false);
 
-		downSpeedGraphic.addIntsValue(new int[] {
+		downSpeedGraphic.addLongsValue(new long[] {
 			stats.getDataReceiveRate() + stats.getProtocolReceiveRate(),
 			stats.getProtocolReceiveRate(),
-			COConfigurationManager.getIntParameter("Max Download Speed KBs") * DisplayFormatters.getKinB(),
+			COConfigurationManager.getLongParameter("Max Download Speed KBs") * DisplayFormatters.getKinB(),
 			swarms_peer_speed
 		});
 	}

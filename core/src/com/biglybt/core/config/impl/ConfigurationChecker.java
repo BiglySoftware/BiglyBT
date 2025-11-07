@@ -645,8 +645,8 @@ ConfigurationChecker
 	    	changed = true;
 	    }
 
-	    int maxUpSpeed 		= COConfigurationManager.getIntParameter("Max Upload Speed KBs",0);
-	    int maxDownSpeed 	= COConfigurationManager.getIntParameter("Max Download Speed KBs",0);
+	    long maxUpSpeed 	= COConfigurationManager.getLongParameter("Max Upload Speed KBs",0);
+	    long maxDownSpeed 	= COConfigurationManager.getLongParameter("Max Download Speed KBs",0);
 
 	    if(	maxUpSpeed > 0 &&
 	    	maxUpSpeed < COConfigurationManager.CONFIG_DEFAULT_MIN_MAX_UPLOAD_SPEED &&

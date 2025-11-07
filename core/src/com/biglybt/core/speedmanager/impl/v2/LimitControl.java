@@ -20,14 +20,14 @@ package com.biglybt.core.speedmanager.impl.v2;
 
 public interface LimitControl
 {
-    SMUpdate adjust(float amount);
+    SMUpdate adjust(double amount);
 
-    void updateLimits(int upMax, int upMin, int downMax, int downMin);
+    void updateLimits(long upMax, long upMin, long downMax, long downMin);
 
     void updateSeedSettings(float downloadModeUsed);
 
-    void updateStatus(int currUpLimit, SaturatedMode uploadUsage,
-                             int currDownLimit, SaturatedMode downloadUsage,
+    void updateStatus(long currUpLimit, SaturatedMode uploadUsage,
+    		long currDownLimit, SaturatedMode downloadUsage,
                              TransferMode transferMode);
 
     void setDownloadUnlimitedMode(boolean isUnlimited);

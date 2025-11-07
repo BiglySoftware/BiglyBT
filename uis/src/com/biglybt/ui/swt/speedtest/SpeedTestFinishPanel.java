@@ -85,9 +85,9 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         
         //show the setting for upload speed
         SpeedManagerLimitEstimate upEst = speedManager.getEstimatedUploadCapacityBytesPerSec();
-        int maxUploadKbs = upEst.getBytesPerSec()/kinb;
+        long maxUploadKbs = upEst.getBytesPerSec()/kinb;
         SpeedManagerLimitEstimate downEst = speedManager.getEstimatedDownloadCapacityBytesPerSec();
-        int maxDownloadKbs = downEst.getBytesPerSec()/kinb;
+        long maxDownloadKbs = downEst.getBytesPerSec()/kinb;
 
         //boolean setting.
         boolean autoSpeedEnabled = COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_ENABLED_CONFIGKEY );
@@ -192,7 +192,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
      * @param maxKbps - bits/sec
      * @param estimate -
      */
-    private void createDataLine(Composite panel, String label, int maxKbps, SpeedManagerLimitEstimate estimate) {
+    private void createDataLine(Composite panel, String label, long maxKbps, SpeedManagerLimitEstimate estimate) {
         GridData gridData;
         Label c1 = new Label(panel, SWT.NULL);//max upload
         gridData = new GridData();

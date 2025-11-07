@@ -1332,13 +1332,13 @@ public abstract class TableViewSWT_Common
 		int originalHeight = tv.getRowDefaultHeight();
 		SpeedScaleShell optionShell = new SpeedScaleShell() {
 			@Override
-			public void setValue(int value) {
+			public void setValue(long value) {
 				super.setValue(value);
-				Utils.execSWTThreadLater(100, () -> tv.setRowHeight(getValue()));
+				Utils.execSWTThreadLater(100, () -> tv.setRowHeight((int)getValue()));
 			}
 
 			@Override
-			public String getStringValue(int value, String sValue) {
+			public String getStringValue(long value, String sValue) {
 				if (sValue != null) {
 					return sValue;
 				}
@@ -1355,7 +1355,7 @@ public abstract class TableViewSWT_Common
 					}), i * lineHeight + 2);
 		}
 		if (optionShell.open(null, tv.getRowDefaultHeight(), false)) {
-			tv.setRowHeight(optionShell.getValue());
+			tv.setRowHeight((int)optionShell.getValue());
 		} else {
 			tv.setRowHeight(originalHeight);
 		}

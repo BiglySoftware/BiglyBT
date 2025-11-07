@@ -77,9 +77,9 @@ RPPluginConfig
 		delegate = (PluginConfig)_delegate;
 
 		cached_property_names 	= new String[]{
-				CORE_PARAM_INT_MAX_UPLOAD_SPEED_KBYTES_PER_SEC,
-				CORE_PARAM_INT_MAX_UPLOAD_SPEED_SEEDING_KBYTES_PER_SEC,
-				CORE_PARAM_INT_MAX_DOWNLOAD_SPEED_KBYTES_PER_SEC,
+				CORE_PARAM_LONG_MAX_UPLOAD_SPEED_KBYTES_PER_SEC,
+				CORE_PARAM_LONG_MAX_UPLOAD_SPEED_SEEDING_KBYTES_PER_SEC,
+				CORE_PARAM_LONG_MAX_DOWNLOAD_SPEED_KBYTES_PER_SEC,
 				CORE_PARAM_INT_MAX_CONNECTIONS_PER_TORRENT,
 				CORE_PARAM_INT_MAX_CONNECTIONS_GLOBAL,
 				CORE_PARAM_INT_MAX_DOWNLOADS,
@@ -90,9 +90,9 @@ RPPluginConfig
 			};
 
 		cached_property_values 	= new Object[]{
-				new Integer( delegate.getCoreIntParameter( cached_property_names[0] )),
-				new Integer( delegate.getCoreIntParameter( cached_property_names[1] )),
-				new Integer( delegate.getCoreIntParameter( cached_property_names[2] )),
+				new Long( delegate.getCoreLongParameter( cached_property_names[0] )),
+				new Long( delegate.getCoreLongParameter( cached_property_names[1] )),
+				new Long( delegate.getCoreLongParameter( cached_property_names[2] )),
 				new Integer( delegate.getCoreIntParameter( cached_property_names[3] )),
 				new Integer( delegate.getCoreIntParameter( cached_property_names[4] )),
 				new Integer( delegate.getCoreIntParameter( cached_property_names[5] )),
@@ -142,6 +142,10 @@ RPPluginConfig
 
 			return( new RPReply( new Integer( delegate.getPluginIntParameter((String)params[0],((Integer)params[1]).intValue()))));
 
+		}else if ( method.equals( "getPluginLongParameter[String,long]")){
+
+			return( new RPReply( new Long( delegate.getPluginLongParameter((String)params[0],((Long)params[1]).longValue()))));
+
 		}else if ( method.equals( "getPluginStringParameter[String,String]")){
 
 			return( new RPReply( delegate.getPluginStringParameter((String)params[0],(String)params[1])));
@@ -149,6 +153,12 @@ RPPluginConfig
 		}else if ( method.equals( "setPluginParameter[String,int]")){
 
 			delegate.setPluginParameter((String)params[0],((Integer)params[1]).intValue());
+
+			return( null );
+			
+		}else if ( method.equals( "setPluginParameter[String,long]")){
+
+			delegate.setPluginParameter((String)params[0],((Long)params[1]).longValue());
 
 			return( null );
 

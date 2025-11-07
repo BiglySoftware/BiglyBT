@@ -40,8 +40,8 @@ public class PingSpaceMapper
 
     GridRegion[][] gridRegion; //here upIndex,downIndex
 
-    int lastDownloadBitsPerSec;
-    int lastUploadBitsPerSec;
+    long lastDownloadBitsPerSec;
+    long lastUploadBitsPerSec;
 
     final int goodPingInMilliSec;
     final int badPingInMilliSec;
@@ -84,13 +84,13 @@ public class PingSpaceMapper
      * @param bitsPerSec -
      * @return - mesh index.
      */
-    private int convertBitsPerSec2meshIndex(int bitsPerSec){
+    private long convertBitsPerSec2meshIndex(long bitsPerSec){
 
         if( bitsPerSec<0){
             return 0;
         }
 
-        int bytesPerSec = bitsPerSec/1024;
+        long bytesPerSec = bitsPerSec/1024;
 
         if( bytesPerSec<100){
             return bytesPerSec/10;
@@ -127,15 +127,15 @@ public class PingSpaceMapper
         return bytesPerSec*1024;
     }//convertMeshIndex2bitsPerSec
 
-    public void setCurrentTransferRates(int downloadBitPerSec, int uploadBitsPerSec){
+    public void setCurrentTransferRates(long downloadBitPerSec, long uploadBitsPerSec){
         lastDownloadBitsPerSec = downloadBitPerSec;
         lastUploadBitsPerSec = uploadBitsPerSec;
     }
 
     public void addMetricToMap(int metric){
 
-        int downIndex = convertBitsPerSec2meshIndex(lastDownloadBitsPerSec);
-        int upIndex = convertBitsPerSec2meshIndex(lastUploadBitsPerSec);
+        int downIndex = (int)convertBitsPerSec2meshIndex(lastDownloadBitsPerSec);
+        int upIndex = (int)convertBitsPerSec2meshIndex(lastUploadBitsPerSec);
 
         totalPointsInMap++;
 

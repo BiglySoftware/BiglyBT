@@ -35,7 +35,7 @@ public class Scale {
   private int pixelsPerLevel = 50;
 
   //The max value
-  private int max = 1;
+  private long max = 1;
 
   //The displayed number of levels
   private int nbLevels;
@@ -95,14 +95,14 @@ public class Scale {
 	  return( isSIIECSensitive );
   }
 
-  public void setMax(int max) {
+  public void setMax(long max) {
     this.max = max;
     if(max < 1)
       max = 1;
     computeValues();
   }
 
-  public int getMax() {
+  public long getMax() {
     return this.max;
   }
 
@@ -204,7 +204,7 @@ public class Scale {
     return( scaleValues );
   }
 
-  public int getScaledValue(int value) {
+  public int getScaledValue(long value) {
     return(int)( ((long)value * nbPixels) / displayedMax );
   }
 

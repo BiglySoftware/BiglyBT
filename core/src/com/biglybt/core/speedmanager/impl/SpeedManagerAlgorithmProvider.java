@@ -91,10 +91,10 @@ SpeedManagerAlgorithmProvider
 		 * @return speed in bytes/sec
 		 */
 
-	public int
+	public long
 	getCurrentChokeSpeed();
 
-	public int
+	public long
 	getMaxUploadSpeed();
 
 		/**

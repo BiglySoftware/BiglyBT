@@ -283,8 +283,8 @@ SpeedManagerImpl
 
 					if ( !pm_enabled || contacts_array.length == 0 ){
 
-						int	x	= (adapter.getCurrentDataUploadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolUploadSpeed(SPEED_AVERAGE_PERIOD));
-						int	y 	= (adapter.getCurrentDataDownloadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolDownloadSpeed(SPEED_AVERAGE_PERIOD));
+						long	x	= (adapter.getCurrentDataUploadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolUploadSpeed(SPEED_AVERAGE_PERIOD));
+						long	y 	= (adapter.getCurrentDataDownloadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolDownloadSpeed(SPEED_AVERAGE_PERIOD));
 
 						for (int i=0;i<ping_mappers.length;i++){
 
@@ -353,7 +353,7 @@ SpeedManagerImpl
 	@Override
 	public void
 	setEstimatedUploadCapacityBytesPerSec(
-		int		bytes_per_sec,
+		long	bytes_per_sec,
 		float	metric )
 	{
 		ping_mapper.setEstimatedUploadCapacityBytesPerSec( bytes_per_sec, metric );
@@ -369,8 +369,8 @@ SpeedManagerImpl
 	@Override
 	public void
 	setEstimatedDownloadCapacityBytesPerSec(
-		int		bytes_per_sec,
-		float	metric )
+		long		bytes_per_sec,
+		float		metric )
 	{
 		ping_mapper.setEstimatedDownloadCapacityBytesPerSec( bytes_per_sec, metric );
 	}
@@ -704,8 +704,8 @@ SpeedManagerImpl
 		int			rtt,
 		boolean		re_base )
 	{
-		int	x	= (adapter.getCurrentDataUploadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolUploadSpeed(SPEED_AVERAGE_PERIOD));
-		int	y 	= (adapter.getCurrentDataDownloadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolDownloadSpeed(SPEED_AVERAGE_PERIOD));
+		long	x	= (adapter.getCurrentDataUploadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolUploadSpeed(SPEED_AVERAGE_PERIOD));
+		long	y 	= (adapter.getCurrentDataDownloadSpeed(SPEED_AVERAGE_PERIOD) + adapter.getCurrentProtocolDownloadSpeed(SPEED_AVERAGE_PERIOD));
 
 		for (int i=0;i<ping_mappers.length;i++){
 
@@ -864,20 +864,20 @@ SpeedManagerImpl
 		 * @return speed in bytes/sec
 		 */
 
-	public int
+	public long
 	getCurrentChokeSpeed()
 	{
 		return( provider.getCurrentChokeSpeed());
 	}
 
-	public int
+	public long
 	getMaxUploadSpeed()
 	{
 		return( provider.getMaxUploadSpeed());
 	}
 
 	@Override
-	public int
+	public long
 	getCurrentUploadLimit()
 	{
 		return( adapter.getCurrentUploadLimit());
@@ -886,7 +886,7 @@ SpeedManagerImpl
 	@Override
 	public void
 	setCurrentUploadLimit(
-		int		bytes_per_second )
+			long		bytes_per_second )
 	{
 		if ( enabled ){
 
@@ -895,7 +895,7 @@ SpeedManagerImpl
 	}
 
 	@Override
-	public int
+	public long
 	getCurrentDownloadLimit()
 	{
 		return( adapter.getCurrentDownloadLimit());
@@ -904,7 +904,7 @@ SpeedManagerImpl
 	@Override
 	public void
 	setCurrentDownloadLimit(
-		int bytes_per_second)
+		long bytes_per_second)
 	{
 		if ( enabled ){
 
@@ -913,28 +913,28 @@ SpeedManagerImpl
 	}
 
 	@Override
-	public int
+	public long
 	getCurrentProtocolUploadSpeed()
 	{
 		return( adapter.getCurrentProtocolUploadSpeed(-1));
 	}
 
 	@Override
-	public int
+	public long
 	getCurrentDataUploadSpeed()
 	{
 		return( adapter.getCurrentDataUploadSpeed(-1));
 	}
 
     @Override
-    public int
+    public long
     getCurrentDataDownloadSpeed()
     {
         return( adapter.getCurrentDataDownloadSpeed(-1) );
     }
 
     @Override
-    public int
+    public long
     getCurrentProtocolDownloadSpeed()
     {
         return( adapter.getCurrentProtocolDownloadSpeed(-1) );
@@ -945,10 +945,10 @@ SpeedManagerImpl
     {
     	if ( COConfigurationManager.getBooleanParameter( "Auto Adjust Transfer Defaults" )){
 
-       		int	up_limit_bytes_per_sec 		= getEstimatedUploadCapacityBytesPerSec().getBytesPerSec();
-       		int	down_limit_bytes_per_sec 	= getEstimatedDownloadCapacityBytesPerSec().getBytesPerSec();
+    		long	up_limit_bytes_per_sec 		= getEstimatedUploadCapacityBytesPerSec().getBytesPerSec();
+    		long	down_limit_bytes_per_sec 	= getEstimatedDownloadCapacityBytesPerSec().getBytesPerSec();
 
-       		int up_kbs = up_limit_bytes_per_sec/1024;
+    		long up_kbs = up_limit_bytes_per_sec/1024;
 
 
        		final int[][] settings = {
@@ -1209,14 +1209,14 @@ SpeedManagerImpl
 		}
 
 		@Override
-		public int
+		public long
 		getCurrentChokeSpeed()
 		{
 			return( 0 );
 		}
 
 		@Override
-		public int
+		public long
 		getMaxUploadSpeed()
 		{
 			return( 0 );

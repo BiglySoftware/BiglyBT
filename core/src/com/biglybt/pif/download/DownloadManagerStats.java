@@ -51,22 +51,22 @@ DownloadManagerStats
 		 * @return
 		 */
 
-	public int
+	public long
 	getDataReceiveRate();
 
-	public int
+	public long
 	getProtocolReceiveRate();
 
-	public int
+	public long
 	getDataAndProtocolReceiveRate();
 
-	public int
+	public long
 	getDataSendRate();
 
-	public int
+	public long
 	getProtocolSendRate();
 
-	public int
+	public long
 	getDataAndProtocolSendRate();
 
 		/**

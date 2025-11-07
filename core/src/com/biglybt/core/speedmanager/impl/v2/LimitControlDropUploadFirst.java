@@ -21,16 +21,16 @@ package com.biglybt.core.speedmanager.impl.v2;
 public class LimitControlDropUploadFirst implements LimitControl
 {
 
-    private float valueUp=0.5f;//number between 0.0 - 1.0
-    int upMax;
-    int upCurr;
-    int upMin;
+    private double valueUp=0.5f;//number between 0.0 - 1.0
+    long upMax;
+    long upCurr;
+    long upMin;
     SaturatedMode upUsage;
 
-    private float valueDown=1.0f;
-    int downMax;
-    int downCurr;
-    int downMin;
+    private double valueDown=1.0f;
+    long downMax;
+    long downCurr;
+    long downMin;
     SaturatedMode downUsage;
 
 
@@ -51,8 +51,8 @@ public class LimitControlDropUploadFirst implements LimitControl
 
 
     @Override
-    public void updateStatus(int currUpLimit, SaturatedMode uploadUsage,
-                             int currDownLimit, SaturatedMode downloadUsage,
+    public void updateStatus(long currUpLimit, SaturatedMode uploadUsage,
+    		long currDownLimit, SaturatedMode downloadUsage,
                              TransferMode transferMode){
         upCurr = currUpLimit;
         upUsage = uploadUsage;
@@ -77,7 +77,7 @@ public class LimitControlDropUploadFirst implements LimitControl
 
 
     @Override
-    public void updateLimits(int _upMax, int _upMin, int _downMax, int _downMin){
+    public void updateLimits(long _upMax, long _upMin, long _downMax, long _downMin){
 
         //verify the limits.
         if(_upMax < SMConst.START_UPLOAD_RATE_MAX ){
@@ -102,9 +102,9 @@ public class LimitControlDropUploadFirst implements LimitControl
     }
 
 
-    private int usedUploadCapacity(){
+    private long usedUploadCapacity(){
 
-        float usedUpMax = upMax;
+        double usedUpMax = upMax;
         if( mode.getMode() == TransferMode.State.SEEDING ){
             usedUpMax = upMax;
         }else if( mode.getMode()==TransferMode.State.DOWNLOADING ){
@@ -131,16 +131,16 @@ public class LimitControlDropUploadFirst implements LimitControl
     }
 
     @Override
-    public SMUpdate adjust(float amount ){
+    public SMUpdate adjust(double amount ){
 
         boolean increase = true;
         if( amount<0.0f ){
             increase = false;
         }
 
-        float factor = amount/10.0f;
-        int usedUpMax = usedUploadCapacity();
-        float gamma = (float) usedUpMax/downMax;
+        double factor = amount/10.0f;
+        long usedUpMax = usedUploadCapacity();
+        double gamma = (double) usedUpMax/downMax;
 
         if( increase ){
             //increase download first
@@ -165,16 +165,16 @@ public class LimitControlDropUploadFirst implements LimitControl
     }//adjust
 
     private SMUpdate update(){
-        int upLimit;
-        int downLimit;
+    	long upLimit;
+    	long downLimit;
 
-        int usedUpMax = usedUploadCapacity();
+        long usedUpMax = usedUploadCapacity();
 
 
         upLimit = Math.round( ((usedUpMax-upMin)*valueUp)+upMin );
 
         //ToDo: remove diagnotics later.
-        if( upLimit>upMax || Float.isNaN(valueUp)){
+        if( upLimit>upMax || Double.isNaN(valueUp)){
             SpeedManagerLogger.trace("Limit - should upload have an unlimited condition? Setting to usedUpMax");
             upLimit = usedUpMax;
         }
@@ -204,12 +204,12 @@ public class LimitControlDropUploadFirst implements LimitControl
         return new SMUpdate(upLimit,true,downLimit,true);
     }
 
-    private float calculateNewValue(float curr, float amount){
+    private double calculateNewValue(double curr, double amount){
 
-        if(Float.isNaN(curr)){
+        if(Double.isNaN(curr)){
             SpeedManagerLogger.trace("calculateNewValue - curr=NaN");
         }
-        if(Float.isNaN(amount)){
+        if(Double.isNaN(amount)){
             SpeedManagerLogger.trace("calculateNewValue = amount=NaN");
         }
 
@@ -221,7 +221,7 @@ public class LimitControlDropUploadFirst implements LimitControl
             curr = 0.0f;
         }
 
-        if(Float.isNaN(curr)){
+        if(Double.isNaN(curr)){
             curr=0.0f;
         }
 

@@ -41,8 +41,8 @@ public class SMSearchLogger
 
         //get the adapter values.
         SpeedManagerAlgorithmProviderAdapter adpter = SMInstance.getInstance().getAdapter();
-        int adptCurrUpLimit = adpter.getCurrentUploadLimit();
-        int adptCurrDownLimit = adpter.getCurrentDownloadLimit();
+        long adptCurrUpLimit = adpter.getCurrentUploadLimit();
+        long adptCurrDownLimit = adpter.getCurrentDownloadLimit();
 
         //get the COConfigurationManager values.
         SMConfigurationAdapter conf = SMInstance.getInstance().getConfigManager();

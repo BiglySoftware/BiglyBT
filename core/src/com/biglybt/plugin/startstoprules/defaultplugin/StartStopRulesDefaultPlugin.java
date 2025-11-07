@@ -194,9 +194,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private int _maxActiveWhenSeeding;
 
-	private int globalDownloadLimit;
-	private int globalUploadLimit;
-	private int globalUploadWhenSeedingLimit;
+	private long globalDownloadLimit;
+	private long globalUploadLimit;
+	private long globalUploadWhenSeedingLimit;
 
 	private int maxConfiguredDownloads;
 	private boolean bMaxDownloadIgnoreChecking;
@@ -1024,9 +1024,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			bAutoStart0Peers = plugin_config.getUnsafeBooleanParameter("StartStopManager_bAutoStart0Peers");
 
 
-			globalDownloadLimit = plugin_config.getUnsafeIntParameter("Max Download Speed KBs", 0);
-			globalUploadLimit = plugin_config.getUnsafeIntParameter("Max Upload Speed KBs", 0);
-			globalUploadWhenSeedingLimit = plugin_config.getUnsafeBooleanParameter("enable.seedingonly.upload.rate") ? plugin_config.getUnsafeIntParameter("Max Upload Speed Seeding KBs", 0) : globalUploadLimit;
+			globalDownloadLimit = plugin_config.getUnsafeLongParameter("Max Download Speed KBs", 0);
+			globalUploadLimit = plugin_config.getUnsafeLongParameter("Max Upload Speed KBs", 0);
+			globalUploadWhenSeedingLimit = plugin_config.getUnsafeBooleanParameter("enable.seedingonly.upload.rate") ? plugin_config.getUnsafeLongParameter("Max Upload Speed Seeding KBs", 0) : globalUploadLimit;
 
 			bStopOnceBandwidthMet = plugin_config.getUnsafeBooleanParameter("StartStopManager_bStopOnceBandwidthMet");
 
@@ -1383,7 +1383,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 		boolean upLimitProhibitsNewSeeds;
 
-		public int maxUploadSpeed()
+		public long maxUploadSpeed()
 		{
 			return downloading == 0 ? globalUploadWhenSeedingLimit : globalUploadLimit;
 		}
@@ -1516,7 +1516,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				// each torrent to have potentially 3kbps.
 				if (minSpeedPerActive < 3)
 					minSpeedPerActive = 3;
-				maxTorrents = (maxUploadSpeed() / minSpeedPerActive);
+				maxTorrents = (int)(maxUploadSpeed() / minSpeedPerActive);
 				// Allow user to do stupid things like have more slots than their
 				// upload speed can handle
 				if (maxTorrents < maxActive)

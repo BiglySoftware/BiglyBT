@@ -77,7 +77,7 @@ DownloadManagerRateController
 	}
 
 
-	static volatile int rate_limit	= 0;
+	static volatile long rate_limit	= 0;
 
 	static final LimitedRateGroup
 		limiter =
@@ -129,7 +129,7 @@ DownloadManagerRateController
 
 	private static int	ticks_to_sample_start;
 
-	private static int		last_rate_limit;
+	private static long		last_rate_limit;
 	private static double	last_incomplete_average;
 	private static double	last_complete_average;
 	private static double	last_overall_average;
@@ -140,7 +140,7 @@ DownloadManagerRateController
 	private static int	last_tick_processed 	= -1;
 
 	private static long pm_last_bad_limit;
-	private static int	latest_choke;
+	private static long	latest_choke;
 	private static int	wait_until_tick;
 
 	public static String
@@ -386,7 +386,7 @@ DownloadManagerRateController
 
 			if ( last_bad != null ){
 
-				int last_bad_limit = last_bad.getBytesPerSec();
+				long last_bad_limit = last_bad.getBytesPerSec();
 
 				if ( last_bad_limit != pm_last_bad_limit ){
 
@@ -394,7 +394,7 @@ DownloadManagerRateController
 
 					SpeedManagerLimitEstimate[] bad_ups = mapper.getBadUploadHistory();
 
-					int		total 	= last_bad.getBytesPerSec();
+					long	total 	= last_bad.getBytesPerSec();
 					int		count	= 1;
 
 					for ( SpeedManagerLimitEstimate bad: bad_ups ){
@@ -411,7 +411,7 @@ DownloadManagerRateController
 
 					latest_choke = total/count;
 
-					int	new_rate_limit;
+					long	new_rate_limit;
 
 					if ( rate_limit == 0 ){
 
@@ -515,13 +515,13 @@ DownloadManagerRateController
 
 				}finally{
 
-					int	new_rate_limit;
+					long	new_rate_limit;
 
 					if ( action > 0 ){
 
-						int	ceiling = latest_choke==0?DEFAULT_UP_LIMIT:latest_choke;
+						long	ceiling = latest_choke==0?DEFAULT_UP_LIMIT:latest_choke;
 
-						int	diff = ( ceiling - rate_limit )/4;
+						long	diff = ( ceiling - rate_limit )/4;
 
 						if ( diff > MAX_UP_DIFF ){
 
@@ -540,7 +540,7 @@ DownloadManagerRateController
 						}
 					}else if ( action < 0 ){
 
-						int	diff = rate_limit/5;
+						long	diff = rate_limit/5;
 
 						if ( diff > MAX_DOWN_DIFF ){
 

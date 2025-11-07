@@ -36,9 +36,9 @@ GlobalManagerStats
 	/**
 	 * Data Receive Rate over the last 10s
 	 */
-	public int getDataReceiveRate();
-	public int getDataReceiveRateNoLAN();
-	public int getDataReceiveRateNoLAN(int average_period);
+	public long getDataReceiveRate();
+	public long getDataReceiveRateNoLAN();
+	public long getDataReceiveRateNoLAN(int average_period);
 
 	public int getProtocolReceiveRate();
 	public int getProtocolReceiveRateNoLAN();
@@ -49,9 +49,9 @@ GlobalManagerStats
 	/**
 	 * Data Send Rate over the last 10s
 	 */
-	public int getDataSendRate();
-	public int getDataSendRateNoLAN();
-	public int getDataSendRateNoLAN(int average_period);
+	public long getDataSendRate();
+	public long getDataSendRateNoLAN();
+	public long getDataSendRateNoLAN(int average_period);
 
 	public int getProtocolSendRate();
 	public int getProtocolSendRateNoLAN();
@@ -70,7 +70,7 @@ GlobalManagerStats
 	 */
 	public long	getSmoothedReceiveRate();
 
-	public int getDataSendRateAtClose();
+	public long getDataSendRateAtClose();
 
 	public long getTotalDataBytesReceived();
 

@@ -26,29 +26,29 @@ SpeedManagerAdapter
 	getCurrentProtocolUploadSpeed(
 		int	average_period );
 
-	public int
+	public long
 	getCurrentDataUploadSpeed(
 		int	average_period );
 
-	public int
+	public long
 	getCurrentUploadLimit();
 
 	public void
 	setCurrentUploadLimit(
-		int		bytes_per_second );
+		long	bytes_per_second );
 
-	public int
+	public long
 	getCurrentDownloadLimit();
 
 	public void
 	setCurrentDownloadLimit(
-		int		bytes_per_second );
+		long	bytes_per_second );
 
     public int
     getCurrentProtocolDownloadSpeed(
     	int	average_period );
 
-    public int
+    public long
     getCurrentDataDownloadSpeed(
     	int	average_period );
 

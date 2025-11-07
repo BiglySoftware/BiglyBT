@@ -93,7 +93,7 @@ public class ViewUpSpeedGraph
 
 		int swarms_peer_speed = (int) stats.getTotalSwarmsPeerRate(true, false);
 
-		upSpeedGraphic.addIntsValue(new int[] {
+		upSpeedGraphic.addLongsValue(new long[] {
 			stats.getDataSendRate() + stats.getProtocolSendRate(),
 			stats.getProtocolSendRate(),
 			COConfigurationManager.getIntParameter(TransferSpeedValidator.getActiveUploadParameter(manager)) * DisplayFormatters.getKinB(),

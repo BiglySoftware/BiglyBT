@@ -138,7 +138,7 @@ SpeedManagerAlgorithmProviderV1
 
 	private int					mode;
 	private volatile int		mode_ticks;
-	private int					saved_limit;
+	private long				saved_limit;
 
 	private int		direction;
 	private int		ticks;
@@ -167,10 +167,10 @@ SpeedManagerAlgorithmProviderV1
 	public void
 	updateStats()
 	{
-		int	current_protocol_speed 	= adapter.getCurrentProtocolUploadSpeed();
-		int	current_data_speed		= adapter.getCurrentDataUploadSpeed();
+		long	current_protocol_speed 	= adapter.getCurrentProtocolUploadSpeed();
+		long	current_data_speed		= adapter.getCurrentDataUploadSpeed();
 
-		int	current_speed = current_protocol_speed + current_data_speed;
+		long	current_speed = current_protocol_speed + current_data_speed;
 
 		upload_average.update( current_speed );
 
@@ -350,10 +350,10 @@ SpeedManagerAlgorithmProviderV1
 			idle_average	= Math.max( running_average, MIN_IDLE_AVERAGE );
 		}
 
-		int	current_speed 	= adapter.getCurrentDataUploadSpeed() + adapter.getCurrentProtocolUploadSpeed();
-		int	current_limit	= adapter.getCurrentUploadLimit();
+		long	current_speed 	= adapter.getCurrentDataUploadSpeed() + adapter.getCurrentProtocolUploadSpeed();
+		long	current_limit	= adapter.getCurrentUploadLimit();
 
-		int	new_limit	= current_limit;
+		long	new_limit	= current_limit;
 
 		log(
 				"Pings: " + str + ", average=" + ping_average +", running_average=" + running_average +
@@ -553,14 +553,14 @@ SpeedManagerAlgorithmProviderV1
 		 */
 
 	@Override
-	public int
+	public long
 	getCurrentChokeSpeed()
 	{
-		return((int)choke_speed_average.getAverage());
+		return((long)choke_speed_average.getAverage());
 	}
 
 	@Override
-	public int
+	public long
 	getMaxUploadSpeed()
 	{
 		return( max_upload_average );

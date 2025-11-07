@@ -71,7 +71,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 
 	private int					nbValues		= 0;
 	private int					maxEntries		= DEFAULT_ENTRIES;
-	private int[][]				all_values		= new int[1][maxEntries];
+	private long[][]				all_values	= new long[1][maxEntries];
 
 	private long				startTime		= -1;
 	private int[]				ages			= new int[maxEntries];
@@ -164,7 +164,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			   	currentPosition	= 0;
 		 		
 			   	for ( int i=0;i<all_values.length;i++ ){
-			   		all_values[i] = new int[all_values[i].length];
+			   		all_values[i] = new long[all_values[i].length];
 			   	}
 			   	
 			   	startTime = -1;
@@ -180,18 +180,25 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
   }
   
   public void addIntsValue(int[] new_values) {
+	long[] temp = new long[new_values.length];
+	for ( int i=0;i<temp.length;i++){
+		temp[i] = new_values[i];
+	}
+	addLongsValue( temp );
+  }
+  public void addLongsValue(long[] new_values) {
     try{
     	this_mon.enter();
 
     	if ( all_values.length < new_values.length ){
 
-    		int[][]	new_all_values = new int[new_values.length][];
+    		long[][]	new_all_values = new long[new_values.length][];
     		
 		    System.arraycopy(all_values, 0, new_all_values, 0, all_values.length);
 
     		for (int i=all_values.length;i<new_all_values.length; i++ ){
 
-    			new_all_values[i] = new int[maxEntries];
+    			new_all_values[i] = new long[maxEntries];
     		}
 
     		all_values = new_all_values;
@@ -226,9 +233,13 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
   }
 
   public void addIntValue(int value) {
-	  addIntsValue( new int[]{ value });
+	  addLongValue( value );
   }
 
+  public void addLongValue(long value) {
+	  addLongsValue( new long[]{ value });
+  }
+  
   @Override
   public void refresh(boolean force) {
     if(drawCanvas == null || drawCanvas.isDisposed())
@@ -249,7 +260,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 
     		for(int i=0;i<all_values.length;i++)
     		{
-    			int[] newValues = new int[maxEntries];
+    			long[] newValues = new long[maxEntries];
     			System.arraycopy(all_values[i], 0, newValues, 0, all_values[i].length);
     			all_values[i] = newValues;
     		}
@@ -313,9 +324,9 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			}
 
 			int oldAverage = 0;
-			int[] oldTargetValues = new int[all_values.length];
+			long[] oldTargetValues = new long[all_values.length];
 
-			int[] maxs = new int[all_values.length];
+			long[] maxs = new long[all_values.length];
 
 			for (int x = 0; x < bounds.width - 71; x++){
 			
@@ -332,7 +343,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 				}
 				for (int chartIdx = 0; chartIdx < all_values.length; chartIdx++){
 				
-					int value = all_values[chartIdx][position];
+					long value = all_values[chartIdx][position];
 					
 					if (value > maxs[chartIdx]){
 						
@@ -341,12 +352,12 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 				}
 			}
 
-			int max = maxs[0];
-			int max_primary = max;
+			long max = maxs[0];
+			long max_primary = max;
 
 			for (int i = 1; i < maxs.length; i++){
 			
-				int m = maxs[i];
+				long m = maxs[i];
 				if (i == 1){
 				
 					if (max < m)
@@ -477,8 +488,8 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 				
 				for (int chartIdx = 2; chartIdx < all_values.length; chartIdx++)
 				{
-					int targetValue = all_values[chartIdx][position];
-					int oldTargetValue = oldTargetValues[chartIdx];
+					long targetValue = all_values[chartIdx][position];
+					long oldTargetValue = oldTargetValues[chartIdx];
 					if (x > 1 && (chartIdx == 2 && (targetValue > 0 && oldTargetValue > 0) || (chartIdx > 2 && (targetValue > 0 || oldTargetValue > 0))))
 					{
 						int trimmed = 0;

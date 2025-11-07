@@ -554,7 +554,7 @@ DownloadManagerController
 					}
 
 					@Override
-					public int
+					public long
 					getUploadSpeedKBSec(
 						boolean estimate )
 					{
@@ -568,9 +568,9 @@ DownloadManagerController
 
 							if ( current_local == 0 ){
 
-								int current_global 	= global_stats.getDataSendRate();
+								long current_global 	= global_stats.getDataSendRate();
 
-								int	old_global		= global_stats.getDataSendRateAtClose();
+								long	old_global		= global_stats.getDataSendRateAtClose();
 
 								if ( current_global < old_global ){
 

@@ -206,7 +206,7 @@ public class PingSpaceMon
     {
 
         @Override
-        public int getBytesPerSec() {
+        public long getBytesPerSec() {
             return 1;
         }
 

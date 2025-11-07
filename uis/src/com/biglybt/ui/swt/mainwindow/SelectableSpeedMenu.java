@@ -63,11 +63,11 @@ public class SelectableSpeedMenu {
         final String configKey =
         	up_menu?
         		TransferSpeedValidator.getActiveUploadParameter(globalManager):
-        		"Max Download Speed KBs";
+        		TransferSpeedValidator.DOWNLOAD_CONFIGKEY;
 
         final int speedPartitions = 12;
 
-        int maxBandwidth = COConfigurationManager.getIntParameter(configKey);
+        long maxBandwidth = COConfigurationManager.getLongParameter(configKey);
         final boolean unlim = (maxBandwidth == 0);
         maxBandwidth = adjustMaxBandWidth(maxBandwidth, globalManager, up_menu, kInB );
 
@@ -99,11 +99,11 @@ public class SelectableSpeedMenu {
 
         MenuItem item = new MenuItem(parent, SWT.RADIO);
         item.setText(MessageText.getString("MyTorrentsView.menu.setSpeed.unlimited"));
-        item.setData("maxkb", new Integer(0));
+        item.setData("maxkb", new Long(0));
         item.setSelection(unlim && !auto);
         item.addListener(SWT.Selection, getLimitMenuItemListener(up_menu, parent, globalManager, configKey));
 
-        Integer[] speed_limits = null;
+        Long[] speed_limits = null;
 
         final String config_prefix = "config.ui.speed.partitions.manual." + ((up_menu) ? "upload": "download") + ".";
         if (COConfigurationManager.getBooleanParameter(config_prefix  + "enabled", false)) {
@@ -115,12 +115,12 @@ public class SelectableSpeedMenu {
 		}
 
         for (int i=0; i<speed_limits.length; i++) {
-        	Integer i_value = speed_limits[i];
-        	int value = i_value.intValue();
+        	Long l_value = speed_limits[i];
+        	long value = l_value.longValue();
         	if (value < 5) {continue;} // Don't allow the user to easily select slow speeds.
             item = new MenuItem(parent, SWT.RADIO);
             item.setText(DisplayFormatters.formatByteCountToKiBEtcPerSec(value * kInB, true));
-            item.setData("maxkb", i_value);
+            item.setData("maxkb", l_value);
             item.addListener(SWT.Selection, getLimitMenuItemListener(up_menu, parent, globalManager, configKey));
             item.setSelection(!unlim && value == maxBandwidth && !auto);
         }
@@ -179,8 +179,7 @@ public class SelectableSpeedMenu {
 							COConfigurationManager.setParameter(configAutoKey, false);
 						}
 
-						final int cValue = ((Integer) new TransferSpeedValidator(configKey,
-								new Integer(newSpeed)).getValue()).intValue();
+						long cValue = new TransferSpeedValidator( configKey, newSpeed ).getValue();
 
 						COConfigurationManager.setParameter(configKey, cValue);
 
@@ -197,12 +196,12 @@ public class SelectableSpeedMenu {
 	 *
 	 * @since 3.0.1.7
 	 */
-	private static int adjustMaxBandWidth(int maxBandwidth,
+	private static long adjustMaxBandWidth(long maxBandwidth,
 			GlobalManager globalManager, boolean up_menu, int kInB) {
     if(maxBandwidth == 0 && !up_menu )
     {
   		GlobalManagerStats stats = globalManager.getStats();
-  		int dataReceive = stats.getDataReceiveRate();
+  		long dataReceive = stats.getDataReceiveRate();
   		if (dataReceive < kInB) {
         maxBandwidth = 275;
   		} else {
@@ -212,25 +211,25 @@ public class SelectableSpeedMenu {
     return maxBandwidth;
 	}
 
-		private static java.util.Map parseSpeedPartitionStringCache = new java.util.HashMap();
-	  private synchronized static Integer[] parseSpeedPartitionString(String s) {
-		  Integer[] result = (Integer[])parseSpeedPartitionStringCache.get(s);
+		private static java.util.Map<String,Long[]> parseSpeedPartitionStringCache = new java.util.HashMap<>();
+	  private synchronized static Long[] parseSpeedPartitionString(String s) {
+		  Long[] result = (Long[])parseSpeedPartitionStringCache.get(s);
 		  if (result == null) {
 			  try {result = parseSpeedPartitionString0(s);}
-			  catch (NumberFormatException nfe) {result = new Integer[0];}
+			  catch (NumberFormatException nfe) {result = new Long[0];}
 			  parseSpeedPartitionStringCache.put(s, result);
 		  }
 		  if (result.length == 0) {return null;}
 		  else {return result;}
 	  }
 
-	  private static Integer[] parseSpeedPartitionString0(String s) {
+	  private static Long[] parseSpeedPartitionString0(String s) {
 		  java.util.StringTokenizer tokeniser = new java.util.StringTokenizer(s.trim(), ",");
-		  java.util.TreeSet values = new java.util.TreeSet(); // Filters duplicates out and orders the values.
+		  java.util.TreeSet<Long> values = new java.util.TreeSet<>(); // Filters duplicates out and orders the values.
 		  while (tokeniser.hasMoreTokens()) {
-			  values.add(new Integer(Integer.parseInt(tokeniser.nextToken().trim())));
+			  values.add(new Long(Long.parseLong(tokeniser.nextToken().trim())));
 		  }
-		  return (Integer[])values.toArray(new Integer[values.size()]);
+		  return (Long[])values.toArray(new Long[values.size()]);
 	  }
 
 	    /**
@@ -263,9 +262,9 @@ public class SelectableSpeedMenu {
 	                        	COConfigurationManager.setParameter( configAutoKey, false );
 	                        }
 
-	                        final int cValue = ((Integer)new TransferSpeedValidator(configKey, (Number)items[i].getData("maxkb")).getValue()).intValue();
+	                        long cValue = new TransferSpeedValidator(configKey, (Long)items[i].getData("maxkb")).getValue();
+	                        
 	                        COConfigurationManager.setParameter(configKey, cValue);
-
 
 	                        COConfigurationManager.save();
 	                    }
@@ -278,19 +277,19 @@ public class SelectableSpeedMenu {
 	   }
 
 
-	public static Integer[] getGenericSpeedList(int speedPartitions,
-			int maxBandwidth) {
-		java.util.List l = new java.util.ArrayList();
+	public static Long[] getGenericSpeedList(int speedPartitions,
+			long maxBandwidth) {
+		java.util.List<Long> l = new java.util.ArrayList<>();
 		int delta = 0;
 		int increaseLevel = 0;
 		for (int i = 0; i < speedPartitions; i++) {
-			final int[] valuePair;
+			final long[] valuePair;
 			if (delta == 0) {
-				valuePair = new int[] {
+				valuePair = new long[] {
 					maxBandwidth
 				};
 			} else {
-				valuePair = new int[] {
+				valuePair = new long[] {
 					maxBandwidth - delta * (maxBandwidth <= 1024 ? 1 : 1024),
 					maxBandwidth + delta * (maxBandwidth < 1024 ? 1 : 1024)
 				};
@@ -298,9 +297,9 @@ public class SelectableSpeedMenu {
 
 			for (int j = 0; j < valuePair.length; j++) {
 				if (j == 0) {
-					l.add(0, new Integer(valuePair[j]));
+					l.add(0, new Long(valuePair[j]));
 				} else {
-					l.add(new Integer(valuePair[j]));
+					l.add(new Long(valuePair[j]));
 				}
 			}
 
@@ -309,7 +308,7 @@ public class SelectableSpeedMenu {
 				increaseLevel++;
 			}
 		}
-		return (Integer[]) l.toArray(new Integer[l.size()]);
+		return (Long[]) l.toArray(new Long[l.size()]);
 	}
 
 	/**
@@ -329,13 +328,13 @@ public class SelectableSpeedMenu {
 		final String configKey = isUpSpeed
 				? TransferSpeedValidator.getActiveUploadParameter(gm)
 				: "Max Download Speed KBs";
-		int maxBandwidth = COConfigurationManager.getIntParameter(configKey);
-		int actualMaxBandwidth = maxBandwidth;
+		long maxBandwidth = COConfigurationManager.getLongParameter(configKey);
+		long actualMaxBandwidth = maxBandwidth;
 		
 		final boolean unlim = (maxBandwidth == 0);
 		if (unlim && !isUpSpeed) {
 			GlobalManagerStats stats = gm.getStats();
-			int dataReceive = stats.getDataReceiveRate();
+			long dataReceive = stats.getDataReceiveRate();
 			if (dataReceive >= 1024) {
 				maxBandwidth = dataReceive / 1024;
 			}
@@ -343,7 +342,7 @@ public class SelectableSpeedMenu {
 
 		SpeedScaleShell speedScale = new SpeedScaleShell() {
 			@Override
-			public String getStringValue(int value, String sValue) {
+			public String getStringValue(long value, String sValue) {
 				if (sValue != null) {
 					return prefix + ": " + sValue;
 				}
@@ -358,19 +357,19 @@ public class SelectableSpeedMenu {
 						+ DisplayFormatters.formatByteCountToKiBEtcPerSec( getValue() * 1024, true);
 			}
 		};
-		int max = unlim ? (isUpSpeed ? 100 : 800) : maxBandwidth * 5;
+		long max = unlim ? (isUpSpeed ? 100 : 800) : maxBandwidth * 5;
 		if (max < 50) {
 			max = 50;
 		}
 		speedScale.setMaxValue(max);
-		speedScale.setMaxTextValue(9999999);
+		speedScale.setMaxTextValue(9999999999999L);
 
 		final String config_prefix = "config.ui.speed.partitions.manual."
 				+ (isUpSpeed ? "upload" : "download") + ".";
-		int lastValue = COConfigurationManager.getIntParameter(config_prefix
+		long lastValue = COConfigurationManager.getLongParameter(config_prefix
 				+ "last", -10);
 
-		Integer[] speed_limits;
+		Long[] speed_limits;
 		if (COConfigurationManager.getBooleanParameter(config_prefix + "enabled",
 				false)) {
 			speed_limits = parseSpeedPartitionString(COConfigurationManager.getStringParameter(
@@ -380,7 +379,7 @@ public class SelectableSpeedMenu {
 		}
 		if (speed_limits != null) {
 			for (int i = 0; i < speed_limits.length; i++) {
-				int value = speed_limits[i].intValue();
+				long value = speed_limits[i].longValue();
 				if (value > 0) {
 					speedScale.addOption(DisplayFormatters.formatByteCountToKiBEtcPerSec(
 							value * 1024, true), value);
@@ -400,7 +399,7 @@ public class SelectableSpeedMenu {
 		}
 
 		if (speedScale.open(cClickedFrom, auto ? -1 : actualMaxBandwidth, true)) {
-			int value = speedScale.getValue();
+			long value = speedScale.getValue();
 
 			if (!speedScale.wasMenuChosen() || lastValue == value) {
 				COConfigurationManager.setParameter(config_prefix + "last",
@@ -429,15 +428,15 @@ public class SelectableSpeedMenu {
 
 		final int	kInB = DisplayFormatters.getKinB();
 
-		int maxBandwidth_k = 0;
+		long maxBandwidth_k = 0;
 		boolean allDisabled = true;
 		
 		for (DownloadManager dm : dms) {
-			int bandwidth = (isUpSpeed
+			long bandwidth = (isUpSpeed
 					? dm.getStats().getUploadRateLimitBytesPerSecond()
 					: dm.getStats().getDownloadRateLimitBytesPerSecond());
 			
-			int bw_k =  bandwidth / kInB;
+			long bw_k =  bandwidth / kInB;
 			if (bw_k > maxBandwidth_k || bandwidth == 0) {
 				maxBandwidth_k = bw_k;
 				allDisabled = false;
@@ -450,7 +449,7 @@ public class SelectableSpeedMenu {
 
 		SpeedScaleShell speedScale = new SpeedScaleShell() {
 			@Override
-			public String getStringValue(int value, String sValue) {
+			public String getStringValue(long value, String sValue) {
 				if (sValue != null) {
 					return prefix + ": " + sValue;
 				}
@@ -478,20 +477,20 @@ public class SelectableSpeedMenu {
 				return prefix + ": " + speed;
 			}
 		};
-		int max = unlim ? (isUpSpeed ? 100 : 800) : maxBandwidth_k * 5;
+		long max = unlim ? (isUpSpeed ? 100 : 800) : maxBandwidth_k * 5;
 		if (max < 50) {
 			max = 50;
 		}
 		speedScale.setMaxValue(max);
-		speedScale.setMaxTextValue(9999999);
+		speedScale.setMaxTextValue(9999999999999L);
 		speedScale.setParentShell(parentShell);
 
 		final String config_prefix = "config.ui.speed.partitions.manual."
 				+ (isUpSpeed ? "upload" : "download") + ".";
-		int lastValue = COConfigurationManager.getIntParameter(config_prefix
+		long lastValue = COConfigurationManager.getLongParameter(config_prefix
 				+ "last", -10);
 
-		Integer[] speed_limits;
+		Long[] speed_limits;
 		if (COConfigurationManager.getBooleanParameter(config_prefix + "enabled",
 				false)) {
 			speed_limits = parseSpeedPartitionString(COConfigurationManager.getStringParameter(
@@ -501,9 +500,9 @@ public class SelectableSpeedMenu {
 		}
 		if (speed_limits != null) {
 			for (int i = 0; i < speed_limits.length; i++) {
-				int value = speed_limits[i].intValue();
+				long value = speed_limits[i].longValue();
 				if (value > 0) {
-					int total = value * num_entries;
+					long total = value * num_entries;
 					String speed = DisplayFormatters.formatByteCountToKiBEtcPerSec(
 							total * kInB, true);
 					if (num_entries > 1) {
@@ -533,7 +532,7 @@ public class SelectableSpeedMenu {
 		}
 
 		if (speedScale.open(cClickedFrom, allDisabled?-2:maxBandwidth_k, true)) {
-			int value = speedScale.getValue();
+			long value = speedScale.getValue();
 
 			if (!speedScale.wasMenuChosen() || lastValue == value) {
 				COConfigurationManager.setParameter(config_prefix + "last",
@@ -543,9 +542,9 @@ public class SelectableSpeedMenu {
 			if (value >= 0) {
 				for (DownloadManager dm : dms) {
 					if (isUpSpeed) {
-						dm.getStats().setUploadRateLimitBytesPerSecond(value * kInB);
+						dm.getStats().setUploadRateLimitBytesPerSecond((int)(value * kInB));
 					} else {
-						dm.getStats().setDownloadRateLimitBytesPerSecond(value * kInB);
+						dm.getStats().setDownloadRateLimitBytesPerSecond((int)(value * kInB));
 					}
 				}
 			}else if ( value == -2 ) {

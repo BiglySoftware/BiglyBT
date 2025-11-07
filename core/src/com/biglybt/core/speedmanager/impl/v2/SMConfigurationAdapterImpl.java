@@ -65,10 +65,10 @@ public class SMConfigurationAdapterImpl implements SMConfigurationAdapter
     //conversion routines need to be here.
     static class SMConfigLimitEstimate implements SpeedManagerLimitEstimate{
 
-        final int bytesPerSec;
+        final long bytesPerSec;
         final float limitEstimateType;
 
-        public SMConfigLimitEstimate(int rateInBytesPerSec, SpeedLimitConfidence conf){
+        public SMConfigLimitEstimate(long rateInBytesPerSec, SpeedLimitConfidence conf){
 
             bytesPerSec = rateInBytesPerSec;
             limitEstimateType = conf.asEstimateType();
@@ -76,7 +76,7 @@ public class SMConfigurationAdapterImpl implements SMConfigurationAdapter
         }
 
         @Override
-        public int getBytesPerSec() {
+        public long getBytesPerSec() {
             return bytesPerSec;
         }
 

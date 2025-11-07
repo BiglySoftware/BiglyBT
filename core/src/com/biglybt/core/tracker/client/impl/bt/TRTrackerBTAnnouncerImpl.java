@@ -2878,7 +2878,7 @@ TRTrackerBTAnnouncerImpl
 
 	if ( az_tracker && !stopped ){
 
-		int up = announce_data_provider.getUploadSpeedKBSec( evt.equals( "started" ));
+		long up = announce_data_provider.getUploadSpeedKBSec( evt.equals( "started" ));
 
 		if ( up > 0 ){
 

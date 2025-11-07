@@ -1914,7 +1914,7 @@ DownloadManagerImpl
 
 					GlobalManagerStats gm_stats = globalManager.getStats();
 
-					int	actual = gm_stats.getDataSendRateNoLAN() + gm_stats.getProtocolSendRateNoLAN();
+					long	actual = gm_stats.getDataSendRateNoLAN() + gm_stats.getProtocolSendRateNoLAN();
 
 					int	move_by = ( local_max_bps - max_upload_when_busy_bps ) / 10;
 
@@ -2714,7 +2714,7 @@ DownloadManagerImpl
 						}
 						
 						@Override
-						public int 
+						public long 
 						getUploadSpeedKBSec(boolean estimate)
 						{
 							return( 0 );

@@ -30,7 +30,7 @@ SpeedManagerLimitEstimate
 	public static final float TYPE_MEASURED =  0.9f;
 	public static final float TYPE_MANUAL =  1.0f;
 
-	public int
+	public long
 	getBytesPerSec();
 
 		/**

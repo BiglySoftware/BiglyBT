@@ -48,7 +48,7 @@ SpeedManager
 
 	public void
 	setEstimatedUploadCapacityBytesPerSec(
-		int		bytes_per_sec,
+		long	bytes_per_sec,
 		float	estimate_type );
 
 	public SpeedManagerLimitEstimate
@@ -56,7 +56,7 @@ SpeedManager
 
 	public void
 	setEstimatedDownloadCapacityBytesPerSec(
-		int		bytes_per_sec,
+		long	bytes_per_sec,
 		float	estimate_type );
 
 	public void

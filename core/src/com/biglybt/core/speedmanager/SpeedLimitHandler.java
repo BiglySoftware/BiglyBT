@@ -4410,6 +4410,30 @@ SpeedLimitHandler
     }
 
     private void
+    exportLong(
+    	Map<String,Object>	map,
+    	String				key,
+    	long				i )
+    {
+    	map.put( key, new Long( i ));
+    }
+
+    private long
+    importLong(
+    	Map<String,Object>	map,
+    	String				key )
+    {
+    	Long	l = (Long)map.get( key );
+
+    	if ( l != null ){
+
+    		return( l.longValue());
+    	}
+
+    	return( 0 );
+    }
+    
+    private void
     exportString(
     	Map<String,Object>	map,
     	String				key,
@@ -4504,13 +4528,13 @@ SpeedLimitHandler
 	    private boolean		auto_up_enabled;
 	    private boolean		auto_up_seeding_enabled;
 	    private boolean		seeding_limits_enabled;
-	    private int			up_limit;
-	    private int			up_seeding_limit;
-	    private int			down_limit;
+	    private long		up_limit;
+	    private long		up_seeding_limit;
+	    private long		down_limit;
 
 	    private boolean		lan_rates_enabled;
-	    private int			lan_up_limit;
-	    private int			lan_down_limit;
+	    private long		lan_up_limit;
+	    private long		lan_down_limit;
 
 	    private final Map<String,int[]>	download_limits = new HashMap<>();
 	    private final Map<String,int[]>	category_limits = new HashMap<>();
@@ -4529,9 +4553,9 @@ SpeedLimitHandler
 	    	auto_up_seeding_enabled	= importBoolean( map, "ause" );
 	    	seeding_limits_enabled	= importBoolean( map, "sle" );
 
-	    	up_limit			= importInt( map, "ul" );
-	    	up_seeding_limit	= importInt( map, "usl" );
-	    	down_limit			= importInt( map, "dl" );
+	    	up_limit			= importLong( map, "ul" );
+	    	up_seeding_limit	= importLong( map, "usl" );
+	    	down_limit			= importLong( map, "dl" );
 
 	    	if ( map.containsKey( "lre" )){
 
@@ -4543,8 +4567,8 @@ SpeedLimitHandler
 	    		lan_rates_enabled = COConfigurationManager.getBooleanParameter( "LAN Speed Enabled" );
 	    	}
 
-	    	lan_up_limit		= importInt( map, "lul" );
-	    	lan_down_limit		= importInt( map, "ldl" );
+	    	lan_up_limit		= importLong( map, "lul" );
+	    	lan_down_limit		= importLong( map, "ldl" );
 
 
 	    	List<Map<String,Object>>	d_list = (List<Map<String,Object>>)map.get( "dms" );
@@ -4611,13 +4635,13 @@ SpeedLimitHandler
 	    	exportBoolean( map, "ause", auto_up_seeding_enabled );
 	    	exportBoolean( map, "sle", seeding_limits_enabled );
 
-	    	exportInt( map, "ul", up_limit );
-	    	exportInt( map, "usl", up_seeding_limit );
-	    	exportInt( map, "dl", down_limit );
+	    	exportLong( map, "ul", up_limit );
+	    	exportLong( map, "usl", up_seeding_limit );
+	    	exportLong( map, "dl", down_limit );
 
 	    	exportBoolean( map, "lre", lan_rates_enabled );
-	    	exportInt( map, "lul", lan_up_limit );
-	    	exportInt( map, "ldl", lan_down_limit );
+	    	exportLong( map, "lul", lan_up_limit );
+	    	exportLong( map, "ldl", lan_down_limit );
 
 
 	    	List<Map<String,Object>>	d_list = new ArrayList<>();
@@ -4682,13 +4706,13 @@ SpeedLimitHandler
 		    auto_up_enabled 		= COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_ENABLED_CONFIGKEY );
 		    auto_up_seeding_enabled = COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_SEEDING_ENABLED_CONFIGKEY );
 		    seeding_limits_enabled 	= COConfigurationManager.getBooleanParameter( TransferSpeedValidator.UPLOAD_SEEDING_ENABLED_CONFIGKEY );
-		    up_limit 				= COConfigurationManager.getIntParameter( TransferSpeedValidator.UPLOAD_CONFIGKEY );
-		    up_seeding_limit 		= COConfigurationManager.getIntParameter( TransferSpeedValidator.UPLOAD_SEEDING_CONFIGKEY );
-		    down_limit				= COConfigurationManager.getIntParameter( TransferSpeedValidator.DOWNLOAD_CONFIGKEY );
+		    up_limit 				= COConfigurationManager.getLongParameter( TransferSpeedValidator.UPLOAD_CONFIGKEY );
+		    up_seeding_limit 		= COConfigurationManager.getLongParameter( TransferSpeedValidator.UPLOAD_SEEDING_CONFIGKEY );
+		    down_limit				= COConfigurationManager.getLongParameter( TransferSpeedValidator.DOWNLOAD_CONFIGKEY );
 
 		    lan_rates_enabled 		= COConfigurationManager.getBooleanParameter( "LAN Speed Enabled" );
-		    lan_up_limit 			= COConfigurationManager.getIntParameter( "Max LAN Upload Speed KBs" );
-		    lan_down_limit 			= COConfigurationManager.getIntParameter( "Max LAN Download Speed KBs" );
+		    lan_up_limit 			= COConfigurationManager.getLongParameter( "Max LAN Upload Speed KBs" );
+		    lan_down_limit 			= COConfigurationManager.getLongParameter( "Max LAN Download Speed KBs" );
 
 		    download_limits.clear();
 

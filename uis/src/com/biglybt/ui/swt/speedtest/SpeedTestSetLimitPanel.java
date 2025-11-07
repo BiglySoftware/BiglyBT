@@ -147,7 +147,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         gridData.widthHint=80;
         uploadLimitSetting.setLayoutData(gridData);
 
-        int uploadCapacity = determineRateSettingEx(measuredUploadKbps,uploadTestRan,true);
+        long uploadCapacity = determineRateSettingEx(measuredUploadKbps,uploadTestRan,true);
 
         //don't accept any value less the 20 kb/s
         if(uploadCapacity<20)
@@ -195,7 +195,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         gridData.widthHint=80;
         downloadLimitSetting.setLayoutData(gridData);
 
-        int bestDownloadSetting = determineRateSettingEx(measuredDownloadKbps,downloadTestRan,false);
+        long bestDownloadSetting = determineRateSettingEx(measuredDownloadKbps,downloadTestRan,false);
 
         downloadLimitSetting.setText( ""+bestDownloadSetting );
         downloadLimitSetting.addListener(SWT.Verify, new NumberListener(downloadLimitSetting) );
@@ -251,9 +251,9 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
             @Override
             public void handleEvent(Event event){
 
-                //Turn the string into an int and make it kbps.
-                int uploadLimitKBPS = Integer.parseInt( uploadLimitSetting.getText() );
-                int downlaodLimitKBPS = Integer.parseInt( downloadLimitSetting.getText() );
+                //Turn the string into a long and make it kbps.
+                long uploadLimitKBPS = Long.parseLong( uploadLimitSetting.getText() );
+                long downlaodLimitKBPS = Long.parseLong( downloadLimitSetting.getText() );
                 //No value less then 20 kpbs should be allowed.
                 if(uploadLimitKBPS<20){
                     uploadLimitKBPS=20;
@@ -506,9 +506,9 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
     }
 
 
-    public int determineRateSettingEx(int measuredRate, boolean testRan, boolean isUpload)
+    public long determineRateSettingEx(int measuredRate, boolean testRan, boolean isUpload)
     {
-        int retVal = measuredRate;
+    	long retVal = measuredRate;
 
         //get speed-manager setting.
         SpeedManagerLimitEstimate est;

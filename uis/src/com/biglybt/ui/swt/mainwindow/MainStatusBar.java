@@ -1415,7 +1415,7 @@ public class MainStatusBar
 				seeding_only = "";
 			}
 
-			int sent_data = stats.getDataSendRate();
+			long sent_data = stats.getDataSendRate();
 			if (imgRec != null && !imgRec.isDisposed()) {
 				updateGraph(statusDown, imgRec, rec_data, max_rec);
 				updateGraph(statusUp, imgSent, sent_data, max_sent);

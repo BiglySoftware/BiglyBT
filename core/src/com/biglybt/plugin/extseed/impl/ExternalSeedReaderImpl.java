@@ -379,14 +379,14 @@ ExternalSeedReaderImpl
 
 				int	existing_peer_count = existing_peers.length;
 
-				int	global_limit	= TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond();
+				long	global_limit	= TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond();
 
 				if ( global_limit > 0 ){
 
 						// if we have a global limit in force and we are near it then no point in
 						// activating
 
-					int current_down = plugin.getGlobalDownloadRateBytesPerSec();
+					long current_down = plugin.getGlobalDownloadRateBytesPerSec();
 
 					if ( global_limit - current_down < 5*1024 ){
 
@@ -394,7 +394,7 @@ ExternalSeedReaderImpl
 					}
 				}
 
-				int	download_limit  = peer_manager.getDownloadRateLimitBytesPerSecond();
+				long	download_limit  = peer_manager.getDownloadRateLimitBytesPerSecond();
 
 				if ( global_limit > 0 && global_limit < download_limit ){
 

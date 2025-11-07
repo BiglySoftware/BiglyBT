@@ -166,7 +166,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		COConfigurationManager.setParameter(co_up_type,
 				limit_to_text.getSettableType(up_lim));
 
-		final IntParameterImpl max_upload = new IntParameterImpl(co_up,
+		final LongParameterImpl max_upload = new LongParameterImpl(co_up,
 				"SpeedView.stats.estupcap");
 		add(max_upload);
 
@@ -190,7 +190,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		});
 
 		max_upload.addListener(p -> {
-			int value = max_upload.getValue() * kinb;
+			long value = max_upload.getValue() * kinb;
 
 			SpeedManagerLimitEstimate existing = sm.getEstimatedUploadCapacityBytesPerSec();
 
@@ -213,7 +213,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		COConfigurationManager.setParameter(co_down_type,
 				limit_to_text.getSettableType(down_lim));
 
-		IntParameterImpl max_download = new IntParameterImpl(co_down,
+		LongParameterImpl max_download = new LongParameterImpl(co_down,
 				"SpeedView.stats.estdowncap");
 		add(max_download);
 
@@ -237,7 +237,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		});
 
 		max_download.addListener(p -> {
-			int value = max_download.getValue() * kinb;
+			long value = max_download.getValue() * kinb;
 
 			SpeedManagerLimitEstimate existing = sm.getEstimatedDownloadCapacityBytesPerSec();
 

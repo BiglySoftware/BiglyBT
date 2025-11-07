@@ -154,14 +154,14 @@ SpeedManagerAlgorithmProviderV2
 	}
 
 	@Override
-	public int
+	public long
 	getCurrentChokeSpeed()
 	{
         return strategy.getCurrentChokeSpeed();
 	}
 
 	@Override
-	public int
+	public long
 	getMaxUploadSpeed()
 	{
         return strategy.getMaxUploadSpeed();

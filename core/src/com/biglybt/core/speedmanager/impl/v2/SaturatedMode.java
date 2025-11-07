@@ -44,7 +44,7 @@ public class SaturatedMode implements Comparable {
      * @param limit -
      * @return - SaturatedMode
      */
-    public static SaturatedMode getSaturatedMode(int currentRate,int limit){
+    public static SaturatedMode getSaturatedMode(long currentRate,long limit){
 
         //unlimited mode has this value as zero.
         if(limit==0){

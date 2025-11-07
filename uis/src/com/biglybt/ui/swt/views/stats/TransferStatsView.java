@@ -976,8 +976,8 @@ public class TransferStatsView
     int now_prot_down_rate = stats.getProtocolReceiveRate();
     int now_prot_up_rate = stats.getProtocolSendRate();
 
-    int now_total_down_rate = stats.getDataReceiveRate() + now_prot_down_rate;
-    int now_total_up_rate = stats.getDataSendRate() + now_prot_up_rate;
+    long now_total_down_rate = stats.getDataReceiveRate() + now_prot_down_rate;
+    long now_total_up_rate = stats.getDataSendRate() + now_prot_up_rate;
 
     float now_perc_down = (float)(now_prot_down_rate *100) / (now_total_down_rate==0?1:now_total_down_rate);
     float now_perc_up = (float)(now_prot_up_rate *100) / (now_total_up_rate==0?1:now_total_up_rate);
@@ -2083,9 +2083,9 @@ public class TransferStatsView
 
 			  for (int i=0;i<bad_up.length;i++){
 
-				  int speed = bad_up[i].getBytesPerSec();
+				  long speed = bad_up[i].getBytesPerSec();
 
-				  int	x = max_x == 0?0:(speed * usable_width / max_x);
+				  int	x = (int)( max_x == 0?0:(speed * usable_width / max_x));
 
 				  gc.drawLine(
 							x_axis_left_x + x,
@@ -2187,9 +2187,9 @@ public class TransferStatsView
 
 			  for (int i=0;i<bad_down.length;i++){
 
-				  int speed = bad_down[i].getBytesPerSec();
+				  long speed = bad_down[i].getBytesPerSec();
 
-				  int	y = max_y==0?0:( speed * usable_height / max_y );
+				  int	y = (int)( max_y==0?0:( speed * usable_height / max_y ));
 
 				  gc.drawLine(
 						  	y_axis_bottom_x + 0,

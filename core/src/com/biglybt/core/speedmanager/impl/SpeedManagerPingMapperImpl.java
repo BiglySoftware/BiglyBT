@@ -437,8 +437,8 @@ SpeedManagerPingMapperImpl
 
 	protected synchronized void
 	addSpeed(
-		int		x,
-		int		y )
+		long		x,
+		long		y )
 	{
 		x = x/SPEED_DIVISOR;
 		y = y/SPEED_DIVISOR;
@@ -446,7 +446,7 @@ SpeedManagerPingMapperImpl
 		if ( x > 65535 )x = 65535;
 		if ( y > 65535 )y = 65535;
 
-		addSpeedSupport( x, y );
+		addSpeedSupport((int)x, (int)y );
 	}
 
 	protected synchronized void
@@ -502,16 +502,20 @@ SpeedManagerPingMapperImpl
 
 	protected synchronized void
 	addPing(
-		int		x,
-		int		y,
+		long	_x,
+		long	_y,
 		int		rtt,
 		boolean	re_base )
 	{
-		x = x/SPEED_DIVISOR;
-		y = y/SPEED_DIVISOR;
+		_x = _x/SPEED_DIVISOR;
+		_y = _y/SPEED_DIVISOR;
 
-		if ( x > 65535 )x = 65535;
-		if ( y > 65535 )y = 65535;
+		if ( _x > 65535 )_x = 65535;
+		if ( _y > 65535 )_y = 65535;
+		
+		int x = (int)_x;
+		int y = (int)_y;
+		
 		if ( rtt > 65535 )rtt = variance?VARIANCE_MAX:RTT_MAX;
 		if ( rtt == 0 )rtt = 1;
 
@@ -964,7 +968,7 @@ SpeedManagerPingMapperImpl
 
 			// remember, 0 means UNLIMITED!!!
 
-		int	cap = capacity.getBytesPerSec();
+		long	cap = capacity.getBytesPerSec();
 
 			// sanity check
 
@@ -988,7 +992,14 @@ SpeedManagerPingMapperImpl
 					limitEstimate	l1 = (limitEstimate)o1;
 					limitEstimate	l2 = (limitEstimate)o2;
 
-					return( l1.getBytesPerSec() - l2.getBytesPerSec());
+					long res = l1.getBytesPerSec() - l2.getBytesPerSec();
+					if ( res < 0 ){
+						return(-1);
+					}else if ( res > 0 ){
+						return( 1 );
+					}else{
+						return(0);
+					}
 				}
 			});
 
@@ -1002,7 +1013,7 @@ SpeedManagerPingMapperImpl
 
 		for (int i=start;i<end;i++){
 
-			int	s = ((limitEstimate)b.get(i)).getBytesPerSec();
+			long	s = ((limitEstimate)b.get(i)).getBytesPerSec();
 
 			total += s;
 
@@ -1024,9 +1035,9 @@ SpeedManagerPingMapperImpl
 
 		for (int i=start;i<end;i++){
 
-			int	s = ((limitEstimate)b.get(i)).getBytesPerSec();
+			long	s = ((limitEstimate)b.get(i)).getBytesPerSec();
 
-			int	deviation = s - average;
+			long	deviation = s - average;
 
 			total_deviation += deviation * deviation;
 		}
@@ -1350,7 +1361,7 @@ SpeedManagerPingMapperImpl
 
 	public void
 	setEstimatedDownloadCapacityBytesPerSec(
-		int		bytes_per_sec,
+		long	bytes_per_sec,
 		float	estimate_type )
 	{
 		if ( down_capacity.getBytesPerSec() != bytes_per_sec || down_capacity.getEstimateType() != estimate_type ){
@@ -1370,7 +1381,7 @@ SpeedManagerPingMapperImpl
 
 	public void
 	setEstimatedUploadCapacityBytesPerSec(
-		int		bytes_per_sec,
+		long	bytes_per_sec,
 		float	estimate_type )
 	{
 		if ( up_capacity.getBytesPerSec() != bytes_per_sec || up_capacity.getEstimateType() != estimate_type ){
@@ -1645,10 +1656,10 @@ SpeedManagerPingMapperImpl
 	limitEstimate
 		implements SpeedManagerLimitEstimate, Cloneable
 	{
-		private int		speed;
-		private float	estimate_type;
-		private float	metric_rating;
-		private final long	when;
+		private long			speed;
+		private float			estimate_type;
+		private float			metric_rating;
+		private final long		when;
 		private final int		hits;
 
 		private final int[][]	segs;
@@ -1682,7 +1693,7 @@ SpeedManagerPingMapperImpl
 		}
 
 		@Override
-		public int
+		public long
 		getBytesPerSec()
 		{
 			return( speed );
@@ -1690,7 +1701,7 @@ SpeedManagerPingMapperImpl
 
 		protected void
 		setBytesPerSec(
-			int		s )
+			long		s )
 		{
 			speed	= s;
 		}

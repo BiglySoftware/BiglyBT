@@ -945,9 +945,9 @@ public class TorrentUtil
 
 		long kInB = DisplayFormatters.getKinB();
 
-		long maxDownload = COConfigurationManager.getIntParameter(
+		long maxDownload = COConfigurationManager.getLongParameter(
 				"Max Download Speed KBs", 0) * kInB;
-		long maxUpload = COConfigurationManager.getIntParameter(
+		long maxUpload = COConfigurationManager.getLongParameter(
 				"Max Upload Speed KBs", 0) * kInB;
 
 		Map<String,Object> menu_properties = new HashMap<>();

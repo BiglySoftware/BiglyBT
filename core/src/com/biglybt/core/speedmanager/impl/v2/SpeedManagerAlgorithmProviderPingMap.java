@@ -57,7 +57,7 @@ public class SpeedManagerAlgorithmProviderPingMap
     final PingSourceManager pingSourceManager = new PingSourceManager();
     //NOTE:: PingSourceManager is something that should be moved up one level!!!
 
-    int sessionMaxUploadRate = 0;
+    long sessionMaxUploadRate = 0;
 
 
     SpeedManagerAlgorithmProviderPingMap(SpeedManagerAlgorithmProviderAdapter _adapter){
@@ -139,15 +139,15 @@ public class SpeedManagerAlgorithmProviderPingMap
 
         //update some stats used in the UI.
 
-        int currUploadLimit = adapter.getCurrentUploadLimit();
-        int currDataUploadSpeed = adapter.getCurrentDataUploadSpeed();
-        int currProtoUploadSpeed = adapter.getCurrentProtocolUploadSpeed();
-        int upRateBitsPerSec = currDataUploadSpeed + currProtoUploadSpeed;
+    	long currUploadLimit = adapter.getCurrentUploadLimit();
+    	long currDataUploadSpeed = adapter.getCurrentDataUploadSpeed();
+        long currProtoUploadSpeed = adapter.getCurrentProtocolUploadSpeed();
+        long upRateBitsPerSec = currDataUploadSpeed + currProtoUploadSpeed;
 
-        int currDownLimit = adapter.getCurrentDownloadLimit();
-        int downDataRate = adapter.getCurrentDataDownloadSpeed();
-        int downProtoRate = adapter.getCurrentProtocolDownloadSpeed();
-        int downRateBitsPerSec = downDataRate+downProtoRate;
+        long currDownLimit = adapter.getCurrentDownloadLimit();
+        long downDataRate = adapter.getCurrentDataDownloadSpeed();
+        long downProtoRate = adapter.getCurrentProtocolDownloadSpeed();
+        long downRateBitsPerSec = downDataRate+downProtoRate;
 
         //update the bandwidth status
         limitMonitor.setDownloadBandwidthMode(downRateBitsPerSec,currDownLimit);
@@ -182,7 +182,7 @@ public class SpeedManagerAlgorithmProviderPingMap
      * @param upRate -
      * @param currUploadLimit -
      */
-    private void logCurrentData(int downRate, int currDownLimit, int upRate, int currUploadLimit) {
+    private void logCurrentData(long downRate, long currDownLimit, long upRate, long currUploadLimit) {
         StringBuilder sb = new StringBuilder("curr-data-m:"+downRate+":"+currDownLimit+":");
         sb.append( limitMonitor.getDownloadMaxLimit() ).append(":");
         sb.append(limitMonitor.getDownloadBandwidthMode()).append(":");
@@ -292,8 +292,8 @@ public class SpeedManagerAlgorithmProviderPingMap
             hadAdjustmentLastInterval=true;
 
             float multiple = consectiveMultiplier();
-            int currUpLimit = adapter.getCurrentUploadLimit();
-            int currDownLimit = adapter.getCurrentDownloadLimit();
+            long currUpLimit = adapter.getCurrentUploadLimit();
+            long currDownLimit = adapter.getCurrentDownloadLimit();
 
             limitMonitor.checkForUnpinningCondition();
 
@@ -309,8 +309,8 @@ public class SpeedManagerAlgorithmProviderPingMap
             hadAdjustmentLastInterval=false;
 
             //verify the limits. It is possible for the user to adjust the capacity down below the current limit, so check that condition here.
-            int currUploadLimit = adapter.getCurrentUploadLimit();
-            int currDownloadLimit = adapter.getCurrentDownloadLimit();
+            long currUploadLimit = adapter.getCurrentUploadLimit();
+            long currDownloadLimit = adapter.getCurrentDownloadLimit();
             if( !limitMonitor.areSettingsInSpec(currUploadLimit, currDownloadLimit) ){
                 SMUpdate update = limitMonitor.adjustLimitsToSpec(currUploadLimit, currDownloadLimit);
                 logNewLimits( update );
@@ -324,8 +324,8 @@ public class SpeedManagerAlgorithmProviderPingMap
     }
 
     private void endLimitTesting() {
-        int downLimitGuess = limitMonitor.guessDownloadLimit();
-        int upLimitGuess = limitMonitor.guessUploadLimit();
+    	long downLimitGuess = limitMonitor.guessDownloadLimit();
+    	long upLimitGuess = limitMonitor.guessUploadLimit();
 
         SMUpdate update = limitMonitor.endLimitTesting(downLimitGuess,
                 upLimitGuess );
@@ -390,12 +390,12 @@ public class SpeedManagerAlgorithmProviderPingMap
 
     private void logNewLimits( SMUpdate update ) {
         if( update.hasNewUploadLimit ){
-            int kbpsUpoadLimit = update.newUploadLimit/1024;
+        	long kbpsUpoadLimit = update.newUploadLimit/1024;
             log(" new up limit  : "+ kbpsUpoadLimit +" kb/s");
         }
 
         if( update.hasNewDownloadLimit ){
-            int kpbsDownloadLimit = update.newDownloadLimit/1024;
+        	long kpbsDownloadLimit = update.newDownloadLimit/1024;
             log(" new down limit: "+kpbsDownloadLimit+" kb/s");
         }
     }
@@ -622,12 +622,12 @@ public class SpeedManagerAlgorithmProviderPingMap
      */
 
     @Override
-    public int getCurrentChokeSpeed() {
+    public long getCurrentChokeSpeed() {
         return 0;
     }
 
     @Override
-    public int getMaxUploadSpeed() {
+    public long getMaxUploadSpeed() {
         return sessionMaxUploadRate;
     }
 

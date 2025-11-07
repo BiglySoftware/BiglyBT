@@ -1327,9 +1327,9 @@ public class TagUIUtils
 
 			long kInB = DisplayFormatters.getKinB();
 
-			long maxDownload = COConfigurationManager.getIntParameter(
+			long maxDownload = COConfigurationManager.getLongParameter(
 					"Max Download Speed KBs", 0) * kInB;
-			long maxUpload = COConfigurationManager.getIntParameter(
+			long maxUpload = COConfigurationManager.getLongParameter(
 					"Max Upload Speed KBs", 0) * kInB;
 
 			int down_speed 	= tf_rate_limit.getTagDownloadLimit();

@@ -637,9 +637,9 @@ NetworkAdminSpeedTestScheduledTestImpl
 
         	//global limits.
 
-        int maxUploadKbs;
-        int maxUploadSeedingKbs;
-        int maxDownloadKbs;
+        long maxUploadKbs;
+        long maxUploadSeedingKbs;
+        long maxDownloadKbs;
 
         boolean autoSpeedEnabled;
         boolean autoSpeedSeedingEnabled;
@@ -762,9 +762,9 @@ NetworkAdminSpeedTestScheduledTestImpl
          */
         private void saveGlobalLimits(){
             //int settings.
-            maxUploadKbs = COConfigurationManager.getIntParameter( TransferSpeedValidator.UPLOAD_CONFIGKEY );
-            maxUploadSeedingKbs = COConfigurationManager.getIntParameter( TransferSpeedValidator.UPLOAD_SEEDING_CONFIGKEY );
-            maxDownloadKbs = COConfigurationManager.getIntParameter( TransferSpeedValidator.DOWNLOAD_CONFIGKEY );
+            maxUploadKbs = COConfigurationManager.getLongParameter( TransferSpeedValidator.UPLOAD_CONFIGKEY );
+            maxUploadSeedingKbs = COConfigurationManager.getLongParameter( TransferSpeedValidator.UPLOAD_SEEDING_CONFIGKEY );
+            maxDownloadKbs = COConfigurationManager.getLongParameter( TransferSpeedValidator.DOWNLOAD_CONFIGKEY );
             //boolean setting.
             autoSpeedEnabled = COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_ENABLED_CONFIGKEY );
             autoSpeedSeedingEnabled = COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_SEEDING_ENABLED_CONFIGKEY );

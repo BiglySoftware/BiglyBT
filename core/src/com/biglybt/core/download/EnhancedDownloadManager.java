@@ -1485,7 +1485,7 @@ EnhancedDownloadManager
 				current = Math.min( current, dl_limit );
 			}
 
-			int global_limit = TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond();
+			long global_limit = TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond();
 
 			if ( global_limit > 0 ){
 

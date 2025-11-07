@@ -29,30 +29,30 @@ SpeedManagerAlgorithmProviderAdapter
 	public SpeedManager
 	getSpeedManager();
 
-	public int
+	public long
 	getCurrentProtocolUploadSpeed();
 
-	public int
+	public long
 	getCurrentDataUploadSpeed();
 
-	public int
+	public long
 	getCurrentUploadLimit();
 
 	public void
 	setCurrentUploadLimit(
-		int		bytes_per_second );
+			long		bytes_per_second );
 
-    public int
+    public long
     getCurrentProtocolDownloadSpeed();
 
-    public int
+    public long
     getCurrentDataDownloadSpeed();
 
-    public int
+    public long
 	getCurrentDownloadLimit();
 
     public void
-    setCurrentDownloadLimit(int bytes_per_second);
+    setCurrentDownloadLimit(long bytes_per_second);
 
     public SpeedManagerPingMapper
     getPingMapper();

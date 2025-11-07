@@ -58,10 +58,10 @@ public class SpeedLimitMonitor implements PSMonitorListener
 {
 
     //use for home network.
-    private int uploadLimitMax = SMConst.START_UPLOAD_RATE_MAX;
-    private int uploadLimitMin = SMConst.calculateMinUpload( uploadLimitMax );
-    private int downloadLimitMax = SMConst.START_DOWNLOAD_RATE_MAX;
-    private int downloadLimitMin = SMConst.calculateMinDownload( downloadLimitMax );
+    private long uploadLimitMax = SMConst.START_UPLOAD_RATE_MAX;
+    private long uploadLimitMin = SMConst.calculateMinUpload( uploadLimitMax );
+    private long downloadLimitMax = SMConst.START_DOWNLOAD_RATE_MAX;
+    private long downloadLimitMin = SMConst.calculateMinDownload( downloadLimitMax );
 
     private final TransferMode transferMode = new TransferMode();
 
@@ -82,12 +82,12 @@ public class SpeedLimitMonitor implements PSMonitorListener
 
     private boolean currTestDone;
     private boolean beginLimitTest;
-    private int highestUploadRate=0;
-    private int highestDownloadRate=0;
-    private int preTestUploadCapacity=5042;
-    private int preTestUploadLimit=5142;
-    private int preTestDownloadCapacity=5042;
-    private int preTestDownloadLimit=5142;
+    private long highestUploadRate=0;
+    private long highestDownloadRate=0;
+    private long preTestUploadCapacity=5042;
+    private long preTestUploadLimit=5142;
+    private long preTestDownloadCapacity=5042;
+    private long preTestDownloadLimit=5142;
 
     public static final String UPLOAD_CONF_LIMIT_SETTING="SpeedLimitMonitor.setting.upload.limit.conf";
     public static final String DOWNLOAD_CONF_LIMIT_SETTING="SpeedLimitMonitor.setting.download.limit.conf";
@@ -186,7 +186,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
                                             sm.getEstimatedUploadCapacityBytesPerSec(),
                                             SMConst.START_UPLOAD_RATE_MAX );
 
-        int upPingMapLimit = uEst.getBytesPerSec();
+        long upPingMapLimit = uEst.getBytesPerSec();
         if(upPingMapLimit<SMConst.START_UPLOAD_RATE_MAX){
             //will find upload limit via slow search.
             uploadLimitMax = SMConst.START_UPLOAD_RATE_MAX;
@@ -202,7 +202,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
                                             SMConst.START_DOWNLOAD_RATE_MAX );
 
 
-        int downPingMapLimit = dEst.getBytesPerSec();
+        long downPingMapLimit = dEst.getBytesPerSec();
         if( isSettingDownloadUnlimited() ){
             slider.setDownloadUnlimitedMode(true);
         }else{
@@ -234,7 +234,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         COConfigurationManager.setParameter(SpeedLimitMonitor.UPLOAD_CHOKE_PING_COUNT,uploadChokePingCount);
     }
 
-    private void logPMData(int oRate, SpeedLimitConfidence oConf, int nRate, float nConf, String type){
+    private void logPMData(long oRate, SpeedLimitConfidence oConf, long nRate, float nConf, String type){
 
 //        SpeedManagerLogger.log("speed-limit-conf: "+type+" rate="+oRate+" conf="+oConf.getString()+"("+oConf.asEstimateType()
 //                +") pm-rate="+nRate+" pm-conf="+nConf);
@@ -250,13 +250,13 @@ public class SpeedLimitMonitor implements PSMonitorListener
         SpeedManager sm = CoreFactory.getSingleton().getSpeedManager();
         SpeedManagerLimitEstimate dEst = sm.getEstimatedDownloadCapacityBytesPerSec();
 
-        int tmpDMax = dEst.getBytesPerSec();
+        long tmpDMax = dEst.getBytesPerSec();
         float tmpDMaxConf = dEst.getEstimateType();
 
 
         // for testing.
         SpeedManagerLimitEstimate uEst = sm.getEstimatedUploadCapacityBytesPerSec();
-        int tmpUMax = uEst.getBytesPerSec();
+        long tmpUMax = uEst.getBytesPerSec();
         float tmpUMaxConf = uEst.getEstimateType();
 
         SpeedLimitConfidence tuploadLimitConf = SpeedLimitConfidence.parseString(
@@ -283,7 +283,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         SpeedManager sm = adpter.getSpeedManager();
         SpeedManagerLimitEstimate dEst = sm.getEstimatedDownloadCapacityBytesPerSec();
 
-        int rate = dEst.getBytesPerSec();
+        long rate = dEst.getBytesPerSec();
         float type = dEst.getEstimateType();
 
         //user or plug-in want the download rate unlimited.
@@ -300,19 +300,19 @@ public class SpeedLimitMonitor implements PSMonitorListener
     }
 
     //SpeedLimitMonitorStatus
-    public void setDownloadBandwidthMode(int rate, int limit){
+    public void setDownloadBandwidthMode(long rate, long limit){
         downloadBandwidthStatus = SaturatedMode.getSaturatedMode(rate,limit);
     }
 
-    public void setUploadBandwidthMode(int rate, int limit){
+    public void setUploadBandwidthMode(long rate, long limit){
         uploadBandwidthStatus = SaturatedMode.getSaturatedMode(rate,limit);
     }
 
-    public void setDownloadLimitSettingMode(int currLimit){
+    public void setDownloadLimitSettingMode(long currLimit){
         downloadLimitSettingStatus = SaturatedMode.getSaturatedMode(currLimit, downloadLimitMax);
     }
 
-    public void setUploadLimitSettingMode(int currLimit){
+    public void setUploadLimitSettingMode(long currLimit){
         if( !transferMode.isDownloadMode() ){
             uploadLimitSettingStatus = SaturatedMode.getSaturatedMode(currLimit, uploadLimitMax);
         }else{
@@ -320,19 +320,19 @@ public class SpeedLimitMonitor implements PSMonitorListener
         }
     }
 
-    public int getUploadMaxLimit(){
+    public long getUploadMaxLimit(){
         return uploadLimitMax;
     }
 
-    public int getDownloadMaxLimit(){
+    public long getDownloadMaxLimit(){
         return downloadLimitMax;
     }
 
-    public int getUploadMinLimit(){
+    public long getUploadMinLimit(){
         return uploadLimitMin;
     }
 
-    public int getDownloadMinLimit(){
+    public long getDownloadMinLimit(){
         return downloadLimitMin;
     }
 
@@ -442,7 +442,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param currDownLimit -
      * @return  -
      */
-    public SMUpdate modifyLimits(float signalStrength, float multiple, int currUpLimit, int currDownLimit){
+    public SMUpdate modifyLimits(float signalStrength, float multiple, long currUpLimit, long currDownLimit){
 
         //this flag is set in a previous method.
         if( isStartLimitTestFlagSet() ){
@@ -600,7 +600,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param currLimitMax - current limit setting.
      * @return - set size for next change.
      */
-    private int calculateUnpinnedStepSize(int currLimitMax){
+    private long calculateUnpinnedStepSize(long currLimitMax){
         if(currLimitMax<102400){
             return 1024;
         }else if(currLimitMax<409600){
@@ -748,7 +748,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param downloadRate - currentUploadRate in bytes/sec
      * @param uploadRate - currentUploadRate in bytes/sec
      */
-    public synchronized void updateLimitTestingData( int downloadRate, int uploadRate ){
+    public synchronized void updateLimitTestingData( long downloadRate, long uploadRate ){
         if( downloadRate>highestDownloadRate ){
             highestDownloadRate=downloadRate;
         }
@@ -802,7 +802,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param currDownloadLimit -
      * @return - SMUpdate
      */
-    public SMUpdate startLimitTesting(int currUploadLimit, int currDownloadLimit){
+    public SMUpdate startLimitTesting(long currUploadLimit, long currDownloadLimit){
 
         clLastIncreaseTime =SystemTime.getCurrentTime();
         clFirstBadPingTime =-1;
@@ -823,12 +823,12 @@ public class SpeedLimitMonitor implements PSMonitorListener
         if( transferMode.isDownloadMode() ){
             //test the download limit.
             retVal = new SMUpdate(uploadLimitMin,true,
-                        Math.round(downloadLimitMax *1.2f),true);
+                        Math.round(downloadLimitMax *1.2),true);
             preTestDownloadCapacity = downloadLimitMax;
             transferMode.setMode( TransferMode.State.DOWNLOAD_LIMIT_SEARCH );
         }else{
             //test the upload limit.
-            retVal = new SMUpdate( Math.round(uploadLimitMax *1.2f),true,
+            retVal = new SMUpdate( Math.round(uploadLimitMax *1.2),true,
                         downloadLimitMin,true);
             preTestUploadCapacity = uploadLimitMax;
             transferMode.setMode( TransferMode.State.UPLOAD_LIMIT_SEARCH );
@@ -843,7 +843,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param downloadLimit -
      * @return -
      */
-    public SMUpdate rampTestingLimit(int uploadLimit, int downloadLimit){
+    public SMUpdate rampTestingLimit(long uploadLimit, long downloadLimit){
         SMUpdate retVal;
         if( transferMode.getMode() == TransferMode.State.DOWNLOAD_LIMIT_SEARCH
                 && downloadBandwidthStatus.isGreater( SaturatedMode.MED ) )
@@ -893,7 +893,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         return currTestDone;
     }
 
-    public synchronized SMUpdate endLimitTesting(int downloadCapacityGuess, int uploadCapacityGuess){
+    public synchronized SMUpdate endLimitTesting(long downloadCapacityGuess, long uploadCapacityGuess){
 
         SpeedManagerLogger.trace(" repalce highestDownloadRate: "+highestDownloadRate+" with "+downloadCapacityGuess);
         SpeedManagerLogger.trace(" replace highestUploadRate: "+highestUploadRate+" with "+uploadCapacityGuess);
@@ -960,8 +960,8 @@ public class SpeedLimitMonitor implements PSMonitorListener
         //String settingMinLimitName;
         boolean isDownload;
         String settingConfidenceName;
-        int preTestValue;
-        int highestValue;
+        long preTestValue;
+        long highestValue;
         if(transferMode.getMode()==TransferMode.State.DOWNLOAD_LIMIT_SEARCH){
 
             settingConfidenceName = DOWNLOAD_CONF_LIMIT_SETTING;
@@ -993,9 +993,9 @@ public class SpeedLimitMonitor implements PSMonitorListener
 
         //update the values.
         COConfigurationManager.setParameter(settingConfidenceName, retVal.getString() );
-        int newMaxLimitSetting = highestValue;
+        long newMaxLimitSetting = highestValue;
         COConfigurationManager.setParameter(settingMaxLimitName, newMaxLimitSetting);
-        int newMinLimitSetting;
+        long newMinLimitSetting;
         if( isDownload ){
             newMinLimitSetting = SMConst.calculateMinDownload( newMaxLimitSetting );
         }else{
@@ -1043,7 +1043,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param currDownloadLimit - reported download capacity from the adapter.
      * @return - true if the "capacity" is lower then the current limit.
      */
-    public boolean areSettingsInSpec(int currUploadLimit, int currDownloadLimit){
+    public boolean areSettingsInSpec(long currUploadLimit, long currDownloadLimit){
 
         //during a confidence level test, anything goes.
         if( isConfTestingLimits() ){
@@ -1060,10 +1060,10 @@ public class SpeedLimitMonitor implements PSMonitorListener
         return retVal;
     }
 
-    private int choseBestLimit(SpeedManagerLimitEstimate estimate, int currMaxLimit, SpeedLimitConfidence currConf) {
+    private long choseBestLimit(SpeedManagerLimitEstimate estimate, long currMaxLimit, SpeedLimitConfidence currConf) {
         float type = estimate.getEstimateType();
-        int estBytesPerSec = estimate.getBytesPerSec();
-        int chosenLimit;
+        long estBytesPerSec = estimate.getBytesPerSec();
+        long chosenLimit;
 
         //no estimate less then 20k accepted.
         if( (estBytesPerSec<currMaxLimit) && estBytesPerSec<20480 ){
@@ -1110,10 +1110,10 @@ public class SpeedLimitMonitor implements PSMonitorListener
     public void setRefLimits(SpeedManagerLimitEstimate estUp,SpeedManagerLimitEstimate estDown){
 
         SpeedManagerLimitEstimate up = SMConst.filterEstimate(estUp,SMConst.MIN_UPLOAD_BYTES_PER_SEC);
-        int upMax = choseBestLimit(up, uploadLimitMax, uploadLimitConf);
+        long upMax = choseBestLimit(up, uploadLimitMax, uploadLimitConf);
 
         SpeedManagerLimitEstimate down = SMConst.filterEstimate(estDown, SMConst.MIN_DOWNLOAD_BYTES_PER_SEC);
-        int downMax = choseBestLimit(down, downloadLimitMax, downloadLimitConf);
+        long downMax = choseBestLimit(down, downloadLimitMax, downloadLimitConf);
 
         if(downMax<upMax){
             SpeedManagerLogger.trace("down max-limit was less then up-max limit. increasing down max-limit. upMax="
@@ -1124,7 +1124,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         setRefLimits(upMax,downMax);
     }
 
-    public void setRefLimits(int uploadMax, int downloadMax){
+    public void setRefLimits(long uploadMax, long downloadMax){
 
         if( (uploadLimitMax!=uploadMax) && (uploadMax>0) ){
             uploadLimitMax=uploadMax;
@@ -1154,11 +1154,11 @@ public class SpeedLimitMonitor implements PSMonitorListener
      * @param currDownloadLimit -
      * @return - Updates as needed.
      */
-    public SMUpdate adjustLimitsToSpec(int currUploadLimit, int currDownloadLimit){
+    public SMUpdate adjustLimitsToSpec(long currUploadLimit, long currDownloadLimit){
 
-        int newUploadLimit = currUploadLimit;
+    	long newUploadLimit = currUploadLimit;
         boolean uploadChanged = false;
-        int newDownloadLimit = currDownloadLimit;
+        long newDownloadLimit = currDownloadLimit;
         boolean downloadChanged = false;
 
         StringBuilder reason = new StringBuilder();
@@ -1251,7 +1251,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         StringBuilder sb = new StringBuilder("beta-ping-maps-").append(name).append(": ");
 
         if(transEst!=null){
-            int rate = transEst.getBytesPerSec();
+        	long rate = transEst.getBytesPerSec();
             float conf = transEst.getMetricRating();
             sb.append("transient-").append(rate).append("(").append(conf).append(")");
         }
@@ -1259,7 +1259,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
 
 
         if(permEst!=null){
-            int rate = permEst.getBytesPerSec();
+        	long rate = permEst.getBytesPerSec();
             float conf = permEst.getMetricRating();
             sb.append("; perm-").append(rate).append("(").append(conf).append(")");
         }
@@ -1292,7 +1292,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         SpeedManagerLogger.log( sb.toString() );
     }//betaLogPingMapperEstimates
 
-    public int guessDownloadLimit(){
+    public long guessDownloadLimit(){
 
         if( !useVariancePingMap){
             return pingMapOfDownloadMode.guessDownloadLimit();
@@ -1327,7 +1327,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         }
     }//guessDownloadLimit
 
-    public int guessUploadLimit(){
+    public long guessUploadLimit(){
 
         if( !useVariancePingMap){
 
@@ -1415,9 +1415,9 @@ public class SpeedLimitMonitor implements PSMonitorListener
             SpeedManagerLimitEstimate estUp = persistentMap.getEstimatedUploadLimit(false);
             SpeedManagerLimitEstimate estDown = persistentMap.getEstimatedDownloadLimit(false);
 
-            int downLimGuess = estDown.getBytesPerSec();
+            long downLimGuess = estDown.getBytesPerSec();
             float downConf = estDown.getMetricRating();
-            int upLimGuess = estUp.getBytesPerSec();
+            long upLimGuess = estUp.getBytesPerSec();
             float upConf = estUp.getMetricRating();
 
             String name = persistentMap.getName();
@@ -1433,7 +1433,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         }
     }//logPingMapData
 
-    public void setCurrentTransferRates(int downRate, int upRate){
+    public void setCurrentTransferRates(long downRate, long upRate){
 
         if( pingMapOfDownloadMode!=null && pingMapOfSeedingMode!=null){
             pingMapOfDownloadMode.setCurrentTransferRates(downRate,upRate);
@@ -1483,7 +1483,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
 
     @Override
     public void notifyUpload(SpeedManagerLimitEstimate estimate) {
-        int bestLimit = choseBestLimit(estimate,uploadLimitMax,uploadLimitConf);
+    	long bestLimit = choseBestLimit(estimate,uploadLimitMax,uploadLimitConf);
 
         SpeedManagerLogger.trace("notifyUpload uploadLimitMax="+uploadLimitMax);
         tempLogEstimate(estimate);
@@ -1507,7 +1507,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
 
     @Override
     public void notifyDownload(SpeedManagerLimitEstimate estimate) {
-        int bestLimit = choseBestLimit(estimate,downloadLimitMax,downloadLimitConf);
+    	long bestLimit = choseBestLimit(estimate,downloadLimitMax,downloadLimitConf);
 
         SpeedManagerLogger.trace("notifyDownload downloadLimitMax="+downloadLimitMax
                 +" conf="+downloadLimitConf.getString()+" ("+downloadLimitConf.asEstimateType()+")");
@@ -1544,7 +1544,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         StringBuilder sb = new StringBuilder();
         float metric = est.getMetricRating();
         float type = est.getEstimateType();
-        int rate = est.getBytesPerSec();
+        long rate = est.getBytesPerSec();
 
         String str = est.getString();
 

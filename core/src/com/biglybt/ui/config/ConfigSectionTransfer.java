@@ -46,15 +46,15 @@ public class ConfigSectionTransfer
 	public void build() {
 
 		//  store the initial d/l speed so we can do something sensible later
-		final int[] manual_max_download_speed = {
-			COConfigurationManager.getIntParameter(ICFG_MAX_DOWNLOAD_SPEED_KBS)
+		final long[] manual_max_download_speed = {
+			COConfigurationManager.getLongParameter(LCFG_MAX_DOWNLOAD_SPEED_KBS)
 		};
 
 		//  max upload speed
 
-		IntParameterImpl paramMaxUploadSpeed = new IntParameterImpl(
-				ICFG_MAX_UPLOAD_SPEED_KBS, "ConfigView.label.maxuploadspeed", 0,
-				Integer.MAX_VALUE);
+		LongParameterImpl paramMaxUploadSpeed = new LongParameterImpl(
+				LCFG_MAX_UPLOAD_SPEED_KBS, "ConfigView.label.maxuploadspeed", 0,
+				Long.MAX_VALUE);
 		add(paramMaxUploadSpeed);
 
 		//  max upload speed when seeding
@@ -64,8 +64,8 @@ public class ConfigSectionTransfer
 				"ConfigView.label.maxuploadspeedseeding");
 		add(enable_seeding_rate);
 
-		IntParameterImpl paramMaxUploadSpeedSeeding = new IntParameterImpl(
-				ICFG_MAX_UPLOAD_SPEED_SEEDING_KBS, null, 0, Integer.MAX_VALUE);
+		LongParameterImpl paramMaxUploadSpeedSeeding = new LongParameterImpl(
+				LCFG_MAX_UPLOAD_SPEED_SEEDING_KBS, null, 0, Long.MAX_VALUE);
 		add(paramMaxUploadSpeedSeeding);
 
 		enable_seeding_rate.addEnabledOnSelection(paramMaxUploadSpeedSeeding);
@@ -89,9 +89,9 @@ public class ConfigSectionTransfer
 
 		// max download speed
 
-		IntParameterImpl paramMaxDownSpeed = new IntParameterImpl(
-				ICFG_MAX_DOWNLOAD_SPEED_KBS, "ConfigView.label.maxdownloadspeed", 0,
-				Integer.MAX_VALUE);
+		LongParameterImpl paramMaxDownSpeed = new LongParameterImpl(
+				LCFG_MAX_DOWNLOAD_SPEED_KBS, "ConfigView.label.maxdownloadspeed", 0,
+				Long.MAX_VALUE);
 		add(paramMaxDownSpeed);
 
 		// max upload/download limit dependencies
@@ -134,8 +134,8 @@ public class ConfigSectionTransfer
 						return;
 					}
 
-					int up_val = paramMaxUploadSpeed.getValue();
-					int down_val = paramMaxDownSpeed.getValue();
+					long up_val = paramMaxUploadSpeed.getValue();
+					long down_val = paramMaxDownSpeed.getValue();
 
 					if (up_val != 0
 							&& up_val < COConfigurationManager.CONFIG_DEFAULT_MIN_MAX_UPLOAD_SPEED) {
@@ -164,8 +164,8 @@ public class ConfigSectionTransfer
 						return;
 					}
 
-					int up_val = paramMaxUploadSpeed.getValue();
-					int down_val = paramMaxDownSpeed.getValue();
+					long up_val = paramMaxUploadSpeed.getValue();
+					long down_val = paramMaxDownSpeed.getValue();
 
 					manual_max_download_speed[0] = down_val;
 

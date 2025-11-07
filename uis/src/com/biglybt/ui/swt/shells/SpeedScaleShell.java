@@ -74,15 +74,15 @@ public class SpeedScaleShell
 
 	private int WIDTH_NO_PADDING;
 
-	private int value;
+	private long value;
 
 	private boolean cancelled;
 
-	private int minValue;
+	private long minValue;
 
-	private int maxValue;
+	private long maxValue;
 
-	private int maxTextValue;
+	private long maxTextValue;
 
 	private int pageIncrement;
 
@@ -92,7 +92,7 @@ public class SpeedScaleShell
 
 	private Shell parentShell;
 
-	private LinkedHashMap mapOptions = new LinkedHashMap();
+	private LinkedHashMap<Long,String> mapOptions = new LinkedHashMap<>();
 
 	private String sValue = "";
 
@@ -128,7 +128,7 @@ public class SpeedScaleShell
 	 *
 	 * @since 3.0.1.7
 	 */
-	public boolean open(final Control cClickedFrom, final int startValue,
+	public boolean open(final Control cClickedFrom, final long startValue,
 			boolean _assumeInitiallyDown) {
 		long openTime = SystemTime.getMonotonousTime();
 		value = startValue;
@@ -149,8 +149,8 @@ public class SpeedScaleShell
 		gc.setAntialias(SWT.ON);
 		WIDTH = MIN_WIDTH;
 		Rectangle r = new Rectangle(0, 0, 9999, 20);
-		for (Iterator iter = mapOptions.keySet().iterator(); iter.hasNext();) {
-			Integer value = (Integer) iter.next();
+		for (Iterator<Long> iter = mapOptions.keySet().iterator(); iter.hasNext();) {
+			long value =  iter.next();
 			String text = (String) mapOptions.get(value);
 
 			String s = getStringValue(value, text);
@@ -338,10 +338,10 @@ public class SpeedScaleShell
 						}
 					} else if (ptOnComposite.y > TEXT_HEIGHT) {
 						int idx = (ptOnComposite.y - TEXT_HEIGHT) / OPTION_HEIGHT;
-						Iterator iterator = mapOptions.keySet().iterator();
-						int newValue;
+						Iterator<Long> iterator = mapOptions.keySet().iterator();
+						long newValue;
 						do {
-							newValue = ((Integer) iterator.next()).intValue();
+							newValue = iterator.next();
 							idx--;
 						} while (idx >= 0);
 						value = newValue; // ignore min/max
@@ -392,14 +392,14 @@ public class SpeedScaleShell
 		composite.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e) {
-				int valueRange = maxValue - minValue;
-				int x = WIDTH_NO_PADDING * (value - minValue) / valueRange;
+				long valueRange = maxValue - minValue;
+				long x = WIDTH_NO_PADDING * (value - minValue) / valueRange;
 				if (x < 0) {
 					x = 0;
 				} else if (x > WIDTH_NO_PADDING) {
 					x = WIDTH_NO_PADDING;
 				}
-				int startX = WIDTH_NO_PADDING * (startValue - minValue) / valueRange;
+				long startX = WIDTH_NO_PADDING * (startValue - minValue) / valueRange;
 				if (startX < 0) {
 					startX = 0;
 				} else if (startX > WIDTH_NO_PADDING) {
@@ -430,10 +430,10 @@ public class SpeedScaleShell
 				e.gc.setForeground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND));
 				e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND));
 				// start value marker
-				e.gc.drawLine(PADDING_X0 + startX, baseLinePos - PX_5,
-						PADDING_X0 + startX, baseLinePos + PX_5);
+				e.gc.drawLine((int)(PADDING_X0 + startX), baseLinePos - PX_5,
+						(int)(PADDING_X0 + startX), baseLinePos + PX_5);
 				// current value marker
-				e.gc.fillRoundRectangle(PADDING_X0 + x - PX_2, baseLinePos - PX_5,
+				e.gc.fillRoundRectangle((int)(PADDING_X0 + x - PX_2), baseLinePos - PX_5,
 						MARKER_WIDTH, MARKER_HEIGHT, MARKER_HEIGHT, MARKER_HEIGHT);
 
 				// Current Value Text
@@ -451,8 +451,8 @@ public class SpeedScaleShell
 				// options list
 				int y = TEXT_HEIGHT;
 				Point mousePos = composite.toControl(display.getCursorLocation());
-				for (Iterator iter = mapOptions.keySet().iterator(); iter.hasNext();) {
-					Integer value = (Integer) iter.next();
+				for (Iterator<Long> iter = mapOptions.keySet().iterator(); iter.hasNext();) {
+					long value = iter.next();
 					String text = (String) mapOptions.get(value);
 
 					e.gc.setAntialias(SWT.ON);
@@ -476,7 +476,7 @@ public class SpeedScaleShell
 					int ovalSize = OPTION_HEIGHT - ovalGap;
 					float xCenter = (ovalSize / 2.0f) + PX_2;
 					float yCenter = (ovalSize / 2.0f) + ovalPadding;
-					if (getValue() == value.intValue()) {
+					if (getValue() == value) {
 						Color saveColor = e.gc.getBackground();
 						e.gc.setBackground(e.gc.getForeground());
 						float ovalSizeMini = ovalSize - (ovalGap / 2.0f);
@@ -590,7 +590,7 @@ public class SpeedScaleShell
 					return;
 				}
 				try {
-					int newValue = Integer.parseInt(sValue);
+					long newValue = Long.parseLong(sValue);
 					if (maxTextValue == -1) {
 						setValue(newValue);
 					} else {
@@ -669,8 +669,8 @@ public class SpeedScaleShell
 	 *
 	 * @since 3.0.1.7
 	 */
-	protected int getValueFromMousePos(int x) {
-		int x0 = x + 1;
+	protected long getValueFromMousePos(int x) {
+		long x0 = x + 1;
 		if (x < PADDING_X0) {
 			x0 = PADDING_X0;
 		} else if (x > PADDING_X0 + WIDTH_NO_PADDING) {
@@ -681,7 +681,7 @@ public class SpeedScaleShell
 				+ minValue;
 	}
 
-	public int getValue() {
+	public long getValue() {
 		return value;
 	}
 
@@ -693,23 +693,23 @@ public class SpeedScaleShell
 		this.cancelled = cancelled;
 	}
 
-	public int getMinValue() {
+	public long getMinValue() {
 		return minValue;
 	}
 
-	public void setMinValue(int minValue) {
+	public void setMinValue(long minValue) {
 		this.minValue = minValue;
 	}
 
-	public int getMaxValue() {
+	public long getMaxValue() {
 		return maxValue;
 	}
 
-	public void setMaxValue(int maxValue) {
+	public void setMaxValue(long maxValue) {
 		this.maxValue = maxValue;
 	}
 
-	public void setValue(int value) {
+	public void setValue(long value) {
 		//System.out.println("sv " + value + ";" + Debug.getCompressedStackTrace());
 		if (value > maxValue) {
 			value = maxValue;
@@ -723,11 +723,11 @@ public class SpeedScaleShell
 	}
 
 	public String _getStringValue() {
-		String name = (String) mapOptions.get(new Integer(value));
+		String name = (String) mapOptions.get(new Long(value));
 		return getStringValue(value, name);
 	}
 
-	public String getStringValue(int value, String sValue) {
+	public String getStringValue(long value, String sValue) {
 		if (sValue != null) {
 			return sValue;
 		}
@@ -738,16 +738,16 @@ public class SpeedScaleShell
 		return HEIGHT - (SCALER_HEIGHT / 2);
 	}
 
-	public void addOption(String id, int value) {
-		mapOptions.put(new Integer(value), id);
+	public void addOption(String id, long value) {
+		mapOptions.put(new Long(value), id);
 		HEIGHT += OPTION_HEIGHT;
 	}
 
-	public int getMaxTextValue() {
+	public long getMaxTextValue() {
 		return maxTextValue;
 	}
 
-	public void setMaxTextValue(int maxTextValue) {
+	public void setMaxTextValue(long maxTextValue) {
 		this.maxTextValue = maxTextValue;
 	}
 

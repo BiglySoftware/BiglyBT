@@ -92,7 +92,7 @@ GlobalManagerStatsImpl
     private long total_data_bytes_sent;
     private long total_protocol_bytes_sent;
 
-    private int	data_send_speed_at_close;
+    private long data_send_speed_at_close;
 
 	private final Average data_receive_speed = Average.getInstance(1000, 10);  //average over 10s, update every 1000ms
     private final Average protocol_receive_speed = Average.getInstance(1000, 10);  //average over 10s, update every 1000ms
@@ -261,7 +261,7 @@ GlobalManagerStatsImpl
 	protected void
 	load()
 	{
-		data_send_speed_at_close	= COConfigurationManager.getIntParameter( "globalmanager.stats.send.speed.at.close", 0 );
+		data_send_speed_at_close	= COConfigurationManager.getLongParameter( "globalmanager.stats.send.speed.at.close", 0 );
 	}
 
 	protected void
@@ -271,7 +271,7 @@ GlobalManagerStatsImpl
 	}
 
 	@Override
-	public int
+	public long
 	getDataSendRateAtClose()
 	{
 		return( data_send_speed_at_close );
@@ -322,16 +322,16 @@ GlobalManagerStatsImpl
 	}
 
 	@Override
-	public int getDataReceiveRate() {
-		return (int)data_receive_speed.getAverage();
+	public long getDataReceiveRate() {
+		return data_receive_speed.getAverage();
 	}
 	@Override
-	public int getDataReceiveRateNoLAN() {
-		return (int)data_receive_speed_no_lan.getAverage();
+	public long getDataReceiveRateNoLAN() {
+		return data_receive_speed_no_lan.getAverage();
 	}
 	@Override
-	public int getDataReceiveRateNoLAN(int average_period) {
-		return (int)(average_period<=0?data_receive_speed_no_lan.getAverage():data_receive_speed_no_lan.getAverage(average_period));
+	public long getDataReceiveRateNoLAN(int average_period) {
+		return (average_period<=0?data_receive_speed_no_lan.getAverage():data_receive_speed_no_lan.getAverage(average_period));
 	}
 	@Override
 	public int getProtocolReceiveRate() {
@@ -352,16 +352,16 @@ GlobalManagerStatsImpl
 	}
 
 	@Override
-	public int getDataSendRate() {
-		return (int)data_send_speed.getAverage();
+	public long getDataSendRate() {
+		return data_send_speed.getAverage();
 	}
 	@Override
-	public int getDataSendRateNoLAN() {
-		return (int)data_send_speed_no_lan.getAverage();
+	public long getDataSendRateNoLAN() {
+		return data_send_speed_no_lan.getAverage();
 	}
 	@Override
-	public int getDataSendRateNoLAN(int average_period) {
-		return (int)(average_period<=0?data_send_speed_no_lan.getAverage():data_send_speed_no_lan.getAverage(average_period));
+	public long getDataSendRateNoLAN(int average_period) {
+		return (average_period<=0?data_send_speed_no_lan.getAverage():data_send_speed_no_lan.getAverage(average_period));
 	}
 
 	@Override
