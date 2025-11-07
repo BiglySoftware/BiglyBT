@@ -59,19 +59,21 @@ public class NetworkManager {
   
   private static final NetworkManager instance = new NetworkManager();
 
-  static long max_download_rate_bps;
-  static long external_max_download_rate_bps;
+  private static long external_max_download_rate_bps;
+  private static long external_max_upload_rate_bps_normal;
+  private static long external_max_upload_rate_bps_seeding_only;
+  
+  private static long max_download_rate_bps_adj;
+  private static long max_upload_rate_bps_normal_adj;
+  private static long max_upload_rate_bps_seeding_only_adj;
+  private static long max_upload_rate_bps_adj;
 
-  static long max_upload_rate_bps_normal;
-  static long max_upload_rate_bps_seeding_only;
-  static long max_upload_rate_bps;
+  private static boolean lan_rate_enabled;
+  private static long max_lan_upload_rate_bps_adj;
+  private static long max_lan_download_rate_bps_adj;
 
-  static boolean lan_rate_enabled;
-  static long max_lan_upload_rate_bps;
-  static long max_lan_download_rate_bps;
-
-  static boolean seeding_only_mode_allowed;
-  static boolean seeding_only_mode = false;
+  private static boolean seeding_only_mode_allowed;
+  private static boolean seeding_only_mode = false;
 
   public static boolean 	REQUIRE_CRYPTO_HANDSHAKE;
   public static boolean 	INCOMING_HANDSHAKE_FALLBACK_ALLOWED;
@@ -109,32 +111,30 @@ public class NetworkManager {
 
     				 USE_REQUEST_LIMITING					= COConfigurationManager.getBooleanParameter("Use Request Limiting");
 
-    				 max_upload_rate_bps_normal = COConfigurationManager.getLongParameter( "Max Upload Speed KBs" ) * 1024;
-    				 if( max_upload_rate_bps_normal < 1024 )  max_upload_rate_bps_normal = UNLIMITED_RATE;
-    				 if( max_upload_rate_bps_normal > UNLIMITED_RATE )  max_upload_rate_bps_normal = UNLIMITED_RATE;
+    				 external_max_upload_rate_bps_normal = max_upload_rate_bps_normal_adj = COConfigurationManager.getLongParameter( "Max Upload Speed KBs" ) * 1024;
+    				 if( max_upload_rate_bps_normal_adj < 1024 )  max_upload_rate_bps_normal_adj = UNLIMITED_RATE;
+    				 if( max_upload_rate_bps_normal_adj > UNLIMITED_RATE )  max_upload_rate_bps_normal_adj = UNLIMITED_RATE;
 
-    				 max_lan_upload_rate_bps = COConfigurationManager.getLongParameter( "Max LAN Upload Speed KBs" ) * 1024;
-    				 if( max_lan_upload_rate_bps < 1024 )  max_lan_upload_rate_bps = UNLIMITED_RATE;
-    				 if( max_lan_upload_rate_bps > UNLIMITED_RATE )  max_lan_upload_rate_bps = UNLIMITED_RATE;
+    				 max_lan_upload_rate_bps_adj = COConfigurationManager.getLongParameter( "Max LAN Upload Speed KBs" ) * 1024;
+    				 if( max_lan_upload_rate_bps_adj < 1024 )  max_lan_upload_rate_bps_adj = UNLIMITED_RATE;
+    				 if( max_lan_upload_rate_bps_adj > UNLIMITED_RATE )  max_lan_upload_rate_bps_adj = UNLIMITED_RATE;
 
-
-    				 max_upload_rate_bps_seeding_only = COConfigurationManager.getLongParameter( "Max Upload Speed Seeding KBs" ) * 1024;
-    				 if( max_upload_rate_bps_seeding_only < 1024 )  max_upload_rate_bps_seeding_only = UNLIMITED_RATE;
-    				 if( max_upload_rate_bps_seeding_only > UNLIMITED_RATE )  max_upload_rate_bps_seeding_only = UNLIMITED_RATE;
+    				 external_max_upload_rate_bps_seeding_only = max_upload_rate_bps_seeding_only_adj = COConfigurationManager.getLongParameter( "Max Upload Speed Seeding KBs" ) * 1024;
+    				 if( max_upload_rate_bps_seeding_only_adj < 1024 )  max_upload_rate_bps_seeding_only_adj = UNLIMITED_RATE;
+    				 if( max_upload_rate_bps_seeding_only_adj > UNLIMITED_RATE )  max_upload_rate_bps_seeding_only_adj = UNLIMITED_RATE;
 
     				 seeding_only_mode_allowed = COConfigurationManager.getBooleanParameter( "enable.seedingonly.upload.rate" );
 
-
-    				 external_max_download_rate_bps = max_download_rate_bps = (COConfigurationManager.getLongParameter( "Max Download Speed KBs" ) * 1024); // leave 5KiB/s room for the request limiting
-    				 if( max_download_rate_bps < 1024 || max_download_rate_bps > UNLIMITED_RATE)
-    					 max_download_rate_bps = UNLIMITED_RATE;
+    				 external_max_download_rate_bps = max_download_rate_bps_adj = (COConfigurationManager.getLongParameter( "Max Download Speed KBs" ) * 1024); 
+    				 if( max_download_rate_bps_adj < 1024 || max_download_rate_bps_adj > UNLIMITED_RATE)
+    					 max_download_rate_bps_adj = UNLIMITED_RATE;
     				 else if(USE_REQUEST_LIMITING && FeatureAvailability.isRequestLimitingEnabled())
-    					 max_download_rate_bps += Math.max(max_download_rate_bps * 0.1, 5*1024);
+    					 max_download_rate_bps_adj += Math.max(max_download_rate_bps_adj * 0.1, 5*1024); // leave some room for the request limiting
 
     				 lan_rate_enabled = COConfigurationManager.getBooleanParameter("LAN Speed Enabled");
-    				 max_lan_download_rate_bps = COConfigurationManager.getLongParameter( "Max LAN Download Speed KBs" ) * 1024;
-    				 if( max_lan_download_rate_bps < 1024 )  max_lan_download_rate_bps = UNLIMITED_RATE;
-    				 if( max_lan_download_rate_bps > UNLIMITED_RATE )  max_lan_download_rate_bps = UNLIMITED_RATE;
+    				 max_lan_download_rate_bps_adj = COConfigurationManager.getLongParameter( "Max LAN Download Speed KBs" ) * 1024;
+    				 if( max_lan_download_rate_bps_adj < 1024 )  max_lan_download_rate_bps_adj = UNLIMITED_RATE;
+    				 if( max_lan_download_rate_bps_adj > UNLIMITED_RATE )  max_lan_download_rate_bps_adj = UNLIMITED_RATE;
 
 				     if (first) {
 				     	first = false;
@@ -195,13 +195,13 @@ public class NetworkManager {
 				  public long
 				  getRateLimitBytesPerSecond()
 				  {
-					  return max_upload_rate_bps;
+					  return max_upload_rate_bps_adj;
 				  }
 				  @Override
 				  public boolean
 				  isDisabled()
 				  {
-					  return( max_upload_rate_bps == -1 );
+					  return( max_upload_rate_bps_adj == -1 );
 				  }
 				  @Override
 				  public void
@@ -227,13 +227,13 @@ public class NetworkManager {
 				  public long
 				  getRateLimitBytesPerSecond()
 				  {
-					  return max_download_rate_bps;
+					  return max_download_rate_bps_adj;
 				  }
 				  @Override
 				  public boolean
 				  isDisabled()
 				  {
-					  return( max_download_rate_bps == -1 );
+					  return( max_download_rate_bps_adj == -1 );
 				  }
 				  @Override
 				  public void
@@ -259,13 +259,13 @@ public class NetworkManager {
 				  public long
 				  getRateLimitBytesPerSecond()
 				  {
-					  return max_lan_upload_rate_bps;
+					  return max_lan_upload_rate_bps_adj;
 				  }
 				  @Override
 				  public boolean
 				  isDisabled()
 				  {
-					  return( max_lan_upload_rate_bps == -1 );
+					  return( max_lan_upload_rate_bps_adj == -1 );
 				  }
 				  @Override
 				  public void
@@ -291,13 +291,13 @@ public class NetworkManager {
 				  public long
 				  getRateLimitBytesPerSecond()
 				  {
-					  return max_lan_download_rate_bps;
+					  return max_lan_download_rate_bps_adj;
 				  }
 				  @Override
 				  public boolean
 				  isDisabled()
 				  {
-					  return( max_lan_download_rate_bps == -1 );
+					  return( max_lan_download_rate_bps_adj == -1 );
 				  }
 				  @Override
 				  public void
@@ -332,21 +332,21 @@ public class NetworkManager {
 
   static void refreshRates() {
     if( isSeedingOnlyUploadRate() ) {
-      max_upload_rate_bps = max_upload_rate_bps_seeding_only;
+      max_upload_rate_bps_adj = max_upload_rate_bps_seeding_only_adj;
     }
     else {
-      max_upload_rate_bps = max_upload_rate_bps_normal;
+      max_upload_rate_bps_adj = max_upload_rate_bps_normal_adj;
     }
 
-    if( max_upload_rate_bps < 1024 ) {
-      Debug.out( "max_upload_rate_bps < 1024=" +max_upload_rate_bps);
+    if( max_upload_rate_bps_adj < 1024 ) {
+      Debug.out( "max_upload_rate_bps < 1024=" +max_upload_rate_bps_adj);
     }
 
     	//ensure that mss isn't greater than up/down rate limits
 
-    long	min_rate = Math.min( max_upload_rate_bps,
-    					Math.min( max_download_rate_bps,
-    						Math.min( max_lan_upload_rate_bps, max_lan_download_rate_bps )));
+    long	min_rate = Math.min( max_upload_rate_bps_adj,
+    					Math.min( max_download_rate_bps_adj,
+    						Math.min( max_lan_upload_rate_bps_adj, max_lan_download_rate_bps_adj )));
 
     TCPNetworkManager.refreshRates( min_rate );
     UDPNetworkManager.refreshRates( min_rate );
@@ -358,20 +358,14 @@ public class NetworkManager {
   }
   
   public static long getMaxUploadRateBPSNormal() {
-	  if( max_upload_rate_bps_normal == UNLIMITED_RATE )  return 0;
-	  return max_upload_rate_bps_normal;
+	  return external_max_upload_rate_bps_normal;
   }
 
   public static long getMaxUploadRateBPSSeedingOnly() {
-	  if( max_upload_rate_bps_seeding_only == UNLIMITED_RATE )  return 0;
-	  return max_upload_rate_bps_seeding_only;
+	  return external_max_upload_rate_bps_seeding_only;
   }
 
-  /**
-   * This method is for display purposes only, the internal rate limiting is 10% higher than returned by this method!
-   */
   public static long getMaxDownloadRateBPS() {
-	  if( max_download_rate_bps == UNLIMITED_RATE )  return 0;
 	  return external_max_download_rate_bps;
   }
 	  
