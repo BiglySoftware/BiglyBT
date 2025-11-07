@@ -78,7 +78,7 @@ GenericMessageDecoder
 
 			long	bytes_read;
 
-			int		read_lim = (int)( max_bytes - total_read );
+			long	read_lim = max_bytes - total_read;
 
 			ByteBuffer	payload_buffer = buffers[1];
 
@@ -89,7 +89,7 @@ GenericMessageDecoder
 
 				if ( rem > read_lim ){
 
-					length_buffer.limit( length_buffer.position() + read_lim );
+					length_buffer.limit( length_buffer.position() + (int)read_lim );
 				}
 
 				bytes_read = transport.read( buffers, 0, 1 );
@@ -133,7 +133,7 @@ GenericMessageDecoder
 
 				if ( rem > read_lim ){
 
-					payload_buffer.limit( payload_buffer.position() + read_lim );
+					payload_buffer.limit( payload_buffer.position() + (int)read_lim );
 				}
 
 				bytes_read = transport.read( buffers, 1, 1 );
