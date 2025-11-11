@@ -20,6 +20,7 @@
 package com.biglybt.core.networkmanager.impl;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -96,6 +97,11 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   private long	progress_count;
   private long	non_progress_count;
 
+  private volatile boolean	processing_waiting;
+  private final ConcurrentLinkedQueue<RateControlledEntity>	to_deactivate = new ConcurrentLinkedQueue<>();
+  
+  private final AEThread2 write_processor_thread;
+  
   private final EventWaiter 	write_waiter = new EventWaiter();
 
   private NetworkManager	net_man;
@@ -111,7 +117,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   {
 	  partition_id = _partition_id;
     //start write handler processing
-    AEThread2 write_processor_thread = new AEThread2( "WriteController:WriteProcessor - " + partition_id ) {
+    write_processor_thread = new AEThread2( "WriteController:WriteProcessor - " + partition_id ) {
       @Override
       public void run() {
         writeProcessorLoop();
@@ -278,33 +284,70 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
     while( true ) {
 
       process_loop_time = SystemTime.getMonotonousTime();
-
+      
       tick_count++;
       
-      try {
-        if( check_high_first ) {
-          check_high_first = false;
-          if( !doHighPriorityWrite() ) {
-            if( !doNormalPriorityWrite( tick_count ) ) {
-              if ( write_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
-            	  wait_count++;
-              }
-            }
-          }
-        }
-        else {
-          check_high_first = true;
-          if( !doNormalPriorityWrite( tick_count ) ) {
-            if( !doHighPriorityWrite() ) {
-            	if ( write_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
-            		wait_count++;
-            	}
-            }
-          }
-        }
-      }catch( Throwable t ){
+      while( true ){
     	  
-        Debug.out( "writeProcessorLoop() EXCEPTION: ", t );
+    	  RateControlledEntity e =  to_deactivate.poll();
+    	  
+    	  if ( e == null ){
+    		  
+    		  break;
+    		  
+    	  }else{
+    		  
+    		  e.activeWriteControllerRelease( false );
+    	  }
+      }
+    	  
+      try{    	  
+    	  if ( check_high_first ){
+    		  
+    		  check_high_first = false;
+    		  
+    		  if ( !doHighPriorityWrite()){
+    			  
+    			  if ( !doNormalPriorityWrite( tick_count )){
+    				  
+    				  try{
+    					  processing_waiting = true;
+    					  
+	    				  if ( write_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
+	    					  
+	    					  wait_count++;
+	    				  }
+    				  }finally{
+    					  
+    					  processing_waiting = false;
+    				  }
+    			  }
+    		  }
+    	  }
+    	  else {
+    		  check_high_first = true;
+    		  
+    		  if ( !doNormalPriorityWrite( tick_count )){
+    			  
+    			  if ( !doHighPriorityWrite()){
+    				     
+    				  try{
+    					  processing_waiting = true;
+    					  
+	    				  if ( write_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
+	    					  
+	    					  wait_count++;
+	    				  }
+    				  }finally{
+    					  
+    					  processing_waiting = false;
+    				  }
+    			  }
+    		  }
+    	  }
+      }catch( Throwable t ){
+
+    	  Debug.out( "writeProcessorLoop() EXCEPTION: ", t );
       }
 
       if ( process_loop_time - last_check > 5000 ){
@@ -560,7 +603,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  
 				  for ( RateControlledEntity e: normal_ref ){
 					  
-					  if ( e.canProcess( write_waiter )){
+					  if ( e.isWriteControllerActive( partition_id ) && e.canProcess( write_waiter )){
 						  
 						  normal_data += e.getBytesReadyToWrite();
 						  
@@ -581,7 +624,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  
 				  for ( RateControlledEntity e: boosted_ref ){
 					  
-					  if ( e.canProcess( write_waiter )){
+					  if ( e.isWriteControllerActive( partition_id ) && e.canProcess( write_waiter )){
 						  
 						  booster_data += e.getBytesReadyToWrite();
 						  
@@ -610,7 +653,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  
 			  next_boost_position++;
 			  
-			  if ( entity.canProcess( write_waiter )){ 
+			  if ( entity.isWriteControllerActive( partition_id ) && entity.canProcess( write_waiter )){ 
 				  
 				  long boosted = entity.doProcessing( write_waiter, 0 );
 				  
@@ -647,7 +690,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 					  RateControlledEntity entity = (RateControlledEntity)normal_ref.get( next_normal_position );
 					  next_normal_position++;
 					  num_checked++;
-					  if ( entity.canProcess( write_waiter )){
+					  if ( entity.isWriteControllerActive( partition_id ) && entity.canProcess( write_waiter )){
 
 						  long gift_used = entity.doProcessing( write_waiter, gift_remaining );
 
@@ -690,7 +733,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  RateControlledEntity entity = boosted_ref.get( next_boost_position );
 				  next_boost_position++;
 				  num_checked++;
-				  if( entity.canProcess( write_waiter ) ) {  //is ready
+				  if( entity.isWriteControllerActive( partition_id ) && entity.canProcess( write_waiter ) ) {  //is ready
 					  long boosted = entity.doProcessing( write_waiter, 0 );
 					  	
 					  	// if no progress is made we give others a chance otherwise this non-progress
@@ -726,7 +769,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  RateControlledEntity entity = (RateControlledEntity)normal_ref.get( next_normal_position );
 			  next_normal_position++;
 			  num_checked++;
-			  if( entity.canProcess( write_waiter ) ) {  //is ready
+			  if( entity.isWriteControllerActive( partition_id ) && entity.canProcess( write_waiter ) ) {  //is ready
 				  long bytes = entity.doProcessing( write_waiter, 0 );
 
 				  if ( bytes > 0 ){
@@ -761,8 +804,10 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
       RateControlledEntity entity = (RateControlledEntity)ref.get( next_high_position );
       next_high_position++;
       num_checked++;
-      if( entity.canProcess( write_waiter ) ) {  //is ready
-        return entity;
+      
+    	  
+      if ( entity.isWriteControllerActive( partition_id ) && entity.canProcess( write_waiter )) {  //is ready
+	        return entity;
       }
     }
 
@@ -775,34 +820,51 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
    * Add the given entity to the controller for write processing.
    * @param entity to process writes for
    */
-  public void addWriteEntity( RateControlledEntity entity ) {
-    try {  entities_mon.enter();
-      if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
-        //copy-on-write
-        ArrayList high_new = new ArrayList( high_priority_entities.size() + 1 );
-        high_new.addAll( high_priority_entities );
-        high_new.add( entity );
-        high_priority_entities = high_new;
-      }
-      else {
-        if ( entity.getPriorityBoost()){
-	        ArrayList boost_new = new ArrayList( boosted_priority_entities.size() + 1 );
-	        boost_new.addAll( boosted_priority_entities );
-	        boost_new.add( entity );
-	        boosted_priority_entities = boost_new;
-        }else{
-	        ArrayList norm_new = new ArrayList( normal_priority_entities.size() + 1 );
-	        norm_new.addAll( normal_priority_entities );
-	        norm_new.add( entity );
-	        normal_priority_entities = norm_new;
-        }
-      }
+  public void 
+  addWriteEntity( 
+		RateControlledEntity entity ) 
+  {
+	  try {  
+		  entities_mon.enter();
+		  
+		  if ( Constants.isCVSVersion()){
+			  if ( high_priority_entities.contains(entity) || boosted_priority_entities.contains(entity) || normal_priority_entities.contains(entity)){
+				  Debug.out( "Entity already added" );
+				  return;
+			  }
+		  }
+		  
+		  entity.setTargetWriteControllerPartition( partition_id );
+		  
+		  if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
+			  //copy-on-write
+			  ArrayList high_new = new ArrayList( high_priority_entities.size() + 1 );
+			  high_new.addAll( high_priority_entities );
+			  high_new.add( entity );
+			  high_priority_entities = high_new;
+		  }
+		  else {
+			  if ( entity.getPriorityBoost()){
+				  ArrayList boost_new = new ArrayList( boosted_priority_entities.size() + 1 );
+				  boost_new.addAll( boosted_priority_entities );
+				  boost_new.add( entity );
+				  boosted_priority_entities = boost_new;
+			  }else{
+				  ArrayList norm_new = new ArrayList( normal_priority_entities.size() + 1 );
+				  norm_new.addAll( normal_priority_entities );
+				  norm_new.add( entity );
+				  normal_priority_entities = norm_new;
+			  }
+		  }
+	
+		  entity_count = normal_priority_entities.size() + boosted_priority_entities.size() + high_priority_entities.size();
+		  
+	  }finally{
+		  
+		  entities_mon.exit();  
+	  }
 
-      entity_count = normal_priority_entities.size() + boosted_priority_entities.size() + high_priority_entities.size();
-    }
-    finally {  entities_mon.exit();  }
-
-    write_waiter.eventOccurred();
+	  write_waiter.eventOccurred();
   }
 
 
@@ -810,45 +872,78 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
    * Remove the given entity from the controller.
    * @param entity to remove from write processing
    */
-  public boolean removeWriteEntity( RateControlledEntity entity ) {
-	boolean found = false;
-    try {  entities_mon.enter();
-      if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
-        //copy-on-write
-        ArrayList high_new = new ArrayList( high_priority_entities );
-        if ( high_new.remove( entity )){
-        	high_priority_entities = high_new;
-        	
-        	found = true;
-        }else{
-        	Debug.out( "entity not found" );
-        }
-      }
-      else {
-        //copy-on-write
-    	if ( boosted_priority_entities.contains( entity )){
-	        ArrayList boosted_new = new ArrayList( boosted_priority_entities );
-	        boosted_new.remove( entity );
-	        boosted_priority_entities = boosted_new;
-	        
-	        found = true;
-    	}else{
-	        ArrayList norm_new = new ArrayList( normal_priority_entities );
-	        if ( norm_new.remove( entity )){
-	        	normal_priority_entities = norm_new;
-	        	
-	        	found = true;
-	        }else{
-	        	Debug.out( "entity not found" );
-	        }
-    	}
-      }
+  public boolean 
+  removeWriteEntity(
+	RateControlledEntity entity ) 
+  {
+	  boolean found = false;
+	  try {  
+		  entities_mon.enter();
+		  
+		  if ( Constants.isCVSVersion()){
+			  if ( !high_priority_entities.contains(entity) && !normal_priority_entities.contains(entity) && !boosted_priority_entities.contains(entity)){
+				  Debug.out( "Entity not added" );
+				  return( false );
+			  }
+		  }
+			
+		  entity.setTargetWriteControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
+		  
+		  if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
+			  //copy-on-write
+			  ArrayList high_new = new ArrayList( high_priority_entities );
+			  if ( high_new.remove( entity )){
+				  high_priority_entities = high_new;
 
-      entity_count = normal_priority_entities.size() + boosted_priority_entities.size() + high_priority_entities.size();
-    }
-    finally {  entities_mon.exit();  }
-    
-    return( found );
+				  found = true;
+			  }else{
+				  Debug.out( "entity not found" );
+			  }
+		  }
+		  else {
+			  //copy-on-write
+			  if ( boosted_priority_entities.contains( entity )){
+				  ArrayList boosted_new = new ArrayList( boosted_priority_entities );
+				  boosted_new.remove( entity );
+				  boosted_priority_entities = boosted_new;
+
+				  found = true;
+			  }else{
+				  ArrayList norm_new = new ArrayList( normal_priority_entities );
+				  if ( norm_new.remove( entity )){
+					  normal_priority_entities = norm_new;
+
+					  found = true;
+				  }else{
+					  Debug.out( "entity not found" );
+				  }
+			  }
+		  }
+
+		  entity_count = normal_priority_entities.size() + boosted_priority_entities.size() + high_priority_entities.size();
+
+		  if ( processing_waiting ){
+
+			  // guaranteed this process loop isn't going to subsequently process the entity
+
+			  entity.setWriteControllerInactive();
+
+		  }else{
+
+			  // possible the process loop is actively about to process it so we can't mark the entity as processable by
+			  // another processor until later
+
+			  entity.activeWriteControllerRelease( true );
+			  
+			  to_deactivate.add( entity  );
+		  }
+
+	  }finally{
+		  
+		  entities_mon.exit();  
+	  }
+    	
+	  return( found );
   }
 
   public int

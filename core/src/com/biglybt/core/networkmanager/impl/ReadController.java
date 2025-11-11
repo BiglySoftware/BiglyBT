@@ -20,6 +20,7 @@
 package com.biglybt.core.networkmanager.impl;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -65,11 +66,17 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
   private int next_normal_position = 0;
   private int next_high_position = 0;
 
-  private long	loop_count;
   private long	wait_count;
   private long	non_progress_count;
   private long	progress_count;
 
+  private long		process_loop_count;
+  
+  private volatile boolean	processing_waiting;
+  private final ConcurrentLinkedQueue<RateControlledEntity>	to_deactivate = new ConcurrentLinkedQueue<>();
+
+  private final  AEThread2 read_processor_thread;
+  
   private long	entity_check_count;
   private long	last_entity_check_count;
 
@@ -82,7 +89,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 	  partition_id = _partition_id;
 	  
     //start read handler processing
-    AEThread2 read_processor_thread = new AEThread2( "ReadController:ReadProcessor - " + partition_id) {
+    read_processor_thread = new AEThread2( "ReadController:ReadProcessor - " + partition_id) {
       @Override
       public void run() {
         readProcessorLoop();
@@ -154,7 +161,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
   {
 	  if ( types.contains( CoreStats.ST_NET_READ_CONTROL_LOOP_COUNT )){
 
-		  values.put( CoreStats.ST_NET_READ_CONTROL_LOOP_COUNT, new Long( loop_count  ));
+		  values.put( CoreStats.ST_NET_READ_CONTROL_LOOP_COUNT, new Long( process_loop_count  ));
 	  }
 
 	  if ( types.contains( CoreStats.ST_NET_READ_CONTROL_NP_COUNT )){
@@ -207,36 +214,66 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 
 
 
-  void readProcessorLoop() {
-    boolean check_high_first = true;
+  void readProcessorLoop()
+  {
+	  boolean check_high_first = true;
 
-    while( true ) {
-      loop_count++;
-      try {
-        if( check_high_first ) {
-          check_high_first = false;
-          if( !doHighPriorityRead() ) {
-            if( !doNormalPriorityRead() ) {
-            	if ( read_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
-            		wait_count++;
-            	}
-            }
-          }
-        }
-        else {
-          check_high_first = true;
-          if( !doNormalPriorityRead() ) {
-            if( !doHighPriorityRead() ) {
-            	if ( read_waiter.waitForEvent(hasConnections()?IDLE_SLEEP_TIME:1000 )){
-            		wait_count++;
-            	}
-            }
-          }
-        }
-      }catch( Throwable t ) {
-        Debug.out( "readProcessorLoop() EXCEPTION: ", t );
-      }
-    }
+	  while( true ) {
+		  process_loop_count++;
+
+		  while( true ){
+			  
+			  while( true ){
+
+				  RateControlledEntity e =  to_deactivate.poll();
+
+				  if ( e == null ){
+
+					  break;
+
+				  }else{
+
+					  e.activeReadControllerRelease( false );
+				  }
+			  }
+
+			  try{
+				  if( check_high_first ) {
+					  check_high_first = false;
+					  if( !doHighPriorityRead() ) {
+						  if( !doNormalPriorityRead() ) {
+							  try{
+								  processing_waiting = true;
+
+								  if ( read_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
+									  wait_count++;
+								  }
+							  }finally{
+								  processing_waiting = false;
+							  }
+						  }
+					  }
+				  }
+				  else {
+					  check_high_first = true;
+					  if( !doNormalPriorityRead() ) {
+						  if( !doHighPriorityRead() ) {
+							  try{
+								  processing_waiting = true;
+								  if ( read_waiter.waitForEvent(hasConnections()?IDLE_SLEEP_TIME:1000 )){
+									  wait_count++;
+								  }
+							  }finally{
+								  processing_waiting = false;
+							  }
+						  }
+					  }
+				  }
+			  }catch( Throwable t ) {
+				  Debug.out( "readProcessorLoop() EXCEPTION: ", t );
+			  }
+		  }
+	  }
   }
 
   private boolean
@@ -339,7 +376,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
       RateControlledEntity entity = ref.get( next_normal_position );
       next_normal_position++;
       num_checked++;
-      if( entity.canProcess( read_waiter ) ) {  //is ready
+      if( entity.isReadControllerActive( partition_id ) && entity.canProcess( read_waiter ) ) {  //is ready
         return entity;
       }
     }
@@ -360,7 +397,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
       RateControlledEntity entity = ref.get( next_high_position );
       next_high_position++;
       num_checked++;
-      if( entity.canProcess( read_waiter ) ) {  //is ready
+      if( entity.isReadControllerActive( partition_id ) && entity.canProcess( read_waiter ) ) {  //is ready
         return entity;
       }
     }
@@ -374,28 +411,44 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
    * Add the given entity to the controller for read processing.
    * @param entity to process reads for
    */
-  public void addReadEntity( RateControlledEntity entity ) {
-    try {  entities_mon.enter();
-      if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
-        //copy-on-write
-        ArrayList<RateControlledEntity> high_new = new ArrayList<>(high_priority_entities.size() + 1);
-        high_new.addAll( high_priority_entities );
-        high_new.add( entity );
-        high_priority_entities = high_new;
-      }
-      else {
-        //copy-on-write
-        ArrayList<RateControlledEntity> norm_new = new ArrayList<>(normal_priority_entities.size() + 1);
-        norm_new.addAll( normal_priority_entities );
-        norm_new.add( entity );
-        normal_priority_entities = norm_new;
-      }
+  public void 
+  addReadEntity( 
+	RateControlledEntity entity ) 
+  {
+	  try { 
+		  entities_mon.enter();
 
-      entity_count = normal_priority_entities.size() + high_priority_entities.size();
-    }
-    finally {  entities_mon.exit();  }
+		  if ( Constants.isCVSVersion()){
+			  if ( high_priority_entities.contains(entity) || normal_priority_entities.contains(entity)){
+				  Debug.out( "Entity already added" );
+				  return;
+			  }
+		  }
+		  
+		  entity.setTargetReadControllerPartition( partition_id );
 
-    read_waiter.eventOccurred();
+		  if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
+			  //copy-on-write
+			  ArrayList<RateControlledEntity> high_new = new ArrayList<>(high_priority_entities.size() + 1);
+			  high_new.addAll( high_priority_entities );
+			  high_new.add( entity );
+			  high_priority_entities = high_new;
+		  }
+		  else {
+			  //copy-on-write
+			  ArrayList<RateControlledEntity> norm_new = new ArrayList<>(normal_priority_entities.size() + 1);
+			  norm_new.addAll( normal_priority_entities );
+			  norm_new.add( entity );
+			  normal_priority_entities = norm_new;
+		  }
+
+		  entity_count = normal_priority_entities.size() + high_priority_entities.size();
+		  
+	  }finally{  
+		  entities_mon.exit();  
+	  }
+
+	  read_waiter.eventOccurred();
   }
 
 
@@ -403,38 +456,71 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
    * Remove the given entity from the controller.
    * @param entity to remove from read processing
    */
-  public boolean removeReadEntity( RateControlledEntity entity ) {
+  public boolean 
+  removeReadEntity( 
+	 RateControlledEntity entity ) 
+  {
 	boolean found = false;
-    try {  entities_mon.enter();
-      if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
-        //copy-on-write
-        ArrayList<RateControlledEntity> high_new = new ArrayList<>(high_priority_entities);
-        if ( high_new.remove( entity )){
-        	
-        	high_priority_entities = high_new;
-        	
-        	found = true;
-        }else{
-        	Debug.out( "entity not found" );
-        }
-      }
-      else {
-        //copy-on-write
-        ArrayList<RateControlledEntity> norm_new = new ArrayList<>(normal_priority_entities);
-       
-        if ( norm_new.remove( entity )){
-        
-        	normal_priority_entities = norm_new;
-        	
-        	found = true;
-        }else{
-        	Debug.out( "entity not found" );
-        }
-      }
+	
+	try{ 
+		entities_mon.enter();
 
-      entity_count = normal_priority_entities.size() + high_priority_entities.size();
-    }
-    finally {  entities_mon.exit();  }
+		if ( Constants.isCVSVersion()){
+			if ( !high_priority_entities.contains(entity) && !normal_priority_entities.contains(entity)){
+				Debug.out( "Entity not added" );
+				return( false );
+			}
+		}
+		  
+		entity.setTargetReadControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
+
+		if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
+			//copy-on-write
+			ArrayList<RateControlledEntity> high_new = new ArrayList<>(high_priority_entities);
+			if ( high_new.remove( entity )){
+
+				high_priority_entities = high_new;
+
+				found = true;
+			}else{
+				Debug.out( "entity not found" );
+			}
+		}
+		else {
+			//copy-on-write
+			ArrayList<RateControlledEntity> norm_new = new ArrayList<>(normal_priority_entities);
+
+			if ( norm_new.remove( entity )){
+
+				normal_priority_entities = norm_new;
+
+				found = true;
+			}else{
+				Debug.out( "entity not found" );
+			}
+		}
+
+		entity_count = normal_priority_entities.size() + high_priority_entities.size();
+		
+		if ( processing_waiting ){
+
+			// guaranteed this process loop isn't going to subsequently process the entity
+
+			entity.setReadControllerInactive();
+
+		}else{
+
+			// possible the process loop is actively about to process it so we can't mark the entity as processable by
+			// another processor until later
+
+			entity.activeReadControllerRelease( true );
+
+			to_deactivate.add( entity  );
+		}
+		  
+	}finally{ 
+		entities_mon.exit();  
+	}
     
     return( found );
   }

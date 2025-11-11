@@ -32,16 +32,17 @@ import com.biglybt.core.util.Debug;
 /**
  * A fast read entity backed by a single peer connection.
  */
-public class SinglePeerDownloader implements RateControlledEntity {
+public class SinglePeerDownloader extends RateControlledSingleEntity {
   
-  private final NetworkConnectionBase connection;
-  private final RateHandler rate_handler;
+	private final NetworkConnectionBase connection;
+	private final RateHandler rate_handler;
 
 
-  public SinglePeerDownloader( NetworkConnectionBase connection, RateHandler rate_handler ) {
-    this.connection = connection;
-    this.rate_handler = rate_handler;
-  }
+	public SinglePeerDownloader( NetworkConnectionBase connection, RateHandler rate_handler ) {
+		super( connection );
+		this.connection = connection;
+		this.rate_handler = rate_handler;
+	}
 
 	@Override
 	public RateHandler

@@ -131,7 +131,7 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
         Message msg = messages[ i ];
 
         if( msg == null ) {
-        	System.out.println( "received msg == null [messages.length=" +messages.length+ ", #" +i+ "]: " +connection.getTransport().getDescription() );
+        	System.out.println( "received msg == null [messages.length=" +messages.length+ ", #" +i+ "]: " +connection.getTransport().getDescription() + " from " + stream_decoder );
         	continue;
         }
 

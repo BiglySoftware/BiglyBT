@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
@@ -31,6 +32,7 @@ import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.SystemTime;
 
 
@@ -38,13 +40,15 @@ import com.biglybt.core.util.SystemTime;
  *
  */
 
-public class MultiPeerDownloader2 implements RateControlledEntity {
+public class MultiPeerDownloader2 extends RateControlledMultipleEntity {
 
 	private static final int MOVE_TO_IDLE_TIME	= 500;
 
 	private static final Object	ADD_ACTION 		= new Object();
 	private static final Object	REMOVE_ACTION 	= new Object();
 
+	private final int partition_id = -1;
+	
 	private volatile ArrayList<NetworkConnectionBase> connections_cow = new ArrayList<>();  //copied-on-write
 	private final AEMonitor connections_mon = new AEMonitor( "MultiPeerDownloader" );
 
@@ -81,7 +85,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 	public int 
 	getPartitionID()
 	{
-		return( -1 );
+		return( partition_id );
 	}
 	
 	/**
@@ -102,6 +106,9 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 		EventWaiter waiter_to_kick = null;
 		try{
 			connections_mon.enter();
+			
+			connection.setTargetReadControllerPartition( partition_id );
+
 				//copy-on-write
 			int cow_size = connections_cow.size();
 			if ( cow_size == 0 ){
@@ -150,10 +157,18 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 		
 		try{
 			connections_mon.enter();
+			
+			connection.setTargetReadControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
+			
 			//copy-on-write
 			ArrayList<NetworkConnectionBase> conn_new = new ArrayList<>( connections_cow );
+			
 			boolean removed = conn_new.remove( connection );
-			if( !removed ) return false;
+			
+			if( !removed ){
+				return false;
+			}
+			
 			connections_cow = conn_new;
 
 			if ( pending_actions == null ){
@@ -162,6 +177,9 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 			}
 
 			pending_actions.add( new Object[]{ REMOVE_ACTION, connection });
+			
+			connection.activeReadControllerRelease( true );
+			 
 			return true;
 		}finally{
 			connections_mon.exit();
@@ -226,7 +244,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 			TransportBase tb = connection.getTransportBase();
 			
-			if ( tb != null && tb.isReadyForRead( waiter ) == 0 ){
+			if ( tb != null && connection.isReadControllerActive( partition_id ) && tb.isReadyForRead( waiter ) == 0 ){
 
 				res++;
 			}
@@ -279,6 +297,8 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 						}else{
 
+							connection.activeReadControllerRelease( false );
+							
 							active_connections.remove( connection );
 
 							idle_connections.remove( connection );
@@ -311,7 +331,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 					TransportBase tb = connection.getTransportBase();
 					
-					if ( tb != null && tb.isReadyForRead( waiter ) == 0 ){
+					if ( tb != null && connection.isReadControllerActive( partition_id ) && tb.isReadyForRead( waiter ) == 0 ){
 
 						// System.out.println( "   moving to active " + connection.getString());
 
@@ -333,17 +353,25 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 			ConnectionEntry	entry = active_connections.head();
 
+			Set<NetworkConnectionBase> processed = new IdentityHashSet<>();
+			
 			int	num_entries = active_connections.size();
 
 			for (int i=0; i<num_entries && entry != null &&  num_bytes_remaining > 0;i++ ){
 
 				NetworkConnectionBase connection = entry.connection;
 
+				if ( processed.contains(connection)){
+					Debug.out( "Arse" );
+				}
+				
+				processed.add( connection );
+				
 				ConnectionEntry next = entry.next;
 
 				TransportBase tb = connection.getTransportBase();
 				
-				if ( tb == null ){
+				if ( tb == null || !connection.isReadControllerActive( partition_id )){
 					
 					continue;
 				}
@@ -362,7 +390,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 					try{
 						long[] read = connection.getIncomingMessageQueue().receiveFromTransport( allowed, protocol_is_free );
-
+						
 						data_bytes_read 	+= read[0];
 						protocol_bytes_read	+= read[1];
 

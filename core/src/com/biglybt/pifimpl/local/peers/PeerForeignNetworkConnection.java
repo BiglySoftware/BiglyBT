@@ -119,6 +119,14 @@ PeerForeignNetworkConnection
 	}
 	
 	@Override
+	public void 
+	close(
+		String reason )
+	{
+		delegate.closeConnection(reason, Transport.CR_STOPPED_OR_REMOVED );
+	}
+	
+	@Override
 	public boolean 
 	isClosed()
 	{

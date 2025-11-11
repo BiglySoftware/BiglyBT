@@ -19,6 +19,7 @@
 
 package com.biglybt.core.networkmanager.impl;
 
+import com.biglybt.core.networkmanager.ControllerAllocationManagement;
 import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.RateHandler;
 
@@ -26,7 +27,9 @@ import com.biglybt.core.networkmanager.RateHandler;
  * Interface designation for rate-limited entities controlled by a handler.
  */
 public interface 
-RateControlledEntity {
+RateControlledEntity 
+	extends ControllerAllocationManagement
+{
 	/**
 	 * Uses fair round-robin scheduling of processing ops.
 	 */
@@ -95,7 +98,7 @@ RateControlledEntity {
 
 	public RateHandler
 	getRateHandler();
-
+	
 	public String
 	getString();
 }
