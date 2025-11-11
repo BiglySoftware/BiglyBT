@@ -176,12 +176,14 @@ public class MultiPeerDownloader2 extends RateControlledMultipleEntity {
 				pending_actions = new ArrayList<>();
 			}
 
-			pending_actions.add( new Object[]{ REMOVE_ACTION, connection });
-			
 			connection.activeReadControllerRelease( true );
-			 
+
+			pending_actions.add( new Object[]{ REMOVE_ACTION, connection });
+						 
 			return true;
+			
 		}finally{
+			
 			connections_mon.exit();
 		}
 	}
