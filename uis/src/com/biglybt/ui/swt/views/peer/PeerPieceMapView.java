@@ -720,7 +720,9 @@ public class PeerPieceMapView
 				//log( i + ": " + (iXPos - 1) + ", " + (iYPos - 1) + "\n" + oldInfo + "\n" + newInfo);
 
 				// Use copyArea if in cache. Saves the most time
-				if (oldBlockInfo != null) {
+				// copyArea doesn't work on GTK
+				
+				if (oldBlockInfo != null && !Utils.isGTK ) {
 					for (Integer cachePieceNo : distinctPieceCache) {
 						if (cachePieceNo == i) {
 							continue;

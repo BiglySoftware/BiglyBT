@@ -473,12 +473,19 @@ public class PieceMapView
 				
 				@Override
 				public void mouseExit(MouseEvent e){
-					selectedPiece 			= -1;
-					selectedPieceShowFile 	= false;
+						// on GTK when the tooltip shows it generates a mouse-exit for this
+						// component which instantly blats things
 					
-					Utils.setTT( pieceInfoCanvas, null );
-					
-					refreshInfoCanvas();
+					if ( !Utils.isGTK ){
+						
+						selectedPiece 			= -1;
+						
+						selectedPieceShowFile 	= false;
+						
+						Utils.setTT( pieceInfoCanvas, null );
+						
+						refreshInfoCanvas();
+					}
 				}
 			});
 
@@ -1187,7 +1194,8 @@ public class PieceMapView
 				//log( i + ": " + (iXPos - 1) + ", " + (iYPos - 1) + "\n" + oldInfo + "\n" + newInfo);
 				
 				// Use copyArea if in cache. Saves the most time
-				if (oldBlockInfo != null) {
+				// copyArea doesn't work on GTK
+				if (oldBlockInfo != null && !Utils.isGTK ) {
 					for (Integer cachePieceNo : distinctPieceCache) {
 						if (cachePieceNo == i) {
 							continue;
