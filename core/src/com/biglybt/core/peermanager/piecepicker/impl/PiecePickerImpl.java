@@ -104,7 +104,7 @@ implements PiecePicker
 	private static final int REQUESTS_MIN_MIN	= 2;
 	private static final int REQUESTS_MIN_MAX	= 8;
 	/** Max number of request sent to a peer */
-	private static final int REQUESTS_MAX	= 512;
+	private static final int REQUESTS_MAX	= 2048;
 	/** Default number of requests sent to a peer, (for each X B/s another request will be used) */
 	private static final int SLOPE_REQUESTS	= 4*1024;
 
