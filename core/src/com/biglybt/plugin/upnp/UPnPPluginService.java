@@ -19,6 +19,8 @@
 
 package com.biglybt.plugin.upnp;
 
+import java.net.InetAddress;
+
 /**
  * @author parg
  *
@@ -148,6 +150,15 @@ UPnPPluginService
 		LoggerChannel		log,
 		UPnPMapping			mapping )
 	{
+		InetAddress local_ia = connection.getGenericService().getDevice().getRootDevice().getLocalAddress( true );
+		
+		if ( local_ia == null ){
+			
+				// no local IPv4 address
+			
+			return;
+		}
+
 		try{
 			this_mon.enter();
 
@@ -170,7 +181,7 @@ UPnPPluginService
 
 				serviceMapping	grab_in_progress	= null;
 
-				String local_address = connection.getGenericService().getDevice().getRootDevice().getLocalAddress().getHostAddress();
+				String local_address = local_ia.getHostAddress();
 
 				for (int i=0;i<service_mappings.size();i++){
 
@@ -238,7 +249,7 @@ UPnPPluginService
 
 				try{
 					connection.addPortMapping(
-						mapping.isTCP(), mapping.getPort(),
+						mapping.isTCP(), mapping.getPort(), local_address,
 						getDescriptionForPort( mapping.isTCP(), mapping.getPort()));
 
 					String	text;
@@ -281,7 +292,7 @@ UPnPPluginService
 
 				if ( grab_in_progress == null ){
 
-					serviceMapping	new_mapping = new serviceMapping( mapping );
+					serviceMapping	new_mapping = new serviceMapping( mapping, local_address );
 
 					new_mapping.setError( error_text );
 
@@ -494,13 +505,14 @@ UPnPPluginService
 
 		protected
 		serviceMapping(
-			UPnPMapping		_mapping )
+			UPnPMapping		_mapping,
+			String			_internal_host )
 		{
 			mappings.add( _mapping );
 
 			tcp				= _mapping.isTCP();
 			port			= _mapping.getPort();
-			internal_host	= connection.getGenericService().getDevice().getRootDevice().getLocalAddress().getHostAddress();
+			internal_host	= _internal_host;
 		}
 
 		public boolean

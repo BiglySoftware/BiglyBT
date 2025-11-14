@@ -700,6 +700,20 @@ AddressUtils
 	
 	public static String
 	getHostAddressForURL(
+		InetAddress	address )
+	{
+		if ( address instanceof Inet6Address ){
+
+			return( "[" + ( address.isLoopbackAddress()?"::1":getHostAddressWithoutScopeID(address)) + "]" );
+
+		}else{
+
+			return( address.getHostAddress());
+		}
+	}
+	
+	public static String
+	getHostAddressForURL(
 		InetSocketAddress	address )
 	{
 		if ( address.isUnresolved()){
@@ -708,16 +722,25 @@ AddressUtils
 
 		}else{
 			
-			InetAddress a = address.getAddress();
+			return( getHostAddressForURL( address.getAddress()));
+		}
+	}
+	
+	public static String
+	getHostAddressWithoutScopeID(
+		InetAddress	address )
+	{
+		String str = address.getHostAddress();
+		
+		int pos = str.indexOf( '%' );
+		
+		if ( pos == -1 ){
 			
-			if ( a instanceof Inet6Address ){
-
-				return( "[" + ( a.isLoopbackAddress()?"::1":a.getHostAddress()) + "]" );
-				
-			}else{
-				
-				return( a.getHostAddress());
-			}
+			return( str );
+			
+		}else{
+			
+			return( str.substring(0, pos ));
 		}
 	}
 	
@@ -888,7 +911,6 @@ AddressUtils
 		return( true );
 	}
 	
-
 	public static String 
 	getShortForm(
 		Inet6Address	a )

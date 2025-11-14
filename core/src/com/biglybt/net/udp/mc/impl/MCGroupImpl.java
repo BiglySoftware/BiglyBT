@@ -23,6 +23,7 @@ import java.net.*;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.util.*;
 import com.biglybt.net.udp.mc.MCGroup;
 import com.biglybt.net.udp.mc.MCGroupAdapter;
@@ -50,6 +51,19 @@ MCGroupImpl
 
 	private static AsyncDispatcher		async_dispatcher = new AsyncDispatcher();
 
+	private volatile boolean	ignore_v4;
+	private volatile boolean	ignore_v6;
+	
+	{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
+				ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES },
+			(n)->{
+				ignore_v4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
+				ignore_v6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
+			});
+	}
 
 	public static MCGroupImpl
 	getSingleton(
@@ -138,12 +152,14 @@ MCGroupImpl
 		}
 	}
 
-	private MCGroupAdapter			adapter;
+	private final MCGroupAdapter			adapter;
 
-	private String					group_address_str;
-	private int						group_port;
+	private final String					group_address_str;
+	private final int						group_port;
+	protected final InetSocketAddress 		group_address;
+	protected final boolean					ipv6;
+
 	private int						control_port;
-	protected InetSocketAddress 	group_address;
 	private String[]				selected_interfaces;
 
 
@@ -182,6 +198,8 @@ MCGroupImpl
 		try{
 			InetAddress ia = HostNameToIPResolver.syncResolve( group_address_str );
 
+			ipv6 = ia instanceof Inet6Address;
+			
 			group_address = new InetSocketAddress( ia, 0 );
 
 			processNetworkInterfaces( true );
@@ -212,6 +230,13 @@ MCGroupImpl
 		}
 	}
 
+	@Override
+	public boolean 
+	isIPv6()
+	{
+		return( ipv6 );
+	}
+	
 	private void
 	setInstanceSuspended(
 		boolean	_suspended )
@@ -302,6 +327,11 @@ MCGroupImpl
 
 					continue;
 				}
+				
+				if ( ( ignore_v4 && !ipv6 ) || ( ignore_v6 && ipv6 )){
+					
+					continue;
+				}
 
 				String ni_name = network_interface.getName();
 
@@ -343,12 +373,8 @@ MCGroupImpl
 						continue;
 					}
 
-					if ( ni_address instanceof Inet6Address ){
-
-						if ( start_of_day ){
-
-							adapter.trace( "ignoring IPv6 address " + ni_address + ", interface " + network_interface.getName());
-						}
+					if (	ipv6 && ni_address instanceof Inet4Address ||
+							!ipv6 && ni_address instanceof Inet6Address ){
 
 						continue;
 					}
@@ -423,7 +449,7 @@ MCGroupImpl
 									}
 								});
 
-						new AEThread2("MCGroup:MCListener", true )
+						new AEThread2("MCGroup:MCListener - " + ni_address, true )
 							{
 								@Override
 								public void
@@ -435,7 +461,7 @@ MCGroupImpl
 
 					}catch( Throwable e ){
 
-						adapter.log( e );
+						// adapter.log( "Failed to join group '" + group_address + ", ni=" + network_interface, e );
 					}
 
 						// now do the incoming control listener
@@ -454,7 +480,7 @@ MCGroupImpl
 							// System.out.println( "local port = " + control_port );
 						}
 
-						new AEThread2( "MCGroup:CtrlListener", true )
+						new AEThread2( "MCGroup:CtrlListener - " + ni_address, true )
 							{
 								@Override
 								public void
@@ -586,6 +612,11 @@ MCGroupImpl
 					continue;
 				}
 
+				if ( ( ignore_v4 && !ipv6 ) || ( ignore_v6 && ipv6 )){
+					
+					continue;
+				}
+				
 				Enumeration<InetAddress> ni_addresses = network_interface.getInetAddresses();
 
 				String	socket_key = null;
@@ -593,8 +624,14 @@ MCGroupImpl
 				while( ni_addresses.hasMoreElements()){
 
 					InetAddress ni_address = ni_addresses.nextElement();
+					
+					if (	ipv6 && ni_address instanceof Inet4Address ||
+							!ipv6 && ni_address instanceof Inet6Address ){
 
-					if ( !( ni_address instanceof Inet6Address || ni_address.isLoopbackAddress())){
+						continue;
+					}
+					
+					if ( !ni_address.isLoopbackAddress()){
 
 						socket_key = ni_address.toString();
 
@@ -641,8 +678,12 @@ MCGroupImpl
 							socket_cache.put( socket_key, mc_sock );
 						}
 
-						// System.out.println( "sendToGroup: ni = " + network_interface.getName() + ", data = " + new String(data));
-
+						/*
+						if ( isIPv6() ){
+							System.out.println( "sendToGroup: ni = " + network_interface.getName() + ", data = " + new String(data));
+						}
+						*/
+						
 						DatagramPacket packet = new DatagramPacket(data, data.length, group_address.getAddress(), group_port );
 
 						try{
@@ -714,6 +755,11 @@ MCGroupImpl
 
 					continue;
 				}
+				
+				if ( ( ignore_v4 && !ipv6 ) || ( ignore_v6 && ipv6 )){
+					
+					continue;
+				}
 
 				Enumeration<InetAddress> ni_addresses = network_interface.getInetAddresses();
 
@@ -723,7 +769,13 @@ MCGroupImpl
 
 					InetAddress ni_address = ni_addresses.nextElement();
 
-					if ( !( ni_address instanceof Inet6Address || ni_address.isLoopbackAddress())){
+					if (	ipv6 && ni_address instanceof Inet4Address ||
+							!ipv6 && ni_address instanceof Inet6Address ){
+
+						continue;
+					}
+					
+					if ( !ni_address.isLoopbackAddress()){
 
 						an_address	= ni_address;
 
@@ -770,10 +822,16 @@ MCGroupImpl
 							socket_cache.put( socket_key, mc_sock );
 						}
 
-						byte[]	data = param_data.replaceAll("%AZINTERFACE%", an_address.getHostAddress()).getBytes();
+						String host = AddressUtils.getHostAddressForURL(an_address);
+						
+						byte[]	data = param_data.replaceAll("%AZINTERFACE%", host).getBytes();
 
-						// System.out.println( "sendToGroup: ni = " + network_interface.getName() + ", data = " + new String(data));
-
+						/*
+						if ( ipv6 ){
+							System.out.println( "sendToGroup: ni = " + network_interface.getName() + ", data = " + new String(data));
+						}
+						*/
+						
 						DatagramPacket packet = new DatagramPacket(data, data.length, group_address.getAddress(), group_port );
 
 						try{
@@ -905,8 +963,12 @@ MCGroupImpl
 		byte[]	data 	= packet.getData();
 		int		len		= packet.getLength();
 
-		// System.out.println( "receive: add = " + local_address + ", data = " + new String( data, 0, len ));
-
+		/*
+		if ( local_address instanceof Inet6Address ){
+			System.out.println( "receive: add = " + local_address + ", data = " + new String( data, 0, len ));
+		}
+		*/
+		
 		adapter.received(
 				network_interface,
 				local_address,
@@ -930,8 +992,12 @@ MCGroupImpl
 
 		DatagramSocket	reply_socket	= null;
 
-		// System.out.println( "sendToMember: add = " + address + ", data = " +new String( data ));
-
+		/*
+		if ( address.getAddress() instanceof Inet6Address ){
+			System.out.println( "sendToMember: add = " + address + ", data = " +new String( data ));
+		}
+		*/
+		
 		try{
 			reply_socket = new DatagramSocket( null );
 

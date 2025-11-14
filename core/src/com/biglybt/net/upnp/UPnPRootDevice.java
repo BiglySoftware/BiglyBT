@@ -42,8 +42,15 @@ UPnPRootDevice
 	public URL
 	getLocation();
 
+	public default InetAddress
+	getLocalAddress()
+	{
+		return( getLocalAddress( true ));
+	}
+	
 	public InetAddress
-	getLocalAddress();
+	getLocalAddress(
+		boolean		ipv4 );
 
 	public NetworkInterface
 	getNetworkInterface();

@@ -29,6 +29,9 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.biglybt.core.util.GeneralUtils;
@@ -38,7 +41,6 @@ import com.biglybt.net.upnp.impl.device.UPnPDeviceImpl;
 import com.biglybt.net.upnp.services.UPnPSpecificService;
 import com.biglybt.pif.utils.xml.simpleparser.SimpleXMLParserDocument;
 import com.biglybt.pif.utils.xml.simpleparser.SimpleXMLParserDocumentNode;
-import com.biglybt.util.StringCompareUtils;
 
 public class
 UPnPServiceImpl
@@ -245,6 +247,33 @@ UPnPServiceImpl
 			}
 		}
 
+		// we prefer IPv4 addresses here as they are more likely to work. For example,
+		// when adding an IPv4 port mapping, some routers don't like the originating IP address
+		// to be IPv6
+	
+		if ( result.size() > 1 ){
+			Collections.sort(
+				result,
+				(u1,u2)->{
+					String h1 = u1.getHost();
+					String h2 = u2.getHost();
+					
+					if ( 	h1.startsWith( "[" ) && 
+							h2.startsWith( "[" )){
+						
+						return( 0 );
+					}else if ( h1.startsWith( "[" )){
+						return( 1 );
+						
+					}else if ( h2.startsWith( "[" )){
+						return( -1 );
+					}else{
+						
+						return( 0 );
+					}
+				});
+			
+		}
 		if ( result.size() > 1 && preferred_control_url != null  ){
 
 			if ( 	!result.get(0).equals( preferred_control_url ) &&
@@ -361,6 +390,10 @@ UPnPServiceImpl
 		}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANPPPConnection:")){
 
 			return( new UPnPSSWANPPPConnectionImpl( this ));
+
+		}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPv6FirewallControl:")){
+
+			return( new UPnPSSWANIPv6FirewallControlImpl( this ));
 
 		}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:")){
 

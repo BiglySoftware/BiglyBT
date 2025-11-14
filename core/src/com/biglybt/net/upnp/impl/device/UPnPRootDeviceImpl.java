@@ -20,13 +20,17 @@
 package com.biglybt.net.upnp.impl.device;
 
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.*;
 
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.UrlUtils;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.net.upnp.*;
 import com.biglybt.net.upnp.impl.UPnPImpl;
@@ -56,12 +60,14 @@ UPnPRootDeviceImpl
 	final private UPnPImpl upnp;
 
 	final private NetworkInterface	network_interface;
-	final private InetAddress		local_address;
+	private final InetAddress		local_address;
+	private final Set<InetAddress>	alt_local_addresses	= new HashSet<>();
 
 	final private String		usn;
 	final private URL			location;
 
-	final private List<URL>		alt_locations = new ArrayList<>();
+	private final List<URL>			alt_locations 			= new ArrayList<>();
+	
 
 	private URL			url_base_for_relative_urls;
 	private URL			saved_url_base_for_relative_urls;
@@ -320,9 +326,50 @@ UPnPRootDeviceImpl
 
 	@Override
 	public InetAddress
-	getLocalAddress()
+	getLocalAddress(
+		boolean	ipv4 )
 	{
-		return( local_address );
+		InetAddress[] binds = NetworkAdmin.getSingleton().getAllBindAddresses( false );
+		
+		List<InetAddress>	relevant = new ArrayList<>();
+		
+		if ( binds.length > 0 ){
+			
+				// select from bind addresses, no point in venturing outside this set as we're not listening on it for incoming connections
+			
+			for ( InetAddress ia: binds ){
+				if ( ipv4 && ia instanceof Inet4Address ){
+					relevant.add( ia );
+				}else if ( !ipv4 && ia instanceof Inet6Address ){
+					relevant.add( ia );
+				}
+			}
+			if ( relevant.contains( local_address )){
+				return( local_address );
+			}
+			if ( relevant.size() > 0 ){
+				return( relevant.get(0));
+			}
+		}
+		
+		if ( ipv4 && local_address instanceof Inet4Address ){
+			return( local_address );
+		}else if ( !ipv4 && local_address instanceof Inet6Address ){
+			return( local_address );
+		}
+				
+		synchronized( alt_locations ){
+			
+			for ( InetAddress ia: alt_local_addresses ){
+				if ( ipv4 && ia instanceof Inet4Address ){
+					return( ia );
+				}else if ( !ipv4 && ia instanceof Inet6Address ){
+					return( ia );
+				}
+			}
+		}
+		
+		return( null );
 	}
 
 	@Override
@@ -341,18 +388,23 @@ UPnPRootDeviceImpl
 
 	public boolean
 	addAlternativeLocation(
-		URL		alt_location )
+		InetAddress		alt_address,
+		URL				alt_location )
 	{
 		synchronized( alt_locations ){
 
 			if ( !alt_locations.contains( alt_location )){
 
 				alt_locations.add( alt_location );
-
-				if ( alt_locations.size() > 10 ){
+				
+				if ( alt_locations.size() > 16 ){
 
 					alt_locations.remove(0);
 				}
+
+				alt_local_addresses.add( alt_address );
+				
+				upnp.log( "Adding alternative location " + alt_location + " to " + usn );
 
 				return( true );
 
@@ -363,6 +415,53 @@ UPnPRootDeviceImpl
 		}
 	}
 
+	public boolean
+	checkSameLocation(
+		InetAddress		alt_address,
+		URL				_alt_location )
+	{
+		String temp_host = "127.0.0.1";
+		
+			// deal with same device being discovered via IPv4 and IPv6 on same interface
+		
+		URL alt_location = UrlUtils.setHost( _alt_location, temp_host );
+		
+		synchronized( alt_locations ){
+
+			boolean same =  UrlUtils.setHost( location, temp_host ).equals( alt_location );
+				
+			if ( !same ){
+
+				for ( URL al: alt_locations ){
+				
+					same =  UrlUtils.setHost (al, temp_host ).equals( alt_location );
+				
+					if ( same ){
+						
+						break;
+					}
+				}
+			}
+			
+			if ( same && !alt_address.equals( local_address )){
+				
+				if ( alt_local_addresses.add( alt_address )){
+						
+					alt_locations.add( _alt_location );
+					
+					if ( alt_locations.size() > 16 ){
+
+						alt_locations.remove(0);
+					}
+					
+					upnp.log( "Adding alternative location " + _alt_location + " to " + usn );
+				}
+			}
+		
+			return( same );
+		}
+	}
+	
 	public List<URL>
 	getAlternativeLocations()
 	{

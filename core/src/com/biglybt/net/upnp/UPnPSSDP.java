@@ -22,11 +22,23 @@ package com.biglybt.net.upnp;
 public interface
 UPnPSSDP
 {
-	public static final String				SSDP_GROUP_ADDRESS 	= "239.255.255.250";
+	public static final String				SSDP_GROUP_ADDRESS_V4 	= "239.255.255.250";
+	public static final String				SSDP_GROUP_ADDRESS_V6 	= "FF02::C";
+	
+	public static final String				SSDP_GROUP_ADDRESS 	= SSDP_GROUP_ADDRESS_V4;
+
+	
 	public static final int					SSDP_GROUP_PORT		= 1900;
 
+	public default int
+	getControlPort()
+	{
+		return( getControlPort( true ));
+	}
+	
 	public int
-	getControlPort();
+	getControlPort(
+		boolean		v4 );
 
 	public void
 	search(

@@ -66,7 +66,8 @@ SSDPIGDImpl
 		ssdp_core	=
 			SSDPCore.getSingleton(
 				upnp.getAdapter(),
-				UPnPSSDP.SSDP_GROUP_ADDRESS,
+				UPnPSSDP.SSDP_GROUP_ADDRESS_V4,
+				UPnPSSDP.SSDP_GROUP_ADDRESS_V6,
 				UPnPSSDP.SSDP_GROUP_PORT,
 				0,
 				_selected_interfaces );

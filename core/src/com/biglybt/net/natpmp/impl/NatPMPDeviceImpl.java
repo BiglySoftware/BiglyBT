@@ -361,9 +361,14 @@ public class NatPMPDeviceImpl implements NatPMPDevice
 
     @Override
     public InetAddress
-    getLocalAddress()
+    getLocalAddress(
+    	boolean ipv4)
     {
-    	return( hostInet );
+    	if ( ipv4 ){
+    		return( hostInet );
+    	}else{
+    		return( null );
+    	}
     }
 
 	@Override

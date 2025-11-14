@@ -417,20 +417,23 @@ RelatedContentManager
 									DHTPlugin dp = (DHTPlugin)dht_pi.getPlugin();
 		
 									public_dht_plugin = dp;
-																														
-									RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, public_dht_plugin, true );
-															
-									searchers.add( public_searcher );
-		
-									if ( dp.isEnabled()){
-										
-										public_dht_plugin_bigly = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
 											
-										RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, public_dht_plugin_bigly, true );
+									if ( dp != null ){
 										
-										searchers.add( bigly_searcher );
+										RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, dp, true );
+																
+										searchers.add( public_searcher );
+			
+										if ( dp.isEnabled()){
+											
+											public_dht_plugin_bigly = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
+												
+											RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, public_dht_plugin_bigly, true );
+											
+											searchers.add( bigly_searcher );
+										}
 									}
-		
+									
 									DownloadManager dm = plugin_interface.getDownloadManager();
 		
 									Download[] downloads = dm.getDownloads();

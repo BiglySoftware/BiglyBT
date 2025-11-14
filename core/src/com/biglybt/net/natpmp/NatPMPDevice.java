@@ -47,7 +47,8 @@ NatPMPDevice
 		throws Exception;
 
 	public InetAddress
-	getLocalAddress();
+	getLocalAddress(
+		boolean 		ipv4 );
 
 	public NetworkInterface
 	getNetworkInterface();

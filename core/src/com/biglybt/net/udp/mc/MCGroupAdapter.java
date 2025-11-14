@@ -44,5 +44,10 @@ MCGroupAdapter
 
 	public void
 	log(
+		String		msg,
+		Throwable	e );
+	
+	public void
+	log(
 		Throwable	e );
 }

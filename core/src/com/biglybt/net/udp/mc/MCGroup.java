@@ -24,6 +24,9 @@ import java.net.InetSocketAddress;
 public interface
 MCGroup
 {
+	public boolean
+	isIPv6();
+	
 	public int
 	getControlPort();
 

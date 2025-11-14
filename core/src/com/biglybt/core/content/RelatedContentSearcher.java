@@ -2085,33 +2085,36 @@ RelatedContentSearcher
 	private List<DownloadInfo>
 	getDHTInfos()
 	{
-		List<DHTPluginValue> vals = dht_plugin.getValues();
-
-		Set<String>	unique_keys = new HashSet<>();
-
 		List<DownloadInfo>	dht_infos = new ArrayList<>();
 
-		for ( DHTPluginValue val: vals ){
-
-			if ( !val.isLocal()){
-
-				byte[]	bytes = val.getValue();
-
-				String test = new String( bytes );
-
-				if ( test.startsWith( "d1:d" ) && test.endsWith( "ee" ) && test.contains( "1:h20:")){
-
-					try{
-						Map map = BDecoder.decode( bytes );
-
-						DownloadInfo info =	manager.decodeInfo( map, null, 1, false, unique_keys );
-
-						if ( info != null ){
-
-							dht_infos.add( info );
+		if ( dht_plugin != null ){
+			
+			List<DHTPluginValue> vals = dht_plugin.getValues();
+	
+			Set<String>	unique_keys = new HashSet<>();
+	
+			for ( DHTPluginValue val: vals ){
+	
+				if ( !val.isLocal()){
+	
+					byte[]	bytes = val.getValue();
+	
+					String test = new String( bytes );
+	
+					if ( test.startsWith( "d1:d" ) && test.endsWith( "ee" ) && test.contains( "1:h20:")){
+	
+						try{
+							Map map = BDecoder.decode( bytes );
+	
+							DownloadInfo info =	manager.decodeInfo( map, null, 1, false, unique_keys );
+	
+							if ( info != null ){
+	
+								dht_infos.add( info );
+							}
+						}catch( Throwable e ){
+	
 						}
-					}catch( Throwable e ){
-
 					}
 				}
 			}
@@ -2298,7 +2301,7 @@ RelatedContentSearcher
 						}
 					}
 
-					if ( harvested_blooms.size() < HARVEST_MAX_BLOOMS ){
+					if ( harvested_blooms.size() < HARVEST_MAX_BLOOMS && dht_plugin != null ){
 
 						try{
 							int	fail_count	= 0;

@@ -169,12 +169,6 @@ UPnPDeviceImpl
 		return( root_device.getAbsoluteURL(url));
 	}
 
-	public InetAddress
-	getLocalAddress()
-	{
-		return( root_device.getLocalAddress());
-	}
-
 	public synchronized void
 	clearRelativeBaseURL()
 	{

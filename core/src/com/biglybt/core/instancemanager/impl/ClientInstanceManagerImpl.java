@@ -369,6 +369,13 @@ ClientInstanceManagerImpl
 			new MCGroup()
 			{
 				@Override
+				public boolean 
+				isIPv6()
+				{
+					return( false );
+				}
+				
+				@Override
 				public int
 				getControlPort()
 				{
@@ -431,6 +438,15 @@ ClientInstanceManagerImpl
 		}
 	}
 
+	@Override
+	public void
+	log(
+		String		msg,
+		Throwable 	e )
+	{
+		Debug.out( msg, e );
+	}
+	
 	@Override
 	public void
 	log(

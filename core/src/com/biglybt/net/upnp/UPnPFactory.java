@@ -44,13 +44,27 @@ UPnPFactory
 	public static UPnPSSDP
 	getSSDP(
 		UPnPSSDPAdapter		adapter,
-		String				group_address,
+		String				group_address_v4,
 		int					group_port,
 		int					control_port,
 		String[]			selected_interfaces )
 
 		throws UPnPException
 	{
-		return( SSDPCore.getSingleton( adapter, group_address, group_port, control_port, selected_interfaces ));
+		return( SSDPCore.getSingleton( adapter, group_address_v4, null, group_port, control_port, selected_interfaces ));
+	}
+	
+	public static UPnPSSDP
+	getSSDP(
+		UPnPSSDPAdapter		adapter,
+		String				group_address_v4,
+		String				group_address_v6,
+		int					group_port,
+		int					control_port,
+		String[]			selected_interfaces )
+
+		throws UPnPException
+	{
+		return( SSDPCore.getSingleton( adapter, group_address_v4, group_address_v6, group_port, control_port, selected_interfaces ));
 	}
 }

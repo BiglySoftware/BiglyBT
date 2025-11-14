@@ -36,6 +36,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.net.upnp.UPnPDevice;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
+import com.biglybt.net.upnp.services.UPnPWANIPv6FirewallControl;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.plugin.upnp.UPnPMapping;
 import com.biglybt.plugin.upnp.UPnPPlugin;
@@ -79,9 +80,10 @@ DeviceInternetGatewayImpl
 
 	protected
 	DeviceInternetGatewayImpl(
-		DeviceManagerImpl			_manager,
-		UPnPDevice					_device,
-		List<UPnPWANConnection>		_connections )
+		DeviceManagerImpl					_manager,
+		UPnPDevice							_device,
+		List<UPnPWANConnection>				_connections,
+		List<UPnPWANIPv6FirewallControl>	_ipv6_fcs )
 	{
 		super( _manager, _device, Device.DT_INTERNET_GATEWAY );
 

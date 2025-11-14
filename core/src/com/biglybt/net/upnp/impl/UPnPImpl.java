@@ -92,7 +92,7 @@ UPnPImpl
 
 	private AsyncDispatcher		async_dispatcher = new AsyncDispatcher();
 
-	private ThreadPool	device_dispatcher	 = new ThreadPool("UPnPDispatcher", 1, true );
+	private ThreadPool<AERunnable>	device_dispatcher	 = new ThreadPool<>("UPnPDispatcher", 1, true );
 	private Set			device_dispatcher_pending	= new HashSet();
 
 	private Map<String,long[]>	failed_urls = new HashMap<>();
@@ -214,19 +214,18 @@ UPnPImpl
 
 						if ( !old_root_device.getNetworkInterface().getName().equals( network_interface.getName())){
 
-							if ( old_root_device.addAlternativeLocation( location )){
+							old_root_device.addAlternativeLocation( local_address, location );
 
-								log( "Adding alternative location " +location + " to " + usn );
+							return;
+							
+						}else{
+							
+								// check that the device's location is the same
+					
+							if ( old_root_device.checkSameLocation( local_address, location )){
+									
+								return;
 							}
-
-							return;
-						}
-
-							// check that the device's location is the same
-
-						if ( old_root_device.getLocation().equals( location )){
-
-							return;
 						}
 					}
 
@@ -362,7 +361,7 @@ UPnPImpl
 						return;
 					}
 
-					log( "UPnP: root lost: usn=" + usn + ", location=" + root_device.getLocation() + ", ni=" + root_device.getNetworkInterface().getName() + ",local=" + root_device.getLocalAddress().toString());
+					log( "UPnP: root lost: usn=" + usn + ", location=" + root_device.getLocation() + ", ni=" + root_device.getNetworkInterface().getName() + ",local=" + root_device.getLocalAddress(true) + "/" + root_device.getLocalAddress(false));
 
 					root_device.destroy( false );
 				}

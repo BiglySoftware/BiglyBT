@@ -587,6 +587,32 @@ UPnPPlugin
 						@Override
 						public void
 						log(
+							String		msg,
+							Throwable	e )
+						{
+							String	nested = Debug.getNestedExceptionMessage(e);
+
+							if ( !exception_traces.contains( nested )){
+
+								exception_traces.add( nested );
+
+								if ( exception_traces.size() > 128 ){
+
+									exception_traces.clear();
+								}
+
+								core_log.log( msg, e );
+
+							}else{
+
+								core_log.log( msg + ": " + nested );
+							}
+						}
+
+						
+						@Override
+						public void
+						log(
 							String	str )
 						{
 							log.log( str );

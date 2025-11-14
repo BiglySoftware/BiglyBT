@@ -92,9 +92,10 @@ NatPMPUPnPRootDeviceImpl
 
 	@Override
 	public InetAddress
-	getLocalAddress()
+	getLocalAddress(
+		boolean		ipv4 )
 	{
-		return( nat_device.getLocalAddress());
+		return( nat_device.getLocalAddress( ipv4 ));
 	}
 
 	@Override
@@ -376,6 +377,7 @@ NatPMPUPnPRootDeviceImpl
 		addPortMapping(
 			final boolean		tcp,
 			final int			port,
+			final String		internal_host,
 			final String		description )
 
 			throws UPnPException

@@ -19,6 +19,7 @@
 
 package com.biglybt.net.upnp.impl.services;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -213,6 +214,17 @@ UPnPSSWANConnectionImpl
 			return;
 		}
 
+		InetAddress local_ia = getGenericService().getDevice().getRootDevice().getLocalAddress( true );
+		
+		if ( local_ia == null ){
+			
+				// no local IPv4 address
+			
+			return;
+		}
+		
+		String local_address = local_ia.getHostAddress();
+		
 		List	mappings_copy;
 
 		try{
@@ -277,7 +289,7 @@ UPnPSSWANConnectionImpl
 					log( "Re-establishing mapping " + mapping.getString());
 				}
 
-				addPortMapping(  mapping.isTCP(), mapping.getExternalPort(), mapping.getDescription());
+				addPortMapping(  mapping.isTCP(), mapping.getExternalPort(), local_address, mapping.getDescription());
 
 			}catch( Throwable e ){
 
@@ -291,6 +303,7 @@ UPnPSSWANConnectionImpl
 	addPortMapping(
 		boolean		tcp,			// false -> UDP
 		int			port,
+		String		internal_host,
 		String		description )
 
 		throws UPnPException
@@ -309,7 +322,7 @@ UPnPSSWANConnectionImpl
 			add_inv.addArgument( "NewExternalPort", 			"" + port );
 			add_inv.addArgument( "NewProtocol", 				tcp?"TCP":"UDP" );
 			add_inv.addArgument( "NewInternalPort", 			"" + port );
-			add_inv.addArgument( "NewInternalClient",			service.getDevice().getRootDevice().getLocalAddress().getHostAddress());
+			add_inv.addArgument( "NewInternalClient",			internal_host );
 			add_inv.addArgument( "NewEnabled", 					"1" );
 			add_inv.addArgument( "NewPortMappingDescription", 	description );
 			add_inv.addArgument( "NewLeaseDuration",			"0" );		// 0 -> infinite (?)

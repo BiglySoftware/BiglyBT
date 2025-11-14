@@ -49,4 +49,13 @@ UPnPSSDPAdapter
 	public void
 	log(
 		Throwable	e );
+	
+	public default void
+	log(
+		String		str,
+		Throwable	e )
+	{
+		log( str );
+		log( e );
+	}
 }

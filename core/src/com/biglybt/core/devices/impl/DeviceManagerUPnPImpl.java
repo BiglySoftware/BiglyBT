@@ -40,6 +40,7 @@ import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.UUIDGenerator;
 import com.biglybt.net.upnp.*;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
+import com.biglybt.net.upnp.services.UPnPWANIPv6FirewallControl;
 import com.biglybt.pif.PluginEvent;
 import com.biglybt.pif.PluginEventListener;
 import com.biglybt.pif.PluginInterface;
@@ -184,6 +185,15 @@ DeviceManagerUPnPImpl
 					Throwable	e )
 				{
 					Debug.printStackTrace(e);
+				}
+				
+				@Override
+				public void
+				log(
+					String		msg,
+					Throwable	e )
+				{
+					Debug.out( msg, e );
 				}
 
 				@Override
@@ -1000,7 +1010,8 @@ DeviceManagerUPnPImpl
 
 		List<DeviceUPnPImpl>	new_devices = new ArrayList<>();
 
-		List<UPnPWANConnection>	igd_services = new ArrayList<>();
+		List<UPnPWANConnection>				igd_wan_services = new ArrayList<>();
+		List<UPnPWANIPv6FirewallControl>	igd_ipv6_services = new ArrayList<>();
 
 		for ( UPnPService service: services ){
 
@@ -1011,7 +1022,13 @@ DeviceManagerUPnPImpl
 
 				UPnPWANConnection	wan_service = (UPnPWANConnection)service.getSpecificService();
 
-				igd_services.add( wan_service );
+				igd_wan_services.add( wan_service );
+
+			}else if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPv6FirewallControl:")){
+
+				UPnPWANIPv6FirewallControl	wan_service = (UPnPWANIPv6FirewallControl)service.getSpecificService();
+
+				igd_ipv6_services.add( wan_service );
 
 			}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:ContentDirectory:" )){
 
@@ -1019,9 +1036,9 @@ DeviceManagerUPnPImpl
 			}
 		}
 
-		if ( igd_services.size() > 0 ){
+		if ( igd_wan_services.size() > 0 || igd_ipv6_services.size() > 0 ){
 
-			new_devices.add( new DeviceInternetGatewayImpl( manager, device, igd_services ));
+			new_devices.add( new DeviceInternetGatewayImpl( manager, device, igd_wan_services, igd_ipv6_services ));
 		}
 
 		if ( GeneralUtils.startsWithIgnoreCase( device.getDeviceType(), "urn:schemas-upnp-org:device:MediaRenderer:" )){

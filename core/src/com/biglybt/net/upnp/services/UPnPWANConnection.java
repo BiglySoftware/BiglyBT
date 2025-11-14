@@ -47,6 +47,7 @@ UPnPWANConnection
 	addPortMapping(
 		boolean		tcp,			// false -> UDP
 		int			port,
+		String		internal_host,
 		String		description )
 
 		throws UPnPException;

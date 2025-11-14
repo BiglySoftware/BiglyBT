@@ -73,7 +73,7 @@ public class NatPMPImpl {
 	        }
 	        /* add new port to list */
 	        mappings.add(   new portMapping( port, tcp,
-	                        natDevice.getLocalAddress().getHostAddress(),
+	                        natDevice.getLocalAddress( true).getHostAddress(),
 	                        description) );
         }
     }
