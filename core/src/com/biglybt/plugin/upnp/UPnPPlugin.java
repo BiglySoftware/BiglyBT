@@ -1261,7 +1261,7 @@ UPnPPlugin
 							(ports[j].isTCP()?"TCP":"UDP" ) + " [" + ports[j].getDescription() + "] -> " + ports[j].getInternalHost());
 		}
 
-		services_cow.add(new UPnPPluginService( wan_service, ports, desc_prefix_param, alert_success_param, grab_ports_param, alert_other_port_param, release_mappings_param ));
+		services_cow.add(new UPnPPluginServiceWAN( wan_service, ports, desc_prefix_param, alert_success_param, grab_ports_param, alert_other_port_param, release_mappings_param ));
 
 		if ( services_cow.size() > 1 ){
 
@@ -1273,7 +1273,7 @@ UPnPPlugin
 
 			for ( UPnPPluginService service: services_cow ){
 
-				String existing_usn = service.getService().getGenericService().getDevice().getRootDevice().getUSN();
+				String existing_usn = service.getGenericService().getDevice().getRootDevice().getUSN();
 
 				if ( !new_usn.equals( existing_usn )){
 
@@ -1323,7 +1323,7 @@ UPnPPlugin
 
 		for ( UPnPPluginService service: services_cow ){
 
-			if ( service.getService() == wan_service ){
+			if ( service.getSpecificService() == wan_service ){
 
 				services_cow.remove(service);
 
@@ -1389,7 +1389,7 @@ UPnPPlugin
 		for ( UPnPPluginService service: services_cow ){
 
 			try{
-				String	address = service.getService().getExternalIPAddress();
+				String	address = service.getExternalIPAddress();
 
 				if ( address != null ){
 
@@ -1407,7 +1407,7 @@ UPnPPlugin
 	public UPnPPluginService[]
 	getServices()
 	{
-		return((UPnPPluginService[])services_cow.toArray( new UPnPPluginService[0] ));
+		return((UPnPPluginServiceWAN[])services_cow.toArray( new UPnPPluginServiceWAN[0] ));
 	}
 
 	public UPnPPluginService[]
@@ -1420,7 +1420,7 @@ UPnPPlugin
 
 		for ( UPnPPluginService service: services_cow ){
 
-			String	this_usn = service.getService().getGenericService().getDevice().getRootDevice().getUSN();
+			String	this_usn = service.getGenericService().getDevice().getRootDevice().getUSN();
 
 			if ( this_usn.equals( target_usn )){
 

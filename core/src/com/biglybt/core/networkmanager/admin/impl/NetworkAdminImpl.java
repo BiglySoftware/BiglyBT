@@ -71,6 +71,7 @@ import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.platform.PlatformManagerPingCallback;
 import com.biglybt.plugin.upnp.UPnPPlugin;
 import com.biglybt.plugin.upnp.UPnPPluginService;
+import com.biglybt.plugin.upnp.UPnPPluginServiceWAN;
 
 public class
 NetworkAdminImpl
@@ -2820,23 +2821,26 @@ addressLoop:
 
 		    	for ( UPnPPluginService service: services ){
 
-		    		NetworkAdminNATDeviceImpl dev = new NetworkAdminNATDeviceImpl( service );
-
-		    		boolean same = false;
-
-		    		for ( NetworkAdminNATDeviceImpl d: devices ){
-
-		    			if ( d.sameAs( dev )){
-
-		    				same = true;
-
-		    				break;
-		    			}
-		    		}
-
-		    		if ( !same ){
-
-		    			devices.add( dev );
+		    		if ( service instanceof UPnPPluginServiceWAN ){
+		    			
+			    		NetworkAdminNATDeviceImpl dev = new NetworkAdminNATDeviceImpl((UPnPPluginServiceWAN)service );
+	
+			    		boolean same = false;
+	
+			    		for ( NetworkAdminNATDeviceImpl d: devices ){
+	
+			    			if ( d.sameAs( dev )){
+	
+			    				same = true;
+	
+			    				break;
+			    			}
+			    		}
+	
+			    		if ( !same ){
+	
+			    			devices.add( dev );
+			    		}
 		    		}
 		    	}
 		    }

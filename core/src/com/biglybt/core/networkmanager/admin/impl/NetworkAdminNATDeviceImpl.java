@@ -25,19 +25,19 @@ import java.net.InetAddress;
 import com.biglybt.core.networkmanager.admin.NetworkAdminNATDevice;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
-import com.biglybt.plugin.upnp.UPnPPluginService;
+import com.biglybt.plugin.upnp.UPnPPluginServiceWAN;
 
 public class
 NetworkAdminNATDeviceImpl
 	implements NetworkAdminNATDevice
 {
-	private final UPnPPluginService		service;
+	private final UPnPPluginServiceWAN		service;
 	private InetAddress				external_address;
 	private long					address_time;
 
 	protected
 	NetworkAdminNATDeviceImpl(
-		UPnPPluginService		_service )
+		UPnPPluginServiceWAN		_service )
 	{
 		service	= _service;
 	}
@@ -86,7 +86,7 @@ NetworkAdminNATDeviceImpl
 		}
 
 		try{
-			external_address = InetAddress.getByName(service.getExternalAddress());
+			external_address = InetAddress.getByName(service.getExternalIPAddress());
 
 			address_time = now;
 

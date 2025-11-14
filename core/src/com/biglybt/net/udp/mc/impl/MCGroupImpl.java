@@ -379,6 +379,14 @@ MCGroupImpl
 						continue;
 					}
 
+					if ( ni_address instanceof Inet6Address ){
+						
+						if ( ni_address.isLinkLocalAddress()){
+							
+							continue;
+						}
+					}
+					
 					if ( !start_of_day ){
 
 						if ( !changed_interfaces.containsKey( ni_name )){

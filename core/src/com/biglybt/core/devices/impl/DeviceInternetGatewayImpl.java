@@ -199,11 +199,11 @@ DeviceInternetGatewayImpl
 	getActualMappings(
 		UPnPPluginService	service )
 	{
-		UPnPPluginService.serviceMapping[] actual_mappings = service.getMappings();
+		UPnPPluginService.ServiceMapping[] actual_mappings = service.getMappings();
 
 		Set<mapping> actual = new TreeSet<>();
 
-		for ( UPnPPluginService.serviceMapping act_mapping: actual_mappings ){
+		for ( UPnPPluginService.ServiceMapping act_mapping: actual_mappings ){
 
 			mapping m = new mapping( act_mapping );
 
@@ -251,7 +251,7 @@ DeviceInternetGatewayImpl
 					}
 				}
 
-				String service_name = MessageText.getString( "device.router.con_type", new String[]{ service.getService().getConnectionType() });
+				String service_name = MessageText.getString( "device.router.con_type", new String[]{ service.getConnectionType() });
 
 				addDP( dp, "!    " + service_name + "!", act_map_str );
 			}
@@ -275,7 +275,7 @@ DeviceInternetGatewayImpl
 
 		protected
 		mapping(
-			UPnPPluginService.serviceMapping		m )
+			UPnPPluginService.ServiceMapping		m )
 		{
 			is_tcp		= m.isTCP();
 			port		= m.getPort();
