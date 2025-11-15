@@ -723,9 +723,10 @@ UPnPImpl
 
 	public SimpleXMLParserDocument
 	performSOAPRequest(
-		UPnPService service,
+		UPnPService 	service,
 		String			soap_action,
-		String			request )
+		String			request,
+		boolean			prefer_ipv4 )
 
 		throws SimpleXMLParserDocumentException, UPnPException, IOException
 	{
@@ -733,18 +734,18 @@ UPnPImpl
 
 		if ( service.getDirectInvocations() || forceDirect()){
 
-			res = performSOAPRequest( service, soap_action, request, false );
+			res = performSOAPRequest( service, soap_action, request, false, prefer_ipv4 );
 
 		}else{
 
 			try{
-				res =  performSOAPRequest( service, soap_action, request, true );
+				res =  performSOAPRequest( service, soap_action, request, true, prefer_ipv4 );
 
 				http_calls_ok++;
 
 			}catch( IOException e ){
 
-				res = performSOAPRequest( service, soap_action, request, false );
+				res = performSOAPRequest( service, soap_action, request, false, prefer_ipv4 );
 
 				direct_calls_ok++;
 
@@ -767,13 +768,14 @@ UPnPImpl
 		UPnPService		service,
 		String			soap_action,
 		String			request,
-		boolean			use_http_connection)
+		boolean			use_http_connection,
+		boolean			prefer_ipv4 )
 
 		throws SimpleXMLParserDocumentException, UPnPException, IOException
 	{
 		//long	start = SystemTime.getMonotonousTime();
 
-		List<URL>	controls = service.getControlURLs();
+		List<URL>	controls = service.getControlURLs( prefer_ipv4 );
 
 		Throwable last_error = null;
 

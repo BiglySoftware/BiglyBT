@@ -89,12 +89,13 @@ DeviceContentDirectoryImpl
 
 	@Override
 	public List<URL>
-	getControlURLs()
+	getControlURLs(
+		boolean		ipv4 )
 	{
 		if ( upnp_service != null ){
 
 			try{
-				return( upnp_service.getControlURLs());
+				return( upnp_service.getControlURLs( ipv4 ));
 
 			}catch( Throwable e ){
 

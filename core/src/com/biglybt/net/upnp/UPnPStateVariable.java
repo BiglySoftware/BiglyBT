@@ -34,7 +34,8 @@ UPnPStateVariable
 	getService();
 
 	public String
-	getValue()
+	getValue(
+		boolean prefer_ipv4 )
 
 		throws UPnPException;
 }

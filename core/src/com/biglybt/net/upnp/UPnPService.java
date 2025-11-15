@@ -39,16 +39,14 @@ UPnPService
 	getServiceType();
 
 	public List<URL>
-	getControlURLs()
+	getControlURLs(
+		boolean		ipv4 )
 
 		throws UPnPException;
 
 	public void
 	setPreferredControlURL(
 		URL		url );
-
-	public boolean
-	isConnectable();
 
 	public UPnPAction[]
 	getActions()

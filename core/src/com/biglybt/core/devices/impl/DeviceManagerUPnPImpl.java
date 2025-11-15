@@ -1026,9 +1026,9 @@ DeviceManagerUPnPImpl
 
 			}else if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPv6FirewallControl:")){
 
-				UPnPWANIPv6FirewallControl	wan_service = (UPnPWANIPv6FirewallControl)service.getSpecificService();
+				UPnPWANIPv6FirewallControl	firewall_service = (UPnPWANIPv6FirewallControl)service.getSpecificService();
 
-				igd_ipv6_services.add( wan_service );
+				igd_ipv6_services.add( firewall_service );
 
 			}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:ContentDirectory:" )){
 

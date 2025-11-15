@@ -18,32 +18,18 @@
 
 package com.biglybt.net.upnp.services;
 
-import com.biglybt.net.upnp.UPnPException;
-
 public interface 
-UPnPWANIPv6FirewallControl
-	extends UPnPSpecificService
+UPnPWANIPv6FirewallControlPinhole
 {
-	public void
-	addPinhole(
-		boolean		tcp,
-		int			port,
-		String		local_address,
-		String		description )
+	public boolean
+	isTCP();
 
-		throws UPnPException;
-	
-	public void
-	updatePinhole(
-		boolean		tcp,
-		int			port )
+	public int
+	getExternalPort();
 
-		throws UPnPException;
-	
-	public void
-	removePinhole(
-		boolean		tcp,
-		int			port )
+	public String
+	getInternalHost();
 
-		throws UPnPException;
+	public String
+	getDescription();
 }

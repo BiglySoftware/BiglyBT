@@ -5280,7 +5280,7 @@ DeviceManagerUI
 
 								final DeviceContentDirectory cd = (DeviceContentDirectory)device;
 
-								final List<URL> endpoints = cd.getControlURLs();
+								final List<URL> endpoints = cd.getControlURLs( true );
 
 								if ( endpoints == null || endpoints.size() == 0 ){
 

@@ -28,7 +28,8 @@ DeviceContentDirectory
 	extends Device
 {
 	public List<URL>
-	getControlURLs();
+	getControlURLs(
+		boolean		ipv4 );
 
 	public void
 	setPreferredControlURL(

@@ -42,7 +42,8 @@ UPnPSSWANConnectionImpl
 	implements UPnPWANConnection
 {
 	private static AEMonitor	class_mon 	= new AEMonitor( "UPnPSSWANConnection" );
-	private static List			services	= new ArrayList();
+	
+	private static List<UPnPSSWANConnectionImpl>			services	= new ArrayList<>();
 
 	static{
 
@@ -54,16 +55,16 @@ UPnPSSWANConnectionImpl
 					"UPnPSSWAN:checker",
 					()->{
 						try{
-							List	to_check = new ArrayList();
+							List<UPnPSSWANConnectionImpl>	to_check = new ArrayList();
 
 							try{
 								class_mon.enter();
 
-								Iterator	it = services.iterator();
+								Iterator<UPnPSSWANConnectionImpl>	it = services.iterator();
 
 								while( it.hasNext()){
 
-									UPnPSSWANConnectionImpl	s = (UPnPSSWANConnectionImpl)it.next();
+									UPnPSSWANConnectionImpl	s = it.next();
 
 									if ( s.getGenericService().getDevice().getRootDevice().isDestroyed()){
 
@@ -83,7 +84,7 @@ UPnPSSWANConnectionImpl
 							for (int i=0;i<to_check.size();i++){
 
 								try{
-									((UPnPSSWANConnectionImpl)to_check.get(i)).checkMappings();
+									to_check.get(i).checkMappings();
 
 								}catch( Throwable e ){
 
@@ -99,8 +100,9 @@ UPnPSSWANConnectionImpl
 	}
 
 	private UPnPServiceImpl		service;
-	private List				mappings	= new ArrayList();
-	private List				listeners	= new ArrayList();
+	
+	private List<PortMapping>						mappings	= new ArrayList();
+	private List<UPnPWANConnectionListener>			listeners	= new ArrayList();
 
 	private boolean				recheck_mappings	= true;
 
@@ -166,7 +168,7 @@ UPnPSSWANConnectionImpl
 
 			UPnPActionInvocation inv = act.getInvocation();
 
-			UPnPActionArgument[]	args = inv.invoke();
+			UPnPActionArgument[]	args = inv.invoke( true );
 
 			String	connection_status	= null;
 			String	connection_error	= null;
@@ -243,7 +245,7 @@ UPnPSSWANConnectionImpl
 
 		while( it.hasNext()){
 
-			portMapping	mapping = (portMapping)it.next();
+			PortMapping	mapping = (PortMapping)it.next();
 
 			for (int j=0;j<current.length;j++){
 
@@ -278,7 +280,7 @@ UPnPSSWANConnectionImpl
 
 		while( it.hasNext()){
 
-			portMapping	mapping = (portMapping)it.next();
+			PortMapping	mapping = (PortMapping)it.next();
 
 			try{
 					// some routers appear to continually fail to report the mappings - avoid
@@ -330,7 +332,7 @@ UPnPSSWANConnectionImpl
 			boolean	ok = false;
 
 			try{
-				add_inv.invoke();
+				add_inv.invoke( true );
 
 				ok	= true;
 
@@ -339,7 +341,8 @@ UPnPSSWANConnectionImpl
 					// some routers won't add properly if the mapping's already there
 
 				try{
-					log("Problem when adding port mapping - will try to see if an existing mapping is in the way");
+					log( "Problem when adding port mapping - will try to see if an existing mapping is in the way");
+					
 					deletePortMapping(tcp, port);
 
 				}catch( Throwable e ){
@@ -347,7 +350,7 @@ UPnPSSWANConnectionImpl
 					throw( original_error );
 				}
 
-				add_inv.invoke();
+				add_inv.invoke( true );
 
 				ok	= true;
 
@@ -376,7 +379,7 @@ UPnPSSWANConnectionImpl
 
 				while( it.hasNext()){
 
-					portMapping	m = (portMapping)it.next();
+					PortMapping	m = (PortMapping)it.next();
 
 					if ( m.getExternalPort() == port && m.isTCP() == tcp ){
 
@@ -384,7 +387,7 @@ UPnPSSWANConnectionImpl
 					}
 				}
 
-				mappings.add( new portMapping( port, tcp, "", description ));
+				mappings.add( new PortMapping( port, tcp, "", description ));
 
 			}finally{
 
@@ -418,7 +421,7 @@ UPnPSSWANConnectionImpl
 
 				while( it.hasNext()){
 
-					portMapping	mapping = (portMapping)it.next();
+					PortMapping	mapping = (PortMapping)it.next();
 
 					if ( 	mapping.getExternalPort() == port &&
 							mapping.isTCP() == tcp ){
@@ -444,7 +447,7 @@ UPnPSSWANConnectionImpl
 				inv.addArgument( "NewProtocol", 				tcp?"TCP":"UDP" );
 				inv.addArgument( "NewExternalPort", 			"" + port );
 
-				inv.invoke();
+				inv.invoke( true );
 
 				long	elapsed = SystemTime.getCurrentTime() - start;
 
@@ -506,7 +509,7 @@ UPnPSSWANConnectionImpl
 					// I've also seen some routers loop here rather than failing when the index gets too large (they
 					// seem to keep returning the last entry) - check for a duplicate entry and exit if found
 
-				portMapping	prev_mapping	= null;
+				PortMapping	prev_mapping	= null;
 
 				for (int i=0;i<(entries==0?512:entries);i++){
 
@@ -515,7 +518,7 @@ UPnPSSWANConnectionImpl
 					inv.addArgument( "NewPortMappingIndex", "" + i );
 
 					try{
-						UPnPActionArgument[] outs = inv.invoke();
+						UPnPActionArgument[] outs = inv.invoke( true );
 
 						int		port			= 0;
 						boolean	tcp				= false;
@@ -557,7 +560,7 @@ UPnPSSWANConnectionImpl
 							}
 						}
 
-						prev_mapping = new portMapping( port, tcp, internal_host, description );
+						prev_mapping = new PortMapping( port, tcp, internal_host, description );
 
 						res.add( prev_mapping );
 
@@ -616,7 +619,7 @@ UPnPSSWANConnectionImpl
 
 			UPnPActionInvocation inv = act.getInvocation();
 
-			UPnPActionArgument[]	args = inv.invoke();
+			UPnPActionArgument[]	args = inv.invoke( true );
 
 			String	ip	= null;
 
@@ -660,7 +663,7 @@ UPnPSSWANConnectionImpl
 	}
 
 	private static class
-	portMapping
+	PortMapping
 		implements UPnPWANConnectionPortMapping
 	{
 		protected int			external_port;
@@ -669,7 +672,7 @@ UPnPSSWANConnectionImpl
 		protected String		description;
 
 		protected
-		portMapping(
+		PortMapping(
 			int			_external_port,
 			boolean		_tcp,
 			String		_internal_host,

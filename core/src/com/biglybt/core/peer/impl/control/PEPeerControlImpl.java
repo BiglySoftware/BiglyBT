@@ -232,6 +232,20 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private static final NetworkAdmin network_admin = NetworkAdmin.getSingleton();
 
+	private static volatile boolean	ignore_v4;
+	private static volatile boolean	ignore_v6;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
+				ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES },
+			(n)->{
+				ignore_v4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
+				ignore_v6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
+			});
+	}
+	
 	private static final IpFilter ip_filter = IpFilterManagerFactory.getSingleton().getIPFilter();
 
 	private static final AtomicInteger UUID_GEN = new AtomicInteger();
@@ -1469,7 +1483,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				key = new PeerUnresolvedCacheKey( address, tcp_port );
 				
 			}else{
-				
+
+				if ( ( bytes.length == 4 && ignore_v4 ) || ( bytes.length == 16 && ignore_v6 )){
+					
+					return( "ip family is ignored" );
+				}
+
 				key = new PeerResolvedCacheKey( bytes, tcp_port );
 			}
 		}else{

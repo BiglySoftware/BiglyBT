@@ -57,7 +57,8 @@ UPnPServiceImpl
 
 	private boolean			direct_invoke;
 
-	private URL				preferred_control_url;
+	private URL				preferred_control_url_v4;
+	private URL				preferred_control_url_v6;
 
 	public
 	UPnPServiceImpl(
@@ -88,50 +89,6 @@ UPnPServiceImpl
 	getServiceType()
 	{
 		return( service_type );
-	}
-
-	@Override
-	public boolean
-	isConnectable()
-	{
-		try{
-			List<URL> urls = getControlURLs();
-
-			for ( URL url: urls ){
-
-				Socket socket = new Socket();
-
-				try{
-					int	port = url.getPort();
-
-					if ( port <= 0 ){
-
-						port = url.getDefaultPort();
-					}
-
-					socket.connect( new InetSocketAddress( url.getHost(), port ), 5000 );
-
-					if ( getPreferredControlURL() == null ){
-
-						setPreferredControlURL( url );
-					}
-
-					return( true );
-
-				}finally{
-
-					try{
-						socket.close();
-
-					}catch( Throwable e ){
-
-					}
-				}
-			}
-		}catch( Throwable e ){
-		}
-
-		return( false );
 	}
 
 	@Override
@@ -220,7 +177,8 @@ UPnPServiceImpl
 
 	@Override
 	public List<URL>
-	getControlURLs()
+	getControlURLs(
+		boolean prefer_ipv4 )
 
 		throws UPnPException
 	{
@@ -245,13 +203,12 @@ UPnPServiceImpl
 
 				result.add( alt_url );
 			}
-		}
 
-		// we prefer IPv4 addresses here as they are more likely to work. For example,
-		// when adding an IPv4 port mapping, some routers don't like the originating IP address
-		// to be IPv6
-	
-		if ( result.size() > 1 ){
+				// we prefer IPv4 addresses here as they are more likely to work. For example,
+				// when adding an IPv4 port mapping, some routers don't like the originating IP address
+				// to be IPv6
+		
+
 			Collections.sort(
 				result,
 				(u1,u2)->{
@@ -263,27 +220,33 @@ UPnPServiceImpl
 						
 						return( 0 );
 					}else if ( h1.startsWith( "[" )){
-						return( 1 );
+						return( prefer_ipv4?1:-1 );
 						
 					}else if ( h2.startsWith( "[" )){
-						return( -1 );
+						return( prefer_ipv4?-1:1 );
 					}else{
 						
 						return( 0 );
 					}
 				});
 			
-		}
-		if ( result.size() > 1 && preferred_control_url != null  ){
-
-			if ( 	!result.get(0).equals( preferred_control_url ) &&
-					result.contains( preferred_control_url )){
-
-				result.remove( preferred_control_url );
-				result.add( 0, preferred_control_url );
+			URL first = result.get(0);
+			
+			boolean first_ipv6 = first.getHost().startsWith( "[" );
+			
+			URL preferred_control_url = first_ipv6?preferred_control_url_v6:preferred_control_url_v4;
+			
+			if ( preferred_control_url != null  ){
+	
+				if ( 	!result.get(0).equals( preferred_control_url ) &&
+						result.contains( preferred_control_url )){
+	
+					result.remove( preferred_control_url );
+					result.add( 0, preferred_control_url );
+				}
 			}
 		}
-
+		
 		return( result );
 	}
 
@@ -292,13 +255,16 @@ UPnPServiceImpl
 	setPreferredControlURL(
 		URL url)
 	{
-		preferred_control_url	= url;
-	}
-
-	protected URL
-	getPreferredControlURL()
-	{
-		return( preferred_control_url );
+		String host = url.getHost();
+		
+		if ( host.startsWith( "[" )){
+			
+			preferred_control_url_v6	= url;
+			
+		}else{
+			
+			preferred_control_url_v4	= url;
+		}
 	}
 
 	protected URL

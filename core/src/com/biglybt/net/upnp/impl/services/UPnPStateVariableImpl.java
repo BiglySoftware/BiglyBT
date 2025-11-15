@@ -64,7 +64,8 @@ UPnPStateVariableImpl
 
 	@Override
 	public String
-	getValue()
+	getValue(
+		boolean prefer_ipv4 )
 
 		throws UPnPException
 	{
@@ -83,7 +84,7 @@ UPnPStateVariableImpl
 			request += 	"</s:Body>"+
 						"</s:Envelope>";
 
-			SimpleXMLParserDocument resp_doc	= ((UPnPDeviceImpl)service.getDevice()).getUPnP().performSOAPRequest( service, soap_action, request );
+			SimpleXMLParserDocument resp_doc	= ((UPnPDeviceImpl)service.getDevice()).getUPnP().performSOAPRequest( service, soap_action, request, prefer_ipv4 );
 
 			SimpleXMLParserDocumentNode	body = resp_doc.getChild( "Body" );
 

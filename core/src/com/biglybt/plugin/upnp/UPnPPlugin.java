@@ -38,6 +38,7 @@ import com.biglybt.net.upnp.services.UPnPWANCommonInterfaceConfig;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
 import com.biglybt.net.upnp.services.UPnPWANConnectionListener;
 import com.biglybt.net.upnp.services.UPnPWANConnectionPortMapping;
+import com.biglybt.net.upnp.services.UPnPWANIPv6FirewallControl;
 import com.biglybt.pif.Plugin;
 import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.PluginInterface;
@@ -1197,6 +1198,27 @@ UPnPPlugin
 
 				interesting++;
 
+			}else if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPv6FirewallControl:" )){
+
+					final UPnPWANIPv6FirewallControl	firewall_service = (UPnPWANIPv6FirewallControl)s.getSpecificService();
+
+					device.getRootDevice().addListener(
+						new UPnPRootDeviceListener()
+						{
+							@Override
+							public void
+							lost(
+								UPnPRootDevice	root,
+								boolean			replaced )
+							{
+								removeService( firewall_service, replaced );
+							}
+						});
+
+					addService( firewall_service );
+
+					interesting++;
+
 			}else if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:")){
 
 				/*
@@ -1332,6 +1354,46 @@ UPnPPlugin
 		}
 	}
 
+	protected void
+	addService(
+		UPnPWANIPv6FirewallControl	firewall_service )
+
+		throws UPnPException
+	{
+		log.log( "    Found WANIPv6FirewallControl" );
+
+		services_cow.add(new UPnPPluginServiceFirewall( firewall_service, desc_prefix_param, alert_success_param, grab_ports_param, alert_other_port_param, release_mappings_param ));
+
+		checkState();
+	}
+
+	protected void
+	removeService(
+		UPnPWANIPv6FirewallControl	firewall_service,
+		boolean						replaced )
+	{
+		String	name = "WANIPv6FirewallControl";
+
+		String	text =
+			MessageText.getString(
+					"upnp.alert.lostdevice",
+					new String[]{ name, firewall_service.getGenericService().getDevice().getRootDevice().getLocation().getHost()});
+
+		log.log( text );
+
+		for ( UPnPPluginService service: services_cow ){
+
+			if ( service.getSpecificService() == firewall_service ){
+
+				services_cow.remove(service);
+
+				break;
+			}
+		}
+	}
+	
+	
+	
 	protected void
 	addMapping(
 		UPnPMapping		mapping )

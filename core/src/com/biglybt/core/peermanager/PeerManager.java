@@ -19,6 +19,8 @@
 
 package com.biglybt.core.peermanager;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -108,6 +110,20 @@ public class PeerManager implements CoreStatsProvider {
 					enable_public_udp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE );
 					socks_data					= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PROXY_DATA_ENABLE );
 				}
+			});
+	}
+	
+	private static volatile boolean	ignore_v4;
+	private static volatile boolean	ignore_v6;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
+				ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES },
+			(n)->{
+				ignore_v4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
+				ignore_v6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
 			});
 	}
 	
@@ -1230,7 +1246,9 @@ public class PeerManager implements CoreStatsProvider {
 
 				return;
 			}
-			
+
+			InetAddress address_mbn = is_address.getAddress();
+
 			if ( net_cat == AENetworkClassifier.AT_PUBLIC ){
 				
 				if ( socks_data ){
@@ -1245,10 +1263,16 @@ public class PeerManager implements CoreStatsProvider {
 
 						return;
 					}
+				}else{
+					
+					if ( ( address_mbn instanceof Inet4Address && ignore_v4 ) || ( address_mbn instanceof Inet6Address && ignore_v6 )){
+							
+						connection.close( "ip family is ignored" );
+						
+						return;
+					}
 				}
 			}
-
-			InetAddress address_mbn = is_address.getAddress();
 
 			boolean same_allowed = COConfigurationManager.getBooleanParameter( "Allow Same IP Peers" ) || ( address_mbn != null && address_mbn.isLoopbackAddress());
 

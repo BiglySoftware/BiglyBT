@@ -280,7 +280,8 @@ NatPMPUPnPRootDeviceImpl
 
 		@Override
 		public List<URL>
-		getControlURLs()
+		getControlURLs(
+			boolean		ipv4 )
 
 			throws UPnPException
 		{
@@ -292,13 +293,6 @@ NatPMPUPnPRootDeviceImpl
 		setPreferredControlURL(
 			URL url)
 		{
-		}
-
-		@Override
-		public boolean
-		isConnectable()
-		{
-			return( true );
 		}
 
 		@Override

@@ -55,7 +55,7 @@ UPnPPluginServiceWAN
 
 	protected List<ServiceMappingImpl>	service_mappings = new ArrayList<>();
 
-	protected AEMonitor	this_mon 	= new AEMonitor( "UPnPPluginService" );
+	protected AEMonitor	this_mon 	= new AEMonitor( "UPnPPluginServiceWAN" );
 
 	protected
 	UPnPPluginServiceWAN(
@@ -225,7 +225,7 @@ UPnPPluginServiceWAN
 
 								sm.setLogged(mapping);
 
-								log.log( "Mapping " + mapping.getString() + " already established" );
+								// log.log( "Mapping " +getString( mapping ) + " already established" );
 							}
 
 							return;
@@ -241,7 +241,7 @@ UPnPPluginServiceWAN
 									String	text =
 										MessageText.getString(
 											"upnp.alert.differenthost",
-											new String[]{ mapping.getString(), sm.getInternalHost()});
+											new String[]{getString( mapping ), sm.getInternalHost()});
 
 									if ( alert_other_port_param.getValue()){
 
@@ -282,12 +282,12 @@ UPnPPluginServiceWAN
 
 						text = MessageText.getString(
 								"upnp.alert.mappinggrabbed",
-								new String[]{ mapping.getString(), grab_in_progress.getInternalHost()});
+								new String[]{getString( mapping ), grab_in_progress.getInternalHost()});
 					}else{
 
 						text = MessageText.getString(
 								"upnp.alert.mappingok",
-								new String[]{ mapping.getString()});
+								new String[]{getString( mapping )});
 					}
 
 					log.log( text );
@@ -304,7 +304,7 @@ UPnPPluginServiceWAN
 					String	text =
 						MessageText.getString(
 								"upnp.alert.mappingfailed",
-								new String[]{ mapping.getString()});
+								new String[]{getString( mapping )});
 
 					log.log( text );
 
@@ -474,6 +474,13 @@ UPnPPluginServiceWAN
 		}
 	}
 
+	private String
+	getString(
+		UPnPMapping		mapping )
+	{
+		return( "IPv4: " + mapping.getString());
+	}
+	
 	public String
 	getString()
 	{

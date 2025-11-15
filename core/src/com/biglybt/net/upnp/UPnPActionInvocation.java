@@ -39,8 +39,17 @@ UPnPActionInvocation
 		 * @throws UPnPException
 		 */
 
-	public UPnPActionArgument[]
+	public default UPnPActionArgument[]
 	invoke()
+
+		throws UPnPException
+	{
+		return( invoke( true ));
+	}
+	
+	public UPnPActionArgument[]
+	invoke(
+		boolean	prefer_ipv4 )
 
 		throws UPnPException;
 
