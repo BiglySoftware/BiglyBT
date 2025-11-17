@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-package com.biglybt.core.networkmanager.impl.tcp;
+package com.biglybt.core.networkmanager.impl;
 
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
