@@ -395,7 +395,7 @@ MCGroupImpl
 							
 							mc_channel.configureBlocking( false );
 							
-							SelectorListener listener = new SelectorListener( network_interface, ni_address, mc_channel );
+							SelectorListener listener = new SelectorListener( network_interface, ni_address, mc_channel, true );
 								
 							if ( ipv6 ){
 								
@@ -510,7 +510,7 @@ MCGroupImpl
 							
 							control_channel.configureBlocking( false );
 							
-							SelectorListener listener = new SelectorListener( network_interface, ni_address, control_channel );
+							SelectorListener listener = new SelectorListener( network_interface, ni_address, control_channel, false );
 								
 							if ( ipv6 ){
 								
@@ -988,9 +988,10 @@ MCGroupImpl
 	SelectorListener
 		implements VirtualSelectorListener
 	{
-		private final  NetworkInterface		network_interface;
-		private final  InetAddress			local_address;
+		private final NetworkInterface		network_interface;
+		private final InetAddress			local_address;
 		private final DatagramChannel		channel;
+		private final boolean				log_on_stop;
 		
 		long	successful_accepts 	= 0;
 		long	failed_accepts		= 0;
@@ -998,11 +999,13 @@ MCGroupImpl
 		SelectorListener(
 			NetworkInterface	_network_interface,
 			InetAddress			_local_address,
-			DatagramChannel		_channel )
+			DatagramChannel		_channel,
+			boolean				_log_on_stop )
 		{
 			network_interface		= _network_interface;
 			local_address			= _local_address;
 			channel 				= _channel;
+			log_on_stop				= _log_on_stop;
 		}
 		
 		@Override
@@ -1012,6 +1015,21 @@ MCGroupImpl
 			AbstractSelectableChannel 		sc, 
 			Object 							attachment )
 		{
+			if ( !validNetworkAddress( network_interface, local_address )){
+
+				if ( log_on_stop ){
+
+					adapter.trace(
+							"group = " + group_address +"/" +
+							network_interface.getName()+":"+
+							network_interface.getDisplayName() + " - " + local_address + ": stopped" );
+				}
+
+				selector.cancel( sc );
+				
+				return( false );
+			}
+			
 			try{
 				ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
 
