@@ -113,16 +113,6 @@ UPnPSSWANIPv6FirewallControlImpl
 		UPnPServiceImpl		_service )
 	{
 		service = _service;
-		
-		try{
-			class_mon.enter();
-
-			services.add( this );
-
-		}finally{
-
-			class_mon.exit();
-		}
 	}
 	
 	@Override
@@ -130,6 +120,22 @@ UPnPSSWANIPv6FirewallControlImpl
 	getGenericService()
 	{
 		return( service );
+	}
+	
+	private void
+	checkRegistered()
+	{
+		try{
+			class_mon.enter();
+
+			if ( !services.contains( this )){
+			
+				services.add( this );
+			}
+		}finally{
+
+			class_mon.exit();
+		}
 	}
 	
 	@Override
@@ -142,6 +148,8 @@ UPnPSSWANIPv6FirewallControlImpl
 
 		throws UPnPException
 	{
+		checkRegistered();
+		
 		UPnPAction act = service.getAction( "AddPinhole" );
 
 		if ( act == null ){

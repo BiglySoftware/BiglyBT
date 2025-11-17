@@ -205,8 +205,6 @@ UPnPPluginServiceWAN
 
 				ServiceMappingImpl	grab_in_progress	= null;
 
-				String local_address = local_ia.getHostAddress();
-
 				for (int i=0;i<service_mappings.size();i++){
 
 					ServiceMappingImpl	sm = (ServiceMappingImpl)service_mappings.get(i);
@@ -280,7 +278,7 @@ UPnPPluginServiceWAN
 					String	text;
 
 					if ( grab_in_progress != null ){
-
+						
 						text = MessageText.getString(
 								"upnp.alert.mappinggrabbed",
 								new String[]{getString( mapping ),
@@ -326,6 +324,11 @@ UPnPPluginServiceWAN
 
 				}else{
 
+					if ( error_text != null ){
+					
+						grab_in_progress.setInternalHost( local_ia );
+					}
+					
 					grab_in_progress.setError( error_text );
 				}
 
@@ -613,6 +616,13 @@ UPnPPluginServiceWAN
 			return( internal_host );
 		}
 
+		public void
+		setInternalHost(
+			InetAddress		a )
+		{
+			internal_host = a;
+		}
+		
 		private String
 		getError()
 		{

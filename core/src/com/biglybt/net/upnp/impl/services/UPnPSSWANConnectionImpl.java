@@ -115,16 +115,6 @@ UPnPSSWANConnectionImpl
 		UPnPServiceImpl		_service )
 	{
 		service	= _service;
-
-		try{
-			class_mon.enter();
-
-			services.add( this );
-
-		}finally{
-
-			class_mon.exit();
-		}
 	}
 
 	@Override
@@ -298,6 +288,22 @@ UPnPSSWANConnectionImpl
 		}
 	}
 
+	private void
+	checkRegistered()
+	{
+		try{
+			class_mon.enter();
+
+			if ( !services.contains( this )){
+			
+				services.add( this );
+			}
+		}finally{
+
+			class_mon.exit();
+		}
+	}
+	
 	@Override
 	public void
 	addPortMapping(
@@ -308,6 +314,8 @@ UPnPSSWANConnectionImpl
 
 		throws UPnPException
 	{
+		checkRegistered();
+		
 		UPnPAction act = service.getAction( "AddPortMapping" );
 
 		if ( act == null ){
@@ -339,7 +347,7 @@ UPnPSSWANConnectionImpl
 					// some routers won't add properly if the mapping's already there
 
 				try{
-					log( "Problem when adding port mapping - will try to see if an existing mapping is in the way");
+					// log( "Problem when adding port mapping - will try to see if an existing mapping is in the way");
 					
 					deletePortMapping(tcp, port);
 
@@ -402,6 +410,8 @@ UPnPSSWANConnectionImpl
 
 		throws UPnPException
 	{
+		checkRegistered();
+		
 		UPnPAction act = service.getAction( "DeletePortMapping" );
 
 		if ( act == null ){

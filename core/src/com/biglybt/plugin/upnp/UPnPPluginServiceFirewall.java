@@ -156,8 +156,6 @@ UPnPPluginServiceFirewall
 
 				ServiceMappingImpl	grab_in_progress	= null;
 
-				String local_address = local_ia.getHostAddress();
-
 				for (int i=0;i<service_mappings.size();i++){
 
 					ServiceMappingImpl	sm = (ServiceMappingImpl)service_mappings.get(i);
