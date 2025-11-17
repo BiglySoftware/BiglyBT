@@ -19,6 +19,7 @@
 
 package com.biglybt.net.natpmp.upnp.impl;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -73,7 +74,7 @@ public class NatPMPImpl {
 	        }
 	        /* add new port to list */
 	        mappings.add(   new portMapping( port, tcp,
-	                        natDevice.getLocalAddress( true).getHostAddress(),
+	                        natDevice.getLocalAddress( true),
 	                        description) );
         }
     }
@@ -133,13 +134,14 @@ public class NatPMPImpl {
     {
         protected int           external_port;
         protected boolean       tcp;
-        protected String        internal_host;
+        protected InetAddress   internal_host;
         protected String        description;
 
-        protected portMapping(
-                int         _external_port,
-                boolean     _tcp,
-                String      _internal_host,
+        protected 
+        portMapping(
+        		int         _external_port,
+        		boolean     _tcp,
+                InetAddress      _internal_host,
                 String      _description )
         {
             external_port   = _external_port;
@@ -161,7 +163,8 @@ public class NatPMPImpl {
         }
 
         @Override
-        public String getInternalHost()
+        public InetAddress
+        getInternalHost()
         {
             return( internal_host );
         }

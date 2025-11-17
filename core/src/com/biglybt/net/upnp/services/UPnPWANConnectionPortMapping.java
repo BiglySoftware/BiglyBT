@@ -19,6 +19,8 @@
 
 package com.biglybt.net.upnp.services;
 
+import java.net.InetAddress;
+
 /**
  * @author parg
  *
@@ -33,7 +35,7 @@ UPnPWANConnectionPortMapping
 	public int
 	getExternalPort();
 
-	public String
+	public InetAddress
 	getInternalHost();
 
 	public String

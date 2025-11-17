@@ -165,7 +165,7 @@ UPnPPluginServiceFirewall
 					if ( 	sm.isTCP() 		== mapping.isTCP() &&
 							sm.getPort() 	== mapping.getPort()){
 
-						if ( sm.getInternalHost().equals( local_address )){
+						if ( sm.getInternalHost().equals( local_ia )){
 
 								// make sure we tie this to the mapping in case it
 								// was external to begin with
@@ -192,7 +192,8 @@ UPnPPluginServiceFirewall
 									String	text =
 										MessageText.getString(
 											"upnp.alert.differenthost",
-											new String[]{getString( mapping ), sm.getInternalHost()});
+											new String[]{getString( mapping ), 
+											sm.getInternalHost().getHostAddress()});
 
 									if ( alert_other_port_param.getValue()){
 
@@ -224,7 +225,7 @@ UPnPPluginServiceFirewall
 
 				try{
 					firewall.addPinhole(
-						mapping.isTCP(), mapping.getPort(), local_address,
+						mapping.isTCP(), mapping.getPort(), local_ia,
 						getDescriptionForPort( mapping.isTCP(), mapping.getPort()));
 
 					String	text;
@@ -233,7 +234,8 @@ UPnPPluginServiceFirewall
 
 						text = MessageText.getString(
 								"upnp.alert.mappinggrabbed",
-								new String[]{getString( mapping ), grab_in_progress.getInternalHost()});
+								new String[]{getString( mapping ), 
+										grab_in_progress.getInternalHost().getHostAddress()});
 					}else{
 
 						text = MessageText.getString(
@@ -267,7 +269,7 @@ UPnPPluginServiceFirewall
 
 				if ( grab_in_progress == null ){
 
-					ServiceMappingImpl	new_mapping = new ServiceMappingImpl( mapping, local_address );
+					ServiceMappingImpl	new_mapping = new ServiceMappingImpl( mapping, local_ia );
 
 					new_mapping.setError( error_text );
 
@@ -482,9 +484,9 @@ UPnPPluginServiceFirewall
 	{
 		private List		mappings	= new ArrayList();
 
-		private boolean		tcp;
-		private int			port;
-		private String		internal_host;
+		private boolean			tcp;
+		private int				port;
+		private InetAddress		internal_host;
 
 		private boolean		external;		// true -> not defined by us
 
@@ -513,7 +515,7 @@ UPnPPluginServiceFirewall
 		protected
 		ServiceMappingImpl(
 			UPnPMapping		_mapping,
-			String			_internal_host )
+			InetAddress		_internal_host )
 		{
 			mappings.add( _mapping );
 
@@ -580,7 +582,7 @@ UPnPPluginServiceFirewall
 			return( port );
 		}
 
-		public String
+		public InetAddress
 		getInternalHost()
 		{
 			return( internal_host );

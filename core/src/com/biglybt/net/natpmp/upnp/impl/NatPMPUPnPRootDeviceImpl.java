@@ -371,7 +371,7 @@ NatPMPUPnPRootDeviceImpl
 		addPortMapping(
 			final boolean		tcp,
 			final int			port,
-			final String		internal_host,
+			final InetAddress	internal_host,
 			final String		description )
 
 			throws UPnPException

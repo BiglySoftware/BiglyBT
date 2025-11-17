@@ -19,6 +19,8 @@
 
 package com.biglybt.net.upnp.services;
 
+import java.net.InetAddress;
+
 import com.biglybt.net.upnp.UPnPException;
 
 /**
@@ -45,10 +47,10 @@ UPnPWANConnection
 
 	public void
 	addPortMapping(
-		boolean		tcp,			// false -> UDP
-		int			port,
-		String		internal_host,
-		String		description )
+		boolean			is_tcp,
+		int				port,
+		InetAddress		internal_host,
+		String			description )
 
 		throws UPnPException;
 

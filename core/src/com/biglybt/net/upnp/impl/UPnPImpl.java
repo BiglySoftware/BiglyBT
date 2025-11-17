@@ -28,6 +28,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import com.biglybt.core.devices.impl.DeviceManagerImpl;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.net.upnp.*;
@@ -249,12 +251,12 @@ UPnPImpl
 						old_root_device.destroy( true );
 					}
 
-					List	listeners;
+					List<UPnPListener>	listeners;
 
 					try{
 						rd_listeners_mon.enter();
 
-						listeners = new ArrayList( rd_listeners );
+						listeners = new ArrayList<>( rd_listeners );
 
 					}finally{
 
@@ -285,24 +287,61 @@ UPnPImpl
 
 							root_locations.put( usn, new_root_device );
 
-							listeners = new ArrayList( rd_listeners );
+							listeners = new ArrayList<>( rd_listeners );
 
 						}finally{
 
 							rd_listeners_mon.exit();
 						}
 
-						for (int i=0;i<listeners.size();i++){
-
-							try{
-								((UPnPListener)listeners.get(i)).rootDeviceFound( new_root_device );
-
-							}catch( Throwable e ){
-
-								Debug.printStackTrace(e);
+							// We have an issue regarding the same device being discovered via IPv4 and IPv6.
+							// Some operations have a preferred IP family (pinholes being added over IPv6...) but
+							// if we discover it over IPv4 first then it may fail whereas once the IPv6 route is discovered
+							// it will work. Of course we may never discover it over V6, or the V6 discovery might happen
+							// a lot later. The easiest fix is to defer the discovery for a bit in the hope that the
+							// "other" discovery occurs in a timely manner...
+						
+						NetworkAdmin na = NetworkAdmin.getSingleton();
+						
+						if ( na.hasIPV4Potential() && na.hasIPV6Potential()){
+							
+							List<UPnPListener>	f_listeners = listeners;
+							
+							new DelayedEvent(
+									"Delay:rootDeviceFound", 
+									2500,
+									new AERunnable()
+									{
+										@Override
+										public void
+										runSupport()
+										{
+											for (int i=0;i<f_listeners.size();i++){
+												
+												try{
+													((UPnPListener)f_listeners.get(i)).rootDeviceFound( new_root_device );
+					
+												}catch( Throwable e ){
+					
+													Debug.printStackTrace(e);
+												}
+											}
+										}
+									});
+							
+						}else{
+							
+							for (int i=0;i<listeners.size();i++){
+	
+								try{
+									((UPnPListener)listeners.get(i)).rootDeviceFound( new_root_device );
+	
+								}catch( Throwable e ){
+	
+									Debug.printStackTrace(e);
+								}
 							}
 						}
-
 					}catch( UPnPException e ){
 
 						String	message = e.getMessage();
@@ -726,7 +765,7 @@ UPnPImpl
 		UPnPService 	service,
 		String			soap_action,
 		String			request,
-		boolean			prefer_ipv4 )
+		InetAddress		bind )
 
 		throws SimpleXMLParserDocumentException, UPnPException, IOException
 	{
@@ -734,18 +773,18 @@ UPnPImpl
 
 		if ( service.getDirectInvocations() || forceDirect()){
 
-			res = performSOAPRequest( service, soap_action, request, false, prefer_ipv4 );
+			res = performSOAPRequest( service, soap_action, request, false, bind );
 
 		}else{
 
 			try{
-				res =  performSOAPRequest( service, soap_action, request, true, prefer_ipv4 );
+				res =  performSOAPRequest( service, soap_action, request, true, bind );
 
 				http_calls_ok++;
 
 			}catch( IOException e ){
 
-				res = performSOAPRequest( service, soap_action, request, false, prefer_ipv4 );
+				res = performSOAPRequest( service, soap_action, request, false, bind );
 
 				direct_calls_ok++;
 
@@ -769,26 +808,46 @@ UPnPImpl
 		String			soap_action,
 		String			request,
 		boolean			use_http_connection,
-		boolean			prefer_ipv4 )
+		InetAddress		bind )
 
 		throws SimpleXMLParserDocumentException, UPnPException, IOException
 	{
 		//long	start = SystemTime.getMonotonousTime();
 
-		List<URL>	controls = service.getControlURLs( prefer_ipv4 );
+		List<URL>	controls = service.getControlURLs( bind == null || ( bind instanceof Inet4Address ));
 
 		Throwable last_error = null;
 
 		for ( URL control: controls ){
 
+			boolean do_bind = bind != null;
+			
+			if ( do_bind ){
+				
+				do_bind = false;
+				
+					// only implement this for IPv6 as it is unlikely that we have multiple IPv4
+					// addresses whereas with "privacy IPv6" it is likely that we have > 1
+				
+				try{
+					InetAddress ta = InetAddress.getByName( control.getHost());
+					
+					if ( ta instanceof Inet6Address && bind instanceof Inet6Address ){
+							
+						do_bind = true;
+					}
+				}catch( Throwable e ){
+				}
+			}
+			
 			boolean	good_url = true;
 
 			try{
 				adapter.trace( "UPnP:Request: -> " + control + "," + request );
 
-				if ( use_http_connection ){
+				if ( use_http_connection && !do_bind ){
 
-					try{
+					try{							
 						AEProxySelectorFactory.getSelector().startNoProxy();
 
 						TorrentUtils.setTLSDescription( "UPnP Device: " + service.getDevice().getFriendlyName());
@@ -821,6 +880,7 @@ UPnPImpl
 								// gotta retry with M-POST method
 
 							try{
+								
 								HttpURLConnection con2 = (HttpURLConnection)control.openConnection();
 
 								con2.setRequestProperty( "Content-Type", "text/xml; charset=\"utf-8\"" );
@@ -879,13 +939,26 @@ UPnPImpl
 
 						AEProxySelectorFactory.getSelector().endNoProxy();
 					}
-				}else{
+				}	else{
 					final int CONNECT_TIMEOUT 	= 15*1000;
 					final int READ_TIMEOUT		= 30*1000;
 
 					Socket	socket = new Socket( Proxy.NO_PROXY );
 
-					socket.connect( new InetSocketAddress( control.getHost(), control.getPort()), CONNECT_TIMEOUT );
+					InetSocketAddress target = new InetSocketAddress( control.getHost(), control.getPort());
+					
+					if ( do_bind ){
+						
+						try{
+							socket.bind( new InetSocketAddress( bind, 0 ));
+							
+						}catch( Throwable e ){
+								
+							Debug.out( e );
+						}
+					}
+					
+					socket.connect( target, CONNECT_TIMEOUT );
 
 					socket.setSoTimeout( READ_TIMEOUT );
 

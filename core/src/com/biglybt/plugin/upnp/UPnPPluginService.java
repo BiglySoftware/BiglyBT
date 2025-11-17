@@ -18,6 +18,8 @@
 
 package com.biglybt.plugin.upnp;
 
+import java.net.InetAddress;
+
 import com.biglybt.net.upnp.UPnPService;
 import com.biglybt.net.upnp.services.UPnPSpecificService;
 import com.biglybt.pif.logging.LoggerChannel;
@@ -69,7 +71,7 @@ UPnPPluginService
 		public int
 		getPort();
 		
-		public String
+		public InetAddress
 		getInternalHost();
 	}
 }

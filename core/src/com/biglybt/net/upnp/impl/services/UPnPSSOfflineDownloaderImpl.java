@@ -61,7 +61,7 @@ UPnPSSOfflineDownloaderImpl
 
 			inv.addArgument( "NewClientID", client_id );
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			for (int i=0;i<args.length;i++){
 
@@ -99,7 +99,7 @@ UPnPSSOfflineDownloaderImpl
 
 			inv.addArgument( "NewClientID", client_id );
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			for (int i=0;i<args.length;i++){
 
@@ -139,7 +139,7 @@ UPnPSSOfflineDownloaderImpl
 			inv.addArgument( "NewClientID", client_id );
 			inv.addArgument( "NewTorrentHashList", hash_list );
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			String	result	= null;
 			String	status 	= null;
@@ -192,7 +192,7 @@ UPnPSSOfflineDownloaderImpl
 			inv.addArgument( "NewTorrentHash", hash );
 			inv.addArgument( "NewTorrentData", torrent );
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			for (int i=0;i<args.length;i++){
 
@@ -237,7 +237,7 @@ UPnPSSOfflineDownloaderImpl
 			inv.addArgument( "NewChunkOffset", String.valueOf( offset ));
 			inv.addArgument( "NewTotalLength", String.valueOf( total_size ));
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			for (int i=0;i<args.length;i++){
 
@@ -278,7 +278,7 @@ UPnPSSOfflineDownloaderImpl
  			inv.addArgument( "NewTorrentHash", hash );
  			inv.addArgument( "NewPieceRequiredMap", required_map );
 
-  			UPnPActionArgument[]	args = inv.invoke( true );
+  			UPnPActionArgument[]	args = inv.invoke( null );
 
   			String	have	= null;
   			String	status 	= null;
@@ -329,7 +329,7 @@ UPnPSSOfflineDownloaderImpl
 			inv.addArgument( "NewClientID", client_id );
 			inv.addArgument( "NewTorrentHash", hash );
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			String	status 	= null;
 
@@ -375,7 +375,7 @@ UPnPSSOfflineDownloaderImpl
 			inv.addArgument( "NewClientID", client_id );
 			inv.addArgument( "NewTorrentHash", hash );
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			String	status 		= null;
 			String	data_port	= null;

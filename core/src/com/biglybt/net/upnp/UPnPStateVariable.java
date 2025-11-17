@@ -19,6 +19,8 @@
 
 package com.biglybt.net.upnp;
 
+import java.net.InetAddress;
+
 /**
  * @author parg
  *
@@ -35,7 +37,7 @@ UPnPStateVariable
 
 	public String
 	getValue(
-		boolean prefer_ipv4 )
+		InetAddress bind )
 
 		throws UPnPException;
 }

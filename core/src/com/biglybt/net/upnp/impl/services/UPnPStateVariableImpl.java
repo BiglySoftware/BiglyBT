@@ -19,6 +19,8 @@
 
 package com.biglybt.net.upnp.impl.services;
 
+import java.net.InetAddress;
+
 /**
  * @author parg
  *
@@ -65,7 +67,7 @@ UPnPStateVariableImpl
 	@Override
 	public String
 	getValue(
-		boolean prefer_ipv4 )
+		InetAddress bind )
 
 		throws UPnPException
 	{
@@ -84,7 +86,7 @@ UPnPStateVariableImpl
 			request += 	"</s:Body>"+
 						"</s:Envelope>";
 
-			SimpleXMLParserDocument resp_doc	= ((UPnPDeviceImpl)service.getDevice()).getUPnP().performSOAPRequest( service, soap_action, request, prefer_ipv4 );
+			SimpleXMLParserDocument resp_doc	= ((UPnPDeviceImpl)service.getDevice()).getUPnP().performSOAPRequest( service, soap_action, request, bind );
 
 			SimpleXMLParserDocumentNode	body = resp_doc.getChild( "Body" );
 

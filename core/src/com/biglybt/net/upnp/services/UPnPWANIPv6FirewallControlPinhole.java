@@ -18,6 +18,8 @@
 
 package com.biglybt.net.upnp.services;
 
+import java.net.InetAddress;
+
 public interface 
 UPnPWANIPv6FirewallControlPinhole
 {
@@ -27,7 +29,7 @@ UPnPWANIPv6FirewallControlPinhole
 	public int
 	getExternalPort();
 
-	public String
+	public InetAddress
 	getInternalHost();
 
 	public String

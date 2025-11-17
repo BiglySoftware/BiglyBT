@@ -18,6 +18,8 @@
 
 package com.biglybt.net.upnp.services;
 
+import java.net.InetAddress;
+
 import com.biglybt.net.upnp.UPnPException;
 
 public interface 
@@ -26,10 +28,10 @@ UPnPWANIPv6FirewallControl
 {
 	public void
 	addPinhole(
-		boolean		tcp,
-		int			port,
-		String		local_address,
-		String		description )
+		boolean			tcp,
+		int				port,
+		InetAddress		local_address,
+		String			description )
 
 		throws UPnPException;
 	

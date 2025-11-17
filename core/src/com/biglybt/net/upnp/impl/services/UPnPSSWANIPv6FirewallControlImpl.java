@@ -18,12 +18,14 @@
 
 package com.biglybt.net.upnp.impl.services;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.AEThread2;
+import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
@@ -41,7 +43,7 @@ public class
 UPnPSSWANIPv6FirewallControlImpl
 	implements UPnPWANIPv6FirewallControl
 {
-	private static final int		LEASE_SECS	= 10*60; // 2*60*60;
+	private static final int		LEASE_SECS	= 2*60*60;
 	private static final int		CHECK_SECS	= 10*60;
 	
 	private static AEMonitor	class_mon 	= new AEMonitor( "UPnPSSWANIPv6FirewallControl" );
@@ -133,10 +135,10 @@ UPnPSSWANIPv6FirewallControlImpl
 	@Override
 	public void
 	addPinhole(
-		boolean		tcp,
-		int			port,
-		String		local_address,
-		String		description )
+		boolean			tcp,
+		int				port,
+		InetAddress		local_address,
+		String			description )
 
 		throws UPnPException
 	{
@@ -152,7 +154,7 @@ UPnPSSWANIPv6FirewallControlImpl
 
 			add_inv.addArgument( "RemoteHost", 				"" );		// "" = wildcard for hosts, 0 = wildcard for ports
 			add_inv.addArgument( "RemotePort", 				"" + port );
-			add_inv.addArgument( "InternalClient",			local_address);
+			add_inv.addArgument( "InternalClient",			AddressUtils.getHostAddressWithoutScopeID( local_address ));
 			add_inv.addArgument( "InternalPort", 			"" + port );
 			add_inv.addArgument( "Protocol", 				tcp?"6":"17" );	// IANA protocol numbers
 			add_inv.addArgument( "LeaseTime",				String.valueOf( LEASE_SECS));
@@ -161,7 +163,7 @@ UPnPSSWANIPv6FirewallControlImpl
 			boolean	ok	= false;
 
 			try{
-				UPnPActionArgument[] result = add_inv.invoke( false );
+				UPnPActionArgument[] result = add_inv.invoke( local_address );
 
 				uid = result[0].getValue();
 				
@@ -208,7 +210,7 @@ UPnPSSWANIPv6FirewallControlImpl
 					}
 				}
 
-				pinholes.add( new Pinhole( uid, port, tcp, "", description ));
+				pinholes.add( new Pinhole( uid, port, tcp, local_address, description ));
 
 			}finally{
 
@@ -267,7 +269,7 @@ UPnPSSWANIPv6FirewallControlImpl
 					inv.addArgument( "UniqueID", 		"" + pinhole_found.getUID());	
 					inv.addArgument( "NewLeaseTime",	String.valueOf( LEASE_SECS));
 	
-					inv.invoke( false );
+					inv.invoke( pinhole_found.getInternalHost());
 	
 					pinhole_found.updated();
 					
@@ -340,7 +342,7 @@ UPnPSSWANIPv6FirewallControlImpl
 	
 					inv.addArgument( "UniqueID", 				"" + pinhole_found.getUID());	
 	
-					inv.invoke( false );
+					inv.invoke( pinhole_found.getInternalHost());
 	
 					long	elapsed = SystemTime.getCurrentTime() - start;
 	
@@ -412,7 +414,7 @@ UPnPSSWANIPv6FirewallControlImpl
 		private final String		uid;
 		private final int			external_port;
 		private final boolean		tcp;
-		private final String		internal_host;
+		private final InetAddress	internal_host;
 		private final String		description;
 
 		private long		last_update = SystemTime.getMonotonousTime();
@@ -422,7 +424,7 @@ UPnPSSWANIPv6FirewallControlImpl
 			String		_uid,
 			int			_external_port,
 			boolean		_tcp,
-			String		_internal_host,
+			InetAddress	_internal_host,
 			String		_description )
 		{
 			uid				= _uid;
@@ -465,7 +467,7 @@ UPnPSSWANIPv6FirewallControlImpl
 		}
 
 		@Override
-		public String
+		public InetAddress
 		getInternalHost()
 		{
 			return( internal_host );

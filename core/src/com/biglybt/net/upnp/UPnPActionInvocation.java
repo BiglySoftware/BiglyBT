@@ -19,6 +19,7 @@
 
 package com.biglybt.net.upnp;
 
+import java.net.InetAddress;
 import java.util.Map;
 
 /**
@@ -44,12 +45,12 @@ UPnPActionInvocation
 
 		throws UPnPException
 	{
-		return( invoke( true ));
+		return( invoke( null ));
 	}
 	
 	public UPnPActionArgument[]
 	invoke(
-		boolean	prefer_ipv4 )
+		InetAddress		bind )
 
 		throws UPnPException;
 

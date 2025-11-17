@@ -60,7 +60,7 @@ UPnPSSWANCommonInterfaceConfigImpl
 
 			UPnPActionInvocation inv = act.getInvocation();
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			long[]	res = new long[2];
 
@@ -100,7 +100,7 @@ UPnPSSWANCommonInterfaceConfigImpl
 
 			UPnPActionInvocation inv = act.getInvocation();
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			for (int i=0;i<args.length;i++){
 
@@ -135,7 +135,7 @@ UPnPSSWANCommonInterfaceConfigImpl
 
 			UPnPActionInvocation inv = act.getInvocation();
 
-			UPnPActionArgument[]	args = inv.invoke( true );
+			UPnPActionArgument[]	args = inv.invoke( null );
 
 			for (int i=0;i<args.length;i++){
 
