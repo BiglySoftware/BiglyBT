@@ -869,6 +869,84 @@ NetStatusPluginTester
 			}
 		}
 
+		if ( doTest( TEST_IPV6 )){
+
+			log( "IPv6 test" );
+
+			InetAddress ipv6_address = admin.getDefaultPublicAddressV6();
+
+			if ( ipv6_address == null ){
+
+				log( "    No default public IPv6 address found" );
+
+			}else{
+
+				log( "    Default public IPv6 address: " + ipv6_address.getHostAddress());
+
+				log( "    Testing connectivity..." );
+
+				String res = VersionCheckClient.getSingleton().getExternalIpAddress( false, true, true );
+
+				if ( res != null && res.length() > 0 ){
+
+					logSuccess( "        Connect succeeded, reported IPv6 address: " + res );
+
+				}else{
+
+					logError( "        Connect failed" );
+				}
+				
+				if ( doTest( TEST_INBOUND )){
+
+					NetworkAdminProtocol[] inbound_protocols = admin.getInboundProtocols(core);
+
+					if ( inbound_protocols.length == 0 ){
+
+						log( "    No inbound protocols" );
+
+					}else{
+
+						for (int i=0;i<inbound_protocols.length;i++){
+
+							if ( test_cancelled ){
+
+								return;
+							}
+
+							NetworkAdminProtocol protocol = inbound_protocols[i];
+
+							log( "    Testing IPv6 " + protocol.getName());
+
+							try{
+								InetAddress public_address =
+									protocol.test(
+										null, true, false,
+										new NetworkAdminProgressListener()
+										{
+											@Override
+											public void
+											reportProgress(
+												String task )
+											{
+												log( "        " + task );
+											}
+										});
+
+								logSuccess( "        Test successful" );
+
+								addPublicAddress( public_addresses, public_address );
+
+							}catch( Throwable e ){
+
+								logError( "        Test failed", e );
+								logInfo(  "        Check your port forwarding for IPv6 " + protocol.getTypeString() + " " + protocol.getPort());
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		if ( doTest( TEST_BT_CONNECT )){
 
 			log( "Distributed protocol test" );
@@ -1020,35 +1098,6 @@ NetStatusPluginTester
 				}
 
 				log( "    Status: " + bt_test.getStatus());
-			}
-		}
-
-		if ( doTest( TEST_IPV6 )){
-
-			log( "IPv6 test" );
-
-			InetAddress ipv6_address = admin.getDefaultPublicAddressV6();
-
-			if ( ipv6_address == null ){
-
-				log( "    No default public IPv6 address found" );
-
-			}else{
-
-				log( "    Default public IPv6 address: " + ipv6_address.getHostAddress());
-
-				log( "    Testing connectivity..." );
-
-				String res = VersionCheckClient.getSingleton().getExternalIpAddress( false, true, true );
-
-				if ( res != null && res.length() > 0 ){
-
-					logSuccess( "        Connect succeeded, reported IPv6 address: " + res );
-
-				}else{
-
-					logError( "        Connect failed" );
-				}
 			}
 		}
 	}
