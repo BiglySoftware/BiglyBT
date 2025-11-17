@@ -36,11 +36,4 @@ MCGroupFactory
 	{
 		return( MCGroupImpl.getSingleton( adapter, group_address, group_port, control_port, selected_interfaces ));
 	}
-
-	public static void
-	setSuspended(
-		boolean		suspended )
-	{
-		MCGroupImpl.setSuspended( suspended );
-	}
 }

@@ -20,10 +20,17 @@
 package com.biglybt.net.udp.mc.impl;
 
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.MembershipKey;
+import java.nio.channels.MulticastChannel;
+import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.networkmanager.VirtualAbstractChannelSelector;
+import com.biglybt.core.networkmanager.VirtualAbstractChannelSelector.VirtualSelectorListener;
 import com.biglybt.core.util.*;
 import com.biglybt.net.udp.mc.MCGroup;
 import com.biglybt.net.udp.mc.MCGroupAdapter;
@@ -43,8 +50,8 @@ MCGroupImpl
 
 	private final static int		PACKET_SIZE		= 8192;
 
-
-	private static boolean							overall_suspended;
+	private final static boolean		USE_NIO	= true;
+	
 	private static Map<String,MCGroupImpl>			singletons	= new HashMap<>();
 
 	private static AEMonitor	class_mon 	= new AEMonitor( "MCGroup:class" );
@@ -65,6 +72,28 @@ MCGroupImpl
 			});
 	}
 
+	private static VirtualAbstractChannelSelector	v4_selector = new VirtualAbstractChannelSelector( "MCGroup:v4", VirtualAbstractChannelSelector.OP_READ, false );
+	private static VirtualAbstractChannelSelector	v6_selector = new VirtualAbstractChannelSelector( "MCGroup:v6", VirtualAbstractChannelSelector.OP_READ, false );
+	
+	static{
+		if ( USE_NIO ){
+			
+			new AEThread2( "MCGroup:selector", true )
+			{
+				@Override
+				public void
+				run()
+				{
+					while( true ){
+						
+						v4_selector.select( 250 );
+						v6_selector.select( 250 );
+					}
+				}
+			}.start();
+		}
+	}
+	
 	public static MCGroupImpl
 	getSingleton(
 		MCGroupAdapter adapter,
@@ -108,7 +137,7 @@ MCGroupImpl
 					}
 				}
 
-				singleton = new MCGroupImpl( adapter, group_address, group_port, control_port, interfaces, overall_suspended );
+				singleton = new MCGroupImpl( adapter, group_address, group_port, control_port, interfaces );
 
 				if ( control_port == 0 ){
 
@@ -122,30 +151,6 @@ MCGroupImpl
 
 			return( singleton );
 
-		}finally{
-
-			class_mon.exit();
-		}
-	}
-
-	public static void
-	setSuspended(
-		boolean		suspended )
-	{
-		try{
-			class_mon.enter();
-
-			if ( overall_suspended == suspended ){
-
-				return;
-			}
-
-			overall_suspended = suspended;
-
-			for ( MCGroupImpl group: singletons.values()){
-
-				group.setInstanceSuspended( overall_suspended );
-			}
 		}finally{
 
 			class_mon.exit();
@@ -170,9 +175,6 @@ MCGroupImpl
 
 	private Map<String,Set<InetAddress>>		current_registrations = new HashMap<>();
 
-	private volatile boolean		instance_suspended;
-	private List<Object[]>			suspended_threads = new ArrayList<>();
-
 	private Map<String,MulticastSocket>		socket_cache = new HashMap<>();
 
 	private
@@ -181,8 +183,7 @@ MCGroupImpl
 		String				_group_address,
 		int					_group_port,
 		int					_control_port,
-		String[]			_interfaces,
-		boolean				_is_suspended )
+		String[]			_interfaces )
 
 		throws MCGroupException
 	{
@@ -192,8 +193,6 @@ MCGroupImpl
 		group_port			= _group_port;
 		control_port		= _control_port;
 		selected_interfaces	= _interfaces;
-
-		instance_suspended	= _is_suspended;
 
 		try{
 			InetAddress ia = HostNameToIPResolver.syncResolve( group_address_str );
@@ -236,65 +235,6 @@ MCGroupImpl
 	{
 		return( ipv6 );
 	}
-	
-	private void
-	setInstanceSuspended(
-		boolean	_suspended )
-	{
-		try{
-			this_mon.enter();
-
-			if ( instance_suspended == _suspended ){
-
-				return;
-			}
-
-			instance_suspended = _suspended;
-
-			if ( !instance_suspended ){
-
-				List<Object[]> states = new ArrayList<>(suspended_threads);
-
-				suspended_threads.clear();
-
-				for ( final Object[] state: states ){
-
-					new AEThread2( (String)state[0], true )
-					{
-						@Override
-						public void
-						run()
-						{
-							handleSocket( (NetworkInterface)state[1], (InetAddress)state[2], (DatagramSocket)state[3], (Boolean)state[4] );
-						}
-					}.start();
-				}
-			}
-		}finally{
-
-			this_mon.exit();
-		}
-
-		if ( !_suspended ){
-
-			async_dispatcher.dispatch(
-				new AERunnable()
-				{
-					@Override
-					public void
-					runSupport()
-					{
-						try{
-							processNetworkInterfaces( false );
-
-						}catch( Throwable e ){
-
-							adapter.log( e );
-						}
-					}
-				});
-		}
-	}
 
 	private void
 	processNetworkInterfaces(
@@ -308,11 +248,6 @@ MCGroupImpl
 
 		try{
 			this_mon.enter();
-
-			if ( instance_suspended ){
-
-				return;
-			}
 
 			List<NetworkInterface>	x = NetUtils.getNetworkInterfaces();
 
@@ -395,112 +330,230 @@ MCGroupImpl
 						}
 					}
 
-					try{
-							// set up group
-
-						final MulticastSocket mc_sock = new MulticastSocket( group_port );
-
-						mc_sock.setReuseAddress(true);
-
-							// windows 98 doesn't support setTimeToLive
-
+					if ( USE_NIO ){
+						
 						try{
-							mc_sock.setTimeToLive(TTL);
-
-						}catch( Throwable e ){
-
-							if ( !ttl_problem_reported ){
-
-								ttl_problem_reported	= true;
-
-								adapter.log( e );
+							DatagramChannel mc_channel = DatagramChannel.open( ipv6?StandardProtocolFamily.INET6:StandardProtocolFamily.INET );
+	
+							mc_channel.setOption(StandardSocketOptions.SO_REUSEADDR, true );
+							
+							try{
+								mc_channel.setOption(StandardSocketOptions.IP_MULTICAST_TTL, TTL );
+								
+							}catch( Throwable e ){
+								
+								if ( !ttl_problem_reported ){
+	
+									ttl_problem_reported	= true;
+	
+									adapter.log( e );
+								}
 							}
+							
+							mc_channel.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, true );
+
+							mc_channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, network_interface );
+							
+							mc_channel.bind( new InetSocketAddress( group_port ));
+							
+							String	addresses_string = "";
+							
+							Enumeration<InetAddress> it = network_interface.getInetAddresses();
+	
+							while (it.hasMoreElements()){
+	
+								InetAddress addr = it.nextElement();
+	
+								addresses_string += (addresses_string.length()==0?"":",") + addr;
+							}
+	
+							adapter.trace( "group = " + group_address +"/" +
+											network_interface.getName()+":"+
+											network_interface.getDisplayName() + "-" + addresses_string +": started" );
+
+							
+							MembershipKey key = mc_channel.join( group_address.getAddress(), network_interface );
+							
+							mc_channel.socket().setSoTimeout( 30*1000 );
+							
+							Runtime.getRuntime().addShutdownHook(
+									new AEThread("MCGroup:VMShutdown")
+									{
+										@Override
+										public void
+										runSupport()
+										{
+											try{
+												key.drop();
+	
+											}catch( Throwable e ){
+	
+												adapter.log( e );
+											}
+										}
+									});
+							
+							mc_channel.configureBlocking( false );
+							
+							SelectorListener listener = new SelectorListener( network_interface, ni_address, mc_channel );
+								
+							if ( ipv6 ){
+								
+								v6_selector.register( mc_channel, listener, null );
+								
+							}else{ 
+								
+								v4_selector.register( mc_channel, listener, null );
+							}
+						}catch( Throwable e ){
+							
+							// adapter.log( "Failed to join group '" + group_address + ", ni=" + network_interface, e );
 						}
-
-						String	addresses_string = "";
-
-						Enumeration<InetAddress> it = network_interface.getInetAddresses();
-
-						while (it.hasMoreElements()){
-
-							InetAddress addr = it.nextElement();
-
-							addresses_string += (addresses_string.length()==0?"":",") + addr;
-						}
-
-						adapter.trace( "group = " + group_address +"/" +
-										network_interface.getName()+":"+
-										network_interface.getDisplayName() + "-" + addresses_string +": started" );
-
-						mc_sock.joinGroup( group_address, network_interface );
-
-						mc_sock.setNetworkInterface( network_interface );
-
-							// note that false ENABLES loopback mode which is what we want
-
-						mc_sock.setLoopbackMode(false);
-
-						Runtime.getRuntime().addShutdownHook(
-								new AEThread("MCGroup:VMShutdown")
+					}else{
+						try{
+								// set up group
+	
+							final MulticastSocket mc_sock = new MulticastSocket( group_port );
+	
+							mc_sock.setReuseAddress(true);
+	
+								// windows 98 doesn't support setTimeToLive
+	
+							try{
+								mc_sock.setTimeToLive(TTL);
+	
+							}catch( Throwable e ){
+	
+								if ( !ttl_problem_reported ){
+	
+									ttl_problem_reported	= true;
+	
+									adapter.log( e );
+								}
+							}
+	
+							String	addresses_string = "";
+	
+							Enumeration<InetAddress> it = network_interface.getInetAddresses();
+	
+							while (it.hasMoreElements()){
+	
+								InetAddress addr = it.nextElement();
+	
+								addresses_string += (addresses_string.length()==0?"":",") + addr;
+							}
+	
+							adapter.trace( "group = " + group_address +"/" +
+											network_interface.getName()+":"+
+											network_interface.getDisplayName() + "-" + addresses_string +": started" );
+	
+							mc_sock.joinGroup( group_address, network_interface );
+	
+							mc_sock.setNetworkInterface( network_interface );
+	
+								// note that false ENABLES loopback mode which is what we want
+	
+							mc_sock.setLoopbackMode(false);
+	
+							Runtime.getRuntime().addShutdownHook(
+									new AEThread("MCGroup:VMShutdown")
+									{
+										@Override
+										public void
+										runSupport()
+										{
+											try{
+												mc_sock.leaveGroup( group_address, network_interface );
+	
+											}catch( Throwable e ){
+	
+												adapter.log( e );
+											}
+										}
+									});
+	
+							new AEThread2("MCGroup:MCListener - " + ni_address, true )
 								{
 									@Override
 									public void
-									runSupport()
+									run()
 									{
-										try{
-											mc_sock.leaveGroup( group_address, network_interface );
-
-										}catch( Throwable e ){
-
-											adapter.log( e );
-										}
+										handleSocket( network_interface, ni_address, mc_sock, true );
 									}
-								});
-
-						new AEThread2("MCGroup:MCListener - " + ni_address, true )
-							{
-								@Override
-								public void
-								run()
-								{
-									handleSocket( network_interface, ni_address, mc_sock, true );
-								}
-							}.start();
-
-					}catch( Throwable e ){
-
-						// adapter.log( "Failed to join group '" + group_address + ", ni=" + network_interface, e );
+								}.start();
+	
+						}catch( Throwable e ){
+	
+							// adapter.log( "Failed to join group '" + group_address + ", ni=" + network_interface, e );
+						}
 					}
-
+					
 						// now do the incoming control listener
 
-					try{
-						final DatagramSocket control_socket = new DatagramSocket( null );
-
-						control_socket.setReuseAddress( true );
-
-						control_socket.bind( new InetSocketAddress(ni_address, control_port ));
-
-						if ( control_port == 0 ){
-
-							control_port	= control_socket.getLocalPort();
-
-							// System.out.println( "local port = " + control_port );
+					if ( USE_NIO ){
+						
+						try{
+							DatagramChannel control_channel = DatagramChannel.open( ipv6?StandardProtocolFamily.INET6:StandardProtocolFamily.INET );
+	
+							control_channel.setOption(StandardSocketOptions.SO_REUSEADDR, true );
+	
+							control_channel.bind( new InetSocketAddress(ni_address, control_port ));
+							
+							control_channel.socket().setSoTimeout( 30*1000 );
+							
+							if ( control_port == 0 ){
+	
+								control_port	= ((InetSocketAddress)control_channel.getLocalAddress()).getPort();
+	
+								// System.out.println( "local port = " + control_port );
+							}
+							
+							control_channel.configureBlocking( false );
+							
+							SelectorListener listener = new SelectorListener( network_interface, ni_address, control_channel );
+								
+							if ( ipv6 ){
+								
+								v6_selector.register( control_channel, listener, null );
+								
+							}else{ 
+								
+								v4_selector.register( control_channel, listener, null );
+							}
+						}catch( Throwable e ){
+	
+							adapter.log( e );
 						}
-
-						new AEThread2( "MCGroup:CtrlListener - " + ni_address, true )
-							{
-								@Override
-								public void
-								run()
+					}else{
+				
+						try{
+							final DatagramSocket control_socket = new DatagramSocket( null );
+	
+							control_socket.setReuseAddress( true );
+	
+							control_socket.bind( new InetSocketAddress(ni_address, control_port ));
+	
+							if ( control_port == 0 ){
+	
+								control_port	= control_socket.getLocalPort();
+	
+								// System.out.println( "local port = " + control_port );
+							}
+	
+							new AEThread2( "MCGroup:CtrlListener - " + ni_address, true )
 								{
-									handleSocket( network_interface, ni_address, control_socket, false );
-								}
-							}.start();
-
-					}catch( Throwable e ){
-
-						adapter.log( e );
+									@Override
+									public void
+									run()
+									{
+										handleSocket( network_interface, ni_address, control_socket, false );
+									}
+								}.start();
+	
+						}catch( Throwable e ){
+	
+							adapter.log( e );
+						}
 					}
 				}
 			}
@@ -587,11 +640,6 @@ MCGroupImpl
 	sendToGroup(
 		final byte[]	data )
 	{
-		if ( instance_suspended ){
-
-			return;
-		}
-
 			// have debugs showing the send-to-group operation hanging and blocking AZ close, make async
 
 		async_dispatcher.dispatch(
@@ -731,11 +779,6 @@ MCGroupImpl
 	sendToGroup(
 		final String	param_data )
 	{
-		if ( instance_suspended ){
-
-			return;
-		}
-
 			// have debugs showing the send-to-group operation hanging and blocking AZ close, make async
 
 		async_dispatcher.dispatch(
@@ -897,22 +940,6 @@ MCGroupImpl
 
 		while(true){
 
-			if ( instance_suspended ){
-
-				try{
-					this_mon.enter();
-
-					if ( instance_suspended ){
-
-						suspended_threads.add( new Object[]{ Thread.currentThread().getName(), network_interface, local_address, socket, log_on_stop } );
-
-						return;
-					}
-				}finally{
-
-					this_mon.exit();
-				}
-			}
 			if ( !validNetworkAddress( network_interface, local_address )){
 
 				if ( log_on_stop ){
@@ -957,17 +984,84 @@ MCGroupImpl
 		}
 	}
 
+	class
+	SelectorListener
+		implements VirtualSelectorListener
+	{
+		private final  NetworkInterface		network_interface;
+		private final  InetAddress			local_address;
+		private final DatagramChannel		channel;
+		
+		long	successful_accepts 	= 0;
+		long	failed_accepts		= 0;
+
+		SelectorListener(
+			NetworkInterface	_network_interface,
+			InetAddress			_local_address,
+			DatagramChannel		_channel )
+		{
+			network_interface		= _network_interface;
+			local_address			= _local_address;
+			channel 				= _channel;
+		}
+		
+		@Override
+		public boolean 
+		selectSuccess(
+			VirtualAbstractChannelSelector	selector,
+			AbstractSelectableChannel 		sc, 
+			Object 							attachment )
+		{
+			try{
+				ByteBuffer buffer = ByteBuffer.allocate(PACKET_SIZE);
+
+				InetSocketAddress remote = (InetSocketAddress)channel.receive( buffer );
+								
+				successful_accepts++;
+
+				failed_accepts	 = 0;
+				
+				receivePacket( network_interface, local_address, buffer, remote );
+				
+				return( true );
+				
+			}catch( Throwable  e){
+				
+				failed_accepts++;
+
+				adapter.trace( "MCGroup: receive failed on port " + channel.socket().getLocalPort() + ":" + e.getMessage());
+
+				if (( failed_accepts > 100 && successful_accepts == 0 ) || failed_accepts > 1000 ){
+
+					adapter.trace( "    too many failures, abandoning" );
+
+					selector.cancel( sc );
+				}
+				
+				return( false );
+			}
+		}
+		
+		@Override
+		public void 
+		selectFailure(
+			VirtualAbstractChannelSelector	selector,
+			AbstractSelectableChannel		sc, 
+			Object							attachment, 
+			Throwable 						msg)
+		{
+			Debug.out( msg );
+			
+			selector.cancel( sc );
+		}
+	}
+	
 	private void
 	receivePacket(
 		NetworkInterface	network_interface,
 		InetAddress			local_address,
 	    DatagramPacket		packet )
 	{
-		if ( instance_suspended ){
-
-			return;
-		}
-
 		byte[]	data 	= packet.getData();
 		int		len		= packet.getLength();
 
@@ -985,6 +1079,30 @@ MCGroupImpl
 				len );
 	}
 
+	private void
+	receivePacket(
+		NetworkInterface	network_interface,
+		InetAddress			local_address,
+		ByteBuffer			buffer,
+		InetSocketAddress	remote )
+	{
+		byte[]	data 	= buffer.array();
+		int		len		= buffer.position();
+
+		/*
+		if ( local_address instanceof Inet6Address ){
+			System.out.println( "receive: add = " + local_address + ", data = " + new String( data, 0, len ));
+		}
+		*/
+		
+		adapter.received(
+				network_interface,
+				local_address,
+				remote,
+				data,
+				len );
+	}
+	
 	@Override
 	public void
 	sendToMember(
@@ -993,11 +1111,6 @@ MCGroupImpl
 
 		throws MCGroupException
 	{
-		if ( instance_suspended ){
-
-			return;
-		}
-
 		DatagramSocket	reply_socket	= null;
 
 		/*

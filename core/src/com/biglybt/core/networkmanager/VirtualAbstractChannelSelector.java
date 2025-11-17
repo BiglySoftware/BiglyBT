@@ -63,7 +63,7 @@ public class VirtualAbstractChannelSelector {
   }
 
 
-  public void register( SocketChannel channel, VirtualSelectorListener listener, Object attachment ) {
+  public void register( AbstractSelectableChannel channel, VirtualAbstractSelectorListener listener, Object attachment ) {
 	  registerSupport( channel, listener, attachment );
   }
   public void register( ServerSocketChannel channel, VirtualAcceptSelectorListener listener, Object attachment ) {
@@ -165,10 +165,10 @@ public class VirtualAbstractChannelSelector {
   {
 	  if ( op == OP_ACCEPT ){
 
-		  return(((VirtualAcceptSelectorListener)listener).selectSuccess( VirtualAbstractChannelSelector.this, (ServerSocketChannel)sc, attachment ));
+		  return(((VirtualAcceptSelectorListener)listener).selectSuccess( VirtualAbstractChannelSelector.this, sc, attachment ));
 	  }else{
 
-		  return(((VirtualSelectorListener)listener).selectSuccess( VirtualAbstractChannelSelector.this, (SocketChannel)sc, attachment ));
+		  return(((VirtualSelectorListener)listener).selectSuccess( VirtualAbstractChannelSelector.this, sc, attachment ));
 	  }
   }
 
@@ -181,10 +181,10 @@ public class VirtualAbstractChannelSelector {
   {
 	  if ( op == OP_ACCEPT ){
 
-		  ((VirtualAcceptSelectorListener)listener).selectFailure( VirtualAbstractChannelSelector.this, (ServerSocketChannel)sc, attachment, msg );
+		  ((VirtualAcceptSelectorListener)listener).selectFailure( VirtualAbstractChannelSelector.this, sc, attachment, msg );
 	  }else{
 
-		  ((VirtualSelectorListener)listener).selectFailure( VirtualAbstractChannelSelector.this, (SocketChannel)sc, attachment, msg );
+		  ((VirtualSelectorListener)listener).selectFailure( VirtualAbstractChannelSelector.this, sc, attachment, msg );
 
 	  }
   }
@@ -200,13 +200,13 @@ public class VirtualAbstractChannelSelector {
      * 			null -> progress made, String -> location of non progress
      *         e.g. read-select -> read >0 bytes, write-select -> wrote > 0 bytes
      */
-    public boolean selectSuccess(VirtualAbstractChannelSelector selector, SocketChannel sc, Object attachment);
+    public boolean selectSuccess(VirtualAbstractChannelSelector selector, AbstractSelectableChannel sc, Object attachment);
 
     /**
      * Called when a channel selection fails.
      * @param msg  failure message
      */
-    public void selectFailure(VirtualAbstractChannelSelector selector, SocketChannel sc, Object attachment, Throwable msg);
+    public void selectFailure(VirtualAbstractChannelSelector selector, AbstractSelectableChannel sc, Object attachment, Throwable msg);
   }
 
   public interface VirtualAcceptSelectorListener extends VirtualAbstractSelectorListener{
@@ -216,13 +216,13 @@ public class VirtualAbstractChannelSelector {
      * @return indicator of whether or not any 'progress' was made due to this select
      *         e.g. read-select -> read >0 bytes, write-select -> wrote > 0 bytes
      */
-    public boolean selectSuccess(VirtualAbstractChannelSelector selector, ServerSocketChannel sc, Object attachment);
+    public boolean selectSuccess(VirtualAbstractChannelSelector selector, AbstractSelectableChannel sc, Object attachment);
 
     /**
      * Called when a channel selection fails.
      * @param msg  failure message
      */
-    public void selectFailure(VirtualAbstractChannelSelector selector, ServerSocketChannel sc, Object attachment, Throwable msg);
+    public void selectFailure(VirtualAbstractChannelSelector selector, AbstractSelectableChannel sc, Object attachment, Throwable msg);
   }
 
 }
