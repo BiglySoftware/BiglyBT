@@ -354,20 +354,12 @@ public class MultiPeerDownloader2 extends RateControlledMultipleEntity {
 			int protocol_bytes_read = 0;
 
 			ConnectionEntry	entry = active_connections.head();
-
-			Set<NetworkConnectionBase> processed = new IdentityHashSet<>();
 			
 			int	num_entries = active_connections.size();
 
 			for (int i=0; i<num_entries && entry != null &&  num_bytes_remaining > 0;i++ ){
 
 				NetworkConnectionBase connection = entry.connection;
-
-				if ( processed.contains(connection)){
-					Debug.out( "Arse" );
-				}
-				
-				processed.add( connection );
 				
 				ConnectionEntry next = entry.next;
 
