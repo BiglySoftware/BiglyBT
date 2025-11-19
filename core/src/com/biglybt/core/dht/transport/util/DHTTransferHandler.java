@@ -445,7 +445,7 @@ DHTTransferHandler
 											this_mon.exit();
 										}
 
-										new AEThread2( "DHTTransportUDP:writeQueueProcessor", true )
+										new AEThreadVirtual( "DHTTransportUDP:writeQueueProcessor", true )
 										{
 											@Override
 											public void
@@ -524,7 +524,7 @@ DHTTransferHandler
 									this_mon.exit();
 								}
 
-								new AEThread2( "DHTTransportUDP:writeQueueProcessor", true )
+								new AEThreadVirtual( "DHTTransportUDP:writeQueueProcessor", true )
 									{
 										@Override
 										public void
