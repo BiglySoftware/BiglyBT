@@ -445,11 +445,7 @@ DHTTransferHandler
 											this_mon.exit();
 										}
 
-										new AEThreadVirtual( "DHTTransportUDP:writeQueueProcessor", true )
-										{
-											@Override
-											public void
-											run()
+										new AEThreadVirtual( "DHTTransportUDP:writeQueueProcessor", true ).start(()->
 											{
 												try{
 
@@ -480,8 +476,8 @@ DHTTransferHandler
 														this_mon.exit();
 													}
 												}
-											}
-										}.start();
+											});
+										
 
 											// indicate that at least one packet has been received
 
@@ -524,11 +520,7 @@ DHTTransferHandler
 									this_mon.exit();
 								}
 
-								new AEThreadVirtual( "DHTTransportUDP:writeQueueProcessor", true )
-									{
-										@Override
-										public void
-										run()
+								new AEThreadVirtual( "DHTTransportUDP:writeQueueProcessor", true ).start(()->
 										{
 											try{
 												byte[] write_data =
@@ -592,9 +584,8 @@ DHTTransferHandler
 													this_mon.exit();
 												}
 											}
-										}
-									}.start();
-
+										});
+						
 										// indicate that at least one packet has been received
 
 								sendWriteReply(

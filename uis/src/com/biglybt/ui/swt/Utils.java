@@ -4769,21 +4769,37 @@ public class Utils
 	public static void getOffOfSWTThread(Runnable runnable) {
 
 		if ( isSWTThread()){
-			AERunnable r = (runnable instanceof AERunnable) ? (AERunnable) runnable : new AERunnable() {
-				@Override
-				public void runSupport() {
-					runnable.run();
-				}
-			};
-			tp.run(r);
+			if ( AEThreadVirtual.areVirtualThreadsAvailable()){
+				
+				new AEThreadVirtual( THREAD_NAME_OFFSWT ).start( runnable );
+			}else{
+				AERunnable r = (runnable instanceof AERunnable) ? (AERunnable) runnable : new AERunnable() {
+					@Override
+					public void runSupport() {
+						runnable.run();
+					}
+				};
+				tp.run(r);
+			}
 		}else{
 			runnable.run();
 		}
 	}
 
 	// Needed because plugins use it (VPNHelper)
-	public static void getOffOfSWTThread(AERunnable runnable) {
-		tp.run(runnable);
+	
+	public static void 
+	getOffOfSWTThread(
+		AERunnable runnable) 
+	{
+		if ( AEThreadVirtual.areVirtualThreadsAvailable()){
+		
+			new AEThreadVirtual( THREAD_NAME_OFFSWT ).start( runnable );
+			
+		}else{
+			
+			tp.run(runnable);
+		}
 	}
 
 	/**

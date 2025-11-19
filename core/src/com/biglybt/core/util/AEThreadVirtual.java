@@ -20,10 +20,11 @@ package com.biglybt.core.util;
 
 import java.lang.reflect.Method;
 
-public abstract class 
+public class 
 AEThreadVirtual
-	implements Runnable
 {
+	private static final boolean	available;
+	
 	private static final Method ofVirtual;
 	private static final Method ThreadBuilder_name;
 	private static final Method ThreadBuilder_start;
@@ -41,6 +42,30 @@ AEThreadVirtual
 			name	= ThreadBuilder.getMethod( "name", String.class );
 			start	= ThreadBuilder.getMethod( "start", Runnable.class );
 			
+			Object thread = ofv.invoke( null );
+			
+			name.invoke( thread, "VirtualThreadTest" );
+			
+			AESemaphore	sem = new AESemaphore( "VirtualThreadTest" );
+			
+			start.invoke( 
+				thread,
+				new Runnable()
+				{
+					public void
+					run()
+					{
+						sem.release();
+					}
+				});
+			
+			if ( !sem.reserve( 5000 )){
+				
+				Debug.out("Virtual thread didn't seem to run");
+				
+				throw( new Exception());
+			}
+			
 		}catch( Throwable e ){
 			
 			ofv		= null;
@@ -51,6 +76,14 @@ AEThreadVirtual
 		ofVirtual			= ofv;
 		ThreadBuilder_name	= name;
 		ThreadBuilder_start	= start;
+		
+		available = ofVirtual != null;
+	}
+	
+	public static boolean
+	areVirtualThreadsAvailable()
+	{
+		return( available );
 	}
 	
 	private final String name;
@@ -76,7 +109,8 @@ AEThreadVirtual
 	}
 	
 	public void
-	start()
+	start(
+		Runnable	runnable )
 	{
 		if ( ofVirtual != null ){
 						
@@ -86,7 +120,7 @@ AEThreadVirtual
 				
 				ThreadBuilder_name.invoke( thread, name );
 				
-				ThreadBuilder_start.invoke( thread, this );
+				ThreadBuilder_start.invoke( thread, runnable );
 				
 				return;
 				
@@ -100,19 +134,8 @@ AEThreadVirtual
 				public void
 				run()
 				{
-					AEThreadVirtual.this.run();
+					runnable.run();
 				}
 			}.start();
-	}
-	
-	public abstract void
-	run();
-	
-	
-	public static void
-	main(
-		String[]	 args )
-	{
-		
 	}
 }
