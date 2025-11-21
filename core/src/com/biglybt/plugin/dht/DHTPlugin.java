@@ -25,6 +25,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
@@ -1948,7 +1949,9 @@ DHTPlugin
 			DHTPluginOperationListener	dual_listener =
 				new DHTPluginOperationListener()
 				{
-					private long start_time = SystemTime.getCurrentTime();
+					private ReentrantLock	lock = new ReentrantLock();	// needed for virtual thread pinning
+					
+					private final long start_time = SystemTime.getCurrentTime();
 
 					private boolean	started;
 
@@ -1967,7 +1970,8 @@ DHTPlugin
 					starts(
 						byte[] 				key )
 					{
-						synchronized( this ){
+						try{
+							lock.lock();
 
 							if ( started ){
 
@@ -1975,6 +1979,10 @@ DHTPlugin
 							}
 
 							started = true;
+							
+						}finally{
+							
+							lock.unlock();
 						}
 
 						main_listener.starts( original_key );
@@ -1986,7 +1994,8 @@ DHTPlugin
 						DHTPluginContact	originator,
 						DHTPluginValue		value )
 					{
-						synchronized( this ){
+						try{
+							lock.lock();
 
 							result_count++;
 
@@ -1996,6 +2005,9 @@ DHTPlugin
 
 								main_listener.valueRead( originator, value );
 							}
+						}finally{
+							
+							lock.unlock();
 						}
 					}
 
@@ -2016,7 +2028,8 @@ DHTPlugin
 					{
 							// we are guaranteed to come through here at least twice
 
-						synchronized( this ){
+						try{
+							lock.lock();
 
 							complete_count++;
 
@@ -2076,6 +2089,9 @@ DHTPlugin
 										}
 									});
 							}
+						}finally{
+							
+							lock.unlock();
 						}
 					}
 				};

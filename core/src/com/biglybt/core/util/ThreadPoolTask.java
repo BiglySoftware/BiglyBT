@@ -19,6 +19,8 @@
 
 package com.biglybt.core.util;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * @author parg
  *
@@ -32,9 +34,11 @@ ThreadPoolTask
 	static final int RELEASE_MANUAL = 0x01;
 	static final int RELEASE_MANUAL_ALLOWED = 0x02;
 
-	private int manualRelease;
+	private final ReentrantLock	lock = new ReentrantLock();
+	
+	private volatile int manualRelease;
 
-	protected ThreadPool.threadPoolWorker		worker;
+	protected Worker		worker;
 
 	public void
 	setTaskState(
@@ -66,27 +70,36 @@ ThreadPoolTask
 	 * only invoke this method after the first run of the threadpooltask as it is only meant to join
 	 * on a task when it has child tasks and thus is running in manual release mode
 	 */
-	synchronized final void join()
+	final void 
+	join()
 	{
-		while(manualRelease != RELEASE_AUTO)
-		{
-			try
-			{
-				wait();
-			} catch (Exception e)
-			{
-				Debug.printStackTrace(e);
+		while( manualRelease != RELEASE_AUTO ){
+			synchronized( this ){
+				try{
+					wait();
+				}catch (Exception e){
+					
+					Debug.printStackTrace(e);
+				}
 			}
 		}
 	}
 
-	synchronized final void
+	final void
 	setManualRelease()
 	{
-		manualRelease = ThreadPoolTask.RELEASE_MANUAL;
+		try{
+			lock.lock();
+			
+			manualRelease = ThreadPoolTask.RELEASE_MANUAL;
+			
+		}finally{
+			
+			lock.unlock();
+		}
 	}
 
-	synchronized final boolean
+	final boolean
 	canManualRelease()
 	{
 		return( manualRelease == ThreadPoolTask.RELEASE_MANUAL_ALLOWED );
@@ -96,26 +109,66 @@ ThreadPoolTask
 	 * only invoke this method after the first run of the threadpooltask as it is only meant to
 	 * update the state of a task when it has child tasks and thus is running in manual release mode
 	 */
-	synchronized final boolean isAutoReleaseAndAllowManual()
+	final boolean isAutoReleaseAndAllowManual()
 	{
-		if(manualRelease == RELEASE_MANUAL)
-			manualRelease = RELEASE_MANUAL_ALLOWED;
-		return manualRelease == RELEASE_AUTO;
+		try{
+			lock.lock();
+			
+			if(manualRelease == RELEASE_MANUAL)
+				manualRelease = RELEASE_MANUAL_ALLOWED;
+			return manualRelease == RELEASE_AUTO;
+			
+		}finally{
+			
+			lock.unlock();
+		}
 	}
 
-	public final synchronized void releaseToPool()
+	public final void releaseToPool()
 	{
 		// releasing before the initial run finished, so just let the runner do the cleanup
-		if(manualRelease == RELEASE_MANUAL)
-			manualRelease = RELEASE_AUTO;
-		else if(manualRelease == RELEASE_MANUAL_ALLOWED)
-		{
-			taskCompleted();
-			worker.getOwner().releaseManual(this);
-			manualRelease = RELEASE_AUTO;
-		} else if(manualRelease == RELEASE_AUTO)
-			Debug.out("this should not happen");
-
-		notifyAll();
+		
+		try{
+			lock.lock();
+			if(manualRelease == RELEASE_MANUAL)
+				manualRelease = RELEASE_AUTO;
+			else if(manualRelease == RELEASE_MANUAL_ALLOWED)
+			{
+				taskCompleted();
+				worker.releaseManual(this);
+				manualRelease = RELEASE_AUTO;
+			} else if(manualRelease == RELEASE_AUTO)
+				Debug.out("this should not happen");
+		}finally{
+			
+			lock.unlock();
+		}
+		synchronized( this ){
+			notifyAll();
+		}
+	}
+	
+	public interface
+	Worker
+	{
+		public long
+		getStartTime();
+		
+		public String
+		getState();
+		
+		public void
+		setState(
+			String	str );
+		
+		public String 
+		getWorkerName();
+		
+		public void
+		interrupt();
+		
+		public void
+		releaseManual(
+			ThreadPoolTask		task );
 	}
 }

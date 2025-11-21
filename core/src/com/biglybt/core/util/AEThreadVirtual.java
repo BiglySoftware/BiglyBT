@@ -39,8 +39,8 @@ AEThreadVirtual
 			
 			Class<?> ThreadBuilder = Class.forName( "java.lang.Thread$Builder" );
 			
-			name	= ThreadBuilder.getMethod( "name", String.class );
-			start	= ThreadBuilder.getMethod( "start", Runnable.class );
+			name		= ThreadBuilder.getMethod( "name", String.class );
+			start		= ThreadBuilder.getMethod( "start", Runnable.class );
 			
 			Object thread = ofv.invoke( null );
 			
@@ -68,14 +68,14 @@ AEThreadVirtual
 			
 		}catch( Throwable e ){
 			
-			ofv		= null;
-			name	= null;
-			start	= null;
+			ofv			= null;
+			name		= null;
+			start		= null;
 		}
 		
-		ofVirtual			= ofv;
-		ThreadBuilder_name	= name;
-		ThreadBuilder_start	= start;
+		ofVirtual				= ofv;
+		ThreadBuilder_name		= name;
+		ThreadBuilder_start		= start;
 		
 		available = ofVirtual != null;
 	}
@@ -86,7 +86,16 @@ AEThreadVirtual
 		return( available );
 	}
 	
-	private final String name;
+	public static void
+	run(
+		String		name,
+		Runnable	r )
+	{
+		new AEThreadVirtual(name).start(r);
+	}
+	
+	private String 	name;
+	private volatile Object	thread;
 	
 	public
 	AEThreadVirtual(
@@ -109,6 +118,31 @@ AEThreadVirtual
 	}
 	
 	public void
+	setName(
+		String		_name )
+	{
+		name	= _name;
+		
+		if ( thread != null ){
+			
+			if ( thread instanceof AEThread2 ){
+				
+				((AEThread2)thread).setName(_name);
+				
+			}else{
+				
+				try{
+					
+					ThreadBuilder_name.invoke( thread, _name );
+					
+				}catch( Throwable e ){
+					
+				}
+			}
+		}
+	}
+	
+	public void
 	start(
 		Runnable	runnable )
 	{
@@ -116,7 +150,7 @@ AEThreadVirtual
 						
 			try{
 				
-				Object thread = ofVirtual.invoke( null );
+				thread = ofVirtual.invoke( null );
 				
 				ThreadBuilder_name.invoke( thread, name );
 				
@@ -129,13 +163,34 @@ AEThreadVirtual
 			}
 		}
 
-		new AEThread2( name, true )
+		AEThread2 t = 
+			new AEThread2( name, true )
 			{
 				public void
 				run()
 				{
 					runnable.run();
 				}
-			}.start();
+			};
+			
+		thread = t;
+		
+		t.start();
+	}
+	
+	public void
+	interrupt()
+	{
+		if ( thread != null ){
+			
+			if ( thread instanceof AEThread2 ){
+				
+				((AEThread2)thread).interrupt();
+				
+			}else{
+				
+				((Thread)thread).interrupt();
+			}
+		}
 	}
 }

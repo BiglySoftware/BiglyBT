@@ -34,7 +34,7 @@ import com.biglybt.core.config.ParameterListener;
 
 
 public class
-ThreadPool<T extends AERunnable>
+ThreadPoolVirtual<T extends AERunnable>
 	implements ThreadPoolParent<T>
 {
 	private static final boolean	NAME_THREADS = Constants.IS_CVS_VERSION && System.getProperty( "az.thread.pool.naming.enable", "true" ).equals( "true" );
@@ -42,7 +42,7 @@ ThreadPool<T extends AERunnable>
 	private static final boolean	LOG_WARNINGS	= false;
 	private static final int		WARN_TIME		= 10000;
 
-	private static final List<ThreadPool<?>>		busy_pools			= new ArrayList<>();
+	private static final List<ThreadPoolVirtual<?>>		busy_pools			= new ArrayList<>();
 	private static boolean	busy_pool_timer_set	= false;
 
 	private static boolean	debug_thread_pool;
@@ -64,7 +64,7 @@ ThreadPool<T extends AERunnable>
 						try{
 							writer.indent();
 
-							List<ThreadPool<?>>	pools;
+							List<ThreadPoolVirtual<?>>	pools;
 
 							synchronized( busy_pools ){
 
@@ -84,11 +84,11 @@ ThreadPool<T extends AERunnable>
 		}
 	}
 
-	static final ThreadLocal<ThreadPoolTask.Worker>		tls	=
-		new ThreadLocal<ThreadPoolTask.Worker>()
+	static final ThreadLocal		tls	=
+		new ThreadLocal()
 		{
 			@Override
-			public ThreadPoolTask.Worker
+			public Object
 			initialValue()
 			{
 				return( null );
@@ -98,7 +98,7 @@ ThreadPool<T extends AERunnable>
 	protected static void
 	checkAllTimeouts()
 	{
-		List<ThreadPool<?>>	pools;
+		List<ThreadPoolVirtual<?>>	pools;
 
 			// copy the busy pools to avoid potential deadlock due to synchronization
 			// nestings
@@ -137,7 +137,7 @@ ThreadPool<T extends AERunnable>
 	private boolean		log_cpu	= AEThread2.TRACE_TIMES;
 
 	public
-	ThreadPool(
+	ThreadPoolVirtual(
 		String	_name,
 		int		_max_size )
 	{
@@ -145,7 +145,7 @@ ThreadPool<T extends AERunnable>
 	}
 
 	public
-	ThreadPool(
+	ThreadPoolVirtual(
 		String	_name,
 		int		_max_size,
 		boolean	_queue_when_full )
@@ -224,10 +224,10 @@ ThreadPool<T extends AERunnable>
 		run(runnable, high_priority, manualRelease);	
 	}
 	
-	public threadPoolWorker 
+	public void 
 	run(T runnable) 
 	{
-		return( run(runnable, false, false));
+		run(runnable, false, false);
 	}
 
 
@@ -237,7 +237,7 @@ ThreadPool<T extends AERunnable>
 	 * @param high_priority
 	 *            inserts at front if tasks queueing
 	 */
-	public threadPoolWorker run(T runnable, boolean high_priority, boolean manualRelease) {
+	public void run(T runnable, boolean high_priority, boolean manualRelease) {
 
 		if(manualRelease && !(runnable instanceof ThreadPoolTask))
 			throw new IllegalArgumentException("manual release only allowed for ThreadPoolTasks");
@@ -289,7 +289,7 @@ ThreadPool<T extends AERunnable>
 						runIt( runnable );
 					}
 
-					return( recursive_worker );
+					return;
 				}
 			}
 		}
@@ -318,8 +318,6 @@ ThreadPool<T extends AERunnable>
 
 			}
 		}
-
-		return( allocated_worker );
 	}
 
 	protected void
@@ -360,7 +358,7 @@ ThreadPool<T extends AERunnable>
 			String task_names = "";
 			try
 			{
-				synchronized (ThreadPool.this)
+				synchronized (ThreadPoolVirtual.this)
 				{
 					for (int i = 0; i < busy.size(); i++)
 					{
@@ -634,27 +632,19 @@ ThreadPool<T extends AERunnable>
 
 	}
 
-	public void registerThreadAsChild(ThreadPoolTask.Worker parent)
+	public void registerThreadAsChild(ThreadPoolTask.Worker parentt)
 	{
-		if(tls.get() == null || tls.get() == parent)
-			tls.set(parent);
-		else
-			throw new IllegalStateException("another parent is already set for this thread");
+		Debug.out( "eh?" );
 	}
 
 	public void deregisterThreadAsChild(ThreadPoolTask.Worker parent)
 	{
-		if(tls.get() == parent)
-			tls.set(null);
-		else
-			throw new IllegalStateException("tls is not set to parent");
+		Debug.out( "eh?" );
 	}
 
 
-	class 
-	threadPoolWorker 
-		extends AEThread2
-		implements ThreadPoolTask.Worker
+	class threadPoolWorker
+		implements ThreadPoolTask.Worker, Runnable
 	{
 		private final String		worker_name;
 		private volatile T			runnable;
@@ -662,21 +652,22 @@ ThreadPool<T extends AERunnable>
 		private int					warn_count;
 		private String				state	= "<none>";
 
+		private final AEThreadVirtual		thread;
+		
 		protected threadPoolWorker()
 		{
-			super(NAME_THREADS?(name + " " + (thread_name_index)):name,true);
+			String thread_name = NAME_THREADS?(name + " " + (thread_name_index)):name;
+			
+			thread = new AEThreadVirtual( thread_name);
+			
 			thread_name_index++;
-			setPriority(thread_priority);
-			worker_name = this.getName();
-			start();
+			// setPriority(thread_priority);
+			worker_name = thread_name;
+			
+			
+			thread.start( threadPoolWorker.this );
 		}
 
-		protected ThreadPool<T>
-		getOwner()
-		{
-			return( ThreadPool.this );
-		}
-		
 		@Override
 		public void run() {
 			tls.set(threadPoolWorker.this);
@@ -689,7 +680,7 @@ ThreadPool<T extends AERunnable>
 				{
 					try
 					{
-						synchronized (ThreadPool.this)
+						synchronized (ThreadPoolVirtual.this)
 						{
 							if (task_queue.size() > 0)
 								runnable = task_queue.remove(0);
@@ -697,7 +688,7 @@ ThreadPool<T extends AERunnable>
 								break;
 						}
 
-						synchronized (ThreadPool.this)
+						synchronized (ThreadPoolVirtual.this)
 						{
 							run_start_time = SystemTime.getMonotonousTime();
 							warn_count = 0;
@@ -707,9 +698,9 @@ ThreadPool<T extends AERunnable>
 							{
 								synchronized (busy_pools)
 								{
-									if (!busy_pools.contains(ThreadPool.this))
+									if (!busy_pools.contains(ThreadPoolVirtual.this))
 									{
-										busy_pools.add(ThreadPool.this);
+										busy_pools.add(ThreadPoolVirtual.this);
 										if (!busy_pool_timer_set)
 										{
 											// we have to defer this action rather
@@ -746,13 +737,13 @@ ThreadPool<T extends AERunnable>
 							try
 							{
 								if (task_name != null)
-									setName(worker_name + "{" + task_name + "}");
+									thread.setName(worker_name + "{" + task_name + "}");
 								tpt.taskStarted();
 								runIt(runnable);
 							} finally
 							{
 								if (task_name != null)
-									setName(worker_name);
+									thread.setName(worker_name);
 
 								if(tpt.isAutoReleaseAndAllowManual())
 									tpt.taskCompleted();
@@ -773,7 +764,7 @@ ThreadPool<T extends AERunnable>
 					{
 						if(autoRelease)
 						{
-							synchronized (ThreadPool.this)
+							synchronized (ThreadPoolVirtual.this)
 							{
 								long elapsed = SystemTime.getMonotonousTime() - run_start_time;
 								if (elapsed > WARN_TIME && LOG_WARNINGS)
@@ -786,7 +777,7 @@ ThreadPool<T extends AERunnable>
 								if (busy.size() == 0 && !debug_thread_pool)
 									synchronized (busy_pools)
 									{
-										busy_pools.remove(ThreadPool.this);
+										busy_pools.remove(ThreadPoolVirtual.this);
 									}
 							}
 						}
@@ -799,7 +790,7 @@ ThreadPool<T extends AERunnable>
 			{
 				if ( autoRelease){
 
-					synchronized (ThreadPool.this){
+					synchronized (ThreadPoolVirtual.this){
 
 						if ( current_permits > target_permits ){
 
@@ -822,7 +813,7 @@ ThreadPool<T extends AERunnable>
 		{
 			return( run_start_time );
 		}
-		
+				
 		public void setState(String _state) {
 			//System.out.println( "state = " + _state );
 			state = _state;
@@ -835,17 +826,26 @@ ThreadPool<T extends AERunnable>
 		public String getWorkerName() {
 			return (worker_name);
 		}
-		
+
+		public ThreadPoolVirtual<T> getOwner() {
+			return (ThreadPoolVirtual.this);
+		}
+
 		@Override
 		public void 
 		releaseManual(
 			ThreadPoolTask task)
 		{
-			ThreadPool.this.releaseManual(task);
+			ThreadPoolVirtual.this.releaseManual(task);
 		}
-
+		
 		protected T getRunnable() {
 			return (runnable);
+		}
+		
+		@Override
+		public void interrupt(){
+			thread.interrupt();
 		}
 	}
 }
