@@ -23,7 +23,7 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.*;
 
-import org.apache.commons.lang.Entities;
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.simple.JSONObject;
 
 import com.biglybt.core.metasearch.utils.MomentsAgoDateFormatter;
@@ -512,6 +512,6 @@ Result
 		if ( input == null ){
 			return( null );
 		}
-		return( Entities.HTML40.unescape( input ));
+		return( StringEscapeUtils.unescapeHtml4( input ));
 	}
 }
