@@ -42,7 +42,6 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.plugin.net.buddy.*;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 
 public class
