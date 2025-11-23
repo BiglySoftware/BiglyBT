@@ -56,6 +56,7 @@ import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.core.vuzefile.VuzeFileProcessor;
 import com.biglybt.core.xml.util.XMLEscapeWriter;
 import com.biglybt.core.xml.util.XUXmlWriter;
+import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
@@ -897,7 +898,37 @@ TagManagerImpl
 				started(
 					Core core )
 				{
-					core.getPluginManager().getDefaultPluginInterface().getDownloadManager().getGlobalDownloadEventNotifier().addCompletionListener( TagManagerImpl.this);
+					PluginInterface pi = core.getPluginManager().getDefaultPluginInterface();
+					
+					pi.getDownloadManager().getGlobalDownloadEventNotifier().addCompletionListener( TagManagerImpl.this);
+					
+					pi.addListener(
+						new PluginAdapter()
+						{
+							@Override
+							public void 
+							initializationComplete()
+							{
+								SimpleTimer.addPeriodicEvent(
+										"TM:Sync",
+										30*1000,
+										new TimerEventPerformer()
+										{
+											@Override
+											public void
+											perform(
+												TimerEvent event)
+											{
+												for ( TagType tt: tag_types ){
+
+													((TagTypeBase)tt).sync();
+												}
+												
+												auto_tracker.sync();
+											}
+										});
+							}
+						});
 				}
 
 				@Override
@@ -1067,25 +1098,6 @@ TagManagerImpl
 					Core core )
 				{
 					destroy();
-				}
-			});
-
-		SimpleTimer.addPeriodicEvent(
-			"TM:Sync",
-			30*1000,
-			new TimerEventPerformer()
-			{
-				@Override
-				public void
-				perform(
-					TimerEvent event)
-				{
-					for ( TagType tt: tag_types ){
-
-						((TagTypeBase)tt).sync();
-					}
-					
-					auto_tracker.sync();
 				}
 			});
 	}

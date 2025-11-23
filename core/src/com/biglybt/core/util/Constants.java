@@ -145,7 +145,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "3.9.0.1_B01";
+	public static final String BIGLYBT_VERSION  = "3.9.0.1_B21";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";
@@ -400,7 +400,8 @@ Constants
 	public static final boolean isJava11OrHigher;
 	public static final boolean isJava12OrHigher;
 	public static final boolean isJava18OrHigher;
-
+	public static final boolean isJava24OrHigher;
+	
 	static{
 		// http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
 		// should always start with n.n.
@@ -415,6 +416,7 @@ Constants
 		boolean	_11plus;
 		boolean	_12plus;
 		boolean	_18plus;
+		boolean	_24plus;
 
 		try{
 			// from Java 9 we need to drop stuff after a + or - as we can have 9-ea (well, the + case shouldn't occur in java.version but whatever)
@@ -440,6 +442,7 @@ Constants
 			_11plus = first >= 11;
 			_12plus = first >= 12;
 			_18plus = first >= 18;
+			_24plus = first >= 24;
 
 		}catch( Throwable e ){
 
@@ -453,6 +456,7 @@ Constants
 			_11plus = false;
 			_12plus = false;
 			_18plus = false;
+			_24plus = false;
 		}
 
 		isJava8OrHigher		= _8plus;
@@ -461,6 +465,7 @@ Constants
 		isJava11OrHigher	= _11plus;
 		isJava12OrHigher	= _12plus;
 		isJava18OrHigher	= _18plus;
+		isJava24OrHigher	= _24plus;
 	}
 
 	public static final String	FILE_WILDCARD = isWindows?"*.*":"*";

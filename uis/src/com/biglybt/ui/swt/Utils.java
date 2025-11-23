@@ -4769,7 +4769,7 @@ public class Utils
 	public static void getOffOfSWTThread(Runnable runnable) {
 
 		if ( isSWTThread()){
-			if ( AEThreadVirtual.areVirtualThreadsAvailable()){
+			if ( AEThreadVirtual.areBasicVirtualThreadsAvailable()){
 				
 				new AEThreadVirtual( THREAD_NAME_OFFSWT ).start( runnable );
 			}else{
@@ -4792,7 +4792,7 @@ public class Utils
 	getOffOfSWTThread(
 		AERunnable runnable) 
 	{
-		if ( AEThreadVirtual.areVirtualThreadsAvailable()){
+		if ( AEThreadVirtual.areBasicVirtualThreadsAvailable()){
 		
 			new AEThreadVirtual( THREAD_NAME_OFFSWT ).start( runnable );
 			

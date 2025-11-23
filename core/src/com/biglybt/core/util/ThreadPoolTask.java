@@ -37,7 +37,8 @@ ThreadPoolTask
 	private final ReentrantLock	lock = new ReentrantLock();
 	
 	private volatile int manualRelease;
-
+	private volatile boolean manualReleaseUnsupported;
+	
 	protected Worker		worker;
 
 	public void
@@ -73,6 +74,9 @@ ThreadPoolTask
 	final void 
 	join()
 	{
+		if ( manualReleaseUnsupported ){
+			Debug.out( "eh?" );
+		}
 		while( manualRelease != RELEASE_AUTO ){
 			synchronized( this ){
 				try{
@@ -86,23 +90,37 @@ ThreadPoolTask
 	}
 
 	final void
+	setManualReleaseUnsupported()
+	{
+			// virtual pool doesn't support manual release
+		
+		manualReleaseUnsupported = true;
+	}
+	
+	final void
 	setManualRelease()
 	{
-		try{
-			lock.lock();
-			
-			manualRelease = ThreadPoolTask.RELEASE_MANUAL;
-			
-		}finally{
-			
-			lock.unlock();
+		if ( !manualReleaseUnsupported ){
+			try{
+				lock.lock();
+				
+				manualRelease = ThreadPoolTask.RELEASE_MANUAL;
+				
+			}finally{
+				
+				lock.unlock();
+			}
 		}
 	}
 
 	final boolean
 	canManualRelease()
 	{
-		return( manualRelease == ThreadPoolTask.RELEASE_MANUAL_ALLOWED );
+		if ( manualReleaseUnsupported ){
+			return( false );
+		}else{
+			return( manualRelease == ThreadPoolTask.RELEASE_MANUAL_ALLOWED );
+		}
 	}
 
 	/**
@@ -111,6 +129,9 @@ ThreadPoolTask
 	 */
 	final boolean isAutoReleaseAndAllowManual()
 	{
+		if ( manualReleaseUnsupported ){
+			return( true );
+		}
 		try{
 			lock.lock();
 			
@@ -126,6 +147,9 @@ ThreadPoolTask
 
 	public final void releaseToPool()
 	{
+		if ( manualReleaseUnsupported ){
+			return;
+		}
 		// releasing before the initial run finished, so just let the runner do the cleanup
 		
 		try{

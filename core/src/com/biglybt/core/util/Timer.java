@@ -38,7 +38,7 @@ public class Timer
 	private static ArrayList<WeakReference<Timer>> timers = null;
 	static final AEMonitor timers_mon = new AEMonitor("timers list");
 
-	private ThreadPool<TimerEvent>	thread_pool;
+	private ThreadPoolParent<TimerEvent>	thread_pool;
 
 	private Set<TimerEvent>	events = new TreeSet<>();
 
@@ -74,6 +74,16 @@ public class Timer
 		int		thread_pool_size,
 		int		thread_priority )
 	{
+		this( name, thread_pool_size, thread_priority, false );
+	}
+	
+	protected
+	Timer(
+		String	name,
+		int		thread_pool_size,
+		int		thread_priority,
+		boolean	virtual )
+	{
 		if (DEBUG_TIMERS) {
 			try {
 				timers_mon.enter();
@@ -87,7 +97,14 @@ public class Timer
 			}
 		}
 
-		thread_pool = new ThreadPool<TimerEvent>(name,thread_pool_size);
+		if ( virtual && AEThreadVirtual.areBasicVirtualThreadsAvailable()){
+			
+			thread_pool = new ThreadPoolVirtual<TimerEvent>(name,thread_pool_size);
+			
+		}else{
+			
+			thread_pool = new ThreadPool<TimerEvent>(name,thread_pool_size);
+		}
 
 		SystemTime.registerClockChangeListener( this );
 
@@ -100,7 +117,7 @@ public class Timer
 		t.start();
 	}
 
-	public ThreadPool<TimerEvent>
+	public ThreadPoolParent<TimerEvent>
 	getThreadPool()
 	{
 		return( thread_pool );
@@ -225,11 +242,6 @@ public class Timer
 		return( slow_event_limit );
 	}
 	
-	public void
-	setLogCPU()
-	{
-		thread_pool.setLogCPU();
-	}
 
 	@Override
 	public void
@@ -344,7 +356,7 @@ public class Timer
 	execute(
 		TimerEvent		event )
 	{
-		thread_pool.run( event );
+		thread_pool.runTask( event );
 	}
 	
 	@Override

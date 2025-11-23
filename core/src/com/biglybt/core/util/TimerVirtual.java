@@ -18,53 +18,22 @@
 
 package com.biglybt.core.util;
 
-import java.util.List;
-
-public interface
-ThreadPoolParent
-	<T extends AERunnable>
+public class 
+TimerVirtual
+	extends Timer
 {
-	public String
-	getName();
-	
-	public void
-	setMaxThreads(
-		int		max );
-	
-	public int
-	getMaxThreads();
-	
-	public boolean
-	isFull();
-	
-	public int
-	getRunningCount();
+	public
+	TimerVirtual(
+		String	name )
+	{
+		super( name );
+	}
 
-	public void
-	runTask(
-		T		task );
-	
-	public void
-	runTask(
-		T			task,
-		boolean		high_priority,
-		boolean		manual_release );
-
-	public List<T>
-	getRunningTasks();
-	
-	public boolean
-	isQueued(
-		T			task );
-	
-	public void
-	setWarnWhenFull();
-	
-	public void
-	registerThreadAsChild(
-		ThreadPoolTask.Worker		worker );
-	
-	public void
-	deregisterThreadAsChild(
-		ThreadPoolTask.Worker		worker );
+	public
+	TimerVirtual(
+		String	name,
+		int		thread_pool_size )
+	{
+		super( name, thread_pool_size, Thread.NORM_PRIORITY, true );
+	}
 }

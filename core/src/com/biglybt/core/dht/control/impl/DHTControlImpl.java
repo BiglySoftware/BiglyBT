@@ -235,7 +235,7 @@ DHTControlImpl
 						transport.getProtocolVersion(),
 						logger );
 
-		if ( AEThreadVirtual.areVirtualThreadsAvailable()){
+		if ( AEThreadVirtual.areBasicVirtualThreadsAvailable()){
 	
 			internal_lookup_pool 	= new ThreadPoolVirtual<DhtTask>("DHTControl:internallookups", lookup_concurrency );
 			internal_put_pool 		= new ThreadPoolVirtual<DhtTask>("DHTControl:internalputs", lookup_concurrency );
@@ -2602,7 +2602,7 @@ DHTControlImpl
 						//System.out.println("release-start");
 						runningState = 1;
 						
-						if ( AEThreadVirtual.areVirtualThreadsAvailable()){
+						if ( AEThreadVirtual.areBasicVirtualThreadsAvailable()){
 							
 							AEThreadVirtual.run("DHT lookup runner", this::lookupSteps );		
 							

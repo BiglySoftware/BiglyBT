@@ -87,9 +87,24 @@ TRTrackerBTAnnouncerImpl
 
 	private static final int OVERRIDE_PERIOD			= 10*1000;
 
-	private static final Timer	tracker_timer_public 	= new Timer( "Tracker Announce Public Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
-	private static final Timer	tracker_timer_private	= new Timer( "Tracker Announce Private Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
-
+	private static final Timer	tracker_timer_public;
+	private static final Timer	tracker_timer_private;
+	
+	static{
+		if ( AEThreadVirtual.areBetterVirtualThreadsAvailable()){
+			
+			tracker_timer_public 	= new TimerVirtual( "Tracker Announce Public Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+			
+			tracker_timer_private	= new TimerVirtual( "Tracker Announce Private Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+			
+		}else{
+			
+			tracker_timer_public 	= new Timer( "Tracker Announce Public Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+			
+			tracker_timer_private	= new Timer( "Tracker Announce Private Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+		}
+	}
+	
 	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
 	static void

@@ -238,12 +238,14 @@ ThreadPoolVirtual<T extends AERunnable>
 	 *            inserts at front if tasks queueing
 	 */
 	public void run(T runnable, boolean high_priority, boolean manualRelease) {
-
+		
 		if(manualRelease && !(runnable instanceof ThreadPoolTask))
 			throw new IllegalArgumentException("manual release only allowed for ThreadPoolTasks");
-		else if(manualRelease)
-			((ThreadPoolTask)runnable).setManualRelease();
+		else if(manualRelease){
+			manualRelease = false;	// not supported for virtual thread pool
 
+			((ThreadPoolTask)runnable).setManualReleaseUnsupported();
+		}
 		// System.out.println( "Thread pool:" + name + " - sem = " + thread_sem.getValue() + ", queue = " + task_queue.size());
 
 			// not queueing, grab synchronous sem here
@@ -254,6 +256,8 @@ ThreadPoolVirtual<T extends AERunnable>
 
 					// defend against recursive entry when in queuing mode (yes, it happens)
 
+					// Replace TLS with ScopedValue one day...
+				
 				threadPoolWorker	recursive_worker = (threadPoolWorker)tls.get();
 
 				if ( recursive_worker == null || recursive_worker.getOwner() != this ){
@@ -294,8 +298,6 @@ ThreadPoolVirtual<T extends AERunnable>
 			}
 		}
 
-		threadPoolWorker allocated_worker;
-
 		synchronized( this ){
 
 			if ( high_priority ){
@@ -308,14 +310,11 @@ ThreadPoolVirtual<T extends AERunnable>
 
 			if ( queue_when_full && !thread_sem.reserveIfAvailable()){
 
-				allocated_worker	= null;
-
 				checkWarning();
 
 			}else{
 
-				allocated_worker = new threadPoolWorker();
-
+				new threadPoolWorker();
 			}
 		}
 	}
@@ -588,48 +587,7 @@ ThreadPoolVirtual<T extends AERunnable>
 	}
 
 	void releaseManual(ThreadPoolTask toRelease) {
-		if( !toRelease.canManualRelease()){
-			throw new IllegalStateException("task not manually releasable");
-		}
-
-		synchronized( this ){
-
-			long elapsed = SystemTime.getMonotonousTime() - toRelease.worker.getStartTime();
-			if (elapsed > WARN_TIME && LOG_WARNINGS)
-				DebugLight.out(toRelease.worker.getWorkerName() + ": terminated, elapsed = " + elapsed + ", state = " + toRelease.worker.getState());
-
-			if ( !busy.remove(toRelease.worker)){
-
-				throw new IllegalStateException("task already released");
-			}
-
-			// if debug is on we leave the pool registered so that we
-			// can trace on the timeout events
-
-			if (busy.size() == 0 && !debug_thread_pool){
-
-				synchronized (busy_pools){
-
-					busy_pools.remove(this);
-				}
-			}
-
-			if ( busy.size() == 0){
-
-				if ( current_permits > target_permits ){
-
-					current_permits--;
-
-				}else{
-
-					thread_sem.release();
-				}
-			}else{
-
-				new threadPoolWorker();
-			}
-		}
-
+		Debug.out( "eh?" );
 	}
 
 	public void registerThreadAsChild(ThreadPoolTask.Worker parentt)
@@ -671,8 +629,6 @@ ThreadPoolVirtual<T extends AERunnable>
 		@Override
 		public void run() {
 			tls.set(threadPoolWorker.this);
-
-			boolean autoRelease = true;
 
 			try
 			{
@@ -729,77 +685,81 @@ ThreadPoolVirtual<T extends AERunnable>
 							}
 						}
 
-						if (runnable instanceof ThreadPoolTask)
-						{
+						if (runnable instanceof ThreadPoolTask){
+							
 							ThreadPoolTask tpt = (ThreadPoolTask) runnable;
+							
 							tpt.worker = this;
+							
 							String task_name = NAME_THREADS?tpt.getName():null;
-							try
-							{
-								if (task_name != null)
+							
+							try{
+								if (task_name != null){
 									thread.setName(worker_name + "{" + task_name + "}");
-								tpt.taskStarted();
-								runIt(runnable);
-							} finally
-							{
-								if (task_name != null)
-									thread.setName(worker_name);
-
-								if(tpt.isAutoReleaseAndAllowManual())
-									tpt.taskCompleted();
-								else
-								{
-									autoRelease = false;
-									break;
 								}
-
+								
+								tpt.taskStarted();
+								
+								runIt(runnable);
+								
+							}finally{
+								
+								if (task_name != null){
+									
+									thread.setName(worker_name);
+								}
+								
+								tpt.taskCompleted();
 							}
-						} else
+						}else{
+							
 							runIt(runnable);
-
-					} catch (Throwable e)
-					{
+						}
+					}catch (Throwable e){
+						
 						DebugLight.printStackTrace(e);
-					} finally
-					{
-						if(autoRelease)
-						{
-							synchronized (ThreadPoolVirtual.this)
-							{
-								long elapsed = SystemTime.getMonotonousTime() - run_start_time;
-								if (elapsed > WARN_TIME && LOG_WARNINGS)
-									DebugLight.out(getWorkerName() + ": terminated, elapsed = " + elapsed + ", state = " + state);
-
-								busy.remove(threadPoolWorker.this);
+						
+					}finally{
+						
+						synchronized (ThreadPoolVirtual.this){
+							
+							long elapsed = SystemTime.getMonotonousTime() - run_start_time;
+							
+							if (elapsed > WARN_TIME && LOG_WARNINGS){
+								DebugLight.out(getWorkerName() + ": terminated, elapsed = " + elapsed + ", state = " + state);
+							}
+							
+							busy.remove(threadPoolWorker.this);
 
 								// if debug is on we leave the pool registered so that we
 								// can trace on the timeout events
-								if (busy.size() == 0 && !debug_thread_pool)
-									synchronized (busy_pools)
-									{
-										busy_pools.remove(ThreadPoolVirtual.this);
-									}
+							
+							if ( busy.size() == 0 && !debug_thread_pool){
+								
+								synchronized (busy_pools){
+									
+									busy_pools.remove(ThreadPoolVirtual.this);
+								}
 							}
 						}
 					}
-				} while (runnable != null);
-			} catch (Throwable e)
-			{
+				}while (runnable != null);
+				
+			}catch (Throwable e){
+				
 				DebugLight.printStackTrace(e);
-			} finally
-			{
-				if ( autoRelease){
+				
+			}finally{
+				
+				synchronized (ThreadPoolVirtual.this){
 
-					synchronized (ThreadPoolVirtual.this){
+					if ( current_permits > target_permits ){
 
-						if ( current_permits > target_permits ){
+						current_permits--;
 
-							current_permits--;
+					}else{
 
-						}else{
-
-							thread_sem.release();
-						}
+						thread_sem.release();
 					}
 				}
 
