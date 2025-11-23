@@ -187,7 +187,7 @@ public class UserCommand extends IConsoleCommand {
 
 			UserProfile profile = new UserProfile(userName, userType);
 			profile.setPassword(password);
-			String defaultSaveDirectory = commandLine.getOptionValue('d', null);
+			String defaultSaveDirectory = commandLine.getOptionValue('d', (String) null);
 			profile.setDefaultSaveDirectory(defaultSaveDirectory);
 
 			getUserManager().addUser(profile);

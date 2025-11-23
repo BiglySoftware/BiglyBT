@@ -65,7 +65,6 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.plugin.net.buddy.*;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
