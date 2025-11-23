@@ -886,9 +886,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  return( false );
 			  }
 		  }
-			
-		  entity.setTargetWriteControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
-		  
+					  
 		  if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
 			  //copy-on-write
 			  ArrayList high_new = new ArrayList( high_priority_entities );
@@ -920,24 +918,28 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  }
 		  }
 
-		  entity_count = normal_priority_entities.size() + boosted_priority_entities.size() + high_priority_entities.size();
-
-		  if ( processing_waiting ){
-
-			  // guaranteed this process loop isn't going to subsequently process the entity
-
-			  entity.setWriteControllerInactive();
-
-		  }else{
-
-			  // possible the process loop is actively about to process it so we can't mark the entity as processable by
-			  // another processor until later
-
-			  entity.activeWriteControllerRelease( true );
+		  if ( found ){
 			  
-			  to_deactivate.add( entity  );
-		  }
+			  entity.setTargetWriteControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
 
+			  entity_count = normal_priority_entities.size() + boosted_priority_entities.size() + high_priority_entities.size();
+	
+			  if ( processing_waiting ){
+	
+				  // guaranteed this process loop isn't going to subsequently process the entity
+	
+				  entity.setWriteControllerInactive();
+	
+			  }else{
+	
+				  // possible the process loop is actively about to process it so we can't mark the entity as processable by
+				  // another processor until later
+	
+				  entity.activeWriteControllerRelease( true );
+				  
+				  to_deactivate.add( entity  );
+			  }
+		  }
 	  }finally{
 		  
 		  entities_mon.exit();  

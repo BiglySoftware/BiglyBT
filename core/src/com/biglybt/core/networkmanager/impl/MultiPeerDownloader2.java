@@ -21,9 +21,7 @@ package com.biglybt.core.networkmanager.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
@@ -32,7 +30,6 @@ import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.SystemTime;
 
 
@@ -158,16 +155,18 @@ public class MultiPeerDownloader2 extends RateControlledMultipleEntity {
 		try{
 			connections_mon.enter();
 			
+			if ( !connections_cow.contains(connection)){
+				
+				return( false );
+			}
+			
 			connection.setTargetReadControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
 			
-			//copy-on-write
+				//copy-on-write
+			
 			ArrayList<NetworkConnectionBase> conn_new = new ArrayList<>( connections_cow );
 			
-			boolean removed = conn_new.remove( connection );
-			
-			if( !removed ){
-				return false;
-			}
+			conn_new.remove( connection );
 			
 			connections_cow = conn_new;
 

@@ -176,14 +176,21 @@ public class MultiPeerUploader extends RateControlledMultipleEntity {
 		int mss_size = peer_connection.getMssSize();
 		boolean has_urgent_data = peer_connection.getOutgoingMessageQueue().hasUrgentMessage();
 		int num_bytes_ready = peer_connection.getOutgoingMessageQueue().getTotalSize();
-
-		peer_connection.setTargetWriteControllerPartition( partition_id );
-
-		if( num_bytes_ready >= mss_size || has_urgent_data ) {  //has a full packet's worth, or has urgent data
-			addToReadyList( peer_connection );
-		}
-		else {   //has data to send, but not enough for a full packet
-			addToWaitingList( peer_connection );
+		
+		try{
+			lists_lock.enter();
+			
+			peer_connection.setTargetWriteControllerPartition( partition_id );
+	
+			if( num_bytes_ready >= mss_size || has_urgent_data ) {  //has a full packet's worth, or has urgent data
+				addToReadyList( peer_connection );
+			}
+			else {   //has data to send, but not enough for a full packet
+				addToWaitingList( peer_connection );
+			}
+		}finally{
+			
+			lists_lock.exit();
 		}
 
 		EventWaiter waiter_to_kick = waiter;
@@ -218,16 +225,25 @@ public class MultiPeerUploader extends RateControlledMultipleEntity {
 		try {
 			lists_lock.enter();
 
-			peer_connection.setTargetWriteControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
-
-			//look for the connection in the waiting list and cancel listener if found
+				//look for the connection in the waiting list and cancel listener if found
+			
 			PeerData peer_data = (PeerData)waiting_connections.remove( peer_connection );
-			if( peer_data != null ) {
-				peer_connection.getOutgoingMessageQueue().cancelQueueListener( peer_data.queue_listener );
-				found = true;
-			}else {	//look for the connection in the ready list
-				if( ready_connections.remove( peer_connection ) ) {
+			
+			if ( peer_data != null ){
 				
+				peer_connection.setTargetWriteControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
+
+				peer_connection.getOutgoingMessageQueue().cancelQueueListener( peer_data.queue_listener );
+				
+				found = true;
+			}else{	
+				
+					//look for the connection in the ready list
+				
+				if ( ready_connections.remove( peer_connection )){
+				
+					peer_connection.setTargetWriteControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
+
 					found = true;
 				}
 			}

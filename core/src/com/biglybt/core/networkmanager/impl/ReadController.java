@@ -222,7 +222,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 		  process_loop_count++;
 
 		  while( true ){
-			  
+			  			  
 			  while( true ){
 
 				  RateControlledEntity e =  to_deactivate.poll();
@@ -472,8 +472,6 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 			}
 		}
 		  
-		entity.setTargetReadControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
-
 		if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
 			//copy-on-write
 			ArrayList<RateControlledEntity> high_new = new ArrayList<>(high_priority_entities);
@@ -500,24 +498,28 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
 			}
 		}
 
-		entity_count = normal_priority_entities.size() + high_priority_entities.size();
-		
-		if ( processing_waiting ){
+		if ( found ){
+			
+			entity.setTargetReadControllerPartition( RateControlledEntity.UNALLOCATED_PARTITION );
 
-			// guaranteed this process loop isn't going to subsequently process the entity
-
-			entity.setReadControllerInactive();
-
-		}else{
-
-			// possible the process loop is actively about to process it so we can't mark the entity as processable by
-			// another processor until later
-
-			entity.activeReadControllerRelease( true );
-
-			to_deactivate.add( entity  );
+			entity_count = normal_priority_entities.size() + high_priority_entities.size();
+			
+			if ( processing_waiting ){
+	
+				// guaranteed this process loop isn't going to subsequently process the entity
+	
+				entity.setReadControllerInactive();
+	
+			}else{
+	
+				// possible the process loop is actively about to process it so we can't mark the entity as processable by
+				// another processor until later
+	
+				entity.activeReadControllerRelease( true );
+	
+				to_deactivate.add( entity  );
+			}
 		}
-		  
 	}finally{ 
 		entities_mon.exit();  
 	}

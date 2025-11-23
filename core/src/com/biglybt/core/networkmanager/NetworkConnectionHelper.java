@@ -294,16 +294,20 @@ NetworkConnectionHelper
 	{
 		//System.out.println( "read release: " + added + " for " + getString());
 		
+		int value;
+		
 		if ( added ){
 			
-			read_release_count.incrementAndGet();
+			value = read_release_count.incrementAndGet();
 			
 		}else{
 			
-			if ( read_release_count.decrementAndGet() == 0 ){
+			value = read_release_count.decrementAndGet();
+		}
+		
+		if ( value == 0 ){
 				
-				active_read_partition.set( UNALLOCATED_PARTITION );
-			}
+			active_read_partition.set( UNALLOCATED_PARTITION );
 		}
 	}
 	
@@ -328,7 +332,14 @@ NetworkConnectionHelper
 										
 				}else{
 				
-					return( active_read_partition.compareAndSet( UNALLOCATED_PARTITION, partition ));
+					boolean res = active_read_partition.compareAndSet( UNALLOCATED_PARTITION, partition );
+					
+					if ( res ){
+						
+						last_read_stall = 0;
+					}
+					
+					return( res );
 				}
 				
 			}else{
@@ -344,7 +355,7 @@ NetworkConnectionHelper
 				
 			}else if ( now - last_read_stall > 30*1000 ){
 			
-				Debug.out( "Stalled waiting for read controller: active=" + arp + ", target=" + target_read_partition + ", required=" + partition + " - " + getString());
+				Debug.out( "Stalled waiting for read controller: active=" + arp + ", target=" + target_read_partition + ", required=" + partition + ", release=" + read_release_count.get() + " - " + getString());
 				
 				last_read_stall = 0;
 				
@@ -380,16 +391,20 @@ NetworkConnectionHelper
 	{
 		//System.out.println( "write release: " + added + " for " + getString());
 		
+		int value;
+		
 		if ( added ){
 			
-			write_release_count.incrementAndGet();
+			value = write_release_count.incrementAndGet();
 			
 		}else{
 			
-			if ( write_release_count.decrementAndGet() == 0 ){
+			value = write_release_count.decrementAndGet();
+		}
+		
+		if ( value == 0 ){
 				
-				active_write_partition.set( UNALLOCATED_PARTITION );
-			}
+			active_write_partition.set( UNALLOCATED_PARTITION );
 		}
 	}
 	
@@ -414,7 +429,14 @@ NetworkConnectionHelper
 										
 				}else{
 				
-					return( active_write_partition.compareAndSet( UNALLOCATED_PARTITION, partition ));
+					boolean res = active_write_partition.compareAndSet( UNALLOCATED_PARTITION, partition );
+					
+					if ( res ){
+						
+						last_write_stall = 0;
+					}
+					
+					return( res );
 				}			
 			}else{
 				
@@ -429,7 +451,7 @@ NetworkConnectionHelper
 				
 			}else if ( now - last_write_stall > 8*1000 ){
 			
-				Debug.out( "Stalled waiting for write controller: active=" + awp + ", target=" + target_write_partition + ", required=" + partition + " - " + getString());
+				Debug.out( "Stalled waiting for write controller: active=" + awp + ", target=" + target_write_partition + ", required=" + partition + ", release=" + write_release_count.get() + " - " + getString());
 				
 				last_write_stall = 0;
 				
