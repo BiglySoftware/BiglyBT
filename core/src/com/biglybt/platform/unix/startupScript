@@ -32,9 +32,10 @@ export GDK_BACKEND=x11
 export FT2_SUBPIXEL_HINTING=2
 
 JAVA_ARGS=$(grep -o '^[^#]*' ~/.biglybt/java.vmoptions 2>/dev/null | tr '\n' ' ')
-JAVA_VERSION=""
 isJ17=false
 JAVABIN="${JAVA_PROGRAM_DIR}java"
+JAVA_HEADER=$("$JAVABIN" -version 2>&1 | grep -i version | head -n 1)
+JAVA_VERSION=$(echo "${JAVA_HEADER}" | sed "s/^.* version \"\(.*\)\".*$/\1/")
 
 look_for_java()
 {
