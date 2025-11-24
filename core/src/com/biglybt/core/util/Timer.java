@@ -714,7 +714,7 @@ public class Timer
 
 		// System.out.println( "event added (" + when + ") - queue = " + events.size());
 
-		if ( current_when == Integer.MAX_VALUE || when < current_when ){
+		if ( current_when == Integer.MAX_VALUE || when < current_when || current_thread == null ){
 
 			wakeup();
 		}
