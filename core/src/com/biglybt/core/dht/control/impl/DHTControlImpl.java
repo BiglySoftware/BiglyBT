@@ -97,10 +97,10 @@ DHTControlImpl
 	private long		router_start_time;
 	private int			router_count;
 
-	private final ThreadPoolParent<DhtTask>	internal_lookup_pool;
-	private final ThreadPoolParent<DhtTask>	external_lookup_pool;
-	private final ThreadPoolParent<DhtTask>	internal_put_pool;
-	private final ThreadPoolParent<DhtTask>	external_put_pool;
+	final ThreadPool	internal_lookup_pool;
+	final ThreadPool	external_lookup_pool;
+	final ThreadPool	internal_put_pool;
+	private final ThreadPool	external_put_pool;
 
 	private final Map<HashWrapper, Object>			imported_state	= new HashMap<>();
 
@@ -235,27 +235,14 @@ DHTControlImpl
 						transport.getProtocolVersion(),
 						logger );
 
-		if ( AEThreadVirtual.areBasicVirtualThreadsAvailable()){
-	
-			internal_lookup_pool 	= new ThreadPoolVirtual<DhtTask>("DHTControl:internallookups", lookup_concurrency );
-			internal_put_pool 		= new ThreadPoolVirtual<DhtTask>("DHTControl:internalputs", lookup_concurrency );
-	
-				// external pools queue when full ( as opposed to blocking )
-	
-			external_lookup_pool 	= new ThreadPoolVirtual<DhtTask>("DHTControl:externallookups", EXTERNAL_LOOKUP_CONCURRENCY, true );
-			external_put_pool 		= new ThreadPoolVirtual<DhtTask>("DHTControl:puts", EXTERNAL_PUT_CONCURRENCY, true );
+		internal_lookup_pool 	= new ThreadPool("DHTControl:internallookups", lookup_concurrency );
+		internal_put_pool 		= new ThreadPool("DHTControl:internalputs", lookup_concurrency );
 
-		}else{
-			
-			internal_lookup_pool 	= new ThreadPool<DhtTask>("DHTControl:internallookups", lookup_concurrency );
-			internal_put_pool 		= new ThreadPool<DhtTask>("DHTControl:internalputs", lookup_concurrency );
-	
-				// external pools queue when full ( as opposed to blocking )
-	
-			external_lookup_pool 	= new ThreadPool<DhtTask>("DHTControl:externallookups", EXTERNAL_LOOKUP_CONCURRENCY, true );
-			external_put_pool 		= new ThreadPool<DhtTask>("DHTControl:puts", EXTERNAL_PUT_CONCURRENCY, true );
-		}
-		
+			// external pools queue when full ( as opposed to blocking )
+
+		external_lookup_pool 	= new ThreadPool("DHTControl:externallookups", EXTERNAL_LOOKUP_CONCURRENCY, true );
+		external_put_pool 		= new ThreadPool("DHTControl:puts", EXTERNAL_PUT_CONCURRENCY, true );
+
 		createRouter( transport.getLocalContact());
 
 		node_id_byte_count	= router.getID().length;
@@ -975,7 +962,7 @@ DHTControlImpl
 
 				// we don't want this to be blocking as it'll stuff the stats
 
-			external_lookup_pool.runTask(
+			external_lookup_pool.run(
 				new DhtTask(external_lookup_pool)
 				{
 					private byte[]	target = {};
@@ -1085,7 +1072,7 @@ DHTControlImpl
 
 	protected void
 	put(
-		ThreadPoolParent<DhtTask>	thread_pool,
+		ThreadPool					thread_pool,
 		boolean						high_priority,
 		byte[]						initial_encoded_key,
 		String						description,
@@ -1112,7 +1099,7 @@ DHTControlImpl
 
 	protected void
 	put(
-		final ThreadPoolParent<DhtTask>		thread_pool,
+		final ThreadPool					thread_pool,
 		final boolean						high_priority,
 		final byte[]						initial_encoded_key,
 		final String						description,
@@ -1426,7 +1413,7 @@ DHTControlImpl
 
 	protected void
 	put(
-		final ThreadPoolParent<DhtTask>			thread_pool,
+		final ThreadPool						thread_pool,
 		final boolean							high_priority,
 		byte[][]								initial_encoded_keys,
 		final String							description,
@@ -2384,7 +2371,7 @@ DHTControlImpl
 
 	protected DhtTask
 	lookup(
-		ThreadPoolParent<DhtTask>	thread_pool,
+		final ThreadPool 			thread_pool,
 		boolean 					high_priority,
 		final byte[] 				_lookup_id,
 		final String 				description,
@@ -2601,22 +2588,14 @@ DHTControlImpl
 					{
 						//System.out.println("release-start");
 						runningState = 1;
-						
-						if ( AEThreadVirtual.areBasicVirtualThreadsAvailable()){
-							
-							AEThreadVirtual.run("DHT lookup runner", this::lookupSteps );		
-							
-						}else{
-							
-							new AEThread2("DHT lookup runner",true) {
-								@Override
-								public void run() {
-									thread_pool.registerThreadAsChild(worker);
-									lookupSteps();
-									thread_pool.deregisterThreadAsChild(worker);
-								}
-							}.start();
-						}
+						new AEThread2("DHT lookup runner",true) {
+							@Override
+							public void run() {
+								thread_pool.registerThreadAsChild(worker);
+								lookupSteps();
+								thread_pool.deregisterThreadAsChild(worker);
+							}
+						}.start();
 					}
 				}
 
@@ -3160,7 +3139,7 @@ DHTControlImpl
 				}
 			};
 
-		thread_pool.runTask( task, high_priority, true);
+		thread_pool.run( task, high_priority, true);
 
 		return( task );
 	}
@@ -5644,7 +5623,7 @@ DHTControlImpl
 
 		protected
 		DhtTask(
-			ThreadPoolParent<DhtTask>	thread_pool )
+			ThreadPool	thread_pool )
 		{
 			activity = new controlActivity( thread_pool, this );
 
@@ -5840,13 +5819,13 @@ DHTControlImpl
 	controlActivity
 		implements DHTControlActivity
 	{
-		protected final ThreadPoolParent<DhtTask>	tp;
-		protected final DhtTask						task;
-		protected final int							type;
+		protected final ThreadPool	tp;
+		protected final DhtTask		task;
+		protected final int			type;
 
 		protected
 		controlActivity(
-			ThreadPoolParent<DhtTask>	_tp,
+			ThreadPool	_tp,
 			DhtTask		_task )
 		{
 			tp		= _tp;
