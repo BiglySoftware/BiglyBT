@@ -355,21 +355,10 @@ MCGroupImpl
 							mc_channel.setOption(StandardSocketOptions.IP_MULTICAST_IF, network_interface );
 							
 							mc_channel.bind( new InetSocketAddress( group_port ));
-							
-							String	addresses_string = "";
-							
-							Enumeration<InetAddress> it = network_interface.getInetAddresses();
-	
-							while (it.hasMoreElements()){
-	
-								InetAddress addr = it.nextElement();
-	
-								addresses_string += (addresses_string.length()==0?"":",") + addr;
-							}
-	
+								
 							adapter.trace( "group = " + group_address +"/" +
 											network_interface.getName()+":"+
-											network_interface.getDisplayName() + "-" + addresses_string +": started" );
+											network_interface.getDisplayName() + "-" + ni_address.getHostAddress() +": started" );
 
 							
 							MembershipKey key = mc_channel.join( group_address.getAddress(), network_interface );
@@ -431,21 +420,10 @@ MCGroupImpl
 									adapter.log( e );
 								}
 							}
-	
-							String	addresses_string = "";
-	
-							Enumeration<InetAddress> it = network_interface.getInetAddresses();
-	
-							while (it.hasMoreElements()){
-	
-								InetAddress addr = it.nextElement();
-	
-								addresses_string += (addresses_string.length()==0?"":",") + addr;
-							}
-	
+		
 							adapter.trace( "group = " + group_address +"/" +
 											network_interface.getName()+":"+
-											network_interface.getDisplayName() + "-" + addresses_string +": started" );
+											network_interface.getDisplayName() + "-" + ni_address.getHostAddress() +": started" );
 	
 							mc_sock.joinGroup( group_address, network_interface );
 	
