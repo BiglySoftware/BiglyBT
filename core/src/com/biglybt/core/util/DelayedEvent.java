@@ -30,6 +30,15 @@ DelayedEvent
 
 	public
 	DelayedEvent(
+		String			name,
+		long			delay_millis,
+		Runnable		target )
+	{
+		this( name, delay_millis, AERunnable.create(target));
+	}
+	
+	public
+	DelayedEvent(
 		String				name,
 		long				delay_millis,
 		final AERunnable	target )

@@ -24,13 +24,6 @@ TimerVirtual
 {
 	public
 	TimerVirtual(
-		String	name )
-	{
-		super( name );
-	}
-
-	public
-	TimerVirtual(
 		String	name,
 		int		thread_pool_size )
 	{
