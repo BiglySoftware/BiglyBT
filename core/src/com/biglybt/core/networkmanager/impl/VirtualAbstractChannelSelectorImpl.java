@@ -967,15 +967,18 @@ public class VirtualAbstractChannelSelectorImpl {
 
 	        	if ( INTEREST_OP != VirtualChannelSelector.OP_ACCEPT ){
 
-	        		SocketChannel sc = (SocketChannel)data.channel;
+	        		AbstractSelectableChannel asc = (AbstractSelectableChannel)data.channel;
 
-	        		Socket socket = sc.socket();
-
-	        		InetAddress address = socket.getInetAddress();
-
-	        		if ( address != null ){
-
-	        			loopback_connection = address.isLoopbackAddress();
+	        		if ( asc instanceof SocketChannel ){
+	        			
+		        		Socket socket = ((SocketChannel)asc).socket();
+	
+		        		InetAddress address = socket.getInetAddress();
+	
+		        		if ( address != null ){
+	
+		        			loopback_connection = address.isLoopbackAddress();
+		        		}
 	        		}
 	        	}
 
@@ -1017,9 +1020,7 @@ public class VirtualAbstractChannelSelectorImpl {
 	        					"VirtualChannelSelector: No progress for op " + INTEREST_OP +
 	        					": listener = " + data.listener.getClass() +
 	        					", count = " + data.non_progress_count +
-	        					", socket: open = " + data.channel.isOpen() +
-	        					(INTEREST_OP==VirtualChannelSelector.OP_ACCEPT?"":
-	        						(", connected = " + ((SocketChannel)data.channel).isConnected())));
+	        					", socket: open = " + data.channel.isOpen());
 	        			}
 
 	        			if ( data.non_progress_count == 1000 ){
