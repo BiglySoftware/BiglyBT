@@ -37,6 +37,7 @@ import com.biglybt.core.util.AEJavaManagement;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -108,6 +109,8 @@ AEMemoryMonitor
 
 						private boolean increase_tried;
 
+						private long	last_gc_time = -1;
+						
 						@Override
 						public void
 						handleNotification(
@@ -141,79 +144,94 @@ AEMemoryMonitor
 
 								Runtime runtime = Runtime.getRuntime();
 
+									// this is getting triggered when there patently is lots
+									// of collectable memory available :(
+								
 								Debug.out( "MemMon: notify triggered: pool=" + pool.getName() +
 											", used=" + used +
 											", max=" + max +
 											": runtime free=" + runtime.freeMemory() + ", tot=" + runtime.totalMemory() + ", max=" + runtime.maxMemory());
 
-	 							Logger.logTextResource(
-	 								new LogAlert(
-	 									LogAlert.REPEATABLE,
-	 									LogAlert.AT_WARNING,
-										"memmon.low.warning"),
-										new String[] {
-	 										(mb==0?"< ":"") + DisplayFormatters.formatByteCountToKiBEtc( Math.max(1,mb)*MB, true ),
-	 										DisplayFormatters.formatByteCountToKiBEtc( max_heap_mb*MB, true )});
+								runtime.gc();
 
-	 							if ( mb == 1 && !increase_tried ){
-
-	 								increase_tried = true;
-
-	 								if ( COConfigurationManager.getBooleanParameter( "jvm.heap.auto.increase.enable", true )){
-
-		 								PlatformManager platform = PlatformManagerFactory.getPlatformManager();
-
-		 								if ( platform.hasCapability( PlatformManagerCapabilities.AccessExplicitVMOptions )){
-
-		 									try{
-		 										String[] options = platform.getExplicitVMOptions();
-
-		 										long	max_mem = AEJavaManagement.getJVMLongOption( options, "-Xmx" );
-
-		 										if ( max_mem <= 0 ){
-
-		 											max_mem = getMaxHeapMB()*MB;
-		 										}
-
-		 										final long HEAP_AUTO_INCREASE_MAX 	= (Constants.is64Bit?2048:768)*MB;
-		 										final long HEAP_AUTO_INCREASE_BY	= 64*MB;
-
-		 										if ( max_mem > 0 && max_mem < HEAP_AUTO_INCREASE_MAX ){
-
-	 												max_mem += HEAP_AUTO_INCREASE_BY;
-
-	 												if ( max_mem > HEAP_AUTO_INCREASE_MAX ){
-
-	 													max_mem = HEAP_AUTO_INCREASE_MAX;
-	 												}
-
-	 												long	last_increase = COConfigurationManager.getLongParameter( "jvm.heap.auto.increase.last", 0 );
-
-	 												if ( max_mem > last_increase ){
-
-	 													COConfigurationManager.setParameter( "jvm.heap.auto.increase.last", max_mem );
-
-		 												options = AEJavaManagement.setJVMLongOption( options, "-Xmx", max_mem );
-
-		 												platform.setExplicitVMOptions( options );
-
-		 					 							Logger.logTextResource(
-		 						 								new LogAlert(
-		 						 									LogAlert.REPEATABLE,
-		 						 									LogAlert.AT_WARNING,
-		 															"memmon.heap.auto.increase.warning"),
-		 															new String[] {
-		 					 											DisplayFormatters.formatByteCountToKiBEtc( max_mem, true )});
-	 												}
-	 											}
-
-		 									}catch( Throwable e ){
-
-		 										Debug.out( e );
-		 									}
+									// don't bother the user unless the notification recurs soon 
+									// after a GC
+								
+								long now = SystemTime.getMonotonousTime();
+								
+								if ( last_gc_time != -1 && ( now - last_gc_time < 30*1000 )){
+									
+		 							Logger.logTextResource(
+		 								new LogAlert(
+		 									LogAlert.REPEATABLE,
+		 									LogAlert.AT_WARNING,
+											"memmon.low.warning"),
+											new String[] {
+		 										(mb==0?"< ":"") + DisplayFormatters.formatByteCountToKiBEtc( Math.max(1,mb)*MB, true ),
+		 										DisplayFormatters.formatByteCountToKiBEtc( max_heap_mb*MB, true )});
+									
+		 							if ( mb == 1 && !increase_tried ){
+	
+		 								increase_tried = true;
+	
+		 								if ( COConfigurationManager.getBooleanParameter( "jvm.heap.auto.increase.enable", true )){
+	
+			 								PlatformManager platform = PlatformManagerFactory.getPlatformManager();
+	
+			 								if ( platform.hasCapability( PlatformManagerCapabilities.AccessExplicitVMOptions )){
+	
+			 									try{
+			 										String[] options = platform.getExplicitVMOptions();
+	
+			 										long	max_mem = AEJavaManagement.getJVMLongOption( options, "-Xmx" );
+	
+			 										if ( max_mem <= 0 ){
+	
+			 											max_mem = getMaxHeapMB()*MB;
+			 										}
+	
+			 										final long HEAP_AUTO_INCREASE_MAX 	= (Constants.is64Bit?2048:768)*MB;
+			 										final long HEAP_AUTO_INCREASE_BY	= 64*MB;
+	
+			 										if ( max_mem > 0 && max_mem < HEAP_AUTO_INCREASE_MAX ){
+	
+		 												max_mem += HEAP_AUTO_INCREASE_BY;
+	
+		 												if ( max_mem > HEAP_AUTO_INCREASE_MAX ){
+	
+		 													max_mem = HEAP_AUTO_INCREASE_MAX;
+		 												}
+	
+		 												long	last_increase = COConfigurationManager.getLongParameter( "jvm.heap.auto.increase.last", 0 );
+	
+		 												if ( max_mem > last_increase ){
+	
+		 													COConfigurationManager.setParameter( "jvm.heap.auto.increase.last", max_mem );
+	
+			 												options = AEJavaManagement.setJVMLongOption( options, "-Xmx", max_mem );
+	
+			 												platform.setExplicitVMOptions( options );
+	
+			 					 							Logger.logTextResource(
+			 						 								new LogAlert(
+			 						 									LogAlert.REPEATABLE,
+			 						 									LogAlert.AT_WARNING,
+			 															"memmon.heap.auto.increase.warning"),
+			 															new String[] {
+			 					 											DisplayFormatters.formatByteCountToKiBEtc( max_mem, true )});
+		 												}
+		 											}
+	
+			 									}catch( Throwable e ){
+	
+			 										Debug.out( e );
+			 									}
+			 								}
 		 								}
 	 								}
 	 							}
+								
+								last_gc_time = now;
 							}
 						}
 					},
