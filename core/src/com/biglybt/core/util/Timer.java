@@ -390,8 +390,6 @@ public class Timer
 
 				if ( event_to_run != null ){
 
-					event_to_run.setHasRun();
-
 					if ( log ){
 						
 						System.out.println( "running: " + event_to_run.getString() );
