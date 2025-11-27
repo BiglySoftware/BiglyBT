@@ -241,16 +241,20 @@ TimerEvent
 		public void
 		runSupport()
 		{
+			long run_start = SystemTime.getMonotonousTime();
+			
 			try{
 				super.runSupport();
 			
 			}finally{
 				
-				long elapsed = SystemTime.getMonotonousTime() - getExecutionStartMonoTime();
+				long exec_start = getExecutionStartMonoTime();
+				
+				long elapsed = SystemTime.getMonotonousTime() - exec_start;
 				
 				if ( elapsed > getSlowEventLimit()){
 				
-					System.out.println( "Timer event '" + getName() + "' took " + elapsed );
+					System.out.println( "Timer event '" + getName() + "' took " + elapsed + " (queue=" + (run_start - exec_start ) + ")" );
 				}
 			}
 		}
