@@ -55,7 +55,8 @@ public class Timer
 
 	private int			slow_event_limit;
 	
-	private AEThread2	current_thread;
+	private AEThread2		current_thread;
+	private DelayedEvent	current_wakeup;
 	
 	public
 	Timer(
@@ -331,10 +332,22 @@ public class Timer
 									
 									current_thread = null;
 									
-									new DelayedEvent( 
-										"Timer:wakeup",
+									String ev_name = "Timer:wakeup (" + getName() + "/" + delay + ")";
+													
+									if ( current_wakeup != null ){
+										
+										current_wakeup.cancel();
+									}
+									
+									current_wakeup = new DelayedEvent( 
+										ev_name,
 										delay,
 										()->{
+											synchronized( Timer.this ){
+												
+												current_wakeup = null;
+											}
+											
 											wakeup();
 										});
 									
