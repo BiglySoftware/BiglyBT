@@ -327,8 +327,11 @@ public class IpFilterAutoLoaderImpl
 
 		try{
 			//open the file
-			String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_AUTOLOAD_FILE);
+			String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_AUTOLOAD_FILE).trim();
 			Logger.log(new LogEvent(LOGID, "IP Filter file: " + file));
+			if ( file.isEmpty()){
+				return( isURL );
+			}
 			File filtersFile = FileUtil.newFile(file);
 			if (filtersFile.exists()) {
 				isURL = false;
@@ -534,8 +537,11 @@ public class IpFilterAutoLoaderImpl
 
 		try{
 			//open the file
-			String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_V6_AUTOLOAD_FILE);
+			String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_V6_AUTOLOAD_FILE).trim();
 			Logger.log(new LogEvent(LOGID, "IPv6 Filter file: " + file));
+			if ( file.isEmpty()){
+				return( isURL );
+			}
 			File filtersFile = FileUtil.newFile(file);
 			if (filtersFile.exists()) {
 				isURL = false;
