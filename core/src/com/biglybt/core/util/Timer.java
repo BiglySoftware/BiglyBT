@@ -346,9 +346,9 @@ public class Timer
 											synchronized( Timer.this ){
 												
 												current_wakeup = null;
-											}
 											
-											wakeup();
+												wakeup();
+											}
 										});
 									
 									return;
