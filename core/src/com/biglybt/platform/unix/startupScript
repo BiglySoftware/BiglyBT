@@ -171,10 +171,8 @@ moveInSWT()
 echo "$MSG_STARTING"
 
 # locate and test the java executable
-if [ "$JAVA_PROGRAM_DIR" == "" ]; then
-	if ! look_for_java ; then
-		exit 1
-	fi
+if ! look_for_java ; then
+    exit 1
 fi
 
 # Java 11+ needs --add-opens, which borks some older java versions
