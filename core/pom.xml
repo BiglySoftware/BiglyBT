@@ -41,17 +41,6 @@
 				</excludes>
 			</resource>
 		</resources>
-		<plugins>
-			<plugin>
-				<groupId>io.takari.maven.plugins</groupId>
-				<artifactId>takari-lifecycle-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-				</configuration>
-			</plugin>
-		</plugins>
 	</build>
 
 	<profiles>
@@ -89,20 +78,10 @@
 						<directory>src/META-INF/services</directory>
 						<excludes>
 							<exclude>*.NameServiceDescriptor</exclude>
+							<exclude>**/core/util/spi/*</exclude>
 						</excludes>
 					</resource>
 				</resources>
-				<plugins>
-					<plugin>
-						<groupId>io.takari.maven.plugins</groupId>
-						<artifactId>takari-lifecycle-plugin</artifactId>
-						<configuration>
-							<excludes>
-								<exclude>**/core/util/spi/*</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-				</plugins>
 			</build>
 		</profile>
 		<profile>
@@ -112,54 +91,26 @@
 				<jdk>[17,)</jdk>
 			</activation>
 			<build>
-				<resources>
-					<resource>
-						<targetPath>META-INF/services</targetPath>
-						<filtering>false</filtering>
-						<directory>src/META-INF/services</directory>
-						<excludes>
-							<exclude>*.NameServiceDescriptor</exclude>
-						</excludes>
-					</resource>
-				</resources>
 				<plugins>
 					<plugin>
-						<groupId>io.takari.maven.plugins</groupId>
-						<artifactId>takari-lifecycle-plugin</artifactId>
-						<configuration>
-							<excludes>
-								<exclude>**/core/util/spi/AENameServiceDescriptor.java</exclude>
-							</excludes>
-						</configuration>
-					</plugin>
-					<plugin>
-					 <groupId>com.coderplus.maven.plugins</groupId>
-				   <artifactId>copy-rename-maven-plugin</artifactId>
+						<artifactId>maven-antrun-plugin</artifactId>
 						<executions>
-						  <execution>
-							 <id>rename-file</id>
-						   <phase>generate-sources</phase>
-						   <goals>
-							  <goal>copy</goal>
-							 </goals>
-							 <configuration>
-								 <fileSets>
-									 <fileSet>
-										 <sourceFile>src/com/biglybt/internat/MessagesBundle_iw_IL.properties</sourceFile>
-										 <destinationFile>${project.build.directory}/classes/com/biglybt/internat/MessagesBundle_he_IL.properties</destinationFile>
-									 </fileSet>
-									 <fileSet>
-										 <sourceFile>src/com/biglybt/internat/MessagesBundle_in_ID.properties</sourceFile>
-										 <destinationFile>${project.build.directory}/classes/com/biglybt/internat/MessagesBundle_id_ID.properties</destinationFile>
-									 </fileSet>
-									 <!-- No current translations exist for this code
-									 <fileSet>
-										 <sourceFile>src/com/biglybt/internat/MessagesBundle_ji_??.properties</sourceFile>
-										 <destinationFile>${project.build.directory}/classes/com/biglybt/internat/MessagesBundle_yi_??.properties</destinationFile>
-										 </fileSet>
-									 -->
-								 </fileSets>
-							 </configuration>
+							<execution>
+								<id>clean-and-rename-resources</id>
+								<phase>process-resources</phase>
+								<configuration>
+									<target>
+										<delete file="src/META-INF/services/sun.net.spi.nameservice.NameServiceDescriptor"/>
+										<delete file="src/com/biglybt/core/util/spi/AENameServiceDescriptor.java"/>
+										<copy file="src/com/biglybt/internat/MessagesBundle_iw_IL.properties"
+													tofile="${project.build.outputDirectory}/com/biglybt/internat/MessagesBundle_he_IL.properties"/>
+										<copy file="src/com/biglybt/internat/MessagesBundle_in_ID.properties"
+													tofile="${project.build.outputDirectory}/com/biglybt/internat/MessagesBundle_id_ID.properties"/>
+										</target>
+								</configuration>
+								<goals>
+										<goal>run</goal>
+								</goals>
 							</execution>
 						</executions>
 					</plugin>
