@@ -546,11 +546,13 @@ implements PEPeerTransport
 					exceptionThrown(
 							Throwable error )
 					{
-						if( error.getMessage() == null ) {
-							Debug.out( error );
+						String msg = error.getMessage();
+						
+						if ( msg == null ){
+							msg = Debug.getNestedExceptionMessageAndStack(error);
 						}
 
-						closeConnectionInternally( "connection exception: " + error.getMessage(), Transport.CR_NONE, false, true );
+						closeConnectionInternally( "connection exception: " + msg, Transport.CR_NONE, false, true );
 					}
 
 					@Override

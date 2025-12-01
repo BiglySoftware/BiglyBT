@@ -119,8 +119,16 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
 
     }catch( RuntimeException e ){
 
-    	Debug.out( "Stream decode for " + connection.getString() + " failed: " + Debug.getNestedExceptionMessageAndStack(e));
-
+    		// due to the lack of synchronization around the connection close/read/write operations we
+    		// often get decode errors here due to the connection being closed
+    		// obviously the correct solution is to fix the underlying cause but that is a little complicated
+    		// so for the moment we just don't spew errors if the connection is already closed
+    	
+    	if ( !connection.isClosed()){
+    	
+    		Debug.out( "Stream decode for " + connection.getString() + " failed: " + Debug.getNestedExceptionMessageAndStack(e));
+    	}
+    	
     	throw( e );
     }
 
