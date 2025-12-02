@@ -175,6 +175,8 @@ if [ "$JAVA_PROGRAM_DIR" == "" ]; then
 	if ! look_for_java ; then
 		exit 1
 	fi
+else
+	check_version
 fi
 
 # Java 11+ needs --add-opens, which borks some older java versions
