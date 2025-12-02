@@ -24,8 +24,7 @@ import java.util.*;
 
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.*;
-
-import java.security.*;
+import java.security.MessageDigest;
 
 
 public class 
