@@ -142,16 +142,6 @@
 					</executions>
 				</plugin>
 				<plugin>
-					<groupId>io.takari.maven.plugins</groupId>
-					<artifactId>takari-lifecycle-plugin</artifactId>
-					<version>2.0.0</version> <!-- 1.13.10	or 2.0.0 -->
-					<extensions>true</extensions>
-					<configuration>
-						<source>${java.version}</source>
-						<target>${java.version}</target>
-					</configuration>
-				</plugin>
-				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.6.2</version>
@@ -183,9 +173,9 @@
 					</configuration>
 				</plugin>
 				<plugin>
-					<groupId>com.coderplus.maven.plugins</groupId>
-					<artifactId>copy-rename-maven-plugin</artifactId>
-					<version>1.0.1</version>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>3.0.0</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -193,10 +183,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>io.takari.maven.plugins</groupId>
-				<artifactId>takari-lifecycle-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>

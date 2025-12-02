@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>biglybt-ui</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
     <name>BiglyBT - UI</name>
 
     <parent>
@@ -111,18 +111,26 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>io.takari.maven.plugins</groupId>
-                        <artifactId>takari-lifecycle-plugin</artifactId>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/biglybt/ui/swt/**</exclude>
-                                <exclude>**/biglybt/ui/swing/**</exclude>
-                                <exclude>**/biglybt/ui/images/**</exclude>
-                                <exclude>**/biglybt/ui/icons/**</exclude>
-                                <exclude>**/biglybt/ui/skin/**</exclude>
-                                <exclude>**/eclipse/swt/**</exclude>
-                            </excludes>
-                        </configuration>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>remove-swt-ui-resources</id>
+                                <phase>process-resources</phase>
+                                <configuration>
+                                    <target>
+                                        <delete dir="src/com/biglybt/ui/swt"/>
+                                        <delete dir="src/com/biglybt/ui/swing"/>
+                                        <delete dir="src/com/biglybt/ui/images"/>
+                                        <delete dir="src/com/biglybt/ui/icons"/>
+                                        <delete dir="src/com/biglybt/ui/skin"/>
+                                        <delete dir="src/eclipse/swt"/>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
@@ -133,7 +141,6 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-antrun-plugin</artifactId>
-                        <version>1.8</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
