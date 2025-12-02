@@ -65,30 +65,10 @@
 		</profile>
 
 		<profile>
-			<id>java-9</id>
+			<id>java-9-plus</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
 				<jdk>[9,)</jdk>
-			</activation>
-			<build>
-				<resources>
-					<resource>
-						<targetPath>META-INF/services</targetPath>
-						<filtering>false</filtering>
-						<directory>src/META-INF/services</directory>
-						<excludes>
-							<exclude>*.NameServiceDescriptor</exclude>
-							<exclude>**/core/util/spi/*</exclude>
-						</excludes>
-					</resource>
-				</resources>
-			</build>
-		</profile>
-		<profile>
-			<id>java-17</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-				<jdk>[17,)</jdk>
 			</activation>
 			<build>
 				<plugins>
