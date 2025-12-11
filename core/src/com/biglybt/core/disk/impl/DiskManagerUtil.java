@@ -1488,6 +1488,7 @@ DiskManagerUtil
 		// <= -2  : negative priority , so -2 -> priority -1, -3 -> priority -2 etc
 
 		List file_priorities = new ArrayList(files.length);
+		boolean all_normal = true;
 		for (int i=0; i < files.length; i++) {
 			DiskManagerFileInfo file = files[i];
 			if (file == null) return;
@@ -1504,10 +1505,13 @@ DiskManagerUtil
 					value = Integer.MIN_VALUE;
 				}
 			}
+			if ( all_normal && value != -1 ){
+				all_normal = false;
+			}
 			file_priorities.add( i, Long.valueOf(value));
 		}
 
-	   download_manager.setUserData( "file_priorities", file_priorities );
+	   download_manager.setUserData( "file_priorities", all_normal?null:file_priorities );
 
 	   		// for whatever reason we don't set the skipped file stats here if we have a REAL set of
 	   		// file info (maybe because the code tries to maintain its own active version of these values)
@@ -1551,11 +1555,15 @@ DiskManagerUtil
 			boolean[] toSkip = new boolean[files.length];
 			int[] prio = new int[files.length];
 
+			boolean all_normal = true;
 			for (int i=0; i < files.length; i++) {
 				DiskManagerFileInfo file = files[i];
 				if (file == null) return;
 				try {
   				int priority = ((Long)file_priorities.get( i )).intValue();
+  				if ( all_normal && priority != -1 ){
+  					all_normal = false;
+  				}
   				if ( priority == 0 ){
   					toSkip[i] = true;
   				}else{
@@ -1569,7 +1577,14 @@ DiskManagerUtil
 				}
 			}
 
-			fileSet.load( prio, toSkip );
+			if ( all_normal ){
+					// TODO: remove this logic sometime after 4.0 as only for migration
+				download_manager.setUserData( "file_priorities", null );
+				
+			}else{
+				
+				fileSet.load( prio, toSkip );
+			}
 		}
 		
 		catch (Throwable t) {Debug.printStackTrace( t );}
