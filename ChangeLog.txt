@@ -1,7 +1,9 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2025.12.yy | BiglyBT 4.0.0.0
+2026.xx.yy | BiglyBT 4.0.0.1
+
+2025.12.19 | BiglyBT 4.0.0.0
 
 FEATURE: Plug  | Added restart, shutdown and update methods to simple-api plugin [Parg]
 FEATURE: Core  | Added minimum seeding time when actively uploading [Parg]
