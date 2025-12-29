@@ -1801,318 +1801,354 @@ TRTrackerBTAnnouncerImpl
 
  		throws IOException
  	{
- 		TRTrackerUtils.checkForBlacklistedURLs( original_reqUrl );
-
- 		URL reqUrl = TRTrackerUtils.adjustURLForHosting( original_reqUrl );
-
- 		reqUrl = AddressUtils.adjustURL( reqUrl );
-
- 		if ( reqUrl != original_reqUrl ){
-			if (Logger.isEnabled()){
-				Logger.log(new LogEvent(torrent, LOGID,
-						"    HTTP: url adjusted to " + reqUrl ));
-			}
- 		}
-
- 		String	failure_reason = null;
-
- 		HttpURLConnection con;
-
- 		Properties	http_properties = new Properties();
-
- 		http_properties.put( ClientIDGenerator.PR_URL, reqUrl );
-
- 		if ( proxy != null ){
-
- 			http_properties.put( ClientIDGenerator.PR_PROXY, proxy );
- 		}
-
- 		if ( enable_sni_hack ){
-
- 			http_properties.put( ClientIDGenerator.PR_SNI_HACK, true );
- 		}
-
  		try{
- 			ClientIDManagerImpl.getSingleton().generateHTTPProperties( torrent_hash_target.getBytes(), http_properties );
-
- 		}catch( ClientIDException e ){
-
- 			throw( new IOException( e.getMessage()));
- 		}
-
- 		reqUrl = (URL)http_properties.get( ClientIDGenerator.PR_URL );
-
- 		boolean	is_https = reqUrl.getProtocol().equalsIgnoreCase("https");
-
- 		if ( is_https ){
-
- 			// see ConfigurationChecker for SSL client defaults
-
- 			HttpsURLConnection ssl_con;
-
- 			if ( proxy == null ){
-
- 				ssl_con = (HttpsURLConnection)reqUrl.openConnection();
-
- 			}else{
-
- 				ssl_con = (HttpsURLConnection)reqUrl.openConnection( proxy );
-
- 			}
-
- 				// allow for certs that contain IP addresses rather than dns names
-
- 			if ( !internal_error_hack ){
-
-	 			ssl_con.setHostnameVerifier(
-	 					new HostnameVerifier()
-	 					{
-	 						@Override
-						  public boolean
-	 						verify(
-	 								String		host,
-									SSLSession	session )
-	 						{
-	 							return( true );
-	 						}
-	 					});
- 			}
-
-			if ( dh_hack ){
-
-				UrlUtils.DHHackIt( ssl_con );
-			}
-
- 			if ( !first_effort ){
-
- 					// meh, some https trackers are just screwed
-
-				TrustManager[] trustAllCerts = SESecurityManager.getAllTrustingTrustManager();
-
-				try{
-					SSLContext sc = SSLContext.getInstance("SSL");
-
-					sc.init(null, trustAllCerts, RandomUtils.SECURE_RANDOM);
-
-					SSLSocketFactory factory = sc.getSocketFactory();
-
-					ssl_con.setSSLSocketFactory( factory );
-
-				}catch( Throwable e ){
+	 		TRTrackerUtils.checkForBlacklistedURLs( original_reqUrl );
+	
+	 		URL reqUrl = TRTrackerUtils.adjustURLForHosting( original_reqUrl );
+	
+	 		reqUrl = AddressUtils.adjustURL( reqUrl );
+	
+	 		if ( reqUrl != original_reqUrl ){
+				if (Logger.isEnabled()){
+					Logger.log(new LogEvent(torrent, LOGID,
+							"    HTTP: url adjusted to " + reqUrl ));
 				}
- 			}
-
- 			con = ssl_con;
-
- 		}else{
-
- 			if ( proxy == null ){
-
- 				con = (HttpURLConnection) reqUrl.openConnection();
-
- 			}else{
-
-				con = (HttpURLConnection) reqUrl.openConnection( proxy );
- 			}
- 		}
-
-			// we want this true but some plugins (grrr) set the global default not to follow
-			// redirects
-
-		con.setInstanceFollowRedirects( true );
-
- 		String	user_agent = (String)http_properties.get( ClientIDGenerator.PR_USER_AGENT );
-
- 		if ( user_agent != null ){
-
- 			con.setRequestProperty("User-Agent", user_agent );
- 		}
-
- 		con.setRequestProperty("Connection", "close" );
-
- 		// some trackers support gzip encoding of replies
-
- 		con.addRequestProperty("Accept-Encoding","gzip");
-
- 		try{
-
- 			try{
- 				con.connect();
-
-			}catch( AEProxyFactory.UnknownHostException e ){
-
-				throw( new UnknownHostException( e.getMessage()));
-
-			}catch( IOException e ){
-
-				if ( is_https ){
-
-					String msg = Debug.getNestedExceptionMessage( e );
-
-					if ( msg.contains( "unrecognized_name" )){
-
-						// SNI borkage - used to fix by globally disabling SNI but this screws too many other things
-
-						enable_sni_hack = true;
-
-					}else if ( msg.contains( "internal_error" ) || msg.contains( "handshake_failure" )){
-
-						internal_error_hack = true;
-
-					}else if ( msg.contains( "DH keypair" )){
-
-						dh_hack = true;
+	 		}
+	
+	 		String	failure_reason = null;
+	
+	 		HttpURLConnection con;
+	
+	 		Properties	http_properties = new Properties();
+	
+	 		http_properties.put( ClientIDGenerator.PR_URL, reqUrl );
+	
+	 		if ( proxy != null ){
+	
+	 			http_properties.put( ClientIDGenerator.PR_PROXY, proxy );
+	 		}
+	
+	 		if ( enable_sni_hack ){
+	
+	 			http_properties.put( ClientIDGenerator.PR_SNI_HACK, true );
+	 		}
+	
+	 		try{
+	 			ClientIDManagerImpl.getSingleton().generateHTTPProperties( torrent_hash_target.getBytes(), http_properties );
+	
+	 		}catch( ClientIDException e ){
+	
+	 			throw( new IOException( e.getMessage()));
+	 		}
+	
+	 		reqUrl = (URL)http_properties.get( ClientIDGenerator.PR_URL );
+	
+	 		boolean	is_https = reqUrl.getProtocol().equalsIgnoreCase("https");
+	
+	 		if ( is_https ){
+	
+	 			// see ConfigurationChecker for SSL client defaults
+	
+	 			HttpsURLConnection ssl_con;
+	
+	 			if ( proxy == null ){
+	
+	 				ssl_con = (HttpsURLConnection)reqUrl.openConnection();
+	
+	 			}else{
+	
+	 				ssl_con = (HttpsURLConnection)reqUrl.openConnection( proxy );
+	
+	 			}
+	
+	 				// allow for certs that contain IP addresses rather than dns names
+	
+	 			if ( !internal_error_hack ){
+	
+		 			ssl_con.setHostnameVerifier(
+		 					new HostnameVerifier()
+		 					{
+		 						@Override
+							  public boolean
+		 						verify(
+		 								String		host,
+										SSLSession	session )
+		 						{
+		 							return( true );
+		 						}
+		 					});
+	 			}
+	
+				if ( dh_hack ){
+	
+					UrlUtils.DHHackIt( ssl_con );
+				}
+	
+	 			if ( !first_effort ){
+	
+	 					// meh, some https trackers are just screwed
+	
+					TrustManager[] trustAllCerts = SESecurityManager.getAllTrustingTrustManager();
+	
+					try{
+						SSLContext sc = SSLContext.getInstance("SSL");
+	
+						sc.init(null, trustAllCerts, RandomUtils.SECURE_RANDOM);
+	
+						SSLSocketFactory factory = sc.getSocketFactory();
+	
+						ssl_con.setSSLSocketFactory( factory );
+	
+					}catch( Throwable e ){
 					}
+	 			}
+	
+	 			con = ssl_con;
+	
+	 		}else{
+	
+	 			if ( proxy == null ){
+	
+	 				con = (HttpURLConnection) reqUrl.openConnection();
+	
+	 			}else{
+	
+					con = (HttpURLConnection) reqUrl.openConnection( proxy );
+	 			}
+	 		}
+	
+				// we want this true but some plugins (grrr) set the global default not to follow
+				// redirects
+	
+			con.setInstanceFollowRedirects( true );
+	
+	 		String	user_agent = (String)http_properties.get( ClientIDGenerator.PR_USER_AGENT );
+	
+	 		if ( user_agent != null ){
+	
+	 			con.setRequestProperty("User-Agent", user_agent );
+	 		}
+	
+	 		con.setRequestProperty("Connection", "close" );
+	
+	 		// some trackers support gzip encoding of replies
+	
+	 		con.addRequestProperty("Accept-Encoding","gzip");
+	
+	 		try{
+	
+	 			try{
+	 				con.connect();
+	
+				}catch( AEProxyFactory.UnknownHostException e ){
+	
+					throw( new UnknownHostException( e.getMessage()));
+	
+				}catch( IOException e ){
+	
+					if ( is_https ){
+	
+						String msg = Debug.getNestedExceptionMessage( e );
+	
+						if ( msg.contains( "unrecognized_name" )){
+	
+							// SNI borkage - used to fix by globally disabling SNI but this screws too many other things
+	
+							enable_sni_hack = true;
+	
+						}else if ( msg.contains( "internal_error" ) || msg.contains( "handshake_failure" )){
+	
+							internal_error_hack = true;
+	
+						}else if ( msg.contains( "DH keypair" )){
+	
+							dh_hack = true;
+						}
+					}
+	
+					throw( e );
 				}
-
-				throw( e );
-			}
-
- 			InputStream is = null;
-
- 			try{
-
- 				is = con.getInputStream();
-
- 				String	resulting_url_str = con.getURL().toString();
-
- 				if ( !reqUrl.toString().equals( resulting_url_str )){
-
- 						// some kind of redirect has occurred. Unfortunately we can't get at the underlying
- 						// redirection reason (temp, perm etc) so we support the use of an explicit indicator
- 						// in the resulting url
-
- 					String	marker = "permredirect=1";
-
- 					int	pos = resulting_url_str.indexOf( marker );
-
- 					if ( pos != -1 ){
-
- 						pos = pos-1;	// include the '&' or '?'
-
- 						try{
- 							URL	redirect_url =
- 								new URL( resulting_url_str.substring(0,pos));
-
-  							tracker_url[0]	= redirect_url;
-
- 						}catch( Throwable e ){
- 							Debug.printStackTrace(e);
- 						}
- 					}
- 				}
-
- 				String encoding = con.getHeaderField( "content-encoding");
-
- 				boolean	gzip = encoding != null && encoding.equalsIgnoreCase("gzip");
-
- 				// System.out.println( "encoding = " + encoding );
-
- 				if ( gzip ){
-
- 					is = new GZIPInputStream( is );
- 				}
-
- 					// there are some trackers out there that don't set content length correctly
- 					// so we can't reliably use it :(
-
- 				int content_length = -1; //con.getContentLength();
-
- 				//      System.out.println(length);
-
- 				byte[] data = new byte[1024];
-
- 				int	num_read = 0;
-
- 				// some trackers don't return content-length
-
- 				while ( content_length <= 0 || num_read < content_length ){
-
- 					try{
- 						int	len = is.read(data);
-
- 						if ( len > 0 ){
-
- 							message.write(data, 0, len);
-
- 							num_read += len;
-
- 							if ( num_read > 128*1024 ){
-
- 									// someone's sending us junk, bail out
-
- 								message.reset();
-
- 								throw( new Exception( "Tracker response invalid (too large)" ));
-
- 							}
- 						}else if ( len == 0 ){
-
- 							Thread.sleep(20);
-
- 						}else{
-
+	
+	 			InputStream is = null;
+	
+	 			try{
+	
+	 				is = con.getInputStream();
+	
+	 				String	resulting_url_str = con.getURL().toString();
+	
+	 				if ( !reqUrl.toString().equals( resulting_url_str )){
+	
+	 						// some kind of redirect has occurred. Unfortunately we can't get at the underlying
+	 						// redirection reason (temp, perm etc) so we support the use of an explicit indicator
+	 						// in the resulting url
+	
+	 					String	marker = "permredirect=1";
+	
+	 					int	pos = resulting_url_str.indexOf( marker );
+	
+	 					if ( pos != -1 ){
+	
+	 						pos = pos-1;	// include the '&' or '?'
+	
+	 						try{
+	 							URL	redirect_url =
+	 								new URL( resulting_url_str.substring(0,pos));
+	
+	  							tracker_url[0]	= redirect_url;
+	
+	 						}catch( Throwable e ){
+	 							Debug.printStackTrace(e);
+	 						}
+	 					}
+	 				}
+	
+	 				String encoding = con.getHeaderField( "content-encoding");
+	
+	 				boolean	gzip = encoding != null && encoding.equalsIgnoreCase("gzip");
+	
+	 				// System.out.println( "encoding = " + encoding );
+	
+	 				if ( gzip ){
+	
+	 					is = new GZIPInputStream( is );
+	 				}
+	
+	 					// there are some trackers out there that don't set content length correctly
+	 					// so we can't reliably use it :(
+	
+	 				int content_length = -1; //con.getContentLength();
+	
+	 				//      System.out.println(length);
+	
+	 				byte[] data = new byte[1024];
+	
+	 				int	num_read = 0;
+	
+	 				// some trackers don't return content-length
+	
+	 				while ( content_length <= 0 || num_read < content_length ){
+	
+	 					try{
+	 						int	len = is.read(data);
+	
+	 						if ( len > 0 ){
+	
+	 							message.write(data, 0, len);
+	
+	 							num_read += len;
+	
+	 							if ( num_read > 128*1024 ){
+	
+	 									// someone's sending us junk, bail out
+	
+	 								message.reset();
+	
+	 								throw( new Exception( "Tracker response invalid (too large)" ));
+	
+	 							}
+	 						}else if ( len == 0 ){
+	
+	 							Thread.sleep(20);
+	
+	 						}else{
+	
+	 							break;
+	 						}
+	
+	 					}catch (Exception e){
+	
+	 						if (Logger.isEnabled()) {
+								Logger.log(new LogEvent(torrent, LOGID,
+										"Exception while Requesting Tracker", e));
+								
+								String str = message.toString();
+								
+								if ( str.length() > 128 ){
+									
+									str = str.substring( 0, 128 ) + "...";
+								}
+								
+								Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR,
+										"Message received was : " + str));
+							}
+	
+	 						failure_reason = exceptionToString( con, e );
+	
+	 						break;
+	 					}
+	 				}
+	
+	 			}catch( SSLException e ){
+	
+	 					// gotta let this through as an exception as it drives the auto-cert install process
+	
+	 				throw( e );
+	
+	 			}catch (Exception e){
+	
+	 				//e.printStackTrace();
+	 				
+	 				if ( e instanceof FileNotFoundException ){
+	 					
+	 					e = new FileNotFoundException( original_reqUrl.toExternalForm());
+	 				}
+	 				
+	 				failure_reason = exceptionToString( con, e );
+	
+	 			}finally{
+	
+	 				if (is != null) {
+	
+	 					try {
+	 						is.close();
+	
+	 					}catch (Exception e) {
+	 					}
+	
+	 					is = null;
+	 				}
+	 			}
+	 		}finally{
+	 			con.disconnect();
+	 		}
+	
+	 		return( failure_reason );
+	 		
+ 		}catch( IOException e ){
+ 			
+ 			String msg = e.getMessage();
+ 			
+ 			if ( msg != null ){
+ 				
+ 					// use the original tracker URL in the exception message
+ 				
+ 				int start = msg.toLowerCase().indexOf( "http" );
+ 				
+ 				if ( start != -1 ){
+ 					
+ 					int end = -1;
+ 					
+ 					for ( int i=start+1;i<msg.length();i++){
+ 						
+ 						char c = msg.charAt(i);
+ 						
+ 						if ( Character.isWhitespace(c) || c == ')' ){
+ 							
+ 							end = i;
+ 							
  							break;
  						}
-
- 					}catch (Exception e){
-
- 						if (Logger.isEnabled()) {
-							Logger.log(new LogEvent(torrent, LOGID,
-									"Exception while Requesting Tracker", e));
-							
-							String str = message.toString();
-							
-							if ( str.length() > 128 ){
-								
-								str = str.substring( 0, 128 ) + "...";
-							}
-							
-							Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR,
-									"Message received was : " + str));
-						}
-
- 						failure_reason = exceptionToString( con, e );
-
- 						break;
  					}
- 				}
-
- 			}catch( SSLException e ){
-
- 					// gotta let this through as an exception as it drives the auto-cert install process
-
- 				throw( e );
-
- 			}catch (Exception e){
-
- 				//e.printStackTrace();
- 				
- 				if ( e instanceof FileNotFoundException ){
  					
- 					e = new FileNotFoundException( original_reqUrl.toExternalForm());
+ 					msg = msg.substring(0,start) + tracker_url[0] + (end==-1?"":msg.substring(end));
  				}
- 				
- 				failure_reason = exceptionToString( con, e );
-
- 			}finally{
-
- 				if (is != null) {
-
- 					try {
- 						is.close();
-
- 					}catch (Exception e) {
- 					}
-
- 					is = null;
- 				}
+ 						
+ 				e = new IOException( msg );
  			}
- 		}finally{
- 			con.disconnect();
+ 			
+ 			throw( e );
  		}
-
- 		return( failure_reason );
  	}
 
  	protected String
