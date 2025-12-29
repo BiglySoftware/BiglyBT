@@ -2142,9 +2142,9 @@ TRTrackerBTAnnouncerImpl
  					}
  					
  					msg = msg.substring(0,start) + tracker_url[0] + (end==-1?"":msg.substring(end));
- 				}
- 						
- 				e = new IOException( msg );
+ 					
+ 	 				e = new IOException( msg );
+ 				} 						
  			}
  			
  			throw( e );
