@@ -5314,18 +5314,31 @@ TorrentUtils
 
 					int target_port = first_port.getPort();
 					
-					if ( url_port != target_port ){
-
-						url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
-					}
-
-					if ( url_is_tcp == first_port.isTCP()){
-
+					if ( first_port.isTCP() && target_port == 443 ){
+						
+							// if the port is 443 assume it is https
+						
+						url = UrlUtils.setProtocol( url, "https" );
+						
+						url = UrlUtils.setPort( url, 0 );
+						
 						return( url );
-
+						
 					}else{
-
-						return( UrlUtils.setProtocol( url, first_port.isTCP()?"http":"udp" ));
+						
+						if ( url_port != target_port ){
+	
+							url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
+						}
+	
+						if ( url_is_tcp == first_port.isTCP()){
+	
+							return( url );
+	
+						}else{
+	
+							return( UrlUtils.setProtocol( url, first_port.isTCP()?"http":"udp" ));
+						}
 					}
 				}
 			}else{
@@ -5376,16 +5389,27 @@ TorrentUtils
 
 						int target_port = port.getPort();
 						
-						if ( url_port != target_port ){
-
-							mod_url = UrlUtils.setPort( mod_url, target_port==mod_url.getDefaultPort()?0:target_port );
+						if ( port.isTCP() && target_port == 443 ){
+							
+								// if the port is 443 assume it is https
+															
+							mod_url = UrlUtils.setProtocol( url, "https" );
+							
+							mod_url = UrlUtils.setPort( url, 0 );
+							
+						}else{
+							
+							if ( url_port != target_port ){
+	
+								mod_url = UrlUtils.setPort( mod_url, target_port==mod_url.getDefaultPort()?0:target_port );
+							}
+	
+							if ( url_is_tcp != port.isTCP()){
+	
+								mod_url = UrlUtils.setProtocol( mod_url, port.isTCP()?"http":"udp" );
+							}
 						}
-
-						if ( url_is_tcp != port.isTCP()){
-
-							mod_url = UrlUtils.setProtocol( mod_url, port.isTCP()?"http":"udp" );
-						}
-
+						
 						result.add( mod_url );
 					}
 
@@ -5483,14 +5507,25 @@ TorrentUtils
 
 							int target_port = port.getPort();
 							
-							if ( url_port != target_port ){
+							if ( port.isTCP() && target_port == 443 ){
+								
+									// if the port is 443 assume it is https
+																
+								url = UrlUtils.setProtocol( url, "https" );
+								
+								url = UrlUtils.setPort( url, 0 );
 
-								url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
-							}
-
-							if ( url_is_tcp != port.isTCP()){
-
-								url = UrlUtils.setProtocol( url, port.isTCP()?"http":"udp" );
+							}else{
+								
+								if ( url_port != target_port ){
+	
+									url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
+								}
+	
+								if ( url_is_tcp != port.isTCP()){
+	
+									url = UrlUtils.setProtocol( url, port.isTCP()?"http":"udp" );
+								}
 							}
 
 							urls.add( url );
