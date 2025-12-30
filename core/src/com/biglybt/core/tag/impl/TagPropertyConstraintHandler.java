@@ -3462,7 +3462,7 @@ TagPropertyConstraintHandler
 					case FT_WEEKS_TO_SECS:{
 				
 
-						params_ok = num_params == 1 && getNumericLiteral( params, 0 );
+						params_ok = num_params == 1;
 						
 						break;
 					}
