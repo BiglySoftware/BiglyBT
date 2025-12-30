@@ -1,11 +1,11 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=BiglyBT
 GenericName=BitTorrent Client
-Exec=${installer:dir.main}/biglybt %U
-Icon=${installer:dir.main}/biglybt
+Exec=biglybt %U
+Icon=biglybt
 Terminal=false
 Type=Application
 MimeType=x-scheme-handler/magnet;application/x-bittorrent;application/x-biglybt;x-scheme-handler/biglybt;
 Categories=Network;FileTransfer;P2P;GTK;Java;
+Keywords=file transfer;P2P
 StartupWMClass=BiglyBT
