@@ -372,11 +372,11 @@ DiskManagerRecheckScheduler
 				
 			}else{
 				
-					// limit to 32MB
+					// limit to 64MB or one if larger
 				
-				int num = 32*1024*1024/piece_length;
+				int num = 64*1024*1024/piece_length;
 				
-				return( Math.min( 8, num ));
+				return( Math.max( Math.min( 8, num ), 1 ));
 			}
 		}
 
