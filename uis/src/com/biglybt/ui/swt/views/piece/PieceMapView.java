@@ -204,9 +204,12 @@ public class PieceMapView
 				img.dispose();
 				img = null;
 			}
-			if (pieceInfoCanvas != null && !pieceInfoCanvas.isDisposed()) {
-				pieceInfoCanvas.redraw();
-			}
+			Utils.execSWTThread(()->
+				{
+					if (pieceInfoCanvas != null && !pieceInfoCanvas.isDisposed()) {
+						pieceInfoCanvas.redraw();
+					}
+				});
 		}
 
 		topLabelRHS = "";
