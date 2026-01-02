@@ -162,7 +162,7 @@ DHTUDPPacketHandler
 				}else{
 
 					updateBloom( destination_address );
-
+					
 					packet_handler.sendAndReceive(
 						request,
 						destination_address,
@@ -175,19 +175,26 @@ DHTUDPPacketHandler
 								PRUDPPacket					packet,
 								InetSocketAddress			from_address )
 							{
-								DHTUDPPacketReply	reply = (DHTUDPPacketReply)packet;
-
-								stats.packetReceived( reply.getSerialisedSize() );
-
-								if ( reply.getNetwork() == network ){
-
-									receiver.packetReceived(reply, from_address, request.getElapsedTime());
-
+								if ( !(packet instanceof DHTUDPPacketReply )){
+									
+									receiver.error( new DHTUDPPacketHandlerException( new Exception( "Invalid packet type received" )));
+									
 								}else{
-
-									Debug.out( "Non-matching network reply received: expected=" + network + ", actual=" + reply.getNetwork());
-
-									receiver.error( new DHTUDPPacketHandlerException( new Exception( "Non-matching network reply received" )));
+									
+									DHTUDPPacketReply	reply = (DHTUDPPacketReply)packet;
+	
+									stats.packetReceived( reply.getSerialisedSize() );
+	
+									if ( reply.getNetwork() == network ){
+	
+										receiver.packetReceived(reply, from_address, request.getElapsedTime());
+	
+									}else{
+	
+										Debug.out( "Non-matching network reply received: expected=" + network + ", actual=" + reply.getNetwork());
+	
+										receiver.error( new DHTUDPPacketHandlerException( new Exception( "Non-matching network reply received" )));
+									}
 								}
 							}
 

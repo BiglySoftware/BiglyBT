@@ -70,7 +70,11 @@ PRUDPPacket
 		try{
 			class_mon.enter();
 
-			transaction_id	= next_id++;
+			transaction_id	= next_id;
+			
+				// reduce the chance of someone guessing the next packet id
+			
+			next_id += RandomUtils.nextInt( 999 )+1;
 
 		}finally{
 
