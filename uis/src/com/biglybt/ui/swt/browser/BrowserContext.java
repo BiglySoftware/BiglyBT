@@ -21,6 +21,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
@@ -995,15 +997,34 @@ public class BrowserContext
 			try {
 				String host = new URL( location ).getHost();
 				
-				for ( String h: popoutBlacklist ) {
+				for ( String bl: popoutBlacklist ) {
 					
-					if ( 	h.equals( "*" ) || 
-							host.endsWith( h ) ||
-							( h.startsWith( "." ) && host.equals( h.substring(1)))) {
+					if ( 	bl.equals( "*" ) || 
+							host.endsWith( bl ) ||
+							( bl.startsWith( "." ) && host.equals( bl.substring(1)))) {
 						
 						on_blacklist = true;
 						
 						break;
+					}
+					
+					if ( bl.startsWith( "(" ) && bl.endsWith( ")")){
+						
+						try{
+							Pattern p = Pattern.compile( bl.substring( 1, bl.length()-1));
+
+							Matcher m = p.matcher( location );
+
+							if ( m.find()){
+								
+								on_blacklist = true;
+								
+								break;
+							}
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
 					}
 				}
 			}catch( Throwable e ) {
