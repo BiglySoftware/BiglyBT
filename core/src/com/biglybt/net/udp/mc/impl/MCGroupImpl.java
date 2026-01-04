@@ -23,7 +23,6 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.MembershipKey;
-import java.nio.channels.MulticastChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.*;
 
@@ -1061,6 +1060,13 @@ MCGroupImpl
 		byte[]	data 	= packet.getData();
 		int		len		= packet.getLength();
 
+		if ( len == 0 ){
+			
+				// getting this on OSX
+			
+			return;
+		}
+		
 		/*
 		if ( local_address instanceof Inet6Address ){
 			System.out.println( "receive: add = " + local_address + ", data = " + new String( data, 0, len ));
@@ -1085,6 +1091,13 @@ MCGroupImpl
 		byte[]	data 	= buffer.array();
 		int		len		= buffer.position();
 
+		if ( len == 0 ){
+			
+				// getting this on OSX
+		
+			return;
+		}
+		
 		/*
 		if ( local_address instanceof Inet6Address ){
 			System.out.println( "receive: add = " + local_address + ", data = " + new String( data, 0, len ));
