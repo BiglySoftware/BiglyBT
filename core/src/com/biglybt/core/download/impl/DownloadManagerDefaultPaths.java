@@ -259,11 +259,47 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 	    	if ( def_mi.target.getBoolean( "enabled", false ) ){
 	    		
-	    		source.setBoolean( "default dir", "Move Only When In Default Save Dir" );
+	    			// however if download is saved to a Tag "initial save location" then
+	    			// ignore default folder settings 
 	    		
-	    		source.setBoolean( "default subdir", SUBDIR_PARAM );
+	    		boolean ignore = false;
 	    		
+	    		List<File>	applicable_folders = 
+	        			TagUtils.getActiveInitialSaveLocationTagFolders( dm, (str)->logInfo( str, dm ));
+	    		
+	    		if ( !applicable_folders.isEmpty()){
+	    			
+	    			File sl = dm.getSaveLocation();
+	    			
+	    			if ( sl.isFile()){
+	    				
+	    				sl = sl.getParentFile();
+	    			}
+	    			
+	    			for ( File f: applicable_folders ){
+	    			
+	    				if ( FileUtil.isAncestorOf( f, sl )){
+	    					
+	    					ignore = true;
+	    					
+	    					logInfo( "Ignoring 'only if in default save dir' setting as download has Tag initial save-location", dm );
+	    					
+	    					break;
+	    				}
+	    			}
+	    		}
+	    		
+	    		if ( ignore ){
+	    			
+	    			source.setBoolean( "default dir", false );
+	    			
+	    		}else{
+	    			source.setBoolean( "default dir", "Move Only When In Default Save Dir" );
+	    		
+	    			source.setBoolean( "default subdir", SUBDIR_PARAM );
+	    		}
 	    	}else{
+	    		
 	    		source.setBoolean( "default dir", false );
 	    	}
 

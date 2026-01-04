@@ -467,6 +467,39 @@ TagUtils
 		return( null );
 	}
 	
+	public static List<File>
+	getActiveInitialSaveLocationTagFolders(
+		DownloadManager			dm,
+		Consumer<String>		logger )
+	{	
+    	List<Tag> dm_tags = TagManagerFactory.getTagManager().getTagsForTaggable( dm );
+
+    	List<File>	applicable_folders = new ArrayList<>();
+
+    	if ( dm_tags != null ){
+	
+	    	for ( Tag tag: dm_tags ){
+	
+	    		if ( tag.getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+	
+	    			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+	
+	    			if ( fl.supportsTagInitialSaveFolder()){
+	
+		    			File sl = fl.getTagInitialSaveFolder();
+	
+		    			if ( sl != null && sl.isDirectory() && !applicable_folders.contains(sl)){
+	
+		    				applicable_folders.add( sl );
+		    			}
+	    			}
+	    		}
+	    	}	    	
+    	}
+    	
+    	return( applicable_folders );
+	}
+	
 	public static List<Tag>
 	getActiveMoveOnCompleteTags(
 		DownloadManager			dm,
