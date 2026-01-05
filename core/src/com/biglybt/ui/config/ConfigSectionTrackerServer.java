@@ -84,7 +84,7 @@ public class ConfigSectionTrackerServer
 		StringParameterImpl tracker_ip = new StringParameterImpl(SCFG_TRACKER_IP,
 				"ConfigView.section.tracker.ip");
 		add(tracker_ip);
-		tracker_ip.setWidthInCharacters(12);
+		tracker_ip.setWidthInCharacters(50);
 
 		if (cbIPChecker != null) {
 			ActionParameterImpl check_button = new ActionParameterImpl(null,
