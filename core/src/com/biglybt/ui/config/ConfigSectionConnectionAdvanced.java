@@ -346,11 +346,18 @@ public class ConfigSectionConnectionAdvanced
 		ipv6_extra_globals.setIndent( 1, true );
 		ipv6_enable.addEnabledOnSelection(ipv6_extra_globals);
 		
-		add(new BooleanParameterImpl(BCFG_IPV_6_PREFER_ADDRESSES, "network.ipv6.prefer.addresses"));
-
-		if (Constants.isWindowsVistaOrHigher) {
-
-			add(new BooleanParameterImpl(BCFG_IPV_4_PREFER_STACK, "network.ipv4.prefer.stack"));
+		if ( Constants.isJava18OrHigher ){
+			
+			add( new InfoParameterImpl(null, "network.ip.pref.options", ""));
+			
+			
+		}else{
+			add(new BooleanParameterImpl(BCFG_IPV_6_PREFER_ADDRESSES, "network.ipv6.prefer.addresses"));
+	
+			if (Constants.isWindowsVistaOrHigher) {
+	
+				add(new BooleanParameterImpl(BCFG_IPV_4_PREFER_STACK, "network.ipv4.prefer.stack"));
+			}
 		}
 		
 		List<Parameter> listNIIgnore = new ArrayList<>();

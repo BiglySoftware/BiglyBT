@@ -97,146 +97,150 @@ ConfigurationChecker
 	  		loadProperties( user_path );
 	  	}
 
-	  		// kinda hard to do this system property setting early enough as we musn't load the
-	  		// config until after checking the "pass to existing process" code and this loads the
-	  		// class InetAddress that caches the current system prop
-
-	  	COConfigurationManager.addAndFireParameterListener(
-	  		"IPV6 Prefer Addresses",
-	  		new ParameterListener()
-	  		{
-	  			private boolean done_something = false;
-
-	  			@Override
-				  public void
-	  			parameterChanged(
-	  				String name )
-	  			{
-	  			  	boolean	prefer_ipv6 	= COConfigurationManager.getBooleanParameter( name );
-
-	  			  	boolean existing = !System.getProperty( "java.net.preferIPv6Addresses", "false" ).equalsIgnoreCase( "false" );
-
-	  			  		// if user has overridden with a -D at az start then we don't want to let our config
-	  			  		// setting (which currently defaults to FALSE) to set this back
-
-	  			  	if ( existing && !done_something ){
-
-	  			  		return;
-	  			  	}
-
-	  			  	if ( existing != prefer_ipv6 ){
-
-	  			  		done_something = true;
-
-		  		  		System.setProperty( "java.net.preferIPv6Addresses", prefer_ipv6?"true":"false" );
-
-		  		  		try{
-		  		  			Field field = InetAddress.class.getDeclaredField( "preferIPv6Address" );
-
-		  		  			field.setAccessible( true );
-
-		  		  			try{
-		  		  				field.setBoolean( null, prefer_ipv6 );
-		  		  				
-		  		  			}catch( Throwable e ){
-		  		  				
-		  		  					// changed to an int 
-		  		  				
-		  		  				try{
-		  		  					field.setInt( null, prefer_ipv6?1:0 );
-		  		  					
-		  		  				}catch( Throwable e2 ){
-		  		  					
-		  		  						// Java 10+ prevented setting Field fields
-		  		  					
-		  		  					Java10PlusHacks.setFieldNonFinal( field );
-		  		  					
-		  		  					field.setInt( null, prefer_ipv6?1:0 );
-		  		  				}
-		  		  			}
-
-		  		  		}catch( Throwable e ){
-
-		  		  			// NO Debug.out, see above
-		  		  			System.err.println( "Failed to update 'preferIPv6Address'" );
-		  		  			e.printStackTrace();
-		  		  		}
-	  			  	}
-	  			}
-	  		});
-
-	  	if ( Constants.isWindowsVistaOrHigher ){
-
-	  		COConfigurationManager.addAndFireParameterListener(
-		  		"IPV4 Prefer Stack",
+	  	
+	  	if ( !Constants.isJava18OrHigher ){
+	  		
+		  		// kinda hard to do this system property setting early enough as we musn't load the
+		  		// config until after checking the "pass to existing process" code and this loads the
+		  		// class InetAddress that caches the current system prop
+	
+		  	COConfigurationManager.addAndFireParameterListener(
+		  		"IPV6 Prefer Addresses",
 		  		new ParameterListener()
 		  		{
 		  			private boolean done_something = false;
-
+	
 		  			@Override
 					  public void
 		  			parameterChanged(
 		  				String name )
 		  			{
-		  			  	boolean	prefer_ipv4 	= COConfigurationManager.getBooleanParameter( name );
-
-		  			  	boolean existing = !System.getProperty( "java.net.preferIPv4Stack", "false" ).equalsIgnoreCase( "false" );
-
+		  			  	boolean	prefer_ipv6 	= COConfigurationManager.getBooleanParameter( name );
+	
+		  			  	boolean existing = !System.getProperty( "java.net.preferIPv6Addresses", "false" ).equalsIgnoreCase( "false" );
+	
 		  			  		// if user has overridden with a -D at az start then we don't want to let our config
 		  			  		// setting (which currently defaults to FALSE) to set this back
-
+	
 		  			  	if ( existing && !done_something ){
-
+	
 		  			  		return;
 		  			  	}
-
-		  			  	if ( existing != prefer_ipv4 ){
-
+	
+		  			  	if ( existing != prefer_ipv6 ){
+	
 		  			  		done_something = true;
-
-			  		  		System.setProperty( "java.net.preferIPv4Stack", prefer_ipv4?"true":"false" );
-
+	
+			  		  		System.setProperty( "java.net.preferIPv6Addresses", prefer_ipv6?"true":"false" );
+	
 			  		  		try{
-			  		  			Class<?> plainSocketImpl = getClass().forName( "java.net.PlainSocketImpl");
-
-			  		  			Field pref_field = plainSocketImpl.getDeclaredField( "preferIPv4Stack" );
-
-			  		  			pref_field.setAccessible( true );
-
+			  		  			Field field = InetAddress.class.getDeclaredField( "preferIPv6Address" );
+	
+			  		  			field.setAccessible( true );
+	
 			  		  			try{
-			  		  				pref_field.setBoolean( null, prefer_ipv4 );
+			  		  				field.setBoolean( null, prefer_ipv6 );
 			  		  				
-		  		  				}catch( Throwable e2 ){
-		  		  					
-		  		  						// Java 10+ prevented setting Field fields
-		  		  					
-		  		  					Java10PlusHacks.setFieldNonFinal( pref_field );
-		  		  					
-		  		  					pref_field.setBoolean( null, prefer_ipv4 );
-		  		  				}
-
-			  		  				// doesn't existing J10+, not sure if things are even
-			  		  				// working but whatever
-			  		  			
-			  		  			if ( !Constants.isJava10OrHigher ){
+			  		  			}catch( Throwable e ){
 			  		  				
-					  		  		Field dual_field = plainSocketImpl.getDeclaredField( "useDualStackImpl" );
-	
-					  		  		dual_field.setAccessible( true );
-	
-					  		  		dual_field.setBoolean( null, !prefer_ipv4 );
+			  		  					// changed to an int 
+			  		  				
+			  		  				try{
+			  		  					field.setInt( null, prefer_ipv6?1:0 );
+			  		  					
+			  		  				}catch( Throwable e2 ){
+			  		  					
+			  		  						// Java 10+ prevented setting Field fields
+			  		  					
+			  		  					Java10PlusHacks.setFieldNonFinal( field );
+			  		  					
+			  		  					field.setInt( null, prefer_ipv6?1:0 );
+			  		  				}
 			  		  			}
+	
 			  		  		}catch( Throwable e ){
-
+	
 			  		  			// NO Debug.out, see above
-			  		  			System.err.println( "Failed to update 'preferIPv4Stack'" );
+			  		  			System.err.println( "Failed to update 'preferIPv6Address'" );
 			  		  			e.printStackTrace();
 			  		  		}
 		  			  	}
 		  			}
 		  		});
+	
+		  	if ( Constants.isWindowsVistaOrHigher ){
+	
+		  		COConfigurationManager.addAndFireParameterListener(
+			  		"IPV4 Prefer Stack",
+			  		new ParameterListener()
+			  		{
+			  			private boolean done_something = false;
+	
+			  			@Override
+						  public void
+			  			parameterChanged(
+			  				String name )
+			  			{
+			  			  	boolean	prefer_ipv4 	= COConfigurationManager.getBooleanParameter( name );
+	
+			  			  	boolean existing = !System.getProperty( "java.net.preferIPv4Stack", "false" ).equalsIgnoreCase( "false" );
+	
+			  			  		// if user has overridden with a -D at az start then we don't want to let our config
+			  			  		// setting (which currently defaults to FALSE) to set this back
+	
+			  			  	if ( existing && !done_something ){
+	
+			  			  		return;
+			  			  	}
+	
+			  			  	if ( existing != prefer_ipv4 ){
+	
+			  			  		done_something = true;
+	
+				  		  		System.setProperty( "java.net.preferIPv4Stack", prefer_ipv4?"true":"false" );
+	
+				  		  		try{
+				  		  			Class<?> plainSocketImpl = getClass().forName( "java.net.PlainSocketImpl");
+	
+				  		  			Field pref_field = plainSocketImpl.getDeclaredField( "preferIPv4Stack" );
+	
+				  		  			pref_field.setAccessible( true );
+	
+				  		  			try{
+				  		  				pref_field.setBoolean( null, prefer_ipv4 );
+				  		  				
+			  		  				}catch( Throwable e2 ){
+			  		  					
+			  		  						// Java 10+ prevented setting Field fields
+			  		  					
+			  		  					Java10PlusHacks.setFieldNonFinal( pref_field );
+			  		  					
+			  		  					pref_field.setBoolean( null, prefer_ipv4 );
+			  		  				}
+	
+				  		  				// doesn't existing J10+, not sure if things are even
+				  		  				// working but whatever
+				  		  			
+				  		  			if ( !Constants.isJava10OrHigher ){
+				  		  				
+						  		  		Field dual_field = plainSocketImpl.getDeclaredField( "useDualStackImpl" );
+		
+						  		  		dual_field.setAccessible( true );
+		
+						  		  		dual_field.setBoolean( null, !prefer_ipv4 );
+				  		  			}
+				  		  		}catch( Throwable e ){
+	
+				  		  			// NO Debug.out, see above
+				  		  			System.err.println( "Failed to update 'preferIPv4Stack'" );
+				  		  			e.printStackTrace();
+				  		  		}
+			  			  	}
+			  			}
+			  		});
+		  	}
 	  	}
-
+	  	
 
       // socket connect/read timeouts
 
