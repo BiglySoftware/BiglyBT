@@ -22,7 +22,6 @@ package com.biglybt.core.config.impl;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -74,6 +73,8 @@ ConfigurationChecker
   protected static void
   setSystemProperties()
   {
+	  	// NEVER USE DEBUG.OUT or similar in this method due to risk of deadlock on startup!!!!
+	  
   	try{
   		class_mon.enter();
 
@@ -156,7 +157,9 @@ ConfigurationChecker
 
 		  		  		}catch( Throwable e ){
 
-		  		  			Debug.out( "Failed to update 'preferIPv6Address'", e );
+		  		  			// NO Debug.out, see above
+		  		  			System.err.println( "Failed to update 'preferIPv6Address'" );
+		  		  			e.printStackTrace();
 		  		  		}
 	  			  	}
 	  			}
@@ -225,7 +228,9 @@ ConfigurationChecker
 			  		  			}
 			  		  		}catch( Throwable e ){
 
-			  		  			Debug.out( "Failed to update 'preferIPv4Stack'", e );
+			  		  			// NO Debug.out, see above
+			  		  			System.err.println( "Failed to update 'preferIPv4Stack'" );
+			  		  			e.printStackTrace();
 			  		  		}
 		  			  	}
 		  			}
@@ -1026,7 +1031,9 @@ ConfigurationChecker
 		  }
 	  }catch( Throwable e ){
 
-		  Debug.out( e );
+  			// NO Debug.out, see above
+  			System.err.println( "Failed to run verifier" );
+  			e.printStackTrace();
 	  }
   }
 
