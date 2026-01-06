@@ -8443,6 +8443,8 @@ public class OpenTorrentOptionsWindow
 			}
 
 			boolean isPathInvalid = dataDirPassed.length() == 0 || filePassed.isFile();
+			boolean ignorePathInvalid = false;
+					
 			if (!isPathInvalid && !filePassed.isDirectory()) {
 				MessageBoxShell mb = new MessageBoxShell(SWT.YES | SWT.NO
 						| SWT.ICON_QUESTION, "OpenTorrentWindow.mb.askCreateDir",
@@ -8456,12 +8458,24 @@ public class OpenTorrentOptionsWindow
 				if (doCreate == SWT.YES)
 					isPathInvalid = !FileUtil.mkdirs(filePassed);
 				else {
+					/*
 					cmbDataDir.setFocus();
 					return false;
+					*/
+					
+						// User chose to continue with invalid folder, guess they want to add the download and fix things later
+					
+						// We can only allow this for non-simple torrents due to the horrors of simple torrent path issues, see
+						// comment below...
+					
+					if ( !torrentOptions.isSimpleTorrent()){
+					
+						ignorePathInvalid = true;
+					}
 				}
 			}
 
-			if (isPathInvalid) {
+			if (isPathInvalid && !ignorePathInvalid ) {
 				MessageBoxShell mb = new MessageBoxShell(SWT.OK | SWT.ICON_ERROR,
 						"OpenTorrentWindow.mb.noGlobalDestDir", new String[] {
 							filePassed.toString()
@@ -8523,7 +8537,7 @@ public class OpenTorrentOptionsWindow
 				torrentOptionsDataDir = torrentOptionsDataDir.getParentFile();	// for non-simple this points to the top folder in download
 			}
 
-			if (!torrentOptionsDataDir.isDirectory() && !FileUtil.mkdirs(torrentOptionsDataDir)) {
+			if (!torrentOptionsDataDir.isDirectory() && !FileUtil.mkdirs(torrentOptionsDataDir) && !ignorePathInvalid) {
 				MessageBoxShell mb = new MessageBoxShell(SWT.OK | SWT.ICON_ERROR,
 						"OpenTorrentWindow.mb.noDestDir", new String[] {
 						torrentOptionsDataDir.toString(),
