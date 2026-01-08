@@ -172,7 +172,8 @@ ConnectionEndpoint
 
 		}else{
 
-			final boolean[] connected = { false };
+			final Transport[] connected = { null };
+			
 			final boolean[] abandoned = { false };
 
 			final List<Transport> transports = new ArrayList<>(protocols.length);
@@ -202,33 +203,66 @@ ConnectionEndpoint
 				    	Transport	transport,
 				    	ByteBuffer 	remaining_initial_data )
 				    {
-				    	boolean	disconnect;
-
+				    	boolean			disconnect_this;
+				    	List<Transport>	disconnect_others = null;
+				    	
 				    	synchronized( connected ){
 
-				    		disconnect = abandoned[0];
+				    		disconnect_this = abandoned[0];
 
-				    		if ( !disconnect ){
+				    		if ( !disconnect_this ){
 
-					    		if ( !connected[0] ){
+					    		if ( connected[0] == null || connected[0] == transport ){
 
-					    			connected[0] = true;
+					    			connected[0] = transport;
 
+						    		for ( Transport t: transports ){
+						    			
+						    			if ( t != transport ){
+						    				
+						    				if ( disconnect_others == null ){
+						    					
+						    					disconnect_others = new ArrayList<>();
+						    				}
+						    				
+						    				disconnect_others.add( t );
+						    			}
+						    		}
+						    		
 					    			//System.out.println( "Connect took " + (SystemTime.getCurrentTime() - start_time ) + " for " + transport.getDescription());
 
 					    		}else{
 
-					    			disconnect = true;
+					    			disconnect_this = true;
 					    		}
 				    		}
 				    	}
 
-				    	if ( disconnect ){
+				    	if ( disconnect_this ){
 
-				    		transport.close( "Transparent not required" );
-
+				    		try{
+				    			transport.close( "Transport not required" );
+				    			
+				    		}catch( Throwable e ){
+				    			
+				    			Debug.out( e );
+				    		}
 				    	}else{
 
+				    		if ( disconnect_others != null ){
+				    			
+				    			for ( Transport t: disconnect_others ){
+				    				
+				    				try{
+						    			t.close( "Transport not required" );
+						    			
+						    		}catch( Throwable e ){
+						    			
+						    			Debug.out( e );
+						    		}
+				    			}
+				    		}
+				    		
 				    		listener.connectSuccess( transport, remaining_initial_data );
 				    	}
 				    }
@@ -309,8 +343,11 @@ ConnectionEndpoint
 							priority,
 							new ConnectListenerEx( listener_delegate ));
 
-					transports.add( transport );
-
+					synchronized( connected ){
+										
+						transports.add( transport );
+					}
+					
 					final ProtocolEndpoint tcp_ep = p1;
 
 					SimpleTimer.addEvent(
@@ -326,7 +363,7 @@ ConnectionEndpoint
 							{
 								synchronized( connected ){
 
-									if ( connected[0] || abandoned[0] ){
+									if ( connected[0] != null || abandoned[0] ){
 
 										return;
 									}
@@ -341,17 +378,36 @@ ConnectionEndpoint
 										priority,
 										new ConnectListenerEx( listener_delegate ));
 
+								boolean disconnect = false;
+								
 								synchronized( connected ){
 
 									if ( abandoned[0] ){
 
-										transport.close( "Connection attempt abandoned" );
+										disconnect = true;
 
-									}else{
+									}else if ( connected[0] != null ){
+										
+										disconnect = connected[0] != transport;
+									}
+									
+									if ( !disconnect ){
 
 										transports.add( transport );
 									}
-								}							}
+								}
+								
+								if ( disconnect ){
+									
+									try{										
+										transport.close( "Transport not required" );
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+							}
 						});
 				}
 			}
@@ -381,7 +437,13 @@ ConnectionEndpoint
 
 							for ( Transport transport: to_kill ){
 
-								transport.close( "Connection attempt abandoned" );
+								try{
+									transport.close( "Connection attempt abandoned" );
+									
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
 							}
 						}
 					});
