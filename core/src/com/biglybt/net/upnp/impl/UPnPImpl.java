@@ -64,13 +64,9 @@ UPnPImpl
 
 			if ( singleton == null ){
 
-				singleton = new UPnPImpl( adapter, selected_interfaces );
-				
-			}else{
-				
-				singleton.updateSelectedInterfaces( selected_interfaces );
+				singleton = new UPnPImpl( adapter, selected_interfaces );	
 			}
-
+			
 			return( singleton );
 
 		}finally{
@@ -119,13 +115,6 @@ UPnPImpl
 		ssdp_igd.addListener(this);
 
 		ssdp_igd.start();
-	}
-
-	private void
-	updateSelectedInterfaces(
-		String[]			selected_interfaces )
-	{
-		ssdp_igd.updateSelectedInterfaces( selected_interfaces );
 	}
 	
 	@Override

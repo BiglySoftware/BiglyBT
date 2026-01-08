@@ -20,7 +20,6 @@ package com.biglybt.net.upnp.impl.ssdp;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.ArrayList;

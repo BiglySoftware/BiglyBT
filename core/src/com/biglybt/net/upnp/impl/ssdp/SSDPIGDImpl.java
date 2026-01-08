@@ -43,9 +43,12 @@ public class
 SSDPIGDImpl
 	implements SSDPIGD, UPnPSSDPListener
 {
-	private UPnPImpl upnp;
-	private SSDPCore		ssdp_core;
+	private final UPnPImpl upnp;
+	
+	private volatile SSDPCore		ssdp_core;
 
+	private String[]		selected_interfaces;
+	
 	private boolean			first_result			= true;
 	private long			last_explicit_search	= 0;
 
@@ -63,23 +66,17 @@ SSDPIGDImpl
 	{
 		upnp	= _upnp;
 
+		selected_interfaces = _selected_interfaces;
+		
 		ssdp_core	=
 			SSDPCore.getSingleton(
 				upnp.getAdapter(),
 				UPnPSSDP.SSDP_GROUP_ADDRESS_V4,
 				UPnPSSDP.SSDP_GROUP_ADDRESS_V6,
 				UPnPSSDP.SSDP_GROUP_PORT,
-				_selected_interfaces );
+				selected_interfaces );
 
 		ssdp_core.addListener( this );
-	}
-
-	@Override
-	public void 
-	updateSelectedInterfaces(
-		String[] selected_interfaces)
-	{
-		Debug.out( "UPDATE!!!!" );
 	}
 	
 	@Override

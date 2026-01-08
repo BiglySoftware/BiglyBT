@@ -40,10 +40,6 @@ SSDPIGD
 	public void
 	searchNow(
 		String[]	STs );
-
-	public void
-	updateSelectedInterfaces(
-		String[]	selected_interfaces );
 	
 	public void
 	addListener(

@@ -27,6 +27,7 @@ package com.biglybt.plugin.upnp;
 import java.net.URL;
 import java.util.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.net.natpmp.NATPMPDeviceAdapter;
@@ -34,7 +35,6 @@ import com.biglybt.net.natpmp.NatPMPDeviceFactory;
 import com.biglybt.net.natpmp.upnp.NatPMPUPnP;
 import com.biglybt.net.natpmp.upnp.NatPMPUPnPFactory;
 import com.biglybt.net.upnp.*;
-import com.biglybt.net.upnp.services.UPnPWANCommonInterfaceConfig;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
 import com.biglybt.net.upnp.services.UPnPWANConnectionListener;
 import com.biglybt.net.upnp.services.UPnPWANConnectionPortMapping;
@@ -116,6 +116,10 @@ UPnPPlugin
 	{
 		plugin_interface.getPluginProperties().setProperty( "plugin.version", 	"1.0" );
 		plugin_interface.getPluginProperties().setProperty( "plugin.name", 		"Universal Plug and Play (UPnP)" );
+		
+		String selected_interfaces = COConfigurationManager.getStringParameter( "Plugin.UPnP.upnp.selectedinterfaces", "" );
+		
+		UPnPFactory.setSelectedInterfaces( getSelectedInterfaces( selected_interfaces ));
 	}
 
 	@Override
@@ -1103,7 +1107,19 @@ UPnPPlugin
 	getSelectedInterfaces()
 	{
 		String	si = selected_interfaces_param.getValue().trim();
+		
+		return( getSelectedInterfaces( si ));
+	}
 
+	protected static String[]
+	getSelectedInterfaces(
+		String	si )
+	{
+		if ( si == null ){
+			
+			si = "";
+		}
+		
 		StringTokenizer	tok = new StringTokenizer( si, ";" );
 
 		List	res = new ArrayList();
@@ -1120,7 +1136,7 @@ UPnPPlugin
 
 		return( (String[])res.toArray( new String[res.size()]));
 	}
-
+	
 	protected String[]
 	getSelectedAddresses()
 	{
