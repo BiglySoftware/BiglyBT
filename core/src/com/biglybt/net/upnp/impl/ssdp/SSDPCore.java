@@ -52,7 +52,6 @@ SSDPCore
 		String				group_address_v4,
 		String				group_address_v6,
 		int					group_port,
-		int					control_port,
 		String[]			selected_interfaces )
 
 		throws UPnPException
@@ -60,7 +59,15 @@ SSDPCore
 		try{
 			class_mon.enter();
 
-			String	key = group_address_v4 + "/" + group_address_v6 + ":" + group_port + ":" + control_port;
+			String si_key = "";
+			
+			if ( selected_interfaces != null ){
+				for ( String si: selected_interfaces ){
+					si_key += "$" + si;
+				}
+			}
+			
+			String	key = group_address_v4 + "/" + group_address_v6 + ":" + group_port  + si_key;
 
 			SSDPCore	singleton = (SSDPCore)singletons.get( key );
 			
@@ -71,12 +78,12 @@ SSDPCore
 
 				if ( group_address_v4 != null ){
 					
-					core_v4 = new SSDPCoreImpl( adapter, group_address_v4, group_port, control_port, selected_interfaces );
+					core_v4 = new SSDPCoreImpl( adapter, group_address_v4, group_port, selected_interfaces );
 				}
 				
 				if ( group_address_v6 != null ){
 					
-					core_v6 = new SSDPCoreImpl( adapter, group_address_v6, group_port, control_port, selected_interfaces );
+					core_v6 = new SSDPCoreImpl( adapter, group_address_v6, group_port, selected_interfaces );
 				}
 				
 				singleton = new SSDPCore( core_v4, core_v6, adapter );

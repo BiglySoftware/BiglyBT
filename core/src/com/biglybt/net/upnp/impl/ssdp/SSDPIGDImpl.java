@@ -49,7 +49,7 @@ SSDPIGDImpl
 	private boolean			first_result			= true;
 	private long			last_explicit_search	= 0;
 
-	private List			listeners	= new ArrayList();
+	private CopyOnWriteList<SSDPIGDListener>	listeners	= new CopyOnWriteList<>();
 
 	protected AEMonitor		this_mon	= new AEMonitor( "SSDP" );
 
@@ -69,19 +69,19 @@ SSDPIGDImpl
 				UPnPSSDP.SSDP_GROUP_ADDRESS_V4,
 				UPnPSSDP.SSDP_GROUP_ADDRESS_V6,
 				UPnPSSDP.SSDP_GROUP_PORT,
-				0,
 				_selected_interfaces );
 
 		ssdp_core.addListener( this );
 	}
 
 	@Override
-	public SSDPCore
-	getSSDP()
+	public void 
+	updateSelectedInterfaces(
+		String[] selected_interfaces)
 	{
-		return( ssdp_core );
+		Debug.out( "UPDATE!!!!" );
 	}
-
+	
 	@Override
 	public void
 	start()
@@ -284,6 +284,8 @@ SSDPIGDImpl
 
 			this_mon.exit();
 		}
+		
+		deviceStatusUpdate( originator, !nts.contains("byebye"));
 	}
 
 	@Override
@@ -296,6 +298,8 @@ SSDPIGDImpl
 	{
 		// not interested, loopback or other search
 
+		deviceStatusUpdate( originator, true );
+		
 		return( null );
 	}
 
@@ -326,10 +330,10 @@ SSDPIGDImpl
 		String				usn,
 		URL					location )
 	{
-		for (int i=0;i<listeners.size();i++){
+		for ( SSDPIGDListener listener: listeners ){
 
 			try{
-				((SSDPIGDListener)listeners.get(i)).rootDiscovered( network_interface, local_address, usn, location );
+				listener.rootDiscovered( network_interface, local_address, usn, location );
 
 			}catch( Throwable e ){
 
@@ -343,10 +347,10 @@ SSDPIGDImpl
 		String	usn,
 		URL		location )
 	{
-		for (int i=0;i<listeners.size();i++){
+		for ( SSDPIGDListener listener: listeners ){
 
 			try{
-				((SSDPIGDListener)listeners.get(i)).rootAlive( usn, location );
+				listener.rootAlive( usn, location );
 
 			}catch( Throwable e ){
 
@@ -360,10 +364,10 @@ SSDPIGDImpl
 		InetAddress	local_address,
 		String		usn )
 	{
-		for (int i=0;i<listeners.size();i++){
+		for ( SSDPIGDListener listener: listeners ){
 
 			try{
-				((SSDPIGDListener)listeners.get(i)).rootLost( local_address, usn );
+				listener.rootLost( local_address, usn );
 
 			}catch( Throwable e ){
 
@@ -372,15 +376,32 @@ SSDPIGDImpl
 		}
 	}
 
+	private void
+	deviceStatusUpdate(
+		InetAddress		originator,
+		boolean			alive )
+	{
+		for ( SSDPIGDListener listener: listeners ){
+
+			try{
+				listener.deviceStatusUpdate( originator, alive );
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+	}
+	
 	@Override
 	public void
 	interfaceChanged(
 		NetworkInterface	network_interface )
 	{
-		for (int i=0;i<listeners.size();i++){
+		for ( SSDPIGDListener listener: listeners ){
 
 			try{
-				((SSDPIGDListener)listeners.get(i)).interfaceChanged( network_interface );
+				listener.interfaceChanged( network_interface );
 
 			}catch( Throwable e ){
 

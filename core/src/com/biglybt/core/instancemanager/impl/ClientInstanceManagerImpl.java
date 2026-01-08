@@ -59,8 +59,7 @@ ClientInstanceManagerImpl
 	private static final LogIDs LOGID = LogIDs.NET;
 
 	private static final String				MC_GROUP_ADDRESS 	= "239.255.067.250";	// 239.255.000.000-239.255.255.255
-	private static final int					MC_GROUP_PORT		= 16680;				//
-	private static final int					MC_CONTROL_PORT		= 0;
+	private static final int				MC_GROUP_PORT		= 16680;				//
 
 	private static final int	MT_VERSION		= 1;
 
@@ -286,9 +285,7 @@ ClientInstanceManagerImpl
 					MCGroupFactory.getSingleton(
 						this,
 						MC_GROUP_ADDRESS,
-						MC_GROUP_PORT,
-						MC_CONTROL_PORT,
-						null );
+						MC_GROUP_PORT );
 			}else{
 
 				mc_group = getDummyMCGroup();
@@ -379,20 +376,22 @@ ClientInstanceManagerImpl
 				public int
 				getControlPort()
 				{
-					return( MC_CONTROL_PORT );
+					return( 0 );
 				}
 
 				@Override
 				public void
 				sendToGroup(
-					byte[]	data )
+					byte[]		data,
+					String[]	selected_interfaces )
 				{
 				}
 
 				@Override
 				public void
 				sendToGroup(
-					String	param_data )
+					String		param_data,
+					String[]	selected_interfaces )
 				{
 				}
 
@@ -552,7 +551,7 @@ ClientInstanceManagerImpl
 
 				byte[]	data = BEncoder.encode( map );
 
-				mc_group.sendToGroup( data );
+				mc_group.sendToGroup( data, null );
 
 				if ( explicit_peers.size() > 0 ){
 

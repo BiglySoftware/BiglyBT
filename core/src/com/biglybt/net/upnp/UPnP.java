@@ -19,8 +19,6 @@
 
 package com.biglybt.net.upnp;
 
-import java.util.Map;
-
 /**
  * @author parg
  *
@@ -50,13 +48,6 @@ UPnP
 	public void
 	search(
 		String[]		STs );
-
-	public void
-	injectDiscoveryCache(
-		Map				cache );
-
-	public UPnPSSDP
-	getSSDP();
 
 		/**
 		 * Logs a message to all registered log listeners

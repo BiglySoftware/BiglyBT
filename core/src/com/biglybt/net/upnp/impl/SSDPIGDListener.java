@@ -49,6 +49,11 @@ SSDPIGDListener
 		String				usn );
 
 	public void
+	deviceStatusUpdate(
+		InetAddress		address,
+		boolean			alive );
+	
+	public void
 	interfaceChanged(
 		NetworkInterface	network_interface );
 

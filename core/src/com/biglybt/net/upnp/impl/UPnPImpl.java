@@ -54,7 +54,7 @@ UPnPImpl
 
 	public static UPnP
 	getSingleton(
-		UPnPAdapter adapter,
+		UPnPAdapter 	adapter,
 		String[]		selected_interfaces )
 
 		throws UPnPException
@@ -65,6 +65,10 @@ UPnPImpl
 			if ( singleton == null ){
 
 				singleton = new UPnPImpl( adapter, selected_interfaces );
+				
+			}else{
+				
+				singleton.updateSelectedInterfaces( selected_interfaces );
 			}
 
 			return( singleton );
@@ -75,8 +79,8 @@ UPnPImpl
 		}
 	}
 
-	private UPnPAdapter				adapter;
-	private SSDPIGD					ssdp;
+	private final UPnPAdapter				adapter;
+	private final SSDPIGD					ssdp_igd;
 
 	private Map<String,UPnPRootDeviceImpl>			root_locations	= new HashMap<>();
 
@@ -84,8 +88,8 @@ UPnPImpl
 	private List		log_history			= new ArrayList();
 	private List		log_alert_history	= new ArrayList();
 
-	private List<UPnPListener>	rd_listeners		= new ArrayList<>();
-	private AEMonitor			rd_listeners_mon 	= new AEMonitor( "UPnP:L" );
+	private CopyOnWriteList<UPnPListener>	rd_listeners		= new CopyOnWriteList<>();
+	private AEMonitor						rd_listeners_mon 	= new AEMonitor( "UPnP:L" );
 
 	private int		http_calls_ok	= 0;
 	private int		direct_calls_ok	= 0;
@@ -110,50 +114,20 @@ UPnPImpl
 	{
 		adapter	= _adapter;
 
-		ssdp = SSDPIGDFactory.create( this, _selected_interfaces );
+		ssdp_igd = SSDPIGDFactory.create( this, _selected_interfaces );
 
-		ssdp.addListener(this);
+		ssdp_igd.addListener(this);
 
-		ssdp.start();
+		ssdp_igd.start();
 	}
 
-	@Override
-	public UPnPSSDP
-	getSSDP()
+	private void
+	updateSelectedInterfaces(
+		String[]			selected_interfaces )
 	{
-		return( ssdp.getSSDP());
+		ssdp_igd.updateSelectedInterfaces( selected_interfaces );
 	}
-
-	@Override
-	public void
-	injectDiscoveryCache(
-		Map 		cache )
-	{
-		try{
-			String	ni_s	= new String((byte[])cache.get( "ni" ), "UTF-8" );
-			String	la_s 	= new String((byte[])cache.get( "la" ), "UTF-8" );
-			String	usn 	= new String((byte[])cache.get( "usn" ), "UTF-8" );
-			String	loc_s 	= new String((byte[])cache.get( "loc" ), "UTF-8" );
-
-			NetworkInterface	network_interface = NetUtils.getByName( ni_s );
-
-			if ( network_interface == null ){
-
-				return;
-			}
-
-			InetAddress	local_address = InetAddress.getByName( la_s );
-
-			URL location = new URL( loc_s );
-
-			rootDiscovered( network_interface, local_address, usn, location );
-
-		}catch( Throwable e ){
-
-			Debug.out( e );
-		}
-	}
-
+	
 	@Override
 	public void
 	rootDiscovered(
@@ -256,7 +230,7 @@ UPnPImpl
 					try{
 						rd_listeners_mon.enter();
 
-						listeners = new ArrayList<>( rd_listeners );
+						listeners = new ArrayList<>( rd_listeners.getList());
 
 					}finally{
 
@@ -287,7 +261,7 @@ UPnPImpl
 
 							root_locations.put( usn, new_root_device );
 
-							listeners = new ArrayList<>( rd_listeners );
+							listeners = new ArrayList<>( rd_listeners.getList());
 
 						}finally{
 
@@ -364,7 +338,7 @@ UPnPImpl
 
 		if ( root_device == null ){
 
-			ssdp.searchNow();
+			ssdp_igd.searchNow();
 		}
 	}
 
@@ -408,6 +382,24 @@ UPnPImpl
 	}
 
 	@Override
+	public void 
+	deviceStatusUpdate(
+		InetAddress		address, 
+		boolean			alive)
+	{
+		for ( UPnPListener listener: rd_listeners ){
+			
+			try{
+				listener.deviceStatusUpdate(address, alive);
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	@Override
 	public void
 	interfaceChanged(
 		NetworkInterface	network_interface )
@@ -419,7 +411,7 @@ UPnPImpl
 	public void
 	search()
 	{
-		ssdp.searchNow();
+		ssdp_igd.searchNow();
 	}
 
 	@Override
@@ -427,7 +419,7 @@ UPnPImpl
 	search(
 		String[]	STs )
 	{
-		ssdp.searchNow( STs );
+		ssdp_igd.searchNow( STs );
 	}
 
 	@Override
@@ -455,7 +447,7 @@ UPnPImpl
 			((UPnPRootDeviceImpl)roots.get(i)).destroy( true );
 		}
 
-		ssdp.searchNow();
+		ssdp_igd.searchNow();
 	}
 
 	public SimpleXMLParserDocument

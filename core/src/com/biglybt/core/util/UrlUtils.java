@@ -1874,6 +1874,15 @@ public class UrlUtils
 	}
 
 	public static URL
+	setHostAndPort(
+		URL		u,
+		String	host,
+		int		port )
+	{
+		return( setPort( setHost( u, host ), port ));
+	}
+	
+	public static URL
 	setProtocol(
 		URL			u,
 		String		protocol )

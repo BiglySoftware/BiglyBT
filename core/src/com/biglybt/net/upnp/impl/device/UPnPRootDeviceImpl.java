@@ -420,21 +420,23 @@ UPnPRootDeviceImpl
 		InetAddress		alt_address,
 		URL				_alt_location )
 	{
-		String temp_host = "127.0.0.1";
+		String	temp_host 	= "127.0.0.1";
+		int		temp_port	= 1;
 		
 			// deal with same device being discovered via IPv4 and IPv6 on same interface
+			// note that BiglyBT uses a different port for v4/v6
 		
-		URL alt_location = UrlUtils.setHost( _alt_location, temp_host );
+		URL alt_location = UrlUtils.setHostAndPort( _alt_location, temp_host, temp_port );
 		
 		synchronized( alt_locations ){
 
-			boolean same =  UrlUtils.setHost( location, temp_host ).equals( alt_location );
+			boolean same =  UrlUtils.setHostAndPort( location, temp_host, temp_port ).equals( alt_location );
 				
 			if ( !same ){
 
 				for ( URL al: alt_locations ){
 				
-					same =  UrlUtils.setHost (al, temp_host ).equals( alt_location );
+					same =  UrlUtils.setHostAndPort(al, temp_host, temp_port ).equals( alt_location );
 				
 					if ( same ){
 						

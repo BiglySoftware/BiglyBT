@@ -19,6 +19,7 @@
 
 package com.biglybt.net.upnp;
 
+import java.net.InetAddress;
 import java.net.URL;
 
 /**
@@ -36,4 +37,11 @@ UPnPListener
 	public void
 	rootDeviceFound(
 		UPnPRootDevice		device );
+	
+	public default void
+	deviceStatusUpdate(
+		InetAddress		address,
+		boolean			alive )
+	{
+	}
 }

@@ -46,12 +46,12 @@ UPnPFactory
 		UPnPSSDPAdapter		adapter,
 		String				group_address_v4,
 		int					group_port,
-		int					control_port,
+		int					deprecated_cp,
 		String[]			selected_interfaces )
 
 		throws UPnPException
 	{
-		return( SSDPCore.getSingleton( adapter, group_address_v4, null, group_port, control_port, selected_interfaces ));
+		return( SSDPCore.getSingleton( adapter, group_address_v4, null, group_port, selected_interfaces ));
 	}
 	
 	public static UPnPSSDP
@@ -60,11 +60,11 @@ UPnPFactory
 		String				group_address_v4,
 		String				group_address_v6,
 		int					group_port,
-		int					control_port,
+		int					deprecated_cp,
 		String[]			selected_interfaces )
 
 		throws UPnPException
 	{
-		return( SSDPCore.getSingleton( adapter, group_address_v4, group_address_v6, group_port, control_port, selected_interfaces ));
+		return( SSDPCore.getSingleton( adapter, group_address_v4, group_address_v6, group_port, selected_interfaces ));
 	}
 }

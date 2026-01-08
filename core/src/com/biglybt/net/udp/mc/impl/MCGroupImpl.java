@@ -95,14 +95,14 @@ MCGroupImpl
 	
 	public static MCGroupImpl
 	getSingleton(
-		MCGroupAdapter adapter,
+		MCGroupAdapter 		adapter,
 		String				group_address,
-		int					group_port,
-		int					control_port,
-		String[]			interfaces )
+		int					group_port )
 
 		throws MCGroupException
 	{
+		int control_port = 0;
+		
 		try{
 			class_mon.enter();
 
@@ -136,7 +136,7 @@ MCGroupImpl
 					}
 				}
 
-				singleton = new MCGroupImpl( adapter, group_address, group_port, control_port, interfaces );
+				singleton = new MCGroupImpl( adapter, group_address, group_port, control_port );
 
 				if ( control_port == 0 ){
 
@@ -146,6 +146,9 @@ MCGroupImpl
 				}
 
 				singletons.put( key, singleton );
+			}else{
+				
+				singleton.addAdapter( adapter );
 			}
 
 			return( singleton );
@@ -156,7 +159,7 @@ MCGroupImpl
 		}
 	}
 
-	private final MCGroupAdapter			adapter;
+	private final CopyOnWriteList<MCGroupAdapter>			adapters = new CopyOnWriteList<>();;
 
 	private final String					group_address_str;
 	private final int						group_port;
@@ -164,7 +167,6 @@ MCGroupImpl
 	protected final boolean					ipv6;
 
 	private int						control_port;
-	private String[]				selected_interfaces;
 
 
 	private boolean		ttl_problem_reported	= true;	// remove these diagnostic reports on win98
@@ -181,17 +183,15 @@ MCGroupImpl
 		MCGroupAdapter		_adapter,
 		String				_group_address,
 		int					_group_port,
-		int					_control_port,
-		String[]			_interfaces )
+		int					_control_port )
 
 		throws MCGroupException
 	{
-		adapter	= _adapter;
+		adapters.add( _adapter );
 
 		group_address_str	= _group_address;
 		group_port			= _group_port;
 		control_port		= _control_port;
-		selected_interfaces	= _interfaces;
 
 		try{
 			InetAddress ia = HostNameToIPResolver.syncResolve( group_address_str );
@@ -217,7 +217,7 @@ MCGroupImpl
 
 						}catch( Throwable e ){
 
-							adapter.log(e);
+							log(e);
 						}
 					}
 				});
@@ -228,6 +228,45 @@ MCGroupImpl
 		}
 	}
 
+	private void
+	addAdapter(
+		MCGroupAdapter	adapter )
+	{
+		adapters.add( adapter );
+	}
+
+	private void
+	trace(
+		String str )
+	{
+		for ( MCGroupAdapter a: adapters ){
+			
+			a.trace( str );
+		}
+	}
+	
+	private void
+	log(
+		Throwable e )
+	{
+		for ( MCGroupAdapter a: adapters ){
+			
+			a.log( e );
+		}
+	}
+	
+	private void
+	log(
+		String		msg,
+		Throwable	e )
+	{
+		for ( MCGroupAdapter a: adapters ){
+			
+			a.log( msg, e );
+		}
+	}
+	
+	
 	@Override
 	public boolean 
 	isIPv6()
@@ -251,16 +290,6 @@ MCGroupImpl
 			List<NetworkInterface>	x = NetUtils.getNetworkInterfaces();
 
 			for ( final NetworkInterface network_interface: x ){
-
-				if ( !interfaceSelected( network_interface )){
-
-					if ( start_of_day ){
-
-						adapter.trace( "ignoring interface " + network_interface.getName() + ":" + network_interface.getDisplayName() + ", not selected" );
-					}
-
-					continue;
-				}
 				
 				if ( ( ignore_v4 && !ipv6 ) || ( ignore_v6 && ipv6 )){
 					
@@ -301,7 +330,7 @@ MCGroupImpl
 
 						if ( start_of_day ){
 
-							adapter.trace( "ignoring loopback address " + ni_address + ", interface " + network_interface.getName());
+							trace( "ignoring loopback address " + ni_address + ", interface " + network_interface.getName());
 						}
 
 						continue;
@@ -345,7 +374,7 @@ MCGroupImpl
 	
 									ttl_problem_reported	= true;
 	
-									adapter.log( e );
+									log( e );
 								}
 							}
 							
@@ -355,7 +384,7 @@ MCGroupImpl
 							
 							mc_channel.bind( new InetSocketAddress( group_port ));
 								
-							adapter.trace( "group = " + group_address +"/" +
+							trace( "group = " + group_address +"/" +
 											network_interface.getName()+":"+
 											network_interface.getDisplayName() + "-" + ni_address.getHostAddress() +": started" );
 
@@ -376,7 +405,7 @@ MCGroupImpl
 	
 											}catch( Throwable e ){
 	
-												adapter.log( e );
+												log( e );
 											}
 										}
 									});
@@ -416,11 +445,11 @@ MCGroupImpl
 	
 									ttl_problem_reported	= true;
 	
-									adapter.log( e );
+									log( e );
 								}
 							}
 		
-							adapter.trace( "group = " + group_address +"/" +
+							trace( "group = " + group_address +"/" +
 											network_interface.getName()+":"+
 											network_interface.getDisplayName() + "-" + ni_address.getHostAddress() +": started" );
 	
@@ -444,7 +473,7 @@ MCGroupImpl
 	
 											}catch( Throwable e ){
 	
-												adapter.log( e );
+												log( e );
 											}
 										}
 									});
@@ -499,7 +528,7 @@ MCGroupImpl
 							}
 						}catch( Throwable e ){
 	
-							adapter.log( e );
+							log( e );
 						}
 					}else{
 				
@@ -529,7 +558,7 @@ MCGroupImpl
 	
 						}catch( Throwable e ){
 	
-							adapter.log( e );
+							log( e );
 						}
 					}
 				}
@@ -543,12 +572,16 @@ MCGroupImpl
 
 		for ( NetworkInterface ni: changed_interfaces.values()){
 
-			try{
-				adapter.interfaceChanged( ni );
+			for ( MCGroupAdapter a: adapters ){
+				
+				try{
 
-			}catch( Throwable e ){
+					a.interfaceChanged( ni );
 
-				Debug.out( e );
+				}catch( Throwable e ){
+
+					Debug.out( e );
+				}
 			}
 		}
 	}
@@ -558,32 +591,6 @@ MCGroupImpl
 	getControlPort()
 	{
 		return( control_port );
-	}
-
-	private boolean
-	interfaceSelected(
-		NetworkInterface	ni )
-	{
-		if ( selected_interfaces != null && selected_interfaces.length > 0 ){
-
-			boolean	ok 	= false;
-
-			for (int i=0;i<selected_interfaces.length;i++){
-
-				if ( ni.getName().equalsIgnoreCase( selected_interfaces[i] )){
-
-					ok	= true;
-
-					break;
-				}
-			}
-
-			return( ok );
-
-		}else{
-
-			return( true );
-		}
 	}
 
 	private boolean
@@ -615,7 +622,8 @@ MCGroupImpl
 	@Override
 	public void
 	sendToGroup(
-		final byte[]	data )
+		byte[]		data,
+		String[]	selected_interfaces )
 	{
 			// have debugs showing the send-to-group operation hanging and blocking AZ close, make async
 
@@ -626,21 +634,49 @@ MCGroupImpl
 				public void
 				runSupport()
 				{
-					sendToGroupSupport( data );
+					sendToGroupSupport( data, selected_interfaces );
 				}
 			});
 	}
 
+	private boolean
+	interfaceSelected(
+		NetworkInterface	ni,
+		String[]			selected_interfaces )
+	{
+		if ( selected_interfaces != null && selected_interfaces.length > 0 ){
+
+			boolean	ok 	= false;
+
+			for (int i=0;i<selected_interfaces.length;i++){
+
+				if ( ni.getName().equalsIgnoreCase( selected_interfaces[i] )){
+
+					ok	= true;
+
+					break;
+				}
+			}
+
+			return( ok );
+
+		}else{
+
+			return( true );
+		}
+	}
+	
 	private void
 	sendToGroupSupport(
-		byte[]	data )
+		byte[]		data,
+		String[]	selected_interfaces )
 	{
 		try{
 			List<NetworkInterface>	x = NetUtils.getNetworkInterfaces();
 
 			for ( final NetworkInterface network_interface: x ){
 
-				if ( !interfaceSelected( network_interface )){
+				if ( !interfaceSelected( network_interface, selected_interfaces )){
 
 					continue;
 				}
@@ -700,7 +736,7 @@ MCGroupImpl
 
 									ttl_problem_reported	= true;
 
-									adapter.log( e );
+									log( e );
 								}
 							}
 
@@ -743,7 +779,7 @@ MCGroupImpl
 
 						sso_problem_reported	= true;
 
-						adapter.log( e );
+						log( e );
 					}
 				}
 			}
@@ -754,7 +790,8 @@ MCGroupImpl
 	@Override
 	public void
 	sendToGroup(
-		final String	param_data )
+		String		param_data,
+		String[]	selected_interfaces )
 	{
 			// have debugs showing the send-to-group operation hanging and blocking AZ close, make async
 
@@ -765,21 +802,22 @@ MCGroupImpl
 				public void
 				runSupport()
 				{
-					sendToGroupSupport( param_data );
+					sendToGroupSupport( param_data, selected_interfaces );
 				}
 			});
 	}
 
 	private void
 	sendToGroupSupport(
-		String	param_data )
+		String		param_data,
+		String[]	selected_interfaces )
 	{
 		try{
 			List<NetworkInterface>	x = NetUtils.getNetworkInterfaces();
 
 			for ( NetworkInterface network_interface: x ){
 
-				if ( !interfaceSelected( network_interface )){
+				if ( !interfaceSelected( network_interface, selected_interfaces )){
 
 					continue;
 				}
@@ -839,7 +877,7 @@ MCGroupImpl
 
 									ttl_problem_reported	= true;
 
-									adapter.log( e );
+									log( e );
 								}
 							}
 
@@ -885,7 +923,7 @@ MCGroupImpl
 
 						sso_problem_reported	= true;
 
-						adapter.log( e );
+						log( e );
 					}
 				}
 			}
@@ -921,7 +959,7 @@ MCGroupImpl
 
 				if ( log_on_stop ){
 
-					adapter.trace(
+					trace(
 							"group = " + group_address +"/" +
 							network_interface.getName()+":"+
 							network_interface.getDisplayName() + " - " + local_address + ": stopped" );
@@ -949,11 +987,11 @@ MCGroupImpl
 
 				failed_accepts++;
 
-				adapter.trace( "MCGroup: receive failed on port " + port + ":" + e.getMessage());
+				trace( "MCGroup: receive failed on port " + port + ":" + e.getMessage());
 
 				if (( failed_accepts > 100 && successful_accepts == 0 ) || failed_accepts > 1000 ){
 
-					adapter.trace( "    too many failures, abandoning" );
+					trace( "    too many failures, abandoning" );
 
 					break;
 				}
@@ -996,7 +1034,7 @@ MCGroupImpl
 
 				if ( log_on_stop ){
 
-					adapter.trace(
+					trace(
 							"group = " + group_address +"/" +
 							network_interface.getName()+":"+
 							network_interface.getDisplayName() + " - " + local_address + ": stopped" );
@@ -1024,11 +1062,11 @@ MCGroupImpl
 				
 				failed_accepts++;
 
-				adapter.trace( "MCGroup: receive failed on port " + channel.socket().getLocalPort() + ":" + e.getMessage());
+				trace( "MCGroup: receive failed on port " + channel.socket().getLocalPort() + ":" + e.getMessage());
 
 				if (( failed_accepts > 100 && successful_accepts == 0 ) || failed_accepts > 1000 ){
 
-					adapter.trace( "    too many failures, abandoning" );
+					trace( "    too many failures, abandoning" );
 
 					selector.cancel( sc );
 				}
@@ -1073,12 +1111,21 @@ MCGroupImpl
 		}
 		*/
 		
-		adapter.received(
-				network_interface,
-				local_address,
-				(InetSocketAddress)packet.getSocketAddress(),
-				data,
-				len );
+		for ( MCGroupAdapter a: adapters ){
+			
+			try{
+				a.received(
+						network_interface,
+						local_address,
+						(InetSocketAddress)packet.getSocketAddress(),
+						data,
+						len );
+				
+			}catch( Throwable e ){
+				
+				log( e );
+			}
+		}
 	}
 
 	private void
@@ -1104,12 +1151,21 @@ MCGroupImpl
 		}
 		*/
 		
-		adapter.received(
-				network_interface,
-				local_address,
-				remote,
-				data,
-				len );
+		for ( MCGroupAdapter a: adapters ){
+
+			try{
+				a.received(
+						network_interface,
+						local_address,
+						remote,
+						data,
+						len );
+
+			}catch( Throwable e ){
+
+				log( e );
+			}
+		}
 	}
 	
 	@Override

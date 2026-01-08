@@ -30,6 +30,11 @@ UPnPSSDP
 	
 	public static final int					SSDP_GROUP_PORT		= 1900;
 
+	/**
+	 * @deprecated
+	 * Delete 4.1+
+	 */
+	
 	public default int
 	getControlPort()
 	{

@@ -223,10 +223,11 @@ DeviceManagerUPnPImpl
 		try{
 			upnp = UPnPFactory.getSingleton( adapter, null );
 
-
 			upnp.addRootDeviceListener(
 				new UPnPListener()
 				{
+					private Map<InetAddress,Boolean>	liveness_map = new HashMap<>();
+
 					@Override
 					public boolean
 					deviceDiscovered(
@@ -243,62 +244,10 @@ DeviceManagerUPnPImpl
 					{
 						handleDevice( device, true );
 					}
-				});
-
-			upnp.getSSDP().addListener(
-				new UPnPSSDPListener()
-				{
-					private Map<InetAddress,Boolean>	liveness_map = new HashMap<>();
 
 					@Override
 					public void
-					receivedResult(
-						NetworkInterface	network_interface,
-						InetAddress			local_address,
-						InetAddress			originator,
-						String				USN,
-						URL					location,
-						String				ST,
-						String				AL )
-					{
-					}
-
-					@Override
-					public void
-					receivedNotify(
-						NetworkInterface	network_interface,
-						InetAddress			local_address,
-						InetAddress			originator,
-						String				USN,
-						URL					location,
-						String				NT,
-						String				NTS )
-					{
-						alive( originator, !NTS.contains("byebye"));
-					}
-
-					@Override
-					public String[]
-					receivedSearch(
-						NetworkInterface	network_interface,
-						InetAddress			local_address,
-						InetAddress			originator,
-						String				ST )
-					{
-						alive( originator, true );
-
-						return( null );
-					}
-
-					@Override
-					public void
-					interfaceChanged(
-						NetworkInterface	network_interface )
-					{
-					}
-
-					private void
-					alive(
+					deviceStatusUpdate(
 						InetAddress		address,
 						boolean			alive )
 					{
@@ -700,19 +649,6 @@ DeviceManagerUPnPImpl
 		}catch( Throwable e ){
 
 			manager.log( "Failed to hook into UPnPAV", e );
-		}
-	}
-
-	protected void
-	injectDiscoveryCache(
-		Map		cache )
-	{
-		try{
-			upnp.injectDiscoveryCache( cache );
-
-		}catch( Throwable e ){
-
-			Debug.out( e );
 		}
 	}
 

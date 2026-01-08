@@ -57,10 +57,11 @@ SSDPCoreImpl
 	private final MCGroup	mc_group;
 	private final boolean	ipv6;
 
-	private UPnPSSDPAdapter		adapter;
-	private String				group_address_str;
-	private int					group_port;
-
+	private final UPnPSSDPAdapter	adapter;
+	private final String			group_address_str;
+	private final int				group_port;
+	private final String[]			selected_interfaces;
+	
 	private boolean		first_response			= true;
 
 	private List<UPnPSSDPListener>			listeners	= new ArrayList<>();
@@ -78,7 +79,6 @@ SSDPCoreImpl
 		UPnPSSDPAdapter		_adapter,
 		String				_group_address_str,
 		int					_group_port,
-		int					_control_port,
 		String[]			_selected_interfaces )
 
 		throws UPnPException
@@ -86,11 +86,11 @@ SSDPCoreImpl
 		adapter	= _adapter;
 
 		group_address_str	= _group_address_str;
-		
 		group_port			= _group_port;
-
+		selected_interfaces	= _selected_interfaces;
+		
 		try{
-			mc_group = MCGroupFactory.getSingleton( this, group_address_str, group_port, _control_port, _selected_interfaces );
+			mc_group = MCGroupFactory.getSingleton( this, group_address_str, group_port );
 
 			ipv6 = mc_group.isIPv6();
 			
@@ -128,6 +128,32 @@ SSDPCoreImpl
 		adapter.log( e );
 	}
 
+	private boolean
+	interfaceSelected(
+		NetworkInterface	ni )
+	{
+		if ( selected_interfaces != null && selected_interfaces.length > 0 ){
+
+			boolean	ok 	= false;
+
+			for (int i=0;i<selected_interfaces.length;i++){
+
+				if ( ni.getName().equalsIgnoreCase( selected_interfaces[i] )){
+
+					ok	= true;
+
+					break;
+				}
+			}
+
+			return( ok );
+
+		}else{
+
+			return( true );
+		}
+	}
+	
 	public void
 	notify(
 		String		NT,
@@ -169,7 +195,7 @@ SSDPCoreImpl
 
 		try{
 
-			mc_group.sendToGroup( str );
+			mc_group.sendToGroup( str, selected_interfaces );
 
 		}catch( Throwable e ){
 		}
@@ -213,7 +239,7 @@ SSDPCoreImpl
 
 		try{
 
-			mc_group.sendToGroup( data );
+			mc_group.sendToGroup( data, selected_interfaces );
 
 		}catch( Throwable e ){
 		}
@@ -224,14 +250,17 @@ SSDPCoreImpl
 	interfaceChanged(
 		NetworkInterface	network_interface )
 	{
-		for (int i=0;i<listeners.size();i++){
-
-			try{
-				((UPnPSSDPListener)listeners.get(i)).interfaceChanged(network_interface);
-
-			}catch( Throwable e ){
-
-				adapter.log(e);
+		if ( interfaceSelected( network_interface )){
+			
+			for (int i=0;i<listeners.size();i++){
+	
+				try{
+					((UPnPSSDPListener)listeners.get(i)).interfaceChanged(network_interface);
+	
+				}catch( Throwable e ){
+	
+					adapter.log(e);
+				}
 			}
 		}
 	}
@@ -245,6 +274,11 @@ SSDPCoreImpl
 		byte[]					packet_data,
 		int						length )
 	{
+		if ( !interfaceSelected( network_interface )){
+			
+			return;
+		}
+		
 		String	str = new String( packet_data, 0,length );
 
 		if ( first_response ){

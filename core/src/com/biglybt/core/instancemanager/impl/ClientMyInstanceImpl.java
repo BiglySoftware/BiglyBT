@@ -20,6 +20,7 @@
 package com.biglybt.core.instancemanager.impl;
 
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ ClientMyInstanceImpl
 	final ClientInstanceManagerImpl manager;
 
 	private String				id;
-	InetAddress			internal_address;
+	private InetAddress			internal_address;
 	private int					tcp_port;
 	private int					udp_port;
 	private int					udp_non_data_port;
@@ -136,7 +137,7 @@ ClientMyInstanceImpl
 	{
 		InetAddress	new_internal_address	= NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress();
 
-		if ( new_internal_address == null ){
+		if ( new_internal_address == null || new_internal_address.isAnyLocalAddress() || new_internal_address instanceof Inet6Address ){
 
 			try{
 				new_internal_address = InetAddress.getByName( "0.0.0.0" );
