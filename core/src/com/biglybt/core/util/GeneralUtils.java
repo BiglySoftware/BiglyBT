@@ -451,6 +451,18 @@ GeneralUtils
 		return( len > 0 && isDoubleQuote( str.charAt(len-1)));
 	}
 	
+	public static String
+	removeDoubleQuotes(
+		String		str )
+	{
+		if ( str.length() >= 2 && GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
+			
+			str = str.substring( 1, str.length()-1 );
+		}
+		
+		return( str );
+	}
+	
 	public static boolean
 	startsWithIgnoreCase(
 		String 	s1,

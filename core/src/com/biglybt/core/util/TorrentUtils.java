@@ -3136,6 +3136,8 @@ TorrentUtils
 
 				bit = bit.trim();
 				
+				bit = GeneralUtils.removeDoubleQuotes( bit );
+						
 				if ( !bit.isEmpty()){
 					
 					if ( regexpr ){
