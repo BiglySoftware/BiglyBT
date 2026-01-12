@@ -184,7 +184,7 @@ DeviceManagerUPnPImpl
 				log(
 					Throwable	e )
 				{
-					Debug.printStackTrace(e);
+					// Debug.printStackTrace(e);
 				}
 				
 				@Override
@@ -193,7 +193,7 @@ DeviceManagerUPnPImpl
 					String		msg,
 					Throwable	e )
 				{
-					Debug.out( msg, e );
+					// Debug.out( msg, e );
 				}
 
 				@Override
