@@ -254,13 +254,13 @@ PeerImpl
 	@Override
 	public boolean isInterested()
 	{
-		return( delegate.isInteresting());
+		return( delegate.isInterested());
 	}
 
 	@Override
 	public boolean isInteresting()
 	{
-		return( delegate.isInterested());
+		return( delegate.isInteresting());
 	}
 
 	@Override
