@@ -81,8 +81,30 @@ RegExUtil
 		}
 	}
 
+	private static volatile String[] convcache;
+	
 	public static String
 	convertAndOrToExpr(
+		String		str )
+	{
+			// gets called a lot with same arg during filtering
+		
+		String[] cache = convcache;
+		
+		if ( cache != null && cache[0].equals( str )){
+			
+			return( cache[1] );
+		}
+		
+		String result = convertAndOrToExprSupport( str );
+				
+		convcache = new String[]{ str, result };
+		
+		return( result );
+	}
+	
+	private static String
+	convertAndOrToExprSupport(
 		String		str )
 	{
 		str = str.replaceAll("\\s*[|;]\\s*", "|" );
