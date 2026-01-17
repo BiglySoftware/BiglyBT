@@ -46,16 +46,14 @@ TableColumnFilterHelper<T>
 	private TimerEventPeriodic 	filter_refilter;
 	private Object				refilter_lock = this;
 
-	private volatile boolean 	filter_active;
+	private volatile boolean 	col_filter_active;
 	
 	private TableColumn		col_cache;
 	private String			col_cache_name;
 
 	private String			date_cache_str;
 	private double			date_cache_time;
-	
-	private int match_mode;
-	
+		
 	public
 	TableColumnFilterHelper(
 		TableViewSWT<T>		_table_view,
@@ -97,7 +95,7 @@ TableColumnFilterHelper<T>
 								
 								return;
 							}
-						}else if ( filter_active ){
+						}else if ( col_filter_active ){
 															
 							table_view.refilter();
 						}
@@ -114,14 +112,28 @@ TableColumnFilterHelper<T>
 		String		default_match_text,
 		boolean		ignore_column_match )
 	{
-		if ( original_filter.isEmpty()){
+		return( filterCheck( data_source, original_filter, regex, new String[]{default_match_text}, false, ignore_column_match ));
+	}
+	
+	public boolean
+	filterCheck(
+		T			data_source,
+		String		original_filter,
+		boolean		regex,
+		String[]	default_match_texts,
+		boolean		confusable,
+		boolean		ignore_column_match )
+	{
+		if ( original_filter == null || original_filter.isEmpty()){
 			
 			return( true );
 		}
 
 		String	filter_text = null;
-		String	match_text 	= null;
+		String	col_match_text 	= null;
 	
+		int match_mode = MM_EQ;
+
 		double match_numeric = Double.NaN;
 		
 		int pos = original_filter.indexOf( ':' );
@@ -187,7 +199,7 @@ TableColumnFilterHelper<T>
 		
 			if ( col != null ){
 
-				match_text = "";
+				col_match_text = "";
 				
 				TableRowSWT row = table_view.getRowSWT( data_source );
 				
@@ -215,11 +227,11 @@ TableColumnFilterHelper<T>
 						
 						cell.refresh();
 											
-						match_text = cell.getTextEquivalent();
+						col_match_text = cell.getTextEquivalent();
 						
-						if ( match_text == null ){
+						if ( col_match_text == null ){
 							
-							match_text = cell.getText();
+							col_match_text = cell.getText();
 						}
 						
 						match_numeric = cell.getNumeric();
@@ -234,26 +246,41 @@ TableColumnFilterHelper<T>
 			}
 		}
 		
-		boolean active;
+		boolean col_match_active;
 		
-		if ( match_text == null || filter_text == null ){
+		String[] match_texts;
+		
+		if ( col_match_text == null || filter_text == null ){
 			
 			filter_text	= original_filter;
-			match_text	= default_match_text;
 			
-			active = false;
+			match_texts	= default_match_texts;
+			
+			if ( confusable ){
+				
+				filter_text = GeneralUtils.getConfusableEquivalent( filter_text, true );
+
+				for ( int i=0; i< match_texts.length; i++ ){
+				
+					match_texts[i] = GeneralUtils.getConfusableEquivalent( match_texts[i], false );
+				}
+			}
+			
+			col_match_active = false;
 			
 		}else{
 			
-			active = true;
+			match_texts	= new String[]{ col_match_text };
+			
+			col_match_active = true;
 		}
 				
-		if ( filter_active != active ){
+		if ( col_filter_active != col_match_active ){
 			
-			filter_active = active;
+			col_filter_active = col_match_active;
 		}
 		
-		if ( active && match_mode != MM_EQ ){
+		if ( col_match_active && match_mode != MM_EQ ){
 			
 			double filter_num;
 			
@@ -282,7 +309,7 @@ TableColumnFilterHelper<T>
 				filter_num 	= getNumber( filter_text );
 			}
 			
-			double match_num	= Double.isNaN(match_numeric)?getNumber( match_text ):match_numeric;
+			double match_num	= Double.isNaN(match_numeric)?getNumber( match_texts[0] ):match_numeric;
 			
 			if (  Double.isNaN( filter_num ) ||  Double.isNaN( match_num )){
 				
@@ -321,7 +348,19 @@ TableColumnFilterHelper<T>
 	
 			Pattern pattern = RegExUtil.getCachedPattern( regex_key, expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 	
-			return( pattern.matcher(match_text).find() == match_result );
+			boolean result = !match_result;
+
+			for ( String match_text: match_texts ){
+				
+				if ( pattern.matcher( match_text ).find()){
+
+					result = match_result;
+
+					break;
+				}
+			}
+			
+			return( result );
 		}
 	}
 	

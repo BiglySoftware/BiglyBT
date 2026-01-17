@@ -138,11 +138,19 @@ RegExUtil
 	}
 	
 	public static String
-	splitAndQuote(String s, String splitterRegex) {
-		String[] bits = s.split(splitterRegex);
+	splitAndQuote(
+		String s, 
+		String splitterRegex) 
+	{
+		Pattern p = getCachedPattern( "regexutil: " + splitterRegex , splitterRegex);
+		
+		String[] bits = p.split( s );
+		
 		for (int i = 0; i < bits.length; i++) {
+			
 			bits[i] = Pattern.quote(bits[i]);
 		}
+		
 		return String.join("|", bits);
 	}
 	

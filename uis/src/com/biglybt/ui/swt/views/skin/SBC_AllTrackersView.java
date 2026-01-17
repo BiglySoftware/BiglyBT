@@ -23,13 +23,13 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.content.RelatedContent;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
@@ -65,6 +65,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
@@ -86,6 +87,8 @@ public class SBC_AllTrackersView
 
 	private static final String TABLE_NAME = "AllTrackersView";
 	private static final Class<AllTrackersViewEntry> PLUGIN_DS_TYPE = AllTrackersViewEntry.class;
+
+	private TableColumnFilterHelper<AllTrackersViewEntry>	col_filter_helper;
 
 	TableViewSWT<AllTrackersViewEntry> tv;
 
@@ -339,6 +342,8 @@ public class SBC_AllTrackersView
 			listener_added = false;
 		}
 
+		col_filter_helper = null;
+		
 		return super.skinObjectHidden(skinObject, params);
 	}
 
@@ -410,13 +415,21 @@ public class SBC_AllTrackersView
 					ColumnAllTrackersTracker.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
-			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
-				"filterbox");
+			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject( "filterbox" );
+			
 			if (soFilter != null) {
 				
 				BubbleTextBox bubbleTextBox = soFilter.getBubbleTextBox();
 				
+				col_filter_helper = new TableColumnFilterHelper<AllTrackersViewEntry>( tv, "alltrackersview:search" );
+
 				tv.enableFilterCheck(bubbleTextBox, this);
+				
+				String tooltip = MessageText.getString("filter.tt.start");
+				tooltip += MessageText.getString("column.filter.tt.line1");
+				tooltip += MessageText.getString("column.filter.tt.line2");
+
+				bubbleTextBox.setTooltip( tooltip );
 				
 				bubbleTextBox.setMessage( MessageText.getString( "Button.search2" ) );
 			}
@@ -1673,6 +1686,7 @@ public class SBC_AllTrackersView
 	filterSet(
 		String filter)
 	{
+		col_filter_helper.filterSet( filter );
 	}
 
 	@Override
@@ -1683,38 +1697,13 @@ public class SBC_AllTrackersView
 		boolean 				regex,
 		boolean					confusable )
 	{
-		if ( confusable ){
-			
-			return( false );
-		}
-		
 		AllTrackersTracker tracker = ds.getTracker();
 		
-		String name = tracker.getTrackerName();
-
-		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
-
-		boolean	match_result = true;
-
-		if ( regex && s.startsWith( "!" )){
-
-			s = s.substring(1);
-
-			match_result = false;
-		}
-
-		Pattern pattern = RegExUtil.getCachedPattern( "alltrackersview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-
-		boolean result = pattern.matcher(name).find() == match_result;
-		
-		if ( result != match_result ){
+		String default_texts[] = new String[]{ ds.getTrackerName(), tracker.getStatusString()};
+					
+		boolean res = col_filter_helper.filterCheck( ds, filter, regex, default_texts, confusable, false );
 			
-			String status = tracker.getStatusString();
-			
-			result = pattern.matcher(status).find() == match_result;
-		}
-		
-		return( result );
+		return( res );
 	}
 
 	private void
