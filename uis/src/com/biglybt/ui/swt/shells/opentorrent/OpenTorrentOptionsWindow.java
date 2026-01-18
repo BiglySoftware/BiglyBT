@@ -830,9 +830,22 @@ public class OpenTorrentOptionsWindow
 		try{
 			if ( dlg == null ){
 
-				dlg = new SkinnedDialog("skin3_dlg_opentorrent_options", "shell",
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP );
 
+					// if we only have one dialog then we can make it independent and 
+					// minimizable - user requested feature
+				
+				if ( separate_dialogs ){
+					
+					dlg = new SkinnedDialog("skin3_dlg_opentorrent_options", "shell",
+							SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+
+				}else{
+					
+					dlg = new SkinnedDialog("skin3_dlg_opentorrent_options", "shell", null,
+							SWT.RESIZE | SWT.MAX | SWT.MIN | SWT.DIALOG_TRIM);
+				}
+				
 				final SWTSkin skin_outter = dlg.getSkin();
 
 				SWTSkinObject so;
@@ -1017,8 +1030,6 @@ public class OpenTorrentOptionsWindow
 
 				torrents_info_label = new Label( info_area, SWT.NULL );
 				torrents_info_label.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
-
-				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP );
 
 				boolean always_show_sidebar = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR ) && !separate_dialogs;
 				
