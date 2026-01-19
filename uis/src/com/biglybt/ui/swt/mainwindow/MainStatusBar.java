@@ -44,6 +44,7 @@ import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.speedmanager.SpeedManager;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.util.*;
@@ -427,6 +428,7 @@ public class MainStatusBar
 		
 		niStatus = new CLabelPadding(statusBar, borderFlag);
 		niStatus.setText("");			
+		ClipboardCopy.addCopyToClipMenu( niStatus, ()->niStatus.getText());
 		
 		Utils.addAndFireParameterListener(mapConfigListeners, true,
 				"Status Area Show NI", new ParameterListener() {
@@ -1671,6 +1673,13 @@ public class MainStatusBar
 	private void 
 	updateNIStatus() 
 	{
+		if (!CoreFactory.isCoreRunning()){
+			
+			return;
+		}
+
+		Core core = CoreFactory.getSingleton();
+		
 		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress( true );
 
 		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
@@ -1686,7 +1695,14 @@ public class MainStatusBar
 
 			lastNIInfo		= str;
 			
-			niStatus.setText( str );			
+			niStatus.setText( str );
+			
+			SpeedManager sm = core.getSpeedManager();
+			
+			if ( sm != null ){
+				
+				Utils.setTT( niStatus, sm.getASN());
+			}
 		}
 	}
 
