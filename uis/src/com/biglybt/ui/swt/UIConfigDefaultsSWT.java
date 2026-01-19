@@ -112,6 +112,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Status Area Show NAT", true);
 		def.addParameter("Status Area Show DDB", true);
 		def.addParameter("Status Area Show IPF", true);
+		def.addParameter("Status Area Show NI", false);
 		def.addParameter("Status Area Show RIP", true);
 
 		def.addParameter("status.rategraphs", Utils.getUserMode() > 0);

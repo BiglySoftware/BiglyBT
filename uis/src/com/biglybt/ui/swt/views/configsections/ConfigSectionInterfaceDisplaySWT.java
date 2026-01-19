@@ -407,6 +407,8 @@ public class ConfigSectionInterfaceDisplaySWT
 				"ConfigView.section.style.status.show_ddb"), listStatusBar);
 		add(new BooleanParameterImpl("Status Area Show IPF",
 				"ConfigView.section.style.status.show_ipf"), listStatusBar);
+		add(new BooleanParameterImpl("Status Area Show NI",
+				"label.quick.net.info"), listStatusBar);
 		add(new BooleanParameterImpl("status.rategraphs",
 				"ConfigView.section.style.status.show_rategraphs"), listStatusBar);
 

@@ -355,12 +355,14 @@ public class MainMenuV3
 				"ConfigView.section.style.status.show_nat",
 				"ConfigView.section.style.status.show_ddb",
 				"ConfigView.section.style.status.show_ipf",
+				"label.quick.net.info",
 			};
 			final String[] statusAreaConfig = {
 				"Status Area Show SR",
 				"Status Area Show NAT",
 				"Status Area Show DDB",
 				"Status Area Show IPF",
+				"Status Area Show NI",
 			};
 
 			for (int i = 0; i < statusAreaConfig.length; i++) {

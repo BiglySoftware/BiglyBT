@@ -16,6 +16,7 @@
  */
 package com.biglybt.ui.swt.mainwindow;
 
+import java.net.InetAddress;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -42,6 +43,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.util.*;
@@ -102,6 +104,8 @@ public class MainStatusBar
 
 	private CLabelPadding srStatus;
 
+	private CLabelPadding niStatus;
+	
 	private CLabelPadding natStatus;
 
 	private CLabelPadding dhtStatus;
@@ -123,6 +127,7 @@ public class MainStatusBar
 
 	private int 	lastNATstatus 	= -1;
 	private String 	lastNATInfo		= "";
+	private String	lastNIInfo		= "";
 	
 	private String lastNATimageID = null;
 
@@ -418,6 +423,22 @@ public class MainStatusBar
 					}
 				});
 
+			// Network Info
+		
+		niStatus = new CLabelPadding(statusBar, borderFlag);
+		niStatus.setText("");			
+		
+		Utils.addAndFireParameterListener(mapConfigListeners, true,
+				"Status Area Show NI", new ParameterListener() {
+					@Override
+					public void parameterChanged(String parameterName) {
+						niStatus.setVisible(COConfigurationManager.getBooleanParameter(parameterName));
+						statusBar.layout();
+					}
+				});
+		
+			// NAT Status
+		
 		natStatus = new CLabelPadding(statusBar, borderFlag);
 		natStatus.setText("");
 
@@ -1159,12 +1180,14 @@ public class MainStatusBar
 			"ConfigView.section.style.status.show_nat",
 			"ConfigView.section.style.status.show_ddb",
 			"ConfigView.section.style.status.show_ipf",
+			"label.quick.net.info",
 		};
 		final String[] statusAreaConfig = {
 			"Status Area Show SR",
 			"Status Area Show NAT",
 			"Status Area Show DDB",
 			"Status Area Show IPF",
+			"Status Area Show NI",
 		};
 
 		for (int i = 0; i < statusAreaConfig.length; i++) {
@@ -1367,6 +1390,10 @@ public class MainStatusBar
 		}
 
 
+		if (niStatus.isVisible()) {
+			updateNIStatus();
+		}
+		
 		if (natStatus.isVisible()) {
 			updateNatStatus();
 		}
@@ -1641,6 +1668,29 @@ public class MainStatusBar
 		}
 	}
 
+	private void 
+	updateNIStatus() 
+	{
+		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress( true );
+
+		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
+
+		String str = MessageText.getString( "Peers.column.ip" ) + ": " + ( ip==null?"":ip.getHostAddress());
+
+		if ( ip_v6 != null && !ip_v6.equals( ip )){
+
+			str += (str.isEmpty()?"":", ") + ip_v6.getHostAddress();
+		}
+		
+		if ( !str.equals(lastNIInfo)){
+
+			lastNIInfo		= str;
+			
+			niStatus.setText( str );			
+		}
+	}
+
+	
 	/**
 	 *
 	 *
