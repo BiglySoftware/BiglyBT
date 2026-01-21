@@ -21,6 +21,8 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -306,11 +308,28 @@ public class Win32UIEnhancer
 
 	private static boolean	gfi_active = false;
 	private static int		gfi_consec_fails = 0;
-	private static AsyncDispatcher	gfi_dispatcher = new AsyncDispatcher( "gfi" );
+	private static AsyncDispatcher	gfi_dispatcher		= new AsyncDispatcher( "gfi" );
+	private static List<Image>		gfi_pending_images	= new ArrayList<>();
 	
-	public static Image getFileIcon(File file, boolean big) {
+	public static Image 
+	getFileIcon(
+		File file, boolean big) 
+	{
+		if ( !Utils.isSWTThread()){
+			
+			Debug.out( "Must be SWT thread" );
+			
+			return( null );
+		}
 		
 		synchronized( Win32UIEnhancer.class ){
+			
+			for ( Image img: gfi_pending_images ){
+
+				img.dispose();
+			}
+			
+			gfi_pending_images.clear();
 			
 			if ( gfi_active || gfi_consec_fails > 3 ){
 				
@@ -332,7 +351,7 @@ public class Win32UIEnhancer
 					// user has this hanging for ages so protect against it a bit
 				
 				res = getFileIconSupport( file, big );
-				
+								
 			}catch( Throwable e ){
 				
 				Debug.out( e );
@@ -344,6 +363,11 @@ public class Win32UIEnhancer
 					gfi_active = false;
 					
 					result[0] = res;
+					
+					if ( res != null ){
+						
+						gfi_pending_images.add( res );
+					}
 				}
 				
 				sem.release();
@@ -363,7 +387,14 @@ public class Win32UIEnhancer
 				gfi_consec_fails++;
 			}
 			
-			return( result[0] );
+			Image img = result[0];
+			
+			if ( img != null ){
+				
+				gfi_pending_images.remove( img );
+			}
+			
+			return( img );
 		}
 	}
 	
