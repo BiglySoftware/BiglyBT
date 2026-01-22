@@ -173,6 +173,11 @@ public class ConfigSectionFile
 				BCFG_ENABLE_SPARSE_FILES, "ConfigView.label.spare.file.enable");
 		add(sparseFiles, Parameter.MODE_INTERMEDIATE);
 
+		BooleanParameterImpl sparseFilesNoPrealloc = new BooleanParameterImpl(
+				BCFG_SPARSE_FILES_NO_PREALLOC, "ConfigView.label.spare.file.no.prealloc");
+		sparseFilesNoPrealloc.setIndent(1, true );
+		add(sparseFilesNoPrealloc, Parameter.MODE_INTERMEDIATE);
+			
 		BooleanParameterImpl pieceReorder = new BooleanParameterImpl(
 				BCFG_ENABLE_REORDER_STORAGE_MODE, "ConfigView.label.piecereorder");
 		add(pieceReorder, Parameter.MODE_ADVANCED);
@@ -215,7 +220,8 @@ public class ConfigSectionFile
 			zeroNewStop.setEnabled(zero && zeroNew.getValue());
 
 			sparseFiles.setEnabled(sparse);
-
+			sparseFilesNoPrealloc.setEnabled(sparse&&sparseFiles.getValue());
+			
 			pieceReorder.setEnabled(reorder);
 			minMB.setEnabled(reorder && pieceReorder.getValue());
 

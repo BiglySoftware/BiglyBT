@@ -147,6 +147,8 @@ DiskManagerImpl
 	static boolean	skip_incomp_dl_file_checks;
 	static boolean	skip_comp_dl_file_checks;
 	static boolean	switch_to_upload_only_enable;
+	static boolean	enable_sparse_files;
+	static boolean	sparse_files_dont_preallocate;
 	
 	static{
 		 COConfigurationManager.addAndFireParameterListeners(
@@ -155,6 +157,8 @@ DiskManagerImpl
 				ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS,
 				ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS,
 				ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE,
+				ConfigKeys.File.BCFG_ENABLE_SPARSE_FILES,
+				ConfigKeys.File.BCFG_SPARSE_FILES_NO_PREALLOC,
 			},
 			new ParameterListener(){
 				@Override
@@ -164,6 +168,8 @@ DiskManagerImpl
 	    	    	skip_comp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS );
 	    	    	skip_incomp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS );
 	    	    	switch_to_upload_only_enable	= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UPLOAD_ONLY_ON_WRITE_ERROR_ENABLE );
+	    	    	enable_sparse_files				= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_ENABLE_SPARSE_FILES );
+	    	    	sparse_files_dont_preallocate	= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SPARSE_FILES_NO_PREALLOC );
 				}
 			});
 	}
@@ -1670,8 +1676,21 @@ DiskManagerImpl
 	        }else{
 
 	                //reserve the full file size with the OS file system
-
-	            fileInfo.getCacheFile().setLength( target_length );
+	        	
+	        	if ( enable_sparse_files && sparse_files_dont_preallocate ){
+	        	
+	        			// user doesn't like the files sitting there with 0 disk used but length set to actual
+	        			// as if they copy the file it ends up grabbing the max space (assuming target
+	        			// isn't sparse...)
+	        		
+	        		if ( existing_length < 0 ){
+	            
+	        			fileInfo.getCacheFile().setLength( 0 );
+	        		}
+	        	}else{
+	        		
+	        		fileInfo.getCacheFile().setLength( target_length);
+	        	}
 
 	            allocated += target_length;
 	        }
