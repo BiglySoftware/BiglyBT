@@ -843,7 +843,7 @@ public class OpenTorrentOptionsWindow
 				}else{
 					
 					dlg = new SkinnedDialog("skin3_dlg_opentorrent_options", "shell", null,
-							SWT.RESIZE | SWT.MAX | SWT.MIN | SWT.DIALOG_TRIM);
+							SWT.RESIZE | SWT.MAX | SWT.MIN | SWT.DIALOG_TRIM | SWT.ON_TOP);
 				}
 				
 				final SWTSkin skin_outter = dlg.getSkin();
