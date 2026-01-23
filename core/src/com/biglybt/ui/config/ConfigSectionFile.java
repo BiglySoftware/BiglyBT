@@ -153,38 +153,40 @@ public class ConfigSectionFile
 
 		////////////////////
 
+		List<Parameter> listAlloc = new ArrayList<>();
+
 		if (!Constants.isWindows) {
 			BooleanParameterImpl xfsAllocation = new BooleanParameterImpl(
 					BCFG_XFS_ALLOCATION, "ConfigView.label.xfs.allocation");
-			add(xfsAllocation, Parameter.MODE_INTERMEDIATE);
+			add(xfsAllocation, Parameter.MODE_INTERMEDIATE, listAlloc );
 		}
 
 		// zero new files
 		BooleanParameterImpl zeroNew = new BooleanParameterImpl(BCFG_ZERO_NEW,
 				"ConfigView.label.zeronewfiles");
-		add(zeroNew, Parameter.MODE_INTERMEDIATE);
+		add(zeroNew, Parameter.MODE_INTERMEDIATE, listAlloc);
 
 		BooleanParameterImpl zeroNewStop = new BooleanParameterImpl(
 				BCFG_ZERO_NEW_STOP, "ConfigView.label.zeronewfiles.stop");
-		add(zeroNewStop, Parameter.MODE_INTERMEDIATE);
+		add(zeroNewStop, Parameter.MODE_INTERMEDIATE, listAlloc);
 		zeroNewStop.setIndent(1, true);
 
 		BooleanParameterImpl sparseFiles = new BooleanParameterImpl(
 				BCFG_ENABLE_SPARSE_FILES, "ConfigView.label.spare.file.enable");
-		add(sparseFiles, Parameter.MODE_INTERMEDIATE);
+		add(sparseFiles, Parameter.MODE_INTERMEDIATE, listAlloc);
 
 		BooleanParameterImpl sparseFilesNoPrealloc = new BooleanParameterImpl(
 				BCFG_SPARSE_FILES_NO_PREALLOC, "ConfigView.label.spare.file.no.prealloc");
 		sparseFilesNoPrealloc.setIndent(1, true );
-		add(sparseFilesNoPrealloc, Parameter.MODE_INTERMEDIATE);
+		add(sparseFilesNoPrealloc, Parameter.MODE_INTERMEDIATE, listAlloc);
 			
 		BooleanParameterImpl pieceReorder = new BooleanParameterImpl(
 				BCFG_ENABLE_REORDER_STORAGE_MODE, "ConfigView.label.piecereorder");
-		add(pieceReorder, Parameter.MODE_ADVANCED);
+		add(pieceReorder, Parameter.MODE_ADVANCED, listAlloc);
 
 		IntParameterImpl minMB = new IntParameterImpl(
 				ICFG_REORDER_STORAGE_MODE_MIN_MB, "ConfigView.label.piecereorderminmb");
-		add(minMB, Parameter.MODE_INTERMEDIATE);
+		add(minMB, Parameter.MODE_INTERMEDIATE, listAlloc);
 		minMB.setIndent(1, true);
 
 		// incremental file creation
@@ -192,7 +194,7 @@ public class ConfigSectionFile
 		BooleanParameterImpl incremental = new BooleanParameterImpl(
 				BCFG_ENABLE_INCREMENTAL_FILE_CREATION,
 				"ConfigView.label.incrementalfile");
-		add(incremental, Parameter.MODE_INTERMEDIATE);
+		add(incremental, Parameter.MODE_INTERMEDIATE, listAlloc);
 
 		ParameterListener listener = param -> {
 			// these are mutually exclusive
@@ -261,7 +263,11 @@ public class ConfigSectionFile
 		BooleanParameterImpl truncateLarge = new BooleanParameterImpl(
 				BCFG_FILE_TRUNCATE_IF_TOO_LARGE,
 				"ConfigView.section.file.truncate.too.large");
-		add(truncateLarge, Parameter.MODE_INTERMEDIATE);
+		add(truncateLarge, Parameter.MODE_INTERMEDIATE, listAlloc );
+		
+		ParameterGroupImpl pgAlloc = 
+				new ParameterGroupImpl("label.allocate",listAlloc);
+		add(pgAlloc);
 
 		// merge files of same size
 
