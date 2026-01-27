@@ -735,6 +735,18 @@ public class OpenTorrentOptionsWindow
 
 					reuse_window.swt_addTorrent( hw, torrentOptions );
 
+					Shell reuse_shell = reuse_window.getShell();
+					
+					if ( 	reuse_shell != null && 
+							( reuse_shell.getStyle() | SWT.MIN ) != 0 && 
+							!reuse_shell.getMinimized()){
+						
+							// existing dialog may be behind main window, bring 
+							// to front to make obvious to user
+						
+						reuse_shell.moveAbove( null );
+					}
+					
 					activeWindowsChanged( true );
 					
 					return;
@@ -843,7 +855,7 @@ public class OpenTorrentOptionsWindow
 				}else{
 					
 					dlg = new SkinnedDialog("skin3_dlg_opentorrent_options", "shell", null,
-							SWT.RESIZE | SWT.MAX | SWT.MIN | SWT.DIALOG_TRIM | SWT.ON_TOP);
+							SWT.RESIZE | SWT.MAX | SWT.MIN | SWT.DIALOG_TRIM );
 				}
 				
 				final SWTSkin skin_outter = dlg.getSkin();
