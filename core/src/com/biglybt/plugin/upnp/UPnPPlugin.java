@@ -1485,7 +1485,7 @@ UPnPPlugin
 	public UPnPPluginService[]
 	getServices()
 	{
-		return((UPnPPluginServiceWAN[])services_cow.toArray( new UPnPPluginServiceWAN[0] ));
+		return((UPnPPluginService[])services_cow.toArray( new UPnPPluginService[0] ));
 	}
 
 	public UPnPPluginService[]
