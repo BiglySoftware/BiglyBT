@@ -954,7 +954,7 @@ SubscriptionImpl
 					}
 				}catch( Throwable e ){
 		
-					Debug.printStackTrace(e);
+					// Debug.printStackTrace(e);
 				}
 			}
 		}
