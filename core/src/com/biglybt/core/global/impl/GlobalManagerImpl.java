@@ -498,7 +498,7 @@ public class GlobalManagerImpl
 
         		if ( loopFactor % lc == 0 ) {
 
-        			List<DownloadManager>	eligible = new ArrayList<>();
+        			Map<String,DownloadManager>	eligible_map = new HashMap<>();
 
         			DownloadManager[] managers = managers_list_cow;
         			
@@ -509,30 +509,24 @@ public class GlobalManagerImpl
     		        			(!manager.isPaused()) &&
     		        			manager.getErrorType() == DownloadManager.ET_INSUFFICIENT_SPACE ){
 
-    		        		eligible.add( manager );
+    		        		String fs = FileUtil.getFileStoreName(manager.getAbsoluteSaveLocation());
+    		        		
+    		        		if ( fs == null ){
+    		        			
+    		        			fs = "";
+    		        		}
+    		        		
+    		        		DownloadManager existing = eligible_map.get( fs );
+    		        		
+    		        		if ( 	existing == null ||
+    		        				existing.getPosition() > manager.getPosition()){
+    		        			
+    		        			eligible_map.put( fs, manager );
+    		        		}
     		        	}
     		        }
 
-    		        if ( !eligible.isEmpty()){
-
-    		        	if ( eligible.size() > 1 ){
-
-	    		        	Collections.sort(
-	    		        		eligible,
-	    		        		new Comparator<DownloadManager>()
-	    		        		{
-	    		        			@Override
-						            public int
-	    		        			compare(
-	    		        				DownloadManager o1,
-	    		        				DownloadManager o2)
-	    		        			{
-	    		        				return( o1.getPosition() - o2.getPosition());
-	    		        			}
-	    		        		});
-    		        	}
-
-    		        	DownloadManager manager = eligible.get(0);
+        			for ( DownloadManager manager: eligible_map.values()){
 
     		        	Logger.log(new LogEvent(LOGID, "Restarting download '" + manager.getDisplayName() + "' to check if disk space now available" ));
 
@@ -576,7 +570,7 @@ public class GlobalManagerImpl
 
     			long now = SystemTime.getMonotonousTime();
 
-        		List<DownloadManager>	eligible = new ArrayList<>();
+        		Map<String,List<DownloadManager>>	eligible_map = new HashMap<>();
 
         		DownloadManager[] managers = managers_list_cow;
         			
@@ -590,12 +584,28 @@ public class GlobalManagerImpl
 	        				
 	        			if ( t == null || now - t >= missing_file_dl_restart_check_period_millis ){
     		       		
-	        				eligible.add( manager );
+	        				String fs = FileUtil.getFileStoreName(manager.getAbsoluteSaveLocation());
+    		        		
+    		        		if ( fs == null ){
+    		        			
+    		        			fs = "";
+    		        		}
+    		        		
+    		        		List<DownloadManager> l = eligible_map.get( fs );
+    		        		
+    		        		if ( l == null ){
+    		        			
+    		        			 l = new ArrayList<>();
+    		        			 
+    		        			 eligible_map.put( fs,  l );
+    		        		}
+    		        		
+	        				l.add( manager );
 	        			}
     		       	}
         		}
 
-		        if ( !eligible.isEmpty()){
+        		for ( List<DownloadManager> eligible: eligible_map.values()){
 
 		        	if ( eligible.size() > 1 ){
 
