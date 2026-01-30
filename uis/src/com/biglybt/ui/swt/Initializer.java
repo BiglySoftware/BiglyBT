@@ -620,7 +620,7 @@ public class Initializer
 
 		reportPercent(50);
 
-		System.out.println("Core Initializing took "
+		System.out.println("Core " + Constants.getCurrentVersion() + " Initializing took "
 				+ (SystemTime.getCurrentTime() - startTime) + "ms");
 		startTime = SystemTime.getCurrentTime();
 
