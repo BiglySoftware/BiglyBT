@@ -33,7 +33,7 @@ import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
-
+import com.biglybt.platform.PlatformManagerJVMOptionsUtils;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -346,7 +346,7 @@ public class ConfigSectionConnectionAdvanced
 		ipv6_extra_globals.setIndent( 1, true );
 		ipv6_enable.addEnabledOnSelection(ipv6_extra_globals);
 		
-		if ( Constants.isJava18OrHigher ){
+		if ( Constants.isJava18OrHigher && !PlatformManagerJVMOptionsUtils.canAccessOptions()){
 			
 			add( new InfoParameterImpl(null, "network.ip.pref.options", ""));
 			

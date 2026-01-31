@@ -33,6 +33,7 @@ import java.util.Properties;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.custom.CustomizationManagerFactory;
+import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -42,6 +43,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.platform.PlatformManagerJVMOptionsUtils;
 
 
 /**
@@ -972,9 +974,122 @@ ConfigurationChecker
   	ConfigurationDefaults.getInstance().runVerifiers();
   }
 
+  private static boolean ip_prefs_changing;
+  
+  private static void
+  checkIPPrefs(
+		  boolean first_time )
+  {
+	  if ( Constants.isJava18OrHigher && PlatformManagerJVMOptionsUtils.canAccessOptions()){
+
+		  boolean did_it = false;
+		  
+		  try{
+			  class_mon.enter();
+		  
+			  if ( ip_prefs_changing ){
+				  
+				  return;
+			  }
+			  
+			  did_it = true;
+			  
+			  ip_prefs_changing = true;
+			  
+			  // this is to handle the case where our hacks no longer work and we fall back to
+			  // using the vmoptions file
+	
+			  String[][]	params = {
+					  { "IPV6 Prefer Addresses",	"java.net.preferIPv6Addresses" },
+					  { "IPV4 Prefer Stack",		"java.net.preferIPv4Stack" },
+			  };
+	
+			  boolean changed = false;
+	
+			  for ( String[] param: params ){
+	
+				  String config_str	= param[0];
+				  String prop_str	= param[1];
+	
+				  boolean config_value = COConfigurationManager.getBooleanParameter( config_str );
+	
+				  boolean sys_prop_value = !System.getProperty( prop_str, "false" ).equalsIgnoreCase( "false" );
+	
+				  if ( config_value != sys_prop_value || !first_time ){
+	
+					  try{
+	
+						  if ( first_time && sys_prop_value ){
+								
+							  	// startup and property already set so migrate the config
+							  	// to match
+								  
+							  COConfigurationManager.setParameter( config_str, true );
+								  
+							  PlatformManagerJVMOptionsUtils.setBooleanProperty( prop_str, true );	// not 100% necessary but good for consistency
+							  
+						  }else{
+							  
+							  Boolean vm_opt = PlatformManagerJVMOptionsUtils.getBooleanProperty( prop_str );
+								
+							  if ( vm_opt == null || vm_opt != config_value ){
+								  
+								  PlatformManagerJVMOptionsUtils.setBooleanProperty( prop_str, config_value );
+		
+								  changed = true;
+							  }
+						  }
+					  }catch( Throwable e ){
+	
+						  Debug.out( e );
+					  }
+				  }
+			  }
+	
+			  if ( first_time && changed ){
+				  
+				  String key = "config.checker.ipprefs.restart.warned";
+				  
+				  if ( !COConfigurationManager.getBooleanParameter( key, false )){
+					  
+					  COConfigurationManager.setParameter( key, true );
+					  
+					  LogAlert la = 
+							new LogAlert( 
+								LogAlert.REPEATABLE,
+								LogAlert.AT_WARNING, 
+								"config.migrated.restart");
+								
+					  la.forceNotify = true;
+					  
+					  Logger.logTextResource( la );
+				  } 
+			  }
+		  }finally{
+			  
+			  if ( did_it ){
+				  
+				  ip_prefs_changing = false;
+			  }
+			  
+			  class_mon.exit();
+		  }
+	  }
+  }
+  
   private static void
   setupVerifier()
   {
+	 COConfigurationManager.addParameterListener(
+		  	new String[]{
+		  		"IPV6 Prefer Addresses",
+		  		"IPV4 Prefer Stack"
+		  	},
+		  	(n)->{
+		  		checkIPPrefs( false );
+		  	});
+
+		  		
 	  SimpleTimer.addEvent(
 			"ConfigCheck:ver",
 			SystemTime.getOffsetTime( 10*1000 ),
@@ -982,12 +1097,16 @@ ConfigurationChecker
 
 				private TimerEventPeriodic event;
 
+				int count = 0;
+						
 				@Override
 				public void
 				perform(
 					TimerEvent ev )
 				{
-					runVerifier();
+					count++;
+					
+					runVerifier( count == 1 );
 
 					if ( event == null ){
 
@@ -1009,8 +1128,14 @@ ConfigurationChecker
   }
 
   static void
-  runVerifier()
+  runVerifier(
+	boolean	first_time )
   {
+	  if ( first_time ){
+		  	
+		 checkIPPrefs( true );
+	  }
+	  
 	  try{
 		  PlatformManager pm = PlatformManagerFactory.getPlatformManager();
 
