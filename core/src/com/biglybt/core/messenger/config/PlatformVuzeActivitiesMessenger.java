@@ -20,6 +20,7 @@
 
 package com.biglybt.core.messenger.config;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -64,27 +65,25 @@ public class PlatformVuzeActivitiesMessenger
 				@Override
 				public void replyReceived(PlatformMessage message, String replyType,
 				                          Map reply) {
-					ActivitiesEntry[] entries = new ActivitiesEntry[0];
+					List<ActivitiesEntry>	entries = new ArrayList<>();
 					List entriesList = (List) MapUtils.getMapObject(reply, "entries",
 							null, List.class);
 					if (entriesList != null && entriesList.size() > 0) {
-						entries = new ActivitiesEntry[entriesList.size()];
-						int i = 0;
+
 						for (Iterator iter = entriesList.iterator(); iter.hasNext();) {
 							Object obj = iter.next();
 							if  ( obj instanceof Map ){
 								Map platformEntry = (Map)obj;
-								entries[i] = ActivitiesManager.createEntryFromMap(
-										platformEntry, false);
-								if (entries[i] != null) {
-									i++;
+								ActivitiesEntry entry = ActivitiesManager.createEntryFromMap(platformEntry, false);
+								if ( entry != null ){
+									entries.add( entry );
 								}
 							}
 						}
 					}
 					long refreshInMS = MapUtils.getMapLong(reply, "refresh-in-ms",
 							DEFAULT_RETRY_MS);
-					replyListener.gotVuzeNewsEntries(entries, refreshInMS);
+					replyListener.gotVuzeNewsEntries(entries.toArray(new ActivitiesEntry[entries.size()]), refreshInMS);
 				}
 			};
 		}
