@@ -507,12 +507,17 @@ AddressUtils
 	isGlobalAddressV6(
 		InetAddress addr )
 	{
+		if ( addr == null ){
+			
+			return( false );
+		}
+
+		byte[] bytes = addr.getAddress();
+
 		List<Object[]> extra = extra_ipv6_globals;
 		
-		if ( extra != null && addr != null ){
+		if ( extra != null ){
 		
-			byte[] bytes = addr.getAddress();
-
 			for ( Object[] e: extra ){
 				
 				byte[]	prefix	= (byte[])e[0];
@@ -531,6 +536,7 @@ AddressUtils
 				!addr.isLoopbackAddress() && 
 				!addr.isMulticastAddress() && 
 				!addr.isSiteLocalAddress() && 
+				((bytes[0]&0xfe) != 0xfc ) && 	// ULA - fc0::/7
 				!((Inet6Address)addr).isIPv4CompatibleAddress();
 	}
 
