@@ -345,6 +345,11 @@ RDResumeHandler
 						
 						check_interrupted = true;
 						
+						if ( recheck_inst_maybe_null != null ){
+							
+							check_position -= recheck_inst_maybe_null.getSlotConcurrency();
+						}
+						
 						break;
 					}
 					
@@ -470,6 +475,11 @@ RDResumeHandler
 
 								check_interrupted = true;
 
+								if ( recheck_inst_maybe_null != null ){
+								
+									check_position -= recheck_inst_maybe_null.getSlotConcurrency();
+								}
+								
 								break;
 
 							}else{
@@ -864,7 +874,7 @@ RDResumeHandler
 				// if we are terminating due to az closure and this has interrupted a recheck then
 				// make sure that the recheck continues appropriately on restart
 
-			if ( stopped_for_close && check_interrupted && check_is_full_check && i >= check_position ){
+			if ( stopped_for_close && check_interrupted && i >= check_position ){
 
 				resume_pieces[i] = PIECE_RECHECK_REQUIRED;
 

@@ -416,6 +416,12 @@ DiskManagerRecheckScheduler
 			slot_sem.release();
 		}
 		
+		public int
+		getSlotConcurrency()
+		{
+			return( getPieceConcurrency());
+		}
+		
 		public boolean
 		getPermission()
 		{

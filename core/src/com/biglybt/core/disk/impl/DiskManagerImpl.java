@@ -177,10 +177,14 @@ DiskManagerImpl
     private static final DiskManagerRecheckScheduler      recheck_scheduler       = new DiskManagerRecheckScheduler();
     private static final DiskManagerAllocationScheduler   allocation_scheduler    = new DiskManagerAllocationScheduler();
 
-    private static final ThreadPool	start_pool = new ThreadPool( "DiskManager:start", 64, true );
+    private static final ThreadPool<AERunnable>	start_pool = new ThreadPool<>( "DiskManager:start", 64, true );
 
     static{
     	start_pool.setThreadPriority( Thread.MIN_PRIORITY );
+    	
+    		// we want semi-started downloads to close tidily on closedown
+    	
+    	start_pool.setDaemon( false );
     }
 
     private boolean used    = false;

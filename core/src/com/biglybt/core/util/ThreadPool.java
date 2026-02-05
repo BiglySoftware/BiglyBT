@@ -128,6 +128,8 @@ ThreadPool<T extends AERunnable>
 	private int					current_permits;
 
 	private int			thread_priority	= Thread.NORM_PRIORITY;
+	private boolean		is_daemon		= true;
+	
 	private boolean		warn_when_full;
 
 	private long		task_total;
@@ -199,6 +201,13 @@ ThreadPool<T extends AERunnable>
 		thread_priority	= _priority;
 	}
 
+	public void
+	setDaemon(
+		boolean	d )
+	{
+		is_daemon = d;
+	}
+	
 	public void
 	setExecutionLimit(
 		long		millis )
@@ -664,7 +673,7 @@ ThreadPool<T extends AERunnable>
 
 		protected threadPoolWorker()
 		{
-			super(NAME_THREADS?(name + " " + (thread_name_index)):name,true);
+			super(NAME_THREADS?(name + " " + (thread_name_index)):name,is_daemon);
 			thread_name_index++;
 			setPriority(thread_priority);
 			worker_name = this.getName();
