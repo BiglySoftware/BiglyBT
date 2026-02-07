@@ -67,7 +67,7 @@ public class ColumnFO_Size
 		
 		if ( cell.setSortValue( size )){
 		
-			cell.setText( size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
+			cell.setText( size<0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
 			
 			TableColumnSWTUtils.setSizeAlpha( cell, size );
 		}
