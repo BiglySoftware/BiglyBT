@@ -4771,10 +4771,25 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					// these are messages not part of any chain so sort based on sequence or time
 
-				List<ChatMessage>	remainder = new ArrayList<>(remainder_set);
-
-				Collections.sort(
-						remainder,
+				List<ChatMessage>	with_seq	= new ArrayList<>(remainder_set.size());
+				List<ChatMessage>	without_seq = new ArrayList<>(remainder_set.size());
+			
+				for (ChatMessage m: remainder_set ){
+					
+					if ( m.getSequence() == 0 && m.getPreviousID() == null ){
+						
+						without_seq.add( m );
+						
+					}else{
+					
+						with_seq.add( m );
+					}
+				}
+				
+				if ( !with_seq.isEmpty()){
+				
+					Collections.sort(
+						with_seq,
 						new Comparator<ChatMessage>()
 						{
 							@Override
@@ -4786,10 +4801,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								long t1 = m1.getSequence();
 								long t2 = m2.getSequence();
 
-								if (	( t1 == t2 ) ||
-										( t1 == 0 && m1.getPreviousID() == null ) ||
-										( t2 == 0 && m2.getPreviousID() == null )){
-										
+								if ( t1 == t2 ){
+											
 									t1 = m1.getTimeStamp();
 									t2 = m2.getTimeStamp();
 								}
@@ -4805,15 +4818,48 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								}
 							}
 						});
+				}
+				
+				if ( !without_seq.isEmpty()){
+					
+					Collections.sort(
+						without_seq,
+						new Comparator<ChatMessage>()
+						{
+							@Override
+							public int
+							compare(
+								ChatMessage m1,
+								ChatMessage m2 )
+							{
+								long	t1 = m1.getTimeStamp();
+								long	t2 = m2.getTimeStamp();
+							
+								long l = t1 - t2;
 
+								if ( l < 0 ){
+									return( -1 );
+								}else if ( l > 0 ){
+									return( 1 );
+								}else{
+									return( m1.getUID() - m2.getUID());
+								}
+							}
+						});
+				}
+								
 				if ( result == null ){
 
-					result = remainder;
+					result = with_seq;
 
 				}else{
 
-					result = merge( result, remainder );
+					result = merge( result, with_seq );
 				}
+				
+					// finally merge in any timestamp only messages
+									
+				result = merge( result, without_seq );
 			}
 
 			if ( result == null ){
@@ -4962,11 +5008,27 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			List<ChatMessage>		list1,
 			List<ChatMessage>		list2 )
 		{
+			if ( list1.isEmpty()){
+				
+				return( list2 );
+				
+			}else if ( list2.isEmpty()){
+				
+				return( list1 );
+			}
+			
 			int	size1 = list1.size();
 			int size2 = list2.size();
 
+			int total = size1 + size2;
+			
 			List<ChatMessage>	result = new ArrayList<>(size1 + size2);
 
+			if ( total == 0 ){
+				
+				return( result );
+			}
+			
 			int	pos1 = 0;
 			int pos2 = 0;
 
