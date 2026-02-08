@@ -4769,7 +4769,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			if ( remainder_set.size() > 0 ){
 
-					// these are messages not part of any chain so sort based on time
+					// these are messages not part of any chain so sort based on sequence or time
 
 				List<ChatMessage>	remainder = new ArrayList<>(remainder_set);
 
@@ -4786,8 +4786,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								long t1 = m1.getSequence();
 								long t2 = m2.getSequence();
 
-								if ( t1 == t2 ){
-									
+								if (	( t1 == t2 ) ||
+										( t1 == 0 && m1.getPreviousID() == null ) ||
+										( t2 == 0 && m2.getPreviousID() == null )){
+										
 									t1 = m1.getTimeStamp();
 									t2 = m2.getTimeStamp();
 								}
@@ -4996,8 +4998,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					long t1 = m1.getSequence();
 					long t2 = m2.getSequence();
 
-					if ( t1 == t2 ){
-						
+						// if sequence numbers are the same or either message is missing sequence + prev info then
+						// we only have timestamp to use for ordering
+					
+					if (	( t1 == t2 ) ||
+							( t1 == 0 && m1.getPreviousID() == null ) ||
+							( t2 == 0 && m2.getPreviousID() == null )){
+							
 						t1 = m1.getTimeStamp();
 						t2 = m2.getTimeStamp();
 					}
