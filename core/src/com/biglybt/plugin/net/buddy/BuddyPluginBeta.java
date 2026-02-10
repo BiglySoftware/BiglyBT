@@ -117,6 +117,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final int VIEW_TYPE_DEFAULT			= 1;
 	public static final int VIEW_TYPE_SHARING			= 2;
 
+	private static final int PF_WELCOME_SHOWN	= 0x0001;
+	
 	public static final String RSS_ITEMS_UNAVAILABLE = "RSS items unavailable until you accept Chat terms and conditions";
 
 	private BuddyPlugin			plugin;
@@ -712,6 +714,42 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 	}
 
+	private boolean
+	getPrivateFlag(
+		String		net,
+		String		key,
+		int			flag )
+	{
+		int flags = getIntOption(net, key, "pflag", 0 );
+		
+		return(( flags & flag ) != 0 );
+	}
+
+	private void
+	setPrivateFlag(
+		String		net,
+		String		key,
+		int			flag,
+		boolean		b )
+	{
+		int flags = getIntOption(net, key, "pflag", 0 );
+		
+		int new_flags = flags;
+		
+		if ( b ){
+			
+			new_flags |= flag;
+		}else{
+			
+			new_flags &= ~flag;
+		}
+		
+		if ( flags != new_flags ){
+			
+			setIntOption(net, key, "pflag", new_flags );
+		}
+	}
+	
 		// auto-mute
 
 	private boolean
@@ -907,7 +945,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String		net,
 		String		key,
 		String		name,
-		int		def )
+		int			def )
 	{
 		Object	obj = getGenericOption(net, key, name);
 
@@ -4170,7 +4208,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				if ( key.startsWith( "General: ") || key.startsWith( Constants.APP_NAME + ": General: " )){
 
-					sendLocalMessage( "!*" + MessageText.getString( "azbuddy.dchat.welcome.general" ) + "*!", null, ChatMessage.MT_INFO );
+					if ( !getPrivateFlag( network, key, PF_WELCOME_SHOWN )){
+					
+						setPrivateFlag( network, key, PF_WELCOME_SHOWN, true );
+						
+						sendLocalMessage( "!*" + MessageText.getString( "azbuddy.dchat.welcome.general" ) + "*!", null, ChatMessage.MT_INFO );
+					}
 				}
 			}
 		}
