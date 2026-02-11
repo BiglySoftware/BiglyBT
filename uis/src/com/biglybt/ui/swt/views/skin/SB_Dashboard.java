@@ -2455,7 +2455,7 @@ public class SB_Dashboard
 						@Override
 						public void widgetSelected(SelectionEvent arg0){
 							
-							PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), null );
+							PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), "dashboard.popout:" + config_prefix );
 						}
 					});
 				
@@ -2501,7 +2501,7 @@ public class SB_Dashboard
 				
 				if ( parent_tab_item == null ){
 					menu_comp.addListener( SWT.MouseDoubleClick, (ev)->{
-						PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), null );
+						PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), "dashboard.popout:" + config_prefix );
 					});
 				}else{
 					
@@ -2510,7 +2510,7 @@ public class SB_Dashboard
 					folder.addListener( SWT.MouseDoubleClick, (ev)->{
 						if ( folder.getItem( new Point( ev.x, ev.y )) == parent_tab_item ){
 							
-							PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), null );
+							PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), "dashboard.popout:" + config_prefix );
 						}
 					});
 				}
