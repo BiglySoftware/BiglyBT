@@ -1393,6 +1393,13 @@ public abstract class BaseMdiEntry
 
 		result.put( "id", id );
 		
+		String sid = getViewSubID();
+		
+		if ( sid != null ){
+			
+			result.put( "view_sub_id", sid );
+		}
+		
 		Object data_source = getDatasourceCore();
 		
 		if ( data_source == null ) {
@@ -1511,6 +1518,8 @@ public abstract class BaseMdiEntry
 		
 		String		id			= (String)map.get( "id" );
 
+		String		sid			= (String)map.get( "view_sub_id" );
+		
 		Object		data_source =  map.get( "data_source" );
 		
 		if ( data_source != null ) {
@@ -1670,6 +1679,12 @@ public abstract class BaseMdiEntry
 						}
 						
 						builder = new UISWTViewBuilderCore( id, pi, cla ).setInitialDatasource(data_source);
+						
+						
+						if ( sid != null ){
+							
+							builder.setViewSubID(sid);
+						}
 					}
 				}else{
 					String instantiator_uid = (String)el_map.get( "instantiator" );

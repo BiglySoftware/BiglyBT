@@ -986,8 +986,11 @@ public class SBC_TagsOverview
 		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
 			MyTorrentsSubView.MSGID_PREFIX, null, MyTorrentsSubView.class));
 
-		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
-			FilesView.MSGID_PREFIX, null, FilesView.class));
+		UISWTViewBuilderCore filesBuilder = new UISWTViewBuilderCore( FilesView.MSGID_PREFIX, null, FilesView.class);
+		
+		filesBuilder.setViewSubID( "TagsOverview");
+		
+		vm.registerView(PLUGIN_DS_TYPE, filesBuilder );
 
 		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}

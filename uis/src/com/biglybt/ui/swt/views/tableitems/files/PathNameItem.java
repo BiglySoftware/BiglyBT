@@ -46,9 +46,9 @@ public class PathNameItem extends CoreTableColumnSWT implements
 	private boolean bShowIcon;
 
 	/** Default Constructor */
-	public PathNameItem() {
+	public PathNameItem(String TableID) {
 		super("pathname", ALIGN_LEAD, POSITION_INVISIBLE, 500,
-				TableManager.TABLE_TORRENT_FILES);
+				TableID);
 		setObfuscation(true);
 		setType(TableColumn.TYPE_TEXT);
 

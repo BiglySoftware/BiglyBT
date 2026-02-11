@@ -34,8 +34,8 @@ public class ModeItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public ModeItem() {
-    super("mode", ALIGN_LEAD, POSITION_LAST, 60, TableManager.TABLE_TORRENT_FILES);
+  public ModeItem(String TableID) {
+    super("mode", ALIGN_LEAD, POSITION_LAST, 60, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

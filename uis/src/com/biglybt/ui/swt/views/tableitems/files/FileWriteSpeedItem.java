@@ -29,9 +29,9 @@ public class FileWriteSpeedItem
 	implements TableCellRefreshListener
 {
 	public
-	FileWriteSpeedItem()
+	FileWriteSpeedItem(String TableID)
 	{
-		super( "writerate", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+		super( "writerate", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableID);
 
 		setRefreshInterval( INTERVAL_LIVE );
 	}

@@ -18,7 +18,6 @@
 
 package com.biglybt.ui.swt.pif;
 
-import com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 
 /**
@@ -34,6 +33,8 @@ public interface UISWTViewBuilder
 	 */
 	UISWTViewBuilder setInitialDatasource(Object datasource);
 
+	void setViewSubID( String sid );
+	
 	/**
 	 * Sets a {@link UISWTViewEventListener} class that will be created when the 
 	 * UI shows the view.

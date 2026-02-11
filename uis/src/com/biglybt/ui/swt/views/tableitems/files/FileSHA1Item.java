@@ -27,8 +27,8 @@ FileSHA1Item
 	extends FileHashItemBase
 {
 	public
-	FileSHA1Item()
+	FileSHA1Item(String TableID)
 	{
-		super( HT_SHA1, 220 );
+		super( TableID, HT_SHA1, 220 );
 	}
 }

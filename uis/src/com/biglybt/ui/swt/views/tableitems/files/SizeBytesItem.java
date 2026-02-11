@@ -32,8 +32,8 @@ public class SizeBytesItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public SizeBytesItem() {
-    super("sizebytes", ALIGN_TRAIL, POSITION_INVISIBLE, 70, TableManager.TABLE_TORRENT_FILES);
+  public SizeBytesItem(String TableID) {
+    super("sizebytes", ALIGN_TRAIL, POSITION_INVISIBLE, 70, TableID);
   }
 
 	@Override

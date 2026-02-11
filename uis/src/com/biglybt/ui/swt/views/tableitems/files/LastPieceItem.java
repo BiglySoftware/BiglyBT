@@ -27,8 +27,8 @@ public class LastPieceItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public LastPieceItem() {
-    super("lastpiece", ALIGN_TRAIL, POSITION_LAST, 75, TableManager.TABLE_TORRENT_FILES);
+  public LastPieceItem(String TableID) {
+    super("lastpiece", ALIGN_TRAIL, POSITION_LAST, 75, TableID);
 	  setDefaultSortAscending(true);
   }
 

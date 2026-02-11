@@ -33,8 +33,8 @@ public class FirstPieceItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public FirstPieceItem() {
-    super("firstpiece", ALIGN_TRAIL, POSITION_LAST, 75, TableManager.TABLE_TORRENT_FILES);
+  public FirstPieceItem(String TableID) {
+    super("firstpiece", ALIGN_TRAIL, POSITION_LAST, 75, TableID);
 	  setDefaultSortAscending(true);
   }
 

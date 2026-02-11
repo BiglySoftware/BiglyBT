@@ -67,10 +67,11 @@ FileHashItemBase
 
 	public
 	FileHashItemBase(
+		String		TableID,
 		String		_hash_type,
 		int			width )
 	{
-		super( _hash_type, ALIGN_LEAD, POSITION_INVISIBLE, width, TableManager.TABLE_TORRENT_FILES);
+		super( _hash_type, ALIGN_LEAD, POSITION_INVISIBLE, width, TableID);
 
 		hash_type = _hash_type;
 

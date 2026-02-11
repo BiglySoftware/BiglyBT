@@ -32,8 +32,8 @@ public class FileIndexItem
 
 
   /** Default Constructor */
-  public FileIndexItem() {
-    super("torrentfileindex", ALIGN_TRAIL, POSITION_INVISIBLE, 40, TableManager.TABLE_TORRENT_FILES);
+  public FileIndexItem(String TableID) {
+    super("torrentfileindex", ALIGN_TRAIL, POSITION_INVISIBLE, 40, TableID);
   }
 
 	@Override

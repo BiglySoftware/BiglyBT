@@ -35,8 +35,8 @@ public class PiecesDoneAndCountItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public PiecesDoneAndCountItem() {
-    super("piecesdoneof", ALIGN_CENTER, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+  public PiecesDoneAndCountItem(String TableID) {
+    super("piecesdoneof", ALIGN_CENTER, POSITION_INVISIBLE, 60, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

@@ -72,6 +72,9 @@ public interface UISWTView extends UIPluginView {
 	 */
 	int getControlType();
 
+	public String
+	getViewSubID();
+	
 	/**
 	 * Retrieve the data sources related to this view.
 	 *

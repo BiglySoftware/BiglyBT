@@ -35,8 +35,8 @@ public class DoneItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public DoneItem() {
-    super("done", ALIGN_TRAIL, POSITION_LAST, 70, TableManager.TABLE_TORRENT_FILES);
+  public DoneItem( String TableID ) {
+    super("done", ALIGN_TRAIL, POSITION_LAST, 70, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

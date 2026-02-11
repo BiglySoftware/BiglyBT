@@ -29,9 +29,9 @@ public class FileReadSpeedItem
 	implements TableCellRefreshListener
 {
 	public
-	FileReadSpeedItem()
+	FileReadSpeedItem(String TableID)
 	{
-		super( "readrate", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+		super( "readrate", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableID);
 
 		setRefreshInterval( INTERVAL_LIVE );
 	}

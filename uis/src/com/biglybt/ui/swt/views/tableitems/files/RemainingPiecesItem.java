@@ -36,8 +36,8 @@ public class RemainingPiecesItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public RemainingPiecesItem() {
-    super("remaining", ALIGN_TRAIL, POSITION_LAST, 60, TableManager.TABLE_TORRENT_FILES);
+  public RemainingPiecesItem(String TableID) {
+    super("remaining", ALIGN_TRAIL, POSITION_LAST, 60, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

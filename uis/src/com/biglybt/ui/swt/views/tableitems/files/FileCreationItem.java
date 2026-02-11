@@ -32,8 +32,8 @@ import com.biglybt.pif.ui.tables.TableManager;
 public class FileCreationItem
 	extends ColumnDateSizer
 {
-	public FileCreationItem(){
-		super( "filecreated", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+	public FileCreationItem(String TableID){
+		super( "filecreated", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableID);
 
 		setRefreshInterval(2);
 	}

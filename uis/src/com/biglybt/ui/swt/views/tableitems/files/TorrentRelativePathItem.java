@@ -32,8 +32,8 @@ public class TorrentRelativePathItem
 
 
   /** Default Constructor */
-  public TorrentRelativePathItem() {
-    super("torrentrelpath", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableManager.TABLE_TORRENT_FILES);
+  public TorrentRelativePathItem(String TableID) {
+    super("torrentrelpath", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableID);
   }
 
 	@Override

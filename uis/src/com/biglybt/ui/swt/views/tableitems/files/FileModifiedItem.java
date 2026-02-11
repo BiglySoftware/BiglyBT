@@ -28,8 +28,8 @@ public class FileModifiedItem
 	extends ColumnDateSizer
 {
 	public 
-	FileModifiedItem(){
-		super( "filemodified", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+	FileModifiedItem(String TableID){
+		super( "filemodified", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableID);
 
 		setRefreshInterval(2);
 	}

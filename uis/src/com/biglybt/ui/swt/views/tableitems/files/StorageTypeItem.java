@@ -34,8 +34,8 @@ public class StorageTypeItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public StorageTypeItem() {
-    super("storagetype", ALIGN_LEAD, POSITION_INVISIBLE, 70, TableManager.TABLE_TORRENT_FILES);
+  public StorageTypeItem(String TableID) {
+    super("storagetype", ALIGN_LEAD, POSITION_INVISIBLE, 70, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

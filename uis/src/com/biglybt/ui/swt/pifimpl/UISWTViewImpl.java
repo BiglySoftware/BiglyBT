@@ -87,6 +87,8 @@ public class UISWTViewImpl
 	// TODO: not protected
 	protected PluginUISWTSkinObject skinObject;
 
+	private String viewSubID;
+	
 	private Object initialDatasource;
 
 	private UISWTView parentView;
@@ -144,6 +146,7 @@ public class UISWTViewImpl
 			throw new UISWTViewEventCancelledException(
 					new NullPointerException("Could not create " + id));
 		}
+		this.viewSubID = builder.getViewSubID();
 		this.initialDatasource = builder.getInitialDataSource();
 		this.datasource = initialDatasource;
 		
@@ -179,6 +182,7 @@ public class UISWTViewImpl
 		}
 		
 		if (builder != null) {
+			viewSubID = builder.getViewSubID();
 			initialDatasource = builder.getInitialDataSource();
 		}
 
@@ -240,6 +244,12 @@ public class UISWTViewImpl
 		}
 		
 		return( null );
+	}
+
+	public String
+	getViewSubID()
+	{
+		return( viewSubID );
 	}
 	
 	/* (non-Javadoc)

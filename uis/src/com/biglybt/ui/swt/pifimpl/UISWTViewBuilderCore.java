@@ -59,6 +59,8 @@ public class UISWTViewBuilderCore
 
 	private final String viewID;
 
+	private String viewSubID;
+	
 	private Reference<Class<? extends UISWTViewEventListener>> cla_ref;
 
 	private String initialTitle;
@@ -128,6 +130,7 @@ public class UISWTViewBuilderCore
 				getPluginInterface());
 		builder.cla_ref = cla_ref;
 		builder.listener = listener;
+		builder.viewSubID = viewSubID;
 		builder.datasource = datasource;
 		builder.initialTitle = initialTitle;
 		builder.listenerInstantiator = listenerInstantiator;
@@ -148,6 +151,19 @@ public class UISWTViewBuilderCore
 		return (pi_ref == null ? null : pi_ref.get());
 	}
 
+	@Override
+	public void 
+	setViewSubID(String sid)
+	{
+		viewSubID = sid;
+	}
+	
+	public String
+	getViewSubID()
+	{
+		return( viewSubID );
+	}
+	
 	public Object getInitialDataSource() {
 		return datasource;
 	}

@@ -50,8 +50,8 @@ public class FileAvailabilityItem
   private int iTimesBy;
 
   /** Default Constructor */
-  public FileAvailabilityItem(){
-	super("availability", ALIGN_LEAD, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+  public FileAvailabilityItem(String TableID){
+	super("availability", ALIGN_LEAD, POSITION_INVISIBLE, 60, TableID);
     setRefreshInterval(INTERVAL_LIVE);
 
     iTimesBy = 1;

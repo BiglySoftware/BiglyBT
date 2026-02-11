@@ -27,8 +27,8 @@ FileCRC32Item
 	extends FileHashItemBase
 {
 	public
-	FileCRC32Item()
+	FileCRC32Item(String TableID)
 	{
-		super( HT_CRC32, 80 );
+		super( TableID, HT_CRC32, 80 );
 	}
 }

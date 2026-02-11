@@ -27,8 +27,8 @@ FileMD5Item
 	extends FileHashItemBase
 {
 	public
-	FileMD5Item()
+	FileMD5Item(String TableID)
 	{
-		super( HT_MD5, 220 );
+		super( TableID, HT_MD5, 220 );
 	}
 }

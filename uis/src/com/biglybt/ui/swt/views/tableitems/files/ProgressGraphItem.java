@@ -61,8 +61,8 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 	}
 	  
 	/** Default Constructor */
-	public ProgressGraphItem() {
-		super("pieces", TableManager.TABLE_TORRENT_FILES);
+	public ProgressGraphItem(String TableID) {
+		super("pieces", TableID);
 		initializeAsGraphic(POSITION_LAST, 200);
 		setMinWidth(100);
 	}

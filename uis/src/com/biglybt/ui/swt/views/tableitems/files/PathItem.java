@@ -47,8 +47,8 @@ public class PathItem
 	private boolean show_full_path;
 
   /** Default Constructor */
-  public PathItem() {
-    super("path", ALIGN_LEAD, POSITION_LAST, 200, TableManager.TABLE_TORRENT_FILES);
+  public PathItem(String TableID) {
+    super("path", ALIGN_LEAD, POSITION_LAST, 200, TableID);
 
 	  configShowFullPathListener = new ParameterListener() {
 		  @Override

@@ -32,8 +32,8 @@ public class DownloadNameItem
 
 
   /** Default Constructor */
-  public DownloadNameItem() {
-    super("downloadname", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableManager.TABLE_TORRENT_FILES);
+  public DownloadNameItem(String TableID) {
+    super("downloadname", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableID);
   }
 
 	@Override

@@ -107,9 +107,9 @@ public class NameItem extends CoreTableColumnSWT implements
 	final TableContextMenuItem menuItem;
 
 	/** Default Constructor */
-	public NameItem() {
+	public NameItem(String TableID) {
 		super("name", ALIGN_LEAD, POSITION_LAST, 300,
-				TableManager.TABLE_TORRENT_FILES);
+				TableID);
 		setObfuscation(true);
 		setInplaceEditorListener(this);
 		setType(TableColumn.TYPE_TEXT);

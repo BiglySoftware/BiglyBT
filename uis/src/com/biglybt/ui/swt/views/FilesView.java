@@ -106,50 +106,53 @@ public class FilesView
 	public static final Class<com.biglybt.pif.disk.DiskManagerFileInfo> PLUGIN_DS_TYPE = com.biglybt.pif.disk.DiskManagerFileInfo.class;
 	boolean refreshing = false;
 
-  private static TableColumnCore[] basicItems = {
-    new NameItem(),
-    new PathItem(),
-    new PathNameItem(),
-    new SizeItem(),
-    new SizeBytesItem(),
-    new DoneItem(),
-    new PercentItem(),
-    new FirstPieceItem(),
-    new LastPieceItem(),
-    new PieceCountItem(),
-    new RemainingPiecesItem(),
-    new PiecesDoneAndCountItem(),
-    new ProgressGraphItem(),
-    new ModeItem(),
-    new PriorityItem(),
-    new StorageTypeItem(),
-    new FileExtensionItem(),
-    new FileIndexItem(),
-    new FileIndexPlus1Item(),
-    new TorrentRelativePathItem(),
-    new FileCRC32Item(),
-    new FileMD5Item(),
-    new FileSHA1Item(),
-    new TorrentV2RootHashItem(),
-    new FileAvailabilityItem(),
-    new AlertsItem(  TableManager.TABLE_TORRENT_FILES ),
-    new FileReadSpeedItem(),
-    new FileWriteSpeedItem(),
-    new FileETAItem(),
-    new RelocatedItem(),
-	  new FileModifiedItem(),
-	  new FileCreationItem(),
-    new DownloadNameItem(),
-  };
+	private static TableColumnCore[] getBasicItems(String tableID )
+	{
+		return new TableColumnCore[]{
+	
+			new NameItem(tableID),
+			new PathItem(tableID),
+			new PathNameItem(tableID),
+			new SizeItem(tableID),
+			new SizeBytesItem(tableID),
+			new DoneItem(tableID),
+			new PercentItem(tableID),
+			new FirstPieceItem(tableID),
+			new LastPieceItem(tableID),
+			new PieceCountItem(tableID),
+			new RemainingPiecesItem(tableID),
+			new PiecesDoneAndCountItem(tableID),
+			new ProgressGraphItem(tableID),
+			new ModeItem(tableID),
+			new PriorityItem(tableID),
+			new StorageTypeItem(tableID),
+			new FileExtensionItem(tableID),
+			new FileIndexItem(tableID),
+			new FileIndexPlus1Item(tableID),
+			new TorrentRelativePathItem(tableID),
+			new FileCRC32Item(tableID),
+			new FileMD5Item(tableID),
+			new FileSHA1Item(tableID),
+			new TorrentV2RootHashItem(tableID),
+			new FileAvailabilityItem(tableID),
+			new AlertsItem(tableID),
+			new FileReadSpeedItem(tableID),
+			new FileWriteSpeedItem(tableID),
+			new FileETAItem(tableID),
+			new RelocatedItem(tableID),
+			new FileModifiedItem(tableID),
+			new FileCreationItem(tableID),
+			new DownloadNameItem(tableID),
+		};
+	}
 
-  static{
-	TableColumnManager tcManager = TableColumnManager.getInstance();
-
-	tcManager.setDefaultColumnNames( TableManager.TABLE_TORRENT_FILES, basicItems );
-  }
+	private static final Map<String,TableColumnCore[]>	basicItemsMap = new HashMap<>();
+	
 
   public static final String MSGID_PREFIX = "FilesView";
 
+  private String view_sub_id;
+  
   private DownloadManager[] managers = new DownloadManager[0];
 
   public boolean hide_dnd_files;
@@ -189,13 +192,37 @@ public class FilesView
 	public TableViewSWT<DiskManagerFileInfo> initYourTableView() {
 		registerPluginViews();
 
+		String table_id = TableManager.TABLE_TORRENT_FILES;
+		
+		if ( view_sub_id != null ){
+			
+			table_id = Utils.createSubViewID(table_id, view_sub_id );
+		}
+		
+		TableColumnCore[] basicItems;
+		
+		synchronized( basicItemsMap ){
+			basicItems = basicItemsMap.get( table_id );
+			
+			if ( basicItems == null ){
+				
+				basicItems = getBasicItems(table_id);
+				
+				basicItemsMap.put( table_id, basicItems );
+				
+				TableColumnManager tcManager = TableColumnManager.getInstance();
+
+				tcManager.setDefaultColumnNames( table_id, basicItems );
+			}
+		}
+		
 		tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
-				TableManager.TABLE_TORRENT_FILES, getTextPrefixID(), basicItems,
+				table_id, getTextPrefixID(), basicItems,
 				"firstpiece", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		
 		tv.setExpandEnabled( true );
 		
-		basicItems = new TableColumnCore[0];
+		//basicItems = new TableColumnCore[0];
 
 		tv.addTableDataSourceChangedListener(this, true);
 		tv.addRefreshListener(this, true);
@@ -1715,10 +1742,15 @@ public class FilesView
 
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
-		boolean b = super.eventOccurred(event);
-		
 		int type = event.getType();
+
+		if ( type == UISWTViewEvent.TYPE_INITIALIZE ){
+			
+			view_sub_id = event.getView().getViewSubID();
+		}
 		
+		boolean b = super.eventOccurred(event);
+				
 		if ( type == UISWTViewEvent.TYPE_SHOWN) {
 	    
 			updateSelectedContent();

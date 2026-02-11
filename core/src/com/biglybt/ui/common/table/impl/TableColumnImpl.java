@@ -23,6 +23,10 @@ package com.biglybt.ui.common.table.impl;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+import javax.rmi.CORBA.Util;
+
+import org.jcp.xml.dsig.internal.dom.Utils;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
@@ -1937,25 +1941,26 @@ public class TableColumnImpl
 	public Class[] getForDataSourceTypes() {
 		if (forPluginDataSourceTypes.isEmpty()) {
 			// Guess forPluginDataSourceType based on tableID
+			String tableID = TableColumnManager.getBaseViewID(sTableID );
 			Class<?> forPluginDataSourceType = null;
-			if (	TableManager.TABLE_MYTORRENTS_ALL_BIG.equals(sTableID) ||
-					TableManager.TABLE_MYTORRENTS_ALL_SMALL.equals(sTableID) ||
-					TableManager.TABLE_MYTORRENTS_UNOPENED.equals(sTableID) ||
-					TableManager.TABLE_MYTORRENTS_UNOPENED_BIG.equals(sTableID)) {
+			if (	TableManager.TABLE_MYTORRENTS_ALL_BIG.equals(tableID) ||
+					TableManager.TABLE_MYTORRENTS_ALL_SMALL.equals(tableID) ||
+					TableManager.TABLE_MYTORRENTS_UNOPENED.equals(tableID) ||
+					TableManager.TABLE_MYTORRENTS_UNOPENED_BIG.equals(tableID)) {
 				forPluginDataSourceType = Download.class;
-			} else if (TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG.equals(sTableID)
-					|| TableManager.TABLE_MYTORRENTS_INCOMPLETE.equals(sTableID)) {
+			} else if (TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG.equals(tableID)
+					|| TableManager.TABLE_MYTORRENTS_INCOMPLETE.equals(tableID)) {
 				forPluginDataSourceType = DownloadTypeIncomplete.class;
-			} else if (TableManager.TABLE_MYTORRENTS_COMPLETE.equals(sTableID)
-					|| TableManager.TABLE_MYTORRENTS_COMPLETE_BIG.equals(sTableID)) {
+			} else if (TableManager.TABLE_MYTORRENTS_COMPLETE.equals(tableID)
+					|| TableManager.TABLE_MYTORRENTS_COMPLETE_BIG.equals(tableID)) {
 				forPluginDataSourceType = DownloadTypeComplete.class;
-			} else if (TableManager.TABLE_TORRENT_PEERS.equals(sTableID)) {
+			} else if (TableManager.TABLE_TORRENT_PEERS.equals(tableID)) {
 				forPluginDataSourceType = Peer.class;
-			} else if (TableManager.TABLE_TORRENT_FILES.equals(sTableID)) {
+			} else if (TableManager.TABLE_TORRENT_FILES.equals(tableID)) {
 				forPluginDataSourceType = DiskManagerFileInfo.class;
-			} else if (TableManager.TABLE_MYTRACKER.equals(sTableID)) {
+			} else if (TableManager.TABLE_MYTRACKER.equals(tableID)) {
 				forPluginDataSourceType = TrackerTorrent.class;
-			} else if (TableManager.TABLE_MYSHARES.equals(sTableID)) {
+			} else if (TableManager.TABLE_MYSHARES.equals(tableID)) {
 				forPluginDataSourceType = ShareResource.class;
 			}
 			if (forPluginDataSourceType != null) {

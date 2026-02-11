@@ -34,8 +34,8 @@ public class PriorityItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public PriorityItem() {
-    super("priority", ALIGN_LEAD, POSITION_LAST, 70, TableManager.TABLE_TORRENT_FILES);
+  public PriorityItem(String TableID) {
+    super("priority", ALIGN_LEAD, POSITION_LAST, 70, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

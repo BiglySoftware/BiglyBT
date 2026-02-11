@@ -35,8 +35,8 @@ public class TorrentV2RootHashItem
 
 
   /** Default Constructor */
-  public TorrentV2RootHashItem() {
-    super("torrentroothash", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableManager.TABLE_TORRENT_FILES);
+  public TorrentV2RootHashItem(String TableID) {
+    super("torrentroothash", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableID);
   }
 
 	@Override

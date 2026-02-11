@@ -32,8 +32,8 @@ public class PieceCountItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public PieceCountItem() {
-    super("numberofpieces", ALIGN_TRAIL, POSITION_LAST, 75, TableManager.TABLE_TORRENT_FILES);
+  public PieceCountItem(String TableID) {
+    super("numberofpieces", ALIGN_TRAIL, POSITION_LAST, 75, TableID);
   }
 
 	@Override

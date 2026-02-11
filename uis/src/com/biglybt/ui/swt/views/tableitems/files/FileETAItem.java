@@ -38,9 +38,9 @@ public class FileETAItem
 	private boolean eta_absolute;
 
 	public
-	FileETAItem()
+	FileETAItem(String TableID)
 	{
-		super( "file_eta", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
+		super( "file_eta", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableID);
 
 		setRefreshInterval( INTERVAL_LIVE );
 
