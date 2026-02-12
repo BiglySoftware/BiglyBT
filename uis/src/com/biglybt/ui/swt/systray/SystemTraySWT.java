@@ -126,6 +126,17 @@ public class SystemTraySWT
 			}
 		});
 
+		uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+		display = Utils.getDisplay();
+
+		tray = TrayDelegateFactory.getTray(display);
+		trayItem = TrayDelegateFactory.createTrayItem(tray);
+
+		File imageFile = new File(SystemProperties.getApplicationPath(), "biglybt-lightgray.svg");
+		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : "logo32";
+		trayItem.setImage(trayIconImageID, imageFile);
+
+		
 		paramTooltipListener = new ParameterListener() {
 			@Override
 			public void parameterChanged(String parameterName) {
@@ -150,22 +161,10 @@ public class SystemTraySWT
 			}
 		};
 
-		COConfigurationManager.addAndFireParameterListener(
-				"ui.systray.tooltip.enable", paramTooltipListener);
-		COConfigurationManager.addAndFireParameterListener(
-				"ui.systray.tooltip.next.eta.enable",
-				paramToolipETAListener);
-
-		uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		display = Utils.getDisplay();
-
-		tray = TrayDelegateFactory.getTray(display);
-		trayItem = TrayDelegateFactory.createTrayItem(tray);
-
-		File imageFile = new File(SystemProperties.getApplicationPath(), "biglybt-lightgray.svg");
-		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : "logo32";
-		trayItem.setImage(trayIconImageID, imageFile);
-
+		COConfigurationManager.addAndFireParameterListener(	"ui.systray.tooltip.enable", paramTooltipListener);
+		
+		COConfigurationManager.addAndFireParameterListener(	"ui.systray.tooltip.next.eta.enable", paramToolipETAListener);
+		
 		trayItem.setVisible(true);
 
 		menu = new Menu(uiFunctions.getMainShell(), SWT.POP_UP);
