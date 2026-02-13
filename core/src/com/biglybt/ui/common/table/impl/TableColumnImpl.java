@@ -23,10 +23,6 @@ package com.biglybt.ui.common.table.impl;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
-import javax.rmi.CORBA.Util;
-
-import org.jcp.xml.dsig.internal.dom.Utils;
-
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
