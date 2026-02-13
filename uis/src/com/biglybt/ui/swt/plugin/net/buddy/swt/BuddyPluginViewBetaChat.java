@@ -6033,7 +6033,7 @@ BuddyPluginViewBetaChat
 				Font 	default_font 	= null;
 				Color	default_colour	= null;
 
-				Font 	info_font 	= null;
+				Font 	info_font 	= italic_font;
 				Color	info_colour	= Colors.grey;
 
 				Color colour = Colors.blues[Colors.FADED_DARKEST];
