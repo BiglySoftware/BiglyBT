@@ -23,6 +23,8 @@ import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -758,6 +760,118 @@ SimpleAPIPlugin
 				
 				return( JSONUtils.encodeToJSON( json ));
 				
+			}else if ( method.equals( "renamedownload" )){
+
+				DownloadManager dm = getDownloadFromHash( args );
+
+				if ( dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+				
+					throw( new Exception( "Can't rename metadata downloads" ));
+				}
+				
+				String from_pattern	= args.get( "from" );
+									
+				if ( from_pattern == null ){
+			
+					throw( new Exception( "missing parameter 'from'" ));
+				}
+
+				String to_pattern	= args.get( "to" );
+				
+				if ( to_pattern == null ){
+			
+					throw( new Exception( "missing parameter 'from'" ));
+				}
+				
+				String options	= args.get( "options" );
+				
+				boolean	do_display;
+				boolean do_data;
+				boolean do_torrent;
+				
+				if ( options == null || options.isEmpty()){
+					
+					do_display = do_data = do_torrent = true;
+					
+				}else{
+					
+					options = options.toLowerCase( Locale.US );
+					
+					do_display	= options.contains( "display" );
+					do_data		= options.contains( "data" );
+					do_torrent	= options.contains( "torrent" );
+				}
+				
+				boolean saveLocationIsFolder = dm.getSaveLocation().isDirectory();
+				
+				String display_name		= dm.getDisplayName();
+				String save_path		= dm.getSaveLocation().getName();
+				String torrent_name		= new File(dm.getTorrentFileName()).getName();
+
+				Pattern pattern = Pattern.compile( from_pattern );
+						
+				if ( do_display ){
+					
+					Matcher matcher = pattern.matcher( display_name );
+					
+					String new_display_name = matcher.replaceAll( to_pattern );
+					
+					if ( !display_name.equals( new_display_name )){
+						
+						dm.getDownloadState().setDisplayName( new_display_name );
+					}
+				}
+				
+				if ( do_data && dm.canMoveDataFiles()){
+					
+					Matcher matcher = pattern.matcher( save_path );
+					
+					String new_save_path = matcher.replaceAll( to_pattern );
+					
+					if ( !save_path.equals( new_save_path )){
+						
+						new_save_path = FileUtil.convertOSSpecificChars( new_save_path, saveLocationIsFolder );
+						
+						try{
+							if ( dm.getTorrent().isSimpleTorrent()){
+
+								String dnd_sf = dm.getDownloadState().getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+
+								if ( dnd_sf != null ){
+
+									dnd_sf = dnd_sf.trim();
+
+									String existing_name = dm.getSaveLocation().getName();
+
+									if ( existing_name.endsWith( dnd_sf )){
+
+										if ( !new_save_path.endsWith( dnd_sf )){
+
+											new_save_path += dnd_sf;
+										}
+									}
+								}
+							}
+						}catch( Throwable e ){
+						}
+						
+						dm.renameDownload( new_save_path );		
+					}
+				}
+				
+				if ( do_torrent ){
+					
+					Matcher matcher = pattern.matcher( torrent_name );
+					
+					String new_torrent_name = matcher.replaceAll( to_pattern );
+					
+					if ( !torrent_name.equals( new_torrent_name )){
+						
+						new_torrent_name = FileUtil.convertOSSpecificChars( new_torrent_name, false );
+						
+						dm.renameTorrentSafe( new_torrent_name );
+					}
+				}
 			}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
 				
 				DownloadManager dm = getDownloadFromHash( args );
