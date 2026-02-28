@@ -780,7 +780,7 @@ SimpleAPIPlugin
 				
 				if ( to_pattern == null ){
 			
-					throw( new Exception( "missing parameter 'from'" ));
+					throw( new Exception( "missing parameter 'to'" ));
 				}
 				
 				String options	= args.get( "options" );
