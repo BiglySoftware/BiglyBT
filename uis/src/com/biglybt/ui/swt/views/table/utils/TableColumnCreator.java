@@ -252,6 +252,8 @@ public class TableColumnCreator
 		c.put(FileExtensionItem.COLUMN_ID, new cInfo(FileExtensionItem.class, FileExtensionItem.DATASOURCE_TYPE));
 		c.put(SavePathItem.COLUMN_ID, new cInfo(SavePathItem.class, SavePathItem.DATASOURCE_TYPE));
 		c.put(TorrentPathItem.COLUMN_ID, new cInfo(TorrentPathItem.class, TorrentPathItem.DATASOURCE_TYPE));
+		c.put(TorrentHashItem.COLUMN_ID, new cInfo(TorrentHashItem.class, TorrentHashItem.DATASOURCE_TYPE));
+		c.put(TorrentHashV2Item.COLUMN_ID, new cInfo(TorrentHashV2Item.class, TorrentHashV2Item.DATASOURCE_TYPE));
 		c.put(CategoryItem.COLUMN_ID, new cInfo(CategoryItem.class, CategoryItem.DATASOURCE_TYPE));
 		c.put(TagsItem.COLUMN_ID, new cInfo(TagsItem.class, TagsItem.DATASOURCE_TYPE));
 		c.put(TagColorsItem.COLUMN_ID, new cInfo(TagColorsItem.class, TagColorsItem.DATASOURCE_TYPE));
