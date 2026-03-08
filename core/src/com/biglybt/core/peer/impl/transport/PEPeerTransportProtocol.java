@@ -2718,6 +2718,10 @@ implements PEPeerTransport
 				transport.setTransportMode( Transport.TRANSPORT_MODE_TURBO );
 				outgoing_piece_message_handler.setRequestReadAhead( 128 );
 			}
+			else if( send_rate >= 625000 ) {  // 5 Mbit/s  (new tier; was 1 Mbit/s)
+				transport.setTransportMode( Transport.TRANSPORT_MODE_TURBO );
+				outgoing_piece_message_handler.setRequestReadAhead( 64 );
+			}
 			else if( send_rate >= 125000 ) {  // 1 Mbit/s
 				if( transport.getTransportMode() < Transport.TRANSPORT_MODE_FAST ) {
 					transport.setTransportMode( Transport.TRANSPORT_MODE_FAST );
@@ -2727,14 +2731,15 @@ implements PEPeerTransport
 			else if( send_rate >= 62500 ) {  // 500 Kbit/s
 				outgoing_piece_message_handler.setRequestReadAhead( 16 );
 			}
-			else if( send_rate >= 31250 ) {  // 250 Kbit/s
-				outgoing_piece_message_handler.setRequestReadAhead( 8 );
+			else if( send_rate >= 25000 ) {  // 200 Kbit/s  (new tier)
+				outgoing_piece_message_handler.setRequestReadAhead( 12 );
 			}
 			else if( send_rate >= 12500 ) {  // 100 Kbit/s
-				outgoing_piece_message_handler.setRequestReadAhead( 4 );
+				outgoing_piece_message_handler.setRequestReadAhead( 8 );
 			}
 			else {
-				outgoing_piece_message_handler.setRequestReadAhead( 2 );
+				// floor raised from 2 to 8 to guarantee minimum pipeline depth
+				outgoing_piece_message_handler.setRequestReadAhead( 8 );
 			}
 
 

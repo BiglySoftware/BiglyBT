@@ -60,7 +60,7 @@ public class OutgoingBTPieceMessageHandler {
   
   private final AEMonitor	lock_mon	= new AEMonitor( "OutgoingBTPieceMessageHandler:lock");
   private boolean destroyed = false;
-  private int request_read_ahead = 2;
+  private int request_read_ahead = 16;  // raised from 2 to avoid pipeline starvation on new connections
 
   final OutgoingBTPieceMessageHandlerAdapter	adapter;
 
@@ -494,12 +494,13 @@ public class OutgoingBTPieceMessageHandler {
   					
   				}else{
   					
-  					long send_rate = peer.getStats().getDataSendRate();
-  				
-  						// give them 30 seconds of upload, pretty generous
-  					
-  					if ( send_rate*30 < queued_data ){
-  						
+  				long send_rate = peer.getStats().getDataSendRate();
+
+  					// give them 60 seconds of upload (raised from 30s to avoid premature back-pressure
+  					// stall in multi-peer high-bandwidth scenarios)
+
+  				if ( send_rate*60 < queued_data ){
+
   						break;
   					}
   				}
