@@ -25,6 +25,9 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.nio.channels.FileChannel;
+import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import com.biglybt.core.category.Category;
@@ -329,9 +332,27 @@ MagnetPluginMDDownloader
 					
 					if ( !data_file.exists() || data_file.length() != MD_TORRENT_SIZE ){
 					
+						if ( !data_file.exists()){
+							
+							try{
+								Set<OpenOption>	options = new HashSet<>();
+								
+								options.add( StandardOpenOption.WRITE );
+								options.add( StandardOpenOption.CREATE_NEW );
+								options.add( StandardOpenOption.SPARSE );
+								
+								FileChannel fc = FileChannel.open( data_file.toPath(), options );
+								
+								fc.close();
+								
+							}catch( Throwable e ){		
+							}
+						}
+						
 						RandomAccessFile raf = new RandomAccessFile( data_file, "rw" );
 		
 						try{
+							/*
 							byte[] buffer = new byte[512*1024];
 			
 							Arrays.fill( buffer, (byte)0xff );
@@ -340,6 +361,11 @@ MagnetPluginMDDownloader
 			
 								raf.write( buffer );
 							}
+							*/
+							
+
+							raf.setLength( MD_TORRENT_SIZE );
+							
 						}finally{
 			
 							raf.close();
@@ -371,8 +397,7 @@ MagnetPluginMDDownloader
 			
 						meta_torrent = creator.create( true );
 					}
-		
-	
+			
 					List<String>	extras = plugin.getExtraTrackers();
 								
 					for ( String extra: extras ){
@@ -520,6 +545,7 @@ MagnetPluginMDDownloader
 					download_manager.addDownloadWillBeAddedListener(dwbal);
 					
 					try{
+						data_file.delete();
 					
 						download = download_manager.addNonPersistentDownloadStopped( PluginCoreUtils.wrap( meta_torrent ), torrent_file, data_file);
 			
