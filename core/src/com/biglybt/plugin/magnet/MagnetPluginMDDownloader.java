@@ -328,7 +328,7 @@ MagnetPluginMDDownloader
 					data_file 		= FileUtil.newFile( md_dir, hash_str + ".torrent" );
 					torrent_file 	= FileUtil.newFile( md_dir, hash_str + ".metatorrent" );
 		
-					int MD_TORRENT_SIZE = 64*1024*1024;
+					int MD_TORRENT_SIZE = 128*1024*1024;
 					
 					if ( !data_file.exists() || data_file.length() != MD_TORRENT_SIZE ){
 					
