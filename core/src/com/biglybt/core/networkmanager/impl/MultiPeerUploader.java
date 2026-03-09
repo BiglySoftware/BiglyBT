@@ -400,6 +400,12 @@ public class MultiPeerUploader extends RateControlledMultipleEntity {
 
 			int num_unusable_connections = 0;
 
+			// Calculate a per-connection budget: let each connection claim a fair share
+			// of the remaining bytes (≥1 MSS), allowing fast peers to use more bandwidth
+			// per turn rather than being hard-capped at one MSS. This mirrors libtorrent's
+			// behaviour where high-RTT or high-speed peers are not artificially throttled.
+			final int num_ready = ready_connections.size();
+
 			while( num_bytes_remaining > 0 && num_unusable_connections < ready_connections.size() ) {
 				NetworkConnectionBase conn = (NetworkConnectionBase)ready_connections.removeFirst();
 
@@ -419,10 +425,21 @@ public class MultiPeerUploader extends RateControlledMultipleEntity {
 				}
 
 				int mss_size = conn.getMssSize();
-				long num_bytes_allowed = num_bytes_remaining > mss_size ? mss_size : num_bytes_remaining;  //allow a single full packet at most
-				int num_bytes_available = total_size > mss_size ? mss_size : total_size;  //allow a single full packet at most
 
-				if( num_bytes_allowed >= num_bytes_available ) { //we're allowed enough (for either a full packet or to drain any remaining data)
+				// Per-connection byte budget: fair share of remaining bytes, but always at
+				// least one full MSS so no connection is starved, and capped at 4 MSS so no
+				// single connection monopolises the whole budget in a multi-peer scenario.
+				int fair_share = (int)(num_bytes_remaining / Math.max(1, num_ready - num_unusable_connections));
+				// Round up to the nearest MSS boundary
+				if ( fair_share < mss_size ) fair_share = mss_size;
+				int max_per_conn_msses = Math.max(1, fair_share / mss_size);
+				if ( max_per_conn_msses > 4 ) max_per_conn_msses = 4;  // hard cap: max 4 MSS per turn
+				long num_bytes_allowed = (long) max_per_conn_msses * mss_size;
+				if ( num_bytes_allowed > num_bytes_remaining ) num_bytes_allowed = num_bytes_remaining;
+
+				int num_bytes_available = total_size > (int)num_bytes_allowed ? (int)num_bytes_allowed : total_size;
+
+				if( num_bytes_allowed >= mss_size || num_bytes_allowed >= num_bytes_available ) { //we're allowed enough (for either a full packet or to drain any remaining data)
 					int written = 0;
 					try {
 						int[] _written = conn.getOutgoingMessageQueue().deliverToTransport( num_bytes_available, protocol_is_free, true );
