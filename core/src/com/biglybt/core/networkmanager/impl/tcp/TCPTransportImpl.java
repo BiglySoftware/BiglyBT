@@ -55,7 +55,8 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
   String description = "<disconnected>";
   final boolean is_inbound_connection;
 
-  private int transport_mode = TRANSPORT_MODE_NORMAL;
+  private int transport_send_mode = TRANSPORT_MODE_NORMAL;
+  private int transport_recv_mode = TRANSPORT_MODE_NORMAL;
 
   public volatile boolean has_been_closed = false;
 
@@ -521,27 +522,27 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 
 
 
-  private void setTransportBuffersSize( int size_in_bytes ) {
+  private void setTransportBuffersSizes( int send_bytes, int recv_bytes ) {
   	if( getFilter() == null ) {
   		Debug.out( "socket_channel == null" );
   		return;
   	}
 
-    try{
-    	SocketChannel	channel = getSocketChannel();
+  	try{
+  		SocketChannel	channel = getSocketChannel();
 
-    	channel.socket().setSendBufferSize( size_in_bytes );
-    	channel.socket().setReceiveBufferSize( size_in_bytes );
+  		channel.socket().setSendBufferSize( send_bytes );
+  		channel.socket().setReceiveBufferSize( recv_bytes );
 
-      int snd_real = channel.socket().getSendBufferSize();
-      int rcv_real = channel.socket().getReceiveBufferSize();
+  		int snd_real = channel.socket().getSendBufferSize();
+  		int rcv_real = channel.socket().getReceiveBufferSize();
 
-      if (Logger.isEnabled())
-    	  Logger.log(new LogEvent(LOGID, "Setting new transport [" + description
-					+ "] buffer sizes: SND=" + size_in_bytes + " [" + snd_real
-					+ "] , RCV=" + size_in_bytes + " [" + rcv_real + "]"));
-    }
-    catch( Throwable t ) {
+  		if (Logger.isEnabled())
+  			Logger.log(new LogEvent(LOGID, "Setting new transport [" + description
+  					+ "] buffer sizes: SND=" + send_bytes + " [" + snd_real
+  					+ "] , RCV=" + recv_bytes + " [" + rcv_real + "]"));
+  	}catch( Throwable t ){
+  		
       Debug.out( t );
     }
   }
@@ -551,28 +552,31 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
    * Set the transport to the given speed mode.
    * @param mode to change to
    */
+  
+  private static final int[] mode_map = {
+			  8 * 1024,				// TRANSPORT_MODE_NORMAL 
+			  64 * 1024,
+			  512 * 1024,
+			  2 * 1024 * 1024,		// TRANSPORT_MODE_MEGA_TURBO
+	  };
+  
   @Override
-  public void setTransportMode(int mode ) {
-    if( mode == transport_mode )  return;  //already in mode
+  public void 
+  setTransportModes(
+	int send_mode,
+	int	recv_mode )
+  {
+	  	// we never decrease buffer sizes
+	  
+	  send_mode = Math.max( send_mode, transport_send_mode );
+	  recv_mode = Math.max( recv_mode, transport_recv_mode );
+	  
+	  if ( send_mode == transport_send_mode && recv_mode == transport_recv_mode )  return;  //already in mode
 
-    switch( mode ) {
-      case TRANSPORT_MODE_NORMAL:
-        setTransportBuffersSize( 8 * 1024 );
-        break;
-
-      case TRANSPORT_MODE_FAST:
-        setTransportBuffersSize( 64 * 1024 );
-        break;
-
-      case TRANSPORT_MODE_TURBO:
-        setTransportBuffersSize( 512 * 1024 );
-        break;
-
-      default:
-        Debug.out( "invalid transport mode given: " +mode );
-    }
-
-    transport_mode = mode;
+	  transport_send_mode = send_mode;
+	  transport_recv_mode = recv_mode;
+	  
+	  setTransportBuffersSizes( mode_map[send_mode], mode_map[recv_mode]);
   }
 
   protected void
@@ -600,13 +604,6 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 		listener.connectSuccess( this, remaining_initial_data );
 	  }
   }
-
-  /**
-   * Get the transport's speed mode.
-   * @return current mode
-   */
-  @Override
-  public int getTransportMode() {  return transport_mode;  }
 
   protected void
   close(

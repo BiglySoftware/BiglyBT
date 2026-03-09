@@ -59,9 +59,12 @@ Transport
   
   public static final int CR_INTERNAL_CONNECT_FAILED	= 1000000;
 		  
-  public static final int TRANSPORT_MODE_NORMAL = 0;
-  public static final int TRANSPORT_MODE_FAST   = 1;
-  public static final int TRANSPORT_MODE_TURBO  = 2;
+  	// these must be numbered from 0 and consecutive...
+  
+  public static final int TRANSPORT_MODE_NORMAL		= 0;
+  public static final int TRANSPORT_MODE_FAST		= 1;
+  public static final int TRANSPORT_MODE_TURBO		= 2;
+  public static final int TRANSPORT_MODE_MEGA_TURBO	= 3;
 
   public int
   getMssSize();
@@ -126,17 +129,35 @@ Transport
   public long read( ByteBuffer[] buffers, int array_offset, int length ) throws IOException;
 
   /**
-   * Set the transport to the given speed mode.
+   * Set the transport to the given speed modes.
    * @param mode to change to
    */
-  public void setTransportMode( int mode );
+  public default void 
+  setTransportModes( 
+	  int send_mode, 
+	  int recv_mode )
+  {
+	  // this is here until uTP plugin updated
+  }
 
   /**
    * Get the transport's speed mode.
    * @return current mode
+   * @deprecated
    */
-  public int getTransportMode();
+  public default int 
+  getTransportMode()
+  {
+	  System.out.println( "Deprecated method" );
+	  new Exception().printStackTrace();
+	  return( TRANSPORT_MODE_NORMAL );
+  }
 
+  public default void setTransportMode( int mode )
+  {
+	  System.out.println( "Deprecated method" );
+	  new Exception().printStackTrace();
+  }
 
   /**
    * Kick off an outbound connection

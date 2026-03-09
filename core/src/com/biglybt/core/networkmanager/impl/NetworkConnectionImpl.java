@@ -541,17 +541,11 @@ NetworkConnectionImpl
 
 		@Override
 		public void
-		setTransportMode(
-			int mode )
+		setTransportModes(
+			int send_mode,
+			int recv_mode )
 		{
 			Debug.out( "Bogus Transport Operation" );
-		}
-
-		@Override
-		public int
-		getTransportMode()
-		{
-			return( transport.getTransportMode());
 		}
 
 		@Override

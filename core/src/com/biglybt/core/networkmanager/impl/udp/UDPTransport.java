@@ -37,8 +37,6 @@ UDPTransport
 	private final ProtocolEndpointUDP		endpoint;
 	private byte[][]				shared_secrets;
 
-	private int transport_mode = TRANSPORT_MODE_NORMAL;
-
 	private volatile boolean	closed;
 
 	protected
@@ -111,17 +109,10 @@ UDPTransport
 
 	@Override
 	public void
-	setTransportMode(
-		int mode )
+	setTransportModes(
+		int send_mode,
+		int recv_mde )
 	{
-		transport_mode	= mode;
-	}
-
-	@Override
-	public int
-	getTransportMode()
-	{
-		return( transport_mode );
 	}
 
 	@Override

@@ -2702,59 +2702,65 @@ implements PEPeerTransport
 
 
 	@Override
-	public void doPerformanceTuningCheck() {
+	public void 
+	doPerformanceTuningCheck() 
+	{
 		Transport	transport = connection.getTransport();
 
-		if( transport != null && peer_stats != null && outgoing_piece_message_handler != null ) {
+		if ( transport != null && peer_stats != null ){
 
-			//send speed -based tuning
+			int	send_mode	= Transport.TRANSPORT_MODE_NORMAL;
+			int recv_mode	= Transport.TRANSPORT_MODE_NORMAL; 
+			
+				// floor raised from 2 to 8 to guarantee minimum pipeline depth
+
+			int read_ahead = 8;
+			
+				//send speed-based tuning
+			
 			final long send_rate = peer_stats.getDataSendRate() + peer_stats.getProtocolSendRate();
 
 			if( send_rate >= 3125000 ) {  // 25 Mbit/s
-				transport.setTransportMode( Transport.TRANSPORT_MODE_TURBO );
-				outgoing_piece_message_handler.setRequestReadAhead( 256 );
-			}
-			else if( send_rate >= 1250000 ) {  // 10 Mbit/s
-				transport.setTransportMode( Transport.TRANSPORT_MODE_TURBO );
-				outgoing_piece_message_handler.setRequestReadAhead( 128 );
-			}
-			else if( send_rate >= 625000 ) {  // 5 Mbit/s  (new tier; was 1 Mbit/s)
-				transport.setTransportMode( Transport.TRANSPORT_MODE_TURBO );
-				outgoing_piece_message_handler.setRequestReadAhead( 64 );
-			}
-			else if( send_rate >= 125000 ) {  // 1 Mbit/s
-				if( transport.getTransportMode() < Transport.TRANSPORT_MODE_FAST ) {
-					transport.setTransportMode( Transport.TRANSPORT_MODE_FAST );
-				}
-				outgoing_piece_message_handler.setRequestReadAhead( 32 );
-			}
-			else if( send_rate >= 62500 ) {  // 500 Kbit/s
-				outgoing_piece_message_handler.setRequestReadAhead( 16 );
-			}
-			else if( send_rate >= 25000 ) {  // 200 Kbit/s  (new tier)
-				outgoing_piece_message_handler.setRequestReadAhead( 12 );
-			}
-			else if( send_rate >= 12500 ) {  // 100 Kbit/s
-				outgoing_piece_message_handler.setRequestReadAhead( 8 );
-			}
-			else {
-				// floor raised from 2 to 8 to guarantee minimum pipeline depth
-				outgoing_piece_message_handler.setRequestReadAhead( 8 );
+				send_mode	= Transport.TRANSPORT_MODE_MEGA_TURBO;
+				read_ahead	= 256;
+			}else if( send_rate >= 1250000 ) {  // 10 Mbit/s
+				send_mode	= Transport.TRANSPORT_MODE_TURBO;
+				read_ahead	= 128;
+			}else if( send_rate >= 625000 ) {  // 5 Mbit/s  (new tier; was 1 Mbit/s)
+				send_mode	= Transport.TRANSPORT_MODE_TURBO;
+				read_ahead	= 64;
+			}else if( send_rate >= 125000 ) {  // 1 Mbit/s
+				send_mode	= Transport.TRANSPORT_MODE_FAST;
+				read_ahead	= 32;
+			}else if( send_rate >= 62500 ) {  // 500 Kbit/s
+				read_ahead	= 16;
+			}else if( send_rate >= 25000 ) {  // 200 Kbit/s  (new tier)
+				read_ahead	= 12;
 			}
 
+			if ( outgoing_piece_message_handler != null ){
+			
+				outgoing_piece_message_handler.setRequestReadAhead( read_ahead );
+			}			
 
-			//receive speed -based tuning
+				//receive speed -based tuning
+			
 			final long receive_rate = peer_stats.getDataReceiveRate() + peer_stats.getProtocolReceiveRate();
 
-			if( receive_rate >= 1250000 ) {  // 10 Mbit/s
-				transport.setTransportMode( Transport.TRANSPORT_MODE_TURBO );
+			if( receive_rate >= 3125000 ) {  // 25 Mbit/s
+				
+				recv_mode	= Transport.TRANSPORT_MODE_MEGA_TURBO;
+				
+			}else if( receive_rate >= 1250000 ) {  // 10 Mbit/s
+				
+				recv_mode	= Transport.TRANSPORT_MODE_TURBO;
+				
+			}else if ( receive_rate >= 125000 ) {  // 1 Mbit/s
+				
+				recv_mode = Transport.TRANSPORT_MODE_FAST;
 			}
-			else if( receive_rate >= 125000 ) {  // 1 Mbit/s
-				if( transport.getTransportMode() < Transport.TRANSPORT_MODE_FAST ) {
-					transport.setTransportMode( Transport.TRANSPORT_MODE_FAST );
-				}
-			}
-
+			
+			transport.setTransportModes( send_mode, recv_mode );
 		}
 	}
 
