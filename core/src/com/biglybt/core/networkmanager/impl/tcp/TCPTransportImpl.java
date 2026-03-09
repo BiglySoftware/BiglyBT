@@ -531,16 +531,34 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
   	try{
   		SocketChannel	channel = getSocketChannel();
 
-  		channel.socket().setSendBufferSize( send_bytes );
-  		channel.socket().setReceiveBufferSize( recv_bytes );
+  		int send_real = channel.socket().getSendBufferSize();
+  		int recv_real = channel.socket().getReceiveBufferSize();
 
-  		int snd_real = channel.socket().getSendBufferSize();
-  		int rcv_real = channel.socket().getReceiveBufferSize();
-
-  		if (Logger.isEnabled())
-  			Logger.log(new LogEvent(LOGID, "Setting new transport [" + description
-  					+ "] buffer sizes: SND=" + send_bytes + " [" + snd_real
-  					+ "] , RCV=" + recv_bytes + " [" + rcv_real + "]"));
+  		boolean changed = false;
+  		
+  		if ( send_bytes > send_real ){
+  			int orig = send_real;
+  			channel.socket().setSendBufferSize( send_bytes );
+  			send_real = channel.socket().getSendBufferSize();
+  			changed = orig != send_real;
+  		}
+  		
+  		if ( recv_bytes > recv_real ){
+  			int orig = recv_real;
+  			channel.socket().setReceiveBufferSize( recv_bytes );
+  	 		recv_real = channel.socket().getReceiveBufferSize();
+  	 		changed = orig != recv_real;
+  		}
+  		
+  		if ( changed ){
+ 
+	  		if (Logger.isEnabled()){
+	  			String str = "Setting new transport [" + description
+	  					+ "] buffer sizes: SND=" + send_real +", RCV=" + recv_real;
+	  						  			
+	  			Logger.log(new LogEvent(LOGID, str));
+	  		}
+  		}
   	}catch( Throwable t ){
   		
       Debug.out( t );
@@ -554,8 +572,8 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
    */
   
   private static final int[] mode_map = {
-			  8 * 1024,				// TRANSPORT_MODE_NORMAL 
-			  64 * 1024,
+			  64 * 1024,			// TRANSPORT_MODE_NORMAL 
+			  128 * 1024,
 			  512 * 1024,
 			  2 * 1024 * 1024,		// TRANSPORT_MODE_MEGA_TURBO
 	  };
