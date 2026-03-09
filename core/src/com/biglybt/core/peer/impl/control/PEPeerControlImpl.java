@@ -5108,6 +5108,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			int udp_connections = 0;
 
+			long now_mono = SystemTime.getMonotonousTime();
+			
 			for( PEPeerTransport transport: peer_transports ){
 
 				// update waiting count
@@ -5116,6 +5118,16 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					num_waiting_establishments++;
 				}else{
 
+						// at the start of a connection's life do the performance checks
+						// more frequently to improve startup
+					
+					long connect_time = transport.getConnectionEstablishedMonoTime();
+					
+					if ( connect_time >= 0 && now_mono - connect_time < 30*1000 ){
+						
+						transport.doPerformanceTuningCheck();
+					}
+					
 					if(can_ipv6 && transport.getNetwork() == AENetworkClassifier.AT_PUBLIC){
 						boolean is_ipv6 = transport.getIp().contains(":");
 						if(is_ipv6){
