@@ -1388,6 +1388,13 @@ TorrentUtils
 
 				if ( first_url.equals(set.get(j))){
 
+					if ( i == 0 && j == 0 ){
+					
+							// already in the right place
+						
+						return;
+					}
+					
 					set.remove(j);
 
 					set.add(0, first_url);
