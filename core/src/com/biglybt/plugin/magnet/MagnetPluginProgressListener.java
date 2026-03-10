@@ -45,6 +45,9 @@ MagnetPluginProgressListener
 	reportContributor(
 		InetSocketAddress	address );
 
+	public void
+	setupComplete();
+	
 	public boolean
 	cancelled();
 

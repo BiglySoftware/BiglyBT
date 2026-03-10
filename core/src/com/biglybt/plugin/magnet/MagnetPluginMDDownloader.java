@@ -1081,6 +1081,16 @@ MagnetPluginMDDownloader
 				}
 			}finally{
 	
+				if ( setup_complete ){
+					
+					try{
+						activity_listener.started();
+						
+					}catch( Throwable e ){
+						
+						Debug.out(e );
+					}
+				}
 				if ( setup_started && !setup_complete ){
 				
 					tidyUp();
@@ -1518,6 +1528,9 @@ MagnetPluginMDDownloader
 	protected interface
 	DownloadListener
 	{
+		public void
+		started();
+		
 		public void
 		reportProgress(
 			String		str );

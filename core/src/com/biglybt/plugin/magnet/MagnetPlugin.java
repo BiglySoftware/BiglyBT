@@ -676,6 +676,12 @@ MagnetPlugin
 							
 							@Override
 							public void 
+							setupComplete()
+							{
+							}
+							
+							@Override
+							public void 
 							failed(
 								MagnetURIHandlerException error )
 							{
@@ -1032,7 +1038,7 @@ MagnetPlugin
 			
 			for ( Map map: sorted ){
 					
-				//System.out.println( "Recovering: " + map );
+				System.out.println( "Recovering: " + map );
 					
 				byte[]	hash = (byte[])map.get( "hash" );
 				
@@ -1125,14 +1131,25 @@ MagnetPlugin
 							public void
 							runSupport()
 							{
+								AESemaphore sem = new AESemaphore( "recovwait" );
+								
 								DownloadAsyncListener dl_listener =
 									new DownloadAsyncListener(){
 										
 										@Override
 										public void 
+										setupComplete()
+										{
+											sem.release();
+										}
+									
+										@Override
+										public void 
 										failed(
 											MagnetURIHandlerException error )
 										{
+											sem.release();
+											
 											if ( !error.isManuallyCancelled()){
 											
 												Debug.out( error );
@@ -1144,6 +1161,8 @@ MagnetPlugin
 										complete(
 											byte[] result )
 										{
+											sem.release();
+											
 											if ( result != null ){
 												
 												try{
@@ -1216,15 +1235,20 @@ MagnetPlugin
 									};
 								
 								recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, added_time, true, dl_listener );
+								
+								if ( !sem.reserve(2500)){
+									
+									Debug.out( "Timeout waiting for magnet recovery to complete" );
+								}
 							}
 						});
-					
-						// we want the metadata downloads to be added in the correct order. as the thread pool
-						// will fire things off concurrently we add this hack to give things a chance to 
-						// end up correct...
-					
-					//Thread.sleep(500);
-					
+						
+							// we want the metadata downloads to be added in the correct order. as the thread pool
+							// will fire things off concurrently we add this hack to give things a chance to 
+							// end up correct...
+						
+							//Thread.sleep(500);
+									
 				}catch( Throwable e ){
 					
 					Debug.out( e );
@@ -1480,6 +1504,13 @@ MagnetPlugin
 					
 					@Override
 					public void 
+					setupComplete()
+					{
+						_dl_listener.setupComplete();
+					}
+					
+					@Override
+					public void 
 					failed(
 						MagnetURIHandlerException error )
 					{
@@ -1508,14 +1539,16 @@ MagnetPlugin
 				};
 				
 			downloadAsync(
-				muh_listener == null ? null : new MagnetPluginProgressListener()
+				new MagnetPluginProgressListener()
 				{
 					@Override
 					public void
 					reportSize(
-							long	size )
+						long	size )
 					{
-						muh_listener.reportSize( size );
+						if ( muh_listener != null ){
+							muh_listener.reportSize( size );
+						}
 					}
 
 					@Override
@@ -1523,7 +1556,9 @@ MagnetPlugin
 					reportActivity(
 							String	str )
 					{
-						muh_listener.reportActivity( str );
+						if ( muh_listener != null ){
+							muh_listener.reportActivity( str );
+						}
 					}
 
 					@Override
@@ -1531,9 +1566,18 @@ MagnetPlugin
 					reportCompleteness(
 							int		percent )
 					{
-						muh_listener.reportCompleteness( percent );
+						if ( muh_listener != null ){
+							muh_listener.reportCompleteness( percent );
+						}
 					}
 
+					@Override
+					public void 
+					setupComplete()
+					{
+						dl_listener.setupComplete();
+					}
+					
 					@Override
 					public void
 					reportContributor(
@@ -1545,14 +1589,22 @@ MagnetPlugin
 					public boolean
 					cancelled()
 					{
-						return( muh_listener.cancelled());
+						if ( muh_listener != null ){
+							return( muh_listener.cancelled());
+						}else{
+							return( false );
+						}
 					}
 
 					@Override
 					public boolean
 					verbose()
 					{
-						return( muh_listener.verbose());
+						if ( muh_listener != null ){
+							return( muh_listener.verbose());
+						}else{
+							return( false );
+						}
 					}
 				},
 				hash,
@@ -1663,6 +1715,12 @@ MagnetPlugin
 		DownloadAsyncListener dl_listener =
 			new DownloadAsyncListener(){
 				
+				@Override
+				public void 
+				setupComplete()
+				{
+				}
+			
 				@Override
 				public void 
 				failed(
@@ -2607,6 +2665,15 @@ MagnetPlugin
 								new MagnetPluginMDDownloader.DownloadListener()
 								{
 									@Override
+									public void
+									started()
+									{
+										if ( listener != null ){
+											listener.setupComplete();
+										}
+									}
+									
+									@Override
 									public void 
 									reportProgress(String str)
 									{
@@ -2636,6 +2703,7 @@ MagnetPlugin
 									{
 										if ( listener != null ){
 											listener.reportActivity( getMessageText( "report.md.done" ));
+											listener.setupComplete();
 										}
 
 										synchronized( md_downloader ){
@@ -2664,6 +2732,7 @@ MagnetPlugin
 									{
 										if ( listener != null ){
 											listener.reportActivity( getMessageText( "report.error", Debug.getNestedExceptionMessage(e)));
+											listener.setupComplete();
 										}
 
 										synchronized( md_downloader ){
@@ -2676,8 +2745,12 @@ MagnetPlugin
 								});
 						}
 					});
+		}else{
+			
+			if ( listener != null ){
+				listener.setupComplete();
+			}
 		}
-
 
 		try{
 			try{
@@ -3422,6 +3495,9 @@ MagnetPlugin
 	private interface
 	DownloadAsyncListener
 	{
+		public void
+		setupComplete();
+		
 		public void
 		complete(
 			byte[]		torrent_data );

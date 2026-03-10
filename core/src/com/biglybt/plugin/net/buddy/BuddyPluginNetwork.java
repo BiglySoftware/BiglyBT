@@ -2452,6 +2452,12 @@ BuddyPluginNetwork
 										}
 		
 										@Override
+										public void 
+										setupComplete()
+										{
+										}
+										
+										@Override
 										public void
 										reportContributor(
 											InetSocketAddress	address )
