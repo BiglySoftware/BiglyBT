@@ -36,6 +36,7 @@ import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
@@ -614,8 +615,11 @@ FMFileImpl
 		File lf = linked_file.getFile();
 		
 		try{
-		
-			fa = FileUtil.newFileAccessor( lf, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+			long fas = owner.getFileAllocationStrategy();
+			
+			boolean explicit_sparse = ( fas == DownloadManagerState.FAS_SPARSE || fas == DownloadManagerState.FAS_SPARSE_ZERO_LENGTH );
+			
+			fa = FileUtil.newFileAccessor( lf, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE, explicit_sparse);
 			
 		}catch( FileNotFoundException e ){
 			
@@ -626,7 +630,11 @@ FMFileImpl
 					FileUtil.exists( lf )  && 
 					lf.canRead()){
 				
-				fa = FileUtil.newFileAccessor( lf, READ_ACCESS_MODE );
+				long fas = owner.getFileAllocationStrategy();
+				
+				boolean explicit_sparse = ( fas == DownloadManagerState.FAS_SPARSE || fas == DownloadManagerState.FAS_SPARSE_ZERO_LENGTH );
+
+				fa = FileUtil.newFileAccessor( lf, READ_ACCESS_MODE, explicit_sparse );
 				
 			}else{
 				

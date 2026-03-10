@@ -51,4 +51,7 @@ CacheFileOwner
 	public StringInterner.FileKey
 	getCacheFileLink(
 		StringInterner.FileKey	file );
+	
+	public long
+	getFileAllocationStrategy();
 }

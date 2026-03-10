@@ -80,9 +80,9 @@ public class FileHandler
 		return new FileInputStream(from_file);
 	}
 
-	public FileAccessor newFileAccessor(File file, String access_mode)
+	public FileAccessor newFileAccessor(File file, String access_mode, boolean explicit_sparse )
 			throws FileNotFoundException {
-		return new FileAccessorRAF(file, access_mode);
+		return new FileAccessorRAF(file, access_mode, explicit_sparse);
 	}
 
 	/**

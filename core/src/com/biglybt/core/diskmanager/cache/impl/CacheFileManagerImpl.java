@@ -277,6 +277,12 @@ CacheFileManagerImpl
 						{
 							return( owner.getCacheFileLink(file));
 						}
+						@Override
+						public long 
+						getFileAllocationStrategy()
+						{
+							return( owner.getFileAllocationStrategy());
+						}
 					}, file, fm_type, force );
 
 			TOTorrentFile	tf = owner.getCacheFileTorrentFile();

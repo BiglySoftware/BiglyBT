@@ -41,6 +41,8 @@ DownloadManagerState
 	public static final long   FAS_DEFAULT					= 0;
 	public static final long   FAS_ZERO_NEW					= 1;
 	public static final long   FAS_ZERO_NEW_STOP			= 2;
+	public static final long   FAS_SPARSE					= 3;
+	public static final long   FAS_SPARSE_ZERO_LENGTH		= 4;
 	
 	public static final String AT_VERSION					= "version";
 	public static final String AT_CATEGORY					= "category";

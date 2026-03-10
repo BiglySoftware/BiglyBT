@@ -1681,7 +1681,10 @@ DiskManagerImpl
 
 	                //reserve the full file size with the OS file system
 	        	
-	        	if ( enable_sparse_files && sparse_files_dont_preallocate ){
+	        	
+	        	
+	        	if ( 	alloc_strategy == DownloadManagerState.FAS_SPARSE_ZERO_LENGTH ||
+	        			enable_sparse_files && sparse_files_dont_preallocate ){
 	        	
 	        			// user doesn't like the files sitting there with 0 disk used but length set to actual
 	        			// as if they copy the file it ends up grabbing the max space (assuming target

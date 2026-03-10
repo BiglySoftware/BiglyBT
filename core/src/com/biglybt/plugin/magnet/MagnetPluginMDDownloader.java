@@ -495,6 +495,8 @@ MagnetPluginMDDownloader
 											
 											DownloadManagerState state = dm.getDownloadState();
 											
+											state.setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_SPARSE_ZERO_LENGTH );
+
 											state.addListener(
 													new DownloadManagerStateAttributeListener()
 													{

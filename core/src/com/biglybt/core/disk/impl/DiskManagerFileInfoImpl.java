@@ -146,6 +146,13 @@ DiskManagerFileInfoImpl
 	{
 		return( diskManager.getDownloadState().getFileLink( file_index, file ));
 	}
+	
+	@Override
+	public long 
+	getFileAllocationStrategy()
+	{
+		return( diskManager.getDownloadState().getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY ));
+	}
 
   @Override
   public void

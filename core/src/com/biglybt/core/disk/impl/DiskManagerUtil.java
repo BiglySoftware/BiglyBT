@@ -718,6 +718,12 @@ DiskManagerUtil
 													{
 														return( download_manager.getDownloadState().getFileLink( idx, file ));
 													}
+													@Override
+													public long 
+													getFileAllocationStrategy()
+													{
+														return( download_manager.getDownloadState().getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY ));
+													}
 												},
 												new StringInterner.FileKey( target_file ),
 												DiskManagerUtil.convertDMStorageTypeToCache( newStorageType ), force );
@@ -1224,6 +1230,12 @@ DiskManagerUtil
 														FileKey file )
 													{
 														return( download_manager.getDownloadState().getFileLink( file_index, file ));
+													}
+													@Override
+													public long 
+													getFileAllocationStrategy()
+													{
+														return( download_manager.getDownloadState().getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY ));
 													}
 	                							},
 	                							new StringInterner.FileKey( getFile( true )),

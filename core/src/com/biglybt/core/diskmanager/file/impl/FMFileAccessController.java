@@ -254,7 +254,7 @@ FMFileAccessController
 
 			if ( FileUtil.exists( file )){
 
-				fa = FileUtil.newFileAccessor( file, FMFileImpl.WRITE_ACCESS_MODE);
+				fa = FileUtil.newFileAccessor( file, FMFileImpl.WRITE_ACCESS_MODE, false);
 
 					// due to the simplistic implementation of compact we only actually need to deal with
 					// the last piece of the file (first piece is in the right place already)
@@ -534,11 +534,12 @@ FMFileAccessController
 		public
 		FileAccessorRAF(
 			File			file,
-			String			access_mode )
+			String			access_mode,
+			boolean			explicit_sparse )
 		
 			throws FileNotFoundException
 		{
-			if ( enable_sparse_files && !FileUtil.exists( file )){
+			if (( enable_sparse_files || explicit_sparse ) && !FileUtil.exists( file )){
 				
 				try{
 					Set<OpenOption>	options = new HashSet<>();

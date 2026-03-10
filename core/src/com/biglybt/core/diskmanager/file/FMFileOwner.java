@@ -44,4 +44,7 @@ FMFileOwner
 	public StringInterner.FileKey
 	getFileLink(
 		StringInterner.FileKey		file );
+	
+	public long
+	getFileAllocationStrategy();
 }

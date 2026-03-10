@@ -4560,10 +4560,12 @@ public class FileUtil {
 	public static FileAccessor
 	newFileAccessor(
 		File			file,
-		String			access_mode)
+		String			access_mode,
+		boolean			explicit_sparse )
+	
 		throws FileNotFoundException
 	{
-		return fileHandling.newFileAccessor(file, access_mode);
+		return fileHandling.newFileAccessor(file, access_mode, explicit_sparse);
 	}
 
 	/**
@@ -4653,12 +4655,12 @@ public class FileUtil {
 		}
 
 		@Override
-		public FileAccessor newFileAccessor(File file, String access_mode)
+		public FileAccessor newFileAccessor(File file, String access_mode, boolean explicit_sparse)
 			throws FileNotFoundException {
 			if (file instanceof FileHack) {
 				file = ((FileHack) file).getHackTarget();
 			}
-			return super.newFileAccessor(file, access_mode);
+			return super.newFileAccessor(file, access_mode, explicit_sparse);
 		}
 	}
 	

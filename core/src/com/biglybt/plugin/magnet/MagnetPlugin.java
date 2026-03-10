@@ -140,7 +140,7 @@ MagnetPlugin
 	private StringListParameter	sources_param;
 	private IntParameter	 	sources_extra_param;
 	private BooleanParameter	magnet_recovery;
-	private IntParameter	 	magnet_recovery_concurrency;
+	// private IntParameter	 	magnet_recovery_concurrency;
 	private BooleanParameter	magnet_rename;
 	private DirectoryParameter	storage_folder;
 
@@ -210,12 +210,14 @@ MagnetPlugin
 				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 		
+		/*
 		magnet_recovery_concurrency	= config.addIntParameter2( "MagnetPlugin.recover.magnets.conc", "MagnetPlugin.recover.magnets.conc", 32, 8, 512 );
 
 		magnet_recovery_concurrency.setIndent( 1, true );
 		
 		magnet_recovery.addEnabledOnSelection( magnet_recovery_concurrency );
-
+		*/
+		
 		magnet_rename = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn", "MagnetPlugin.rename.using.dn", false );
 		
 		BooleanParameter rename_ext = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn.only.with.ext", "MagnetPlugin.rename.using.dn.only.with.ext", false );	
@@ -989,11 +991,15 @@ MagnetPlugin
 		
 		if ( recover && !active.isEmpty()){
 		
+			/*
 			int conc = magnet_recovery_concurrency.getValue();
 			
 			if ( conc < 1 ){
 				conc = 1;
 			}
+			*/
+			
+			int conc = 1;	// switched to single concurrency and no delay
 			
 			ThreadPool<AERunnable> tp = new ThreadPool<AERunnable>( "Magnet Recovery", conc, true );
 			
@@ -1217,7 +1223,7 @@ MagnetPlugin
 						// will fire things off concurrently we add this hack to give things a chance to 
 						// end up correct...
 					
-					Thread.sleep(500);
+					//Thread.sleep(500);
 					
 				}catch( Throwable e ){
 					
