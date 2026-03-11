@@ -2501,7 +2501,7 @@ DownloadImpl
 		}
 		this.setForceStart(false);
 
-		int state = this.getState();
+		int state = download_manager.getState();
 		if (state == DownloadManager.STATE_STOPPED ||	state == DownloadManager.STATE_QUEUED) {
 			download_manager.setStateWaiting();
 		}

@@ -294,6 +294,8 @@ MagnetPluginMDDownloader
 			boolean setup_started	= false;
 			boolean setup_complete	= false;
 			
+			long added_time = -1;
+			
 			try{
 				synchronized( ACTIVE_SET_LOCK ){
 	
@@ -559,6 +561,8 @@ MagnetPluginMDDownloader
 					core_dm = PluginCoreUtils.unwrap( download );
 					
 					DownloadManagerState state = core_dm.getDownloadState();
+					
+					added_time = state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
 					
 					if ( !state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
 					
@@ -1029,12 +1033,8 @@ MagnetPluginMDDownloader
 					int	move_to = 1;
 	
 					for ( Download e: existing ){
-	
-						// we check force-start here as we don't want to pick up other metadata downloads
-						// in the process of being added that have yet to be moved to the correct location
-						// via the code below
-	
-						if ( e == download || !e.isForceStart()){
+		
+						if ( e == download ){
 	
 							continue;
 						}
@@ -1047,7 +1047,13 @@ MagnetPluginMDDownloader
 	
 					download.moveTo( move_to );
 	
-					download.setForceStart( true );
+					int ss =  plugin.getMDDownloadStartState( core_dm );
+					
+					if ( ss == MagnetPlugin.SS_FORCE_START ){
+						download.setForceStart( true );
+					}else if ( ss == MagnetPlugin.SS_START ){
+						download.startDownload(false);
+					}
 	
 					download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
 					
@@ -1084,7 +1090,7 @@ MagnetPluginMDDownloader
 				if ( setup_complete ){
 					
 					try{
-						activity_listener.started();
+						activity_listener.started( added_time );
 						
 					}catch( Throwable e ){
 						
@@ -1529,7 +1535,8 @@ MagnetPluginMDDownloader
 	DownloadListener
 	{
 		public void
-		started();
+		started(
+			long	added_time );
 		
 		public void
 		reportProgress(

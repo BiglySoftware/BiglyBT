@@ -1018,6 +1018,9 @@ TOTorrentImpl
 			}else{
 
 				torrent_hash = torrent_hash_override;
+				
+				torrent_hash_v1 		= torrent_hash;
+				torrent_hash_wrapper_v1 = new HashWrapper( torrent_hash_v1 );
 			}
 
 			torrent_hash_wrapper = new HashWrapper( torrent_hash );

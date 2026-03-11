@@ -6847,7 +6847,8 @@ SubscriptionManagerImpl
 
 					@Override
 					public void 
-					setupComplete()
+					setupComplete(
+						long	added_time )
 					{
 					}
 					

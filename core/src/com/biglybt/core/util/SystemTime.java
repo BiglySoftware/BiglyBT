@@ -29,7 +29,7 @@ public class SystemTime {
 
 	private static final int	STEPS_PER_SECOND	= (int) (1000 / TIME_GRANULARITY_MILLIS);
 
-	private static SystemTimeProvider	instance;
+	private static final SystemTimeProvider	instance;
 
 	// can't do that without some safeguarding code.
 	// monotime does guarantee that time neither goes backwards nor performs leaps into the future.
@@ -45,23 +45,28 @@ public class SystemTime {
 
 	static
 	{
-		try
-		{
+		SystemTimeProvider _instance = null;
+		
+		try{
 			if (System.getProperty(SystemProperties.SYSPROP_TIME_USE_RAW_PROVIDER, "0").equals("1"))
 			{
 				System.out.println("Warning: Using Raw Provider");
-				instance = new RawProvider();
+				_instance = new RawProvider();
 			} else
 			{
-				instance = new SteppedProvider();
+				_instance = new SteppedProvider();
 			}
 		} catch (Throwable e)
 		{
 			// might be in applet...
-			instance = new SteppedProvider();
+			_instance = new SteppedProvider();
+		}finally{
+			
+			instance = _instance;
 		}
 	}
 
+	/*
 	public static void useRawProvider() {
 		if (!(instance instanceof RawProvider))
 		{
@@ -70,10 +75,11 @@ public class SystemTime {
 			instance = new RawProvider();
 		}
 	}
-
+	*/
+	
 	protected interface SystemTimeProvider {
 		public long getTime();
-
+		
 		public long getMonoTime();
 
 		public long
@@ -254,7 +260,7 @@ public class SystemTime {
 		public long getTime() {
 			return getMonoTime() + currentTimeOffset;
 		}
-
+		
 		@Override
 		public long getMonoTime() {
 			if ( SOD_IT_LETS_USE_HPC ){
@@ -414,7 +420,7 @@ public class SystemTime {
 		public long getTime() {
 			return System.currentTimeMillis();
 		}
-
+		
 		/**
 		 * This implementation does not guarantee monotonous time increases with
 		 * 100% accuracy as the adjustedTimeOffset is only adjusted every
@@ -441,6 +447,75 @@ public class SystemTime {
 		return (instance.getTime());
 	}
 
+	/**
+	 * Attempts to return unique values by incrementing millis if current same as previous...
+	 * Obviously this doesn't guarantee uniqueness if the clock changes...
+	 * @return
+	 */
+	
+	private static long last_time			= -1;
+	private static long last_unique_time	= -1;
+	
+	public static long 
+	getCurrentTimeUnique() 
+	{			
+		synchronized( instance ){
+			
+			long time = instance.getTime();
+
+			if ( last_time == -1 || time < last_time ){
+				
+					// start of day or time went backwards
+				
+				last_time = time;
+				
+				last_unique_time = -1;
+				
+			}else{
+			
+				if ( time == last_time ){
+					
+						// time hasn't changed
+					
+					if ( last_unique_time == -1 ){
+						
+						last_unique_time = time;
+					}
+					
+					last_unique_time++;
+					
+					time = last_unique_time;
+										
+				}else{
+					
+						// time has progressed
+					
+					last_time = time;
+	
+					if ( last_unique_time != -1 ){
+						
+						if ( time <= last_unique_time ){
+							
+								// new time still <= than last unique
+							
+							last_unique_time++;
+							
+							time = last_unique_time;
+							
+						}else{
+							
+								// greater than last unique, can use it
+							
+							last_unique_time = -1;
+						}
+					}
+				}
+			}
+
+			return( time );
+		}
+	}
+	
 	/**
 	 * Time that is guaranteed to grow monotonously and also ignores larger
 	 * jumps into the future which might be caused by adjusting the system clock<br>
