@@ -277,7 +277,7 @@ MagnetPluginMDDownloader
 		{
 			String[] bits = args.split( "&" );
 			
-			String	name = "magnet:" + Base32.encode( hash );
+			String	name = ByteFormatter.encodeString( hash ).toLowerCase(Locale.US);
 	
 			for ( String bit: bits ){
 
