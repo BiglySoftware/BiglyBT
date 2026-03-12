@@ -22,6 +22,7 @@ package com.biglybt.plugin.magnet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -72,7 +73,26 @@ MagnetPluginMDDownloader
 	 		}
 	 	};
 
-	final private Object			INSTANCE_LOCK = new Object();
+	 private static byte[] icon_bytes;
+	 	
+	 static{
+		 try{
+			 InputStream is = MagnetPluginMDDownloader.class.getClassLoader().getResourceAsStream("com/biglybt/plugin/magnet/icons/magnet2.png");
+
+			 try{
+				 icon_bytes = FileUtil.readInputStreamAsByteArray(is);
+
+			 }finally{
+
+				 is.close();
+			 }
+		 }catch( Throwable e ){
+
+			 Debug.out( e );
+		 }
+	 }
+	 	
+	 final private Object			INSTANCE_LOCK = new Object();
 
 	final private PluginInterface		plugin_interface;
 	final private MagnetPlugin			plugin;
@@ -470,6 +490,11 @@ MagnetPluginMDDownloader
 			
 						TorrentUtils.setFlag( meta_torrent, TorrentUtils.TORRENT_FLAG_LOW_NOISE, true );
 		
+						if ( icon_bytes != null ){
+							
+							PlatformTorrentUtils.setContentThumbnail(meta_torrent, icon_bytes );
+						}
+												
 						Map<String,Object> debug_data = new HashMap<>();
 						
 						debug_data.put( "args", args );
