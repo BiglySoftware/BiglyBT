@@ -23,6 +23,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -76,7 +77,7 @@ implements TableCellRefreshListener, ObfuscateCellText
 				
 			}else{
 				
-				cell.setText( ByteFormatter.encodeString( torrent.getHash()));
+				cell.setText( ByteFormatter.encodeString( TorrentUtils.getHashForDisplay(torrent)));
 			}
 			
 		}catch( Throwable e ){

@@ -2454,6 +2454,15 @@ MagnetPlugin
 				}
 			}
 		}
+		
+		protected boolean
+		isComplete()
+		{
+			synchronized( this ){
+				
+				return( result_set );
+			}
+		}
 	}
 
 	private void
@@ -2498,13 +2507,36 @@ MagnetPlugin
 	 				new DownloadResultListener()
 	 				{
 		 				@Override
-		 				public void complete(DownloadResult result){
-		 					f_activity.setResult( result );
+		 				public void 
+		 				complete(
+		 					DownloadResult result)
+		 				{
+		 					try{
+		 						f_activity.setResult( result );
+		 					}finally{
+		 						done();
+		 					}
 		 				}
+		 				
 		 				@Override
-	 					public void failed(MagnetURIHandlerException error){
-		 					f_activity.setResult(error);
+	 					public void 
+	 					failed(
+	 						MagnetURIHandlerException error)
+		 				{
+		 					try{
+		 						f_activity.setResult(error);
+		 					}finally{
+		 						done();
+		 					}
 	 					}
+		 				private void
+		 				done()
+		 				{
+		 					synchronized( download_activities ){
+		 		 				
+	 		 					download_activities.remove( hash );
+		 		 			}
+		 				}
 	 				};
 
 	 			_downloadSupport( listener, hash, args, sources, tags, initial_metadata, timeout, flags, result_listener );
@@ -2517,7 +2549,10 @@ MagnetPlugin
 
 	 			synchronized( download_activities ){
 
-	 				download_activities.remove( hash );
+	 				if ( activity.isComplete()){
+	 				
+	 					download_activities.remove( hash );
+	 				}
 	 			}
 	 		}
  		}
