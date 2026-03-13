@@ -117,6 +117,16 @@ public interface TableRowCore extends TableRow
 	public List<TableCellCore> refresh(boolean bDoGraphics, boolean bVisible);
 
 	/**
+	 *
+	 * @param shown
+	 * @param force
+	 *
+	 * @return true: changed
+	 */
+	
+	public boolean setShown(boolean shown, boolean force);
+
+	/**
 	 * like refresh, except a different name to confuse us.
 	 */
 	public void redraw();

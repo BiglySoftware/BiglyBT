@@ -924,6 +924,8 @@ public abstract class TableViewSWT_Common
  				}
  				TableRowCore[] rows = tv.getSelectedRows();
  				for (TableRowCore row : rows) {
+ 					row.setShown( true, true );
+					row.refresh( true, true );
  					if (row != rows[0]) {
  						sToClipboard += "\n";
  					}
