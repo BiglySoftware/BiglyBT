@@ -123,7 +123,7 @@ public interface Wiki
 
 	String SPEED_LIMIT_SCHEDULER = MAIN_PAGE + "w/Speed_Limit_Scheduler";
 
-	String SPEED_TEST_FAQ = MAIN_PAGE + "w/Speed_Test_FAQ";
+	String SPEED_TEST_FAQ = MAIN_PAGE + "w/Speed_Test_FAQ";	// Not used as only MLab test supported now
 	
 	String TAGS = MAIN_PAGE + "w/Tags";
 	
