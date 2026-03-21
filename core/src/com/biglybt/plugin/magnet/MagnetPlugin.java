@@ -2266,6 +2266,19 @@ MagnetPlugin
 	{
 		Map<String,Object> latest = TorrentUtils.getInitialMetadata( dm, dm.getUserData( DM_DN_CHANGED ) != null );
 		
+		try{
+			byte[] thumb = (byte[])latest.get( "thumbnail" );
+			
+			if ( MagnetPluginMDDownloader.isMagnetThumbnail( thumb )){
+				
+				latest.remove( "thumbnail");
+				latest.remove( "thumbnail_type" );
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
 		if ( existing_md == null ){
 			
 			return( latest );

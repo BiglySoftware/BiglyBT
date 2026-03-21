@@ -92,6 +92,13 @@ MagnetPluginMDDownloader
 		 }
 	 }
 	 	
+	 protected static boolean
+	 isMagnetThumbnail(
+			byte[]		bytes )
+	 {
+		 return(  bytes != null && Arrays.equals( icon_bytes, bytes ));
+	 }
+	 
 	 final private Object			INSTANCE_LOCK = new Object();
 
 	final private PluginInterface		plugin_interface;
