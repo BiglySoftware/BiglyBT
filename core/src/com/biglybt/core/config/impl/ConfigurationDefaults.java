@@ -255,6 +255,8 @@ public class ConfigurationDefaults {
     
     def.put(ConfigKeys.File.BCFG_ENABLE_ALT_LOC_FOR_DND_FILES, FALSE );
     def.put(ConfigKeys.File.SCFG_ALT_LOC_FOR_DND_FILES, FileUtil.getUserFile( "active" ).getAbsolutePath());
+    
+    def.put( ConfigKeys.File.BCFG_HIDE_PADDING_FILES, TRUE );
 
     def.put("Max File Links Supported", 2048 );
 

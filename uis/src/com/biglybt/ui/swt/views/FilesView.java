@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -156,6 +157,7 @@ public class FilesView
   private DownloadManager[] managers = new DownloadManager[0];
 
   public boolean hide_dnd_files;
+  public boolean hide_pad_files;
   public boolean tree_view;
 
   private boolean viewActive;
@@ -932,6 +934,14 @@ public class FilesView
 					return( false );
 				}
 			}
+		}else if ( hide_pad_files ){
+			
+			TOTorrentFile tf = ds.getTorrentFile();
+			
+			if ( tf != null && tf.isPadFile()){
+				
+				return( false );
+			}
 		}
 
 		if ( filter == null || filter.length() == 0 ){
@@ -1635,9 +1645,11 @@ public class FilesView
 			case EVENT_TABLELIFECYCLE_INITIALIZED: {
 				createDragDrop();
 
-				hide_dnd_files = COConfigurationManager.getBooleanParameter(
-						"FilesView.hide.dnd");
-				COConfigurationManager.addParameterListener("FilesView.hide.dnd", this);
+				hide_dnd_files = COConfigurationManager.getBooleanParameter("FilesView.hide.dnd");
+				hide_pad_files = COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_HIDE_PADDING_FILES);
+				COConfigurationManager.addParameterListener(
+					new String[]{ "FilesView.hide.dnd", ConfigKeys.File.BCFG_HIDE_PADDING_FILES }, 
+					this);
 				
 				addManagerListeners( managers );
 				
@@ -1645,8 +1657,9 @@ public class FilesView
 			}
 
 			case EVENT_TABLELIFECYCLE_DESTROYED: {
-				COConfigurationManager.removeParameterListener("FilesView.hide.dnd",
-						this);
+				COConfigurationManager.removeParameterListeners(
+					new String[]{ "FilesView.hide.dnd", ConfigKeys.File.BCFG_HIDE_PADDING_FILES },
+					this);
 
 				removeManagerListeners( managers );
 				
@@ -1867,6 +1880,12 @@ public class FilesView
 					}
 				});
 			}
+			if (tv == null || tv.isDisposed()) {
+				return;
+			}
+			tv.refilter();
+		}else if (parameterName.equals(ConfigKeys.File.BCFG_HIDE_PADDING_FILES)){
+			hide_pad_files = COConfigurationManager.getBooleanParameter(parameterName);
 			if (tv == null || tv.isDisposed()) {
 				return;
 			}

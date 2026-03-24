@@ -621,6 +621,13 @@ public class ConfigSectionFile
 				Integer.MAX_VALUE);
 		add(paramAutoSkipMinSize, Parameter.MODE_INTERMEDIATE, listIgnoredFiles);
 
+			// hide padding files
+		
+		BooleanParameterImpl hide_pad =new BooleanParameterImpl(BCFG_HIDE_PADDING_FILES,
+				"ConfigView.label.hide.pad.files");
+		
+		add(hide_pad, Parameter.MODE_INTERMEDIATE, listIgnoredFiles);	
+		
 		// torrent create/delete ignore files
 
 		StringParameterImpl ignoreCreateDelete = new StringParameterImpl(
