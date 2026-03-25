@@ -198,6 +198,10 @@ public class TableViewPainted
 	private int rowMinHeight;
 
 	private volatile boolean												selectionIsFromDrag;
+	
+		// SCLEnabler is used to defer content selection events during a drag-selection
+		// action until after the drag has completed
+	
 	private volatile SelectedContentManager.SelectedContentListenersEnabler SCLEnabler;
 
 	private class

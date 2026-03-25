@@ -152,6 +152,7 @@ public class SelectedContentManager
 	}
 
 	private static List<SelectedContentListenersEnabler>	listenerEnablers = new ArrayList<>();
+	private static boolean									triggerOutstanding;
 	
 	public static class
 	SelectedContentListenersEnabler
@@ -159,12 +160,24 @@ public class SelectedContentManager
 		public void
 		setEnabled()
 		{
+			boolean trigger = false;
+			
 			synchronized( listenerEnablers ){
 				
 				listenerEnablers.remove( this );
+				
+				if ( listenerEnablers.isEmpty() && triggerOutstanding ){
+					
+					trigger = true;
+					
+					triggerOutstanding = false;
+				}
 			}
 			
-			triggerSelectedContentListeners();
+			if ( trigger ){
+				
+				triggerSelectedContentListeners();
+			}
 		}
 	}
 	
@@ -187,6 +200,8 @@ public class SelectedContentManager
 		synchronized( listenerEnablers ){
 			
 			if ( !listenerEnablers.isEmpty()){
+				
+				triggerOutstanding = true;
 				
 				return;
 			}
