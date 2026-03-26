@@ -3045,6 +3045,16 @@ public class TableViewPainted
 	  				if ( REDUCE_GC_CREATION ){
 	  				
 	  					canvasImageGC	= new GC( canvasImage );
+	  					
+	  						// without this we get occasional white background flashes when initialising
+	  						// the view
+	  					
+	  					if ( Utils.isDarkAppearanceNative()){
+	  					
+	  						canvasImageGC.setBackground(TablePaintedUtils.getColour(cTable.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
+	  					
+	  						canvasImageGC.fillRectangle(canvasImage.getBounds());
+	  					}
 	  				}
 	  			}else{
 	  				
