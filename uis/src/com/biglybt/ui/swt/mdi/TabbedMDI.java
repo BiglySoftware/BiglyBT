@@ -530,7 +530,24 @@ public class TabbedMDI
 						tabFolder.toControl(cursorLocation.x, cursorLocation.y));
 
 
-				if ( item == null ){
+
+
+				TabbedEntry entry = null;
+				if (item != null) {
+					entry = getEntryFromTabItem(item);
+
+
+					showEntry(entry);
+				}
+
+				fillMenu(menu, entry, props_prefix);
+
+				if ( !mapUserClosedTabs.isEmpty()){
+					
+					new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
+				}
+
+				if ( item == null || cursorLocation != null  ){
 
 					for (Object id : mapUserClosedTabs.keySet()) {
 						
@@ -556,7 +573,7 @@ public class TabbedMDI
 							}
 						}
 
-						mi.setText(title);
+						mi.setText(title + "..." );
 
 						mi.addListener(SWT.Selection, new Listener() {
 							@Override
@@ -615,11 +632,8 @@ public class TabbedMDI
 							}
 						});
 					}
-
-					if ( !mapUserClosedTabs.isEmpty()){
-						
-						new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
-					}
+					
+					new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
 
 					org.eclipse.swt.widgets.MenuItem miReset = new org.eclipse.swt.widgets.MenuItem(menu, SWT.PUSH);
 
@@ -645,20 +659,7 @@ public class TabbedMDI
 						
 						buildTabs();
 					});
-					
-					new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
 				}
-
-				TabbedEntry entry = null;
-				if (item != null) {
-					entry = getEntryFromTabItem(item);
-
-
-					showEntry(entry);
-				}
-
-				fillMenu(menu, entry, props_prefix);
-
 			}
 		});
 
