@@ -1512,7 +1512,7 @@ DownloadManagerImpl
 						 // grab an initial value from torrent file - migration only
 
 						 try{
-							 add_time = FileUtil.newFile( torrentFileName ).lastModified();
+							 add_time = FileUtil.getFileCreationTime( FileUtil.newFile( torrentFileName ));
 
 						 }catch( Throwable e ){
 						 }

@@ -1727,17 +1727,34 @@ public class FileUtil {
     getFileCreationTime(
     	File		file )
     {
+    	long result = 0;
+    	
     	try{
 			BasicFileAttributeView from_attributes_view 	= Files.getFileAttributeView( file.toPath(), BasicFileAttributeView.class);
 
 			BasicFileAttributes from_attributes = from_attributes_view.readAttributes();
 
-			return( from_attributes.creationTime().toMillis());
+			result = from_attributes.creationTime().toMillis();
 			
 		}catch( Throwable e ){
-			
-			return( 0 );
 		}
+    	
+    	if ( result <= 0 || result == Long.MAX_VALUE ){
+    		
+    		result = 0;
+    		
+    		if ( file.exists()){
+    			
+    				// fallback to this as nothing else to use...
+    			
+    			try{
+    				result = file.lastModified();
+    				
+    			}catch( Throwable e ){
+    			}
+    		}
+    	}
+    	return( result );
     }
     
     public static boolean 

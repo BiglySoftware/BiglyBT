@@ -72,7 +72,7 @@ public class DateAddedItem
 						long add_time = 0;
 						
 						try{
-							add_time = new File(dm.getTorrentFileName()).lastModified();
+							add_time = FileUtil.getFileCreationTime( new File(dm.getTorrentFileName()));
 							
 						}catch( Throwable e ){
 						}
