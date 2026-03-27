@@ -513,7 +513,27 @@ MagnetPluginMDDownloader
 						
 						meta_torrent.setAdditionalMapProperty( "metadata_download_debug", debug_data);
 						
-						meta_torrent.serialiseToBEncodedFile( torrent_file );
+						boolean skip_write = false;
+						
+						if ( torrent_file.exists()){
+							
+							try{								
+								byte[] new_bytes = BEncoder.encode( meta_torrent.serialiseToMap());
+								
+								if ( torrent_file.length() == new_bytes.length ){
+									
+									byte[] existing_bytes = FileUtil.readFileAsByteArray( torrent_file );		
+						
+									skip_write = Arrays.equals( new_bytes, existing_bytes );
+								}								
+							}catch( Throwable e ){							
+							}
+						}
+						
+						if ( !skip_write ){
+						
+							meta_torrent.serialiseToBEncodedFile( torrent_file );
+						}
 			
 						download_manager.clearNonPersistentDownloadState( hash );
 			
