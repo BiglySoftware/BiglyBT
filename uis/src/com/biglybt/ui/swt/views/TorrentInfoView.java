@@ -495,7 +495,7 @@ public class TorrentInfoView
       	dataSourceChanged(event.getData());
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+      case UISWTViewEvent.TYPE_SHOWN:
 	      	String id = "DMDetails_Info";
 	      	if (download_manager != null) {
 	      		if (download_manager.getTorrent() != null) {
@@ -512,7 +512,7 @@ public class TorrentInfoView
 					}
       	break;
 
-      case UISWTViewEvent.TYPE_FOCUSLOST:
+      case UISWTViewEvent.TYPE_HIDDEN:
     		SelectedContentManager.clearCurrentlySelectedContent();
     		break;
 

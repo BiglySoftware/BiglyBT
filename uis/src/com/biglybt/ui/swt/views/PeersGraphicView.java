@@ -1743,7 +1743,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			dataSourceChanged(event.getData());
 			break;
 
-		case UISWTViewEvent.TYPE_FOCUSGAINED:
+		case UISWTViewEvent.TYPE_SHOWN:
 			String id = "DMDetails_Swarm";
 
 			setFocused( true );	// do this before next code as it can pick up the current 'manager' ref
@@ -1771,7 +1771,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				}
 			}
 			break;
-		case UISWTViewEvent.TYPE_FOCUSLOST:
+		case UISWTViewEvent.TYPE_HIDDEN:
 			setFocused( false );
 			SelectedContentManager.clearCurrentlySelectedContent();
 			break;

@@ -164,7 +164,7 @@ public class XferStatsView
 		case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
 			break;
 
-		case UISWTViewEvent.TYPE_FOCUSGAINED:
+		case UISWTViewEvent.TYPE_SHOWN:
 			if ( global_stats != null ){
 				
 				global_stats.requestRefresh();

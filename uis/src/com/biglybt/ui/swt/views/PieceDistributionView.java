@@ -326,11 +326,11 @@ public abstract class PieceDistributionView
       	dataSourceChanged(event.getData());
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+      case UISWTViewEvent.TYPE_SHOWN:
       	viewActivated();
       	break;
 
-      case UISWTViewEvent.TYPE_FOCUSLOST:
+      case UISWTViewEvent.TYPE_HIDDEN:
       	viewDeactivated();
       	break;
 

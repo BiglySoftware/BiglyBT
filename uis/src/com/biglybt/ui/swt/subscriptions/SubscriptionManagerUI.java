@@ -3649,7 +3649,7 @@ SubscriptionManagerUI
 		      case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
 		        break;
 
-		      case UISWTViewEvent.TYPE_FOCUSGAINED:
+		      case UISWTViewEvent.TYPE_SHOWN:
 		      	break;
 
 		      case UISWTViewEvent.TYPE_REFRESH:

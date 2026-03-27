@@ -1974,7 +1974,7 @@ public class GeneralView
       	dataSourceChanged(event.getData());
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+      case UISWTViewEvent.TYPE_SHOWN:
       	String id = "DMDetails_General";
       	if (manager != null) {
       		if (manager.getTorrent() != null) {
@@ -1992,7 +1992,7 @@ public class GeneralView
 
       	break;
 
-      case UISWTViewEvent.TYPE_FOCUSLOST:
+      case UISWTViewEvent.TYPE_HIDDEN:
     		SelectedContentManager.clearCurrentlySelectedContent();
     		break;
 

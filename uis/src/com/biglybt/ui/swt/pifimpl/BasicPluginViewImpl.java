@@ -108,7 +108,7 @@ BasicPluginViewImpl
 				isCreated = false;
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 		   	String	text = model.getLogArea().getText().trim();
 
 		   	if (log != null && !log.isDisposed()) {
@@ -118,7 +118,7 @@ BasicPluginViewImpl
 		   	}
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSLOST:
+			case UISWTViewEvent.TYPE_HIDDEN:
 		   	if (log != null && !log.isDisposed()) {
 		   		log.setText("");
 		   	}

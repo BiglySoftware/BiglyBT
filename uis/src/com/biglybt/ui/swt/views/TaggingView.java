@@ -117,7 +117,7 @@ public class TaggingView
 				dataSourceChanged(ds);
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 				focusGained();
 				rebuildComposite();
 				if (taggables == null) {
@@ -125,7 +125,7 @@ public class TaggingView
 				}
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSLOST:
+			case UISWTViewEvent.TYPE_HIDDEN:
 				delete();
 				break;
 

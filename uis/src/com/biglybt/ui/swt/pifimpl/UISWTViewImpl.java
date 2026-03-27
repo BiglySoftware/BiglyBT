@@ -642,9 +642,21 @@ public class UISWTViewImpl
 						return;
 					}
 				}
-				// Delay trigger of TYPE_SHOWN a bit, so that parent is visible
+					// Delay trigger of TYPE_SHOWN a bit, so that parent is visible
+				
 				Utils.execSWTThreadLater(0,
-						() -> triggerEvent(UISWTViewEvent.TYPE_SHOWN, null));
+						() -> {
+								// possible that things have been disposed in the meantime (observed when creating
+								// tabbed items and switching focus away from them while they are being built, an extra
+								// "shown" even in this case leaves the component unbuilt but marked as shown so when
+								// switching back to it a "shown" event isn't dispatched and it remains unbuilt)
+							
+							if ( parent1.isDisposed()){
+								//Debug.out( "Not triggering SHOWN event, parent disposed" );
+							}else{
+								triggerEvent(UISWTViewEvent.TYPE_SHOWN, null);
+							}
+						});
 			};
 
 			composite.addListener(SWT.Show, showListener);

@@ -3859,7 +3859,7 @@ public class MyTorrentsView
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		boolean b = super.eventOccurred(event);
-		if (event.getType() == UISWTViewEvent.TYPE_FOCUSGAINED) {
+		if (event.getType() == UISWTViewEvent.TYPE_SHOWN) {
 			if (rebuildListOnFocusGain) {
 				List<?> dms = globalManager.getDownloadManagers();
 				List<DownloadManager> listAdds = new ArrayList<>();
@@ -3884,7 +3884,7 @@ public class MyTorrentsView
 			if ( !hiddenTags.isEmpty()){
 				createTabs();
 			}
-		} else if (event.getType() == UISWTViewEvent.TYPE_FOCUSLOST) {
+		} else if (event.getType() == UISWTViewEvent.TYPE_HIDDEN) {
 			if ( !hiddenTags.isEmpty()){
 				destroyTabs();
 			}

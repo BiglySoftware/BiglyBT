@@ -182,14 +182,14 @@ public class PrivacyView
 				dataSourceChanged(ds);
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 				initialize();
 				if (current_dm == null) {
 					dataSourceChanged(swtView.getDataSource());
 				}
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSLOST:
+			case UISWTViewEvent.TYPE_HIDDEN:
 				if ( !KEEP_VIEW ){
 					delete();
 				}

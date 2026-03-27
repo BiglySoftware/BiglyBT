@@ -785,11 +785,11 @@ public class MyTorrentsSuperView
 		// "focus".  We restore last used focus, but only after the subviews are
 		// done being greedy
 		switch (event.getType()) {
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 				viewActivated();
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSLOST:
+			case UISWTViewEvent.TYPE_HIDDEN:
 				viewDeactivated();
 				break;
 		}

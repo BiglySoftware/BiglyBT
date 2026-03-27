@@ -1521,7 +1521,7 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
       	dataSourceChanged(event.getData());
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+      case UISWTViewEvent.TYPE_SHOWN:
       	break;
 
       case UISWTViewEvent.TYPE_REFRESH:

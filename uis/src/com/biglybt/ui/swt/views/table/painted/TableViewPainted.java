@@ -3229,7 +3229,7 @@ public class TableViewPainted
 				}
 			} else {
 				if (view != null) {
-					view.triggerEvent(UISWTViewEvent.TYPE_FOCUSLOST, null);
+					view.triggerEvent(UISWTViewEvent.TYPE_HIDDEN, null);
 				}
 			}
 		}

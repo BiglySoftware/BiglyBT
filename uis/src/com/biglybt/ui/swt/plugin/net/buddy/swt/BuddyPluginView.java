@@ -965,7 +965,7 @@ BuddyPluginView
 
 								break;
 							}
-							case UISWTViewEvent.TYPE_FOCUSGAINED:{
+							case UISWTViewEvent.TYPE_SHOWN:{
 
 								BetaSubViewHolder subview = beta_subviews.get(currentView);
 
@@ -976,7 +976,7 @@ BuddyPluginView
 
 								break;
 							}
-							case UISWTViewEvent.TYPE_FOCUSLOST:{
+							case UISWTViewEvent.TYPE_HIDDEN:{
 
 								BetaSubViewHolder subview = beta_subviews.get(currentView);
 
@@ -1043,7 +1043,7 @@ BuddyPluginView
 
 								break;
 							}
-							case UISWTViewEvent.TYPE_FOCUSGAINED:{
+							case UISWTViewEvent.TYPE_SHOWN:{
 
 								BetaSubViewHolder subview = beta_subviews.get(currentView);
 
@@ -1054,7 +1054,7 @@ BuddyPluginView
 
 								break;
 							}
-							case UISWTViewEvent.TYPE_FOCUSLOST:{
+							case UISWTViewEvent.TYPE_HIDDEN:{
 
 								BetaSubViewHolder subview = beta_subviews.get(currentView);
 

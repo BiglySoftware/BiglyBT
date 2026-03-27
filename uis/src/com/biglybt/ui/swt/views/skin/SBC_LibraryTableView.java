@@ -453,7 +453,7 @@ public class SBC_LibraryTableView
 		super.skinObjectShown(skinObject, params);
 
 		if (view != null) {
-			view.triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
+			view.triggerEvent(UISWTViewEvent.TYPE_SHOWN, null);
 		}
 
 		Utils.execSWTThreadLater(0, new AERunnable() {
@@ -471,7 +471,7 @@ public class SBC_LibraryTableView
 	@Override
 	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
 		if (view != null) {
-			view.triggerEvent(UISWTViewEvent.TYPE_FOCUSLOST, null);
+			view.triggerEvent(UISWTViewEvent.TYPE_HIDDEN, null);
 		}
 
 		return super.skinObjectHidden(skinObject, params);

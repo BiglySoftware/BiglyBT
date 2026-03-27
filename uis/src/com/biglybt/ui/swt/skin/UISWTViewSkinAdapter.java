@@ -100,7 +100,7 @@ UISWTViewSkinAdapter
 				break;
 			}
 
-			case UISWTViewEvent.TYPE_FOCUSLOST:{
+			case UISWTViewEvent.TYPE_HIDDEN:{
 
 				ViewHolder subview = subviews.get(currentView);
 
@@ -111,7 +111,7 @@ UISWTViewSkinAdapter
 
 				break;
 			}
-			case UISWTViewEvent.TYPE_FOCUSGAINED:{
+			case UISWTViewEvent.TYPE_SHOWN:{
 
 				ViewHolder subview = subviews.get(currentView);
 

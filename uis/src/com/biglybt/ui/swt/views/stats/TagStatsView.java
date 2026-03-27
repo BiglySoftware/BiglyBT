@@ -522,7 +522,7 @@ public class TagStatsView
 			case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 				refresh(true);
 				break;
 
