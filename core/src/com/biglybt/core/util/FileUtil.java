@@ -1723,6 +1723,23 @@ public class FileUtil {
     }
     */
 
+    public static long
+    getFileCreationTime(
+    	File		file )
+    {
+    	try{
+			BasicFileAttributeView from_attributes_view 	= Files.getFileAttributeView( file.toPath(), BasicFileAttributeView.class);
+
+			BasicFileAttributes from_attributes = from_attributes_view.readAttributes();
+
+			return( from_attributes.creationTime().toMillis());
+			
+		}catch( Throwable e ){
+			
+			return( 0 );
+		}
+    }
+    
     public static boolean 
     copyFileWithDates( 
     	File 	from_file, 

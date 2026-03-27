@@ -21,8 +21,11 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import java.io.File;
 
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
@@ -66,16 +69,48 @@ public class DateAddedItem
 
 						DownloadManagerState state = dm.getDownloadState();
 
-						try {
-							long add_time = new File(dm.getTorrentFileName()).lastModified();
-
-							if (add_time >= 0) {
-								state.setLongParameter(
-										DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, add_time);
-							}
-
-						} catch (Throwable e) {
+						long add_time = 0;
+						
+						try{
+							add_time = new File(dm.getTorrentFileName()).lastModified();
+							
+						}catch( Throwable e ){
 						}
+						
+						if ( add_time <= 0 ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							long min_t = Long.MAX_VALUE;
+							
+							for ( DiskManagerFileInfo file: files ){
+								
+								File f = file.getFile(true);
+								
+								try{
+									long t = FileUtil.getFileCreationTime( f );
+									
+									if ( t > 0 && t < min_t ){
+										
+										min_t = t;
+										
+									}
+								}catch( Throwable e ){
+								}
+							}
+							
+							if ( min_t < Long.MAX_VALUE ){
+								
+								add_time = min_t;
+							}
+						}
+						
+						if ( add_time <= 0 || add_time == Long.MAX_VALUE ){
+							
+							add_time = SystemTime.getCurrentTimeUnique();
+						}
+						
+						state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, add_time );
 					}
 					row.getTableCell("date_added").invalidate();
 				}
