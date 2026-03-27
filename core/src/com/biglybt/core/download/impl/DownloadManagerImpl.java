@@ -1408,9 +1408,14 @@ DownloadManagerImpl
 					download_manager_state.setFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD, true );
 					
 						// metadata downloads don't come through with "new_torrent" set but we need to set an accurate
-						// added time as used for ordering
+						// added time as used for ordering. Might already be set if recovered from state cache
 					
-					download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, SystemTime.getCurrentTimeUnique());
+					long	add_time = download_manager_state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+
+					if ( add_time <= 0 ){
+					
+						download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, SystemTime.getCurrentTimeUnique());
+					}
 				}
 
 				 	// if this is a newly introduced torrent trash the tracker cache. We do this to
@@ -1514,7 +1519,7 @@ DownloadManagerImpl
 
 						 if ( add_time == 0 ){
 
-							 add_time = SystemTime.getCurrentTime();
+							 add_time = SystemTime.getCurrentTimeUnique();
 						 }
 
 						 download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, add_time );
