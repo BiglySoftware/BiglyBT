@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.views.table.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -44,6 +45,7 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.SpeedScaleShell;
+import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
@@ -51,6 +53,7 @@ import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pif.ui.tables.TableColumn;
 
 public abstract class TableViewSWT_Common
 	implements MouseListener, MouseMoveListener, MouseTrackListener, SelectionListener, KeyListener, MenuDetectListener
@@ -1238,6 +1241,61 @@ public abstract class TableViewSWT_Common
 				});
 			}
 				
+				// alignment
+			
+			
+			final MenuItem itemAlign = new MenuItem(menu, SWT.CASCADE);
+			Messages.setLanguageText(itemAlign, "label.alignment"); 
+
+			Menu menuAlign = new Menu(menu.getShell(), SWT.DROP_DOWN);
+			itemAlign.setMenu(menuAlign);
+			
+				// left
+			
+			MenuItem itemAlignLeft = new MenuItem(menuAlign, SWT.RADIO);
+			Messages.setLanguageText(itemAlignLeft, "label.left");
+			itemAlignLeft.addListener(SWT.Selection, (e)->{
+				column.setAlignment( TableColumn.ALIGN_LEAD );
+				column.invalidateCells();
+			});
+			
+				// centre
+				
+			MenuItem itemAlignCentre = new MenuItem(menuAlign, SWT.RADIO);
+			Messages.setLanguageText(itemAlignCentre, "label.center");
+			itemAlignCentre.addListener(SWT.Selection, (e)->{
+				column.setAlignment( TableColumn.ALIGN_CENTER );
+				column.invalidateCells();
+			});
+
+				// right
+				
+			MenuItem itemAlignRight = new MenuItem(menuAlign, SWT.RADIO);
+			Messages.setLanguageText(itemAlignRight, "label.right");
+			itemAlignRight.addListener(SWT.Selection, (e)->{
+				column.setAlignment( TableColumn.ALIGN_TRAIL );
+				column.invalidateCells();
+				column.reset();
+			});
+
+				// def
+			
+			MenuItem itemAlignDefault = new MenuItem(menuAlign, SWT.RADIO);
+			Messages.setLanguageText(itemAlignDefault, "label.default");
+			itemAlignDefault.addListener(SWT.Selection, (e)->{
+				column.reset( false, true, false, false );
+				column.invalidateCells();
+			});
+			
+			int align = column.getAlignment();
+			
+			itemAlignLeft.setSelection( align==TableColumn.ALIGN_LEAD );
+			itemAlignCentre.setSelection( align==TableColumn.ALIGN_CENTER );
+			itemAlignRight.setSelection( align==TableColumn.ALIGN_TRAIL );
+			
+				// size to preferred
+			
+			
 			final MenuItem itemPrefSize = new MenuItem(menu, SWT.PUSH);
 			Messages.setLanguageText(itemPrefSize, "table.columns.pref.size");
 			itemPrefSize.addListener(SWT.Selection, e -> Utils.execSWTThread(() -> {

@@ -1983,6 +1983,29 @@ public class TableColumnImpl
 		}
 	}
 
+	@Override
+	public void
+	reset(
+		boolean	width,
+		boolean	align,
+		boolean	fg,
+		boolean bg )
+	{
+		if (width && iDefaultWidth != 0) {
+			setWidthPX(iDefaultWidth);
+		}
+		if ( align && iDefaultAlignment != -1 ){
+			setAlignment( iDefaultAlignment );
+		}
+		
+		if ( fg && foregroundColor != null ){
+			setForegroundColor( null );
+		}
+		if ( bg &&  backgroundColor != null ){
+			setBackgroundColor( null );
+		}
+	}
+	
 	/* (non-Javadoc)
 	 * @see TableColumnCore#addDataSourceType(java.lang.Class)
 	 */

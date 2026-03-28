@@ -352,6 +352,8 @@ public interface TableColumnCore
 
 	void reset();
 
+	void reset( boolean width, boolean alignment, boolean fg, boolean bg );
+	
 	String getClipboardText(TableCell cell);
 
 	boolean handlesDataSourceType(Class<?> cla);
