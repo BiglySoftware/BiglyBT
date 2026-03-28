@@ -20,7 +20,6 @@ package com.biglybt.ui.swt.views.table.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -30,6 +29,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
@@ -45,7 +45,6 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.SpeedScaleShell;
-import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
@@ -1280,7 +1279,7 @@ public abstract class TableViewSWT_Common
 
 				// def
 			
-			MenuItem itemAlignDefault = new MenuItem(menuAlign, SWT.RADIO);
+			MenuItem itemAlignDefault = new MenuItem(menuAlign, SWT.PUSH);
 			Messages.setLanguageText(itemAlignDefault, "label.default");
 			itemAlignDefault.addListener(SWT.Selection, (e)->{
 				column.reset( false, true, false, false );
@@ -1292,6 +1291,54 @@ public abstract class TableViewSWT_Common
 			itemAlignLeft.setSelection( align==TableColumn.ALIGN_LEAD );
 			itemAlignCentre.setSelection( align==TableColumn.ALIGN_CENTER );
 			itemAlignRight.setSelection( align==TableColumn.ALIGN_TRAIL );
+			
+				// colors
+						
+			final MenuItem itemColour = new MenuItem(menu, SWT.CASCADE);
+			Messages.setLanguageText(itemColour, "label.color"); 
+	
+			Menu menuColour = new Menu(menu.getShell(), SWT.DROP_DOWN);
+			itemColour.setMenu(menuColour);
+			
+				// fg
+			
+			MenuItem itemColorFG = new MenuItem(menuColour, SWT.PUSH);
+			Messages.setLanguageText(itemColorFG, "label.foreground.color");
+			itemColorFG.addListener(SWT.Selection, (e)->{
+				int[] existing = column.getForegroundColor();
+				RGB rgb = Utils.showColorDialog( Utils.getDisplay().getActiveShell(), existing==null?null:new RGB(existing[0],existing[1],existing[2]));
+				if ( rgb != null ){
+					column.setForegroundColor(new int[]{rgb.red,rgb.green,rgb.blue});
+					column.invalidateCells();
+						// need this to force column to update :(
+					TableStructureEventDispatcher.getInstance(tv.getTableID()).tableStructureChanged(false, null);
+				}
+			});
+			
+				// bg
+			
+			MenuItem itemColorBG = new MenuItem(menuColour, SWT.PUSH);
+			Messages.setLanguageText(itemColorBG, "label.background.color");
+			itemColorBG.addListener(SWT.Selection, (e)->{
+				int[] existing = column.getBackgroundColor();
+				RGB rgb = Utils.showColorDialog( Utils.getDisplay().getActiveShell(), existing==null?null:new RGB(existing[0],existing[1],existing[2]));
+				if ( rgb != null ){
+					column.setBackgroundColor(new int[]{rgb.red,rgb.green,rgb.blue});
+					column.invalidateCells();
+						// need this to force column to update :(
+					TableStructureEventDispatcher.getInstance(tv.getTableID()).tableStructureChanged(false, null);
+				}
+			});
+
+				// def
+			
+			MenuItem itemColourDefault = new MenuItem(menuColour, SWT.PUSH);
+			Messages.setLanguageText(itemColourDefault, "label.default");
+			itemColourDefault.addListener(SWT.Selection, (e)->{
+				column.reset( false, false, true, true );
+				column.invalidateCells();
+				TableStructureEventDispatcher.getInstance(tv.getTableID()).tableStructureChanged(false, null);
+			});
 			
 				// size to preferred
 			
