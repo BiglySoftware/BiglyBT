@@ -33,7 +33,7 @@ import com.biglybt.core.util.IndentWriter;
 public abstract class
 NetworkAdmin
 {
-	private static NetworkAdmin	singleton;
+	private static NetworkAdminImpl	singleton;
 
 	public static final String PR_NETWORK_INTERFACES			= "Network Interfaces";
 	public static final String PR_DEFAULT_BIND_ADDRESS			= "Default Bind IP";
@@ -55,7 +55,7 @@ NetworkAdmin
 	
 	public static final String 		DNS_SPI_TEST_HOST	= "http://dns.test.client.biglybittorrent.com/";
 	
-	public static synchronized NetworkAdmin
+	public static synchronized NetworkAdminImpl
 	getSingleton()
 	{
 		if ( singleton == null ){

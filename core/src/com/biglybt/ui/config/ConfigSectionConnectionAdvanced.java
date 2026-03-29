@@ -26,6 +26,7 @@ import java.util.List;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.admin.NetworkAdminPropertyChangeListener;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.Wiki;
@@ -52,6 +53,20 @@ public class ConfigSectionConnectionAdvanced
 				Parameter.MODE_ADVANCED);
 	}
 
+	NetworkAdminPropertyChangeListener na_listener;
+	
+	@Override
+	public void 
+	deleteConfigSection()
+	{
+		super.deleteConfigSection();
+		
+		if ( na_listener != null ){
+			
+			NetworkAdmin.getSingleton().removePropertyChangeListener(na_listener);
+		}
+	}
+	
 	@Override
 	public void build() {
 
@@ -103,12 +118,27 @@ public class ConfigSectionConnectionAdvanced
 			set_intf.run();
 		});
 		
+		na_listener = (n)->{
+			
+			if (	n == NetworkAdmin.PR_DEFAULT_BIND_ADDRESS || 
+					n == NetworkAdmin.PR_NETWORK_INTERFACES ){
+			
+				set_intf.run();
+			}
+		};
+		
+		NetworkAdmin.getSingleton().addPropertyChangeListener( na_listener );
+		
 		add(paramInterfaceWithAddresses, listSocket);
 	
 		StringParameterImpl paramAdditionServiceBind = new StringParameterImpl(SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS,
 				"ConfigView.label.additional.service.bind");
-		add(paramAdditionServiceBind, listSocket);
+		add(paramAdditionServiceBind, listSocket);	
 		
+		BooleanParameterImpl paramIgnoreBindIPv6NonGlobal = new BooleanParameterImpl(
+				BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL, "ConfigView.label.ignore.bind.ipv6.non.global");
+		add(paramIgnoreBindIPv6NonGlobal, listSocket);
+
 		BooleanParameterImpl paramIgnoreBindLAN = new BooleanParameterImpl(
 				BCFG_NETWORK_IGNORE_BIND_FOR_LAN, "ConfigView.label.ignore.bind.for.lan");
 		add(paramIgnoreBindLAN, listSocket);

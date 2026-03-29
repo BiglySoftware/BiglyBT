@@ -118,8 +118,6 @@ NetworkAdminImpl
 	private boolean						supportsIPv6withNIO		= true;
 	private boolean						supportsIPv6 = true;
 	private boolean						supportsIPv4 = true;
-	private boolean						ignoreIPv4;
-	private boolean						ignoreIPv6;
 	
 	private boolean						IPv6_enabled;
 	private boolean						preferIPv6;
@@ -265,22 +263,6 @@ NetworkAdminImpl
 					checkDefaultBindAddress( false );
 				}
 			});
-
-		COConfigurationManager.addAndFireParameterListeners(
-				new String[]{
-					ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
-					ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES },
-				(n)->{
-					ignoreIPv4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
-					ignoreIPv6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
-					
-					if ( n != null ){
-						
-						checkNetworkInterfaces( false, true );
-	
-						checkDefaultBindAddress( false );
-					}
-				});
 		
 		SimpleTimer.addPeriodicEvent(
 			"NetworkAdmin:checker",
@@ -615,7 +597,7 @@ NetworkAdminImpl
 
 			synchronized( getni_lock ){
 
-				if ( last_getni_result != x ){
+				if ( last_getni_result != x || force ){
 
 					last_getni_result = x;
 
@@ -2520,7 +2502,7 @@ addressLoop:
 	public boolean
 	hasDHTIPV4()
 	{
-		return( !ignoreIPv4 );	// should be brave and change this to hasIPv4Potential() but as this is really just for
+		return( !ignore_v4 );	// should be brave and change this to hasIPv4Potential() but as this is really just for
 								// testing gonna require user to explicitly ignore V4 ATM
 	}
 	
@@ -5471,15 +5453,34 @@ addressLoop:
 	
 	private static volatile boolean	ignore_v4;
 	private static volatile boolean	ignore_v6;
+	private static volatile boolean	ignore_v6_non_global;
 	
 	static{
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
-				ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES },
+				ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES,
+				ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL },
 			(n)->{
 				ignore_v4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
 				ignore_v6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
+				
+				ignore_v6_non_global = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL );
+				
+				if ( n == null ){
+					
+						// start of day
+					
+					return;
+				}
+				
+				if (	n == ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES || 
+						n == ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES ){
+					
+					getSingleton().checkNetworkInterfaces( false, true );
+				}
+				
+				getSingleton().checkDefaultBindAddress( false );
 			});
 	}
 	
@@ -5488,26 +5489,67 @@ addressLoop:
 	filter(
 		Enumeration<InetAddress> addresses )
 	{
-		if ( ignore_v4 || ignore_v6 ){
+		List<InetAddress> result = null;
+
+		if ( ignore_v4 || ignore_v6 || ignore_v6_non_global ){
 			
-			Vector<InetAddress> result = new Vector<>();
+			result = new ArrayList<>();
+			
+			int		num_v6			= 0;
+			boolean has_v6_global	= false;
 			
 			while( addresses.hasMoreElements()){
 				
 				InetAddress ia =  addresses.nextElement();
 				
-				if ( 	( ia instanceof Inet4Address && ignore_v4 )||
-						( ia instanceof Inet6Address && ignore_v6 )){
+				boolean is_v4 = ( ia instanceof Inet4Address );
+				
+				if ( 	( is_v4 && ignore_v4 )||
+						( ( !is_v4)  && ignore_v6 )){
 					
 				}else{
 					
 					result.add( ia );
+					
+					if ( !is_v4 ){
+						
+						if ( AddressUtils.isGlobalAddressV6(ia)){
+							
+							has_v6_global = true;
+						}
+						
+						num_v6++;
+					}
 				}
 			}
-			return( result.elements());
+			
+			if ( ignore_v6_non_global && num_v6 >= 2 && has_v6_global ){
+				
+				Iterator<InetAddress> it = result.iterator();
+				
+				while( it.hasNext()){
+					
+					InetAddress ia = it.next();
+					
+					if ( ia instanceof Inet6Address && !AddressUtils.isGlobalAddressV6( ia )){
+						
+						it.remove();
+					}
+				}
+			}
+		}
+		
+		if ( ignore_v6_non_global ){
+			
+		}
+		
+		if ( result == null ){
+			
+			return( addresses );
 			
 		}else{
-			return( addresses );
+			
+			return( new Vector<>( result ).elements());
 		}
 	}
 
