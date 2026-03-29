@@ -1274,7 +1274,6 @@ public abstract class TableViewSWT_Common
 			itemAlignRight.addListener(SWT.Selection, (e)->{
 				column.setAlignment( TableColumn.ALIGN_TRAIL );
 				column.invalidateCells();
-				column.reset();
 			});
 
 				// def
