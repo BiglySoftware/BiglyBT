@@ -5473,12 +5473,8 @@ addressLoop:
 					
 					return;
 				}
-				
-				if (	n == ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES || 
-						n == ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES ){
-					
-					getSingleton().checkNetworkInterfaces( false, true );
-				}
+							
+				getSingleton().checkNetworkInterfaces( false, true );
 				
 				getSingleton().checkDefaultBindAddress( false );
 			});
@@ -5537,10 +5533,6 @@ addressLoop:
 					}
 				}
 			}
-		}
-		
-		if ( ignore_v6_non_global ){
-			
 		}
 		
 		if ( result == null ){
