@@ -781,6 +781,45 @@ public class PeerUtils {
 								if ( udp_bind == null ){
 								
 									udp_bind = network_admin.getSingleHomedServiceBindAddress();
+									
+										// confusing to randomly select from IPv4/6 if peer address
+										// says otherwise
+									
+									if ( udp_bind != null && !udp_bind.isAnyLocalAddress()){
+
+										InetAddress better_bind = null;
+										
+										boolean has_v6 = peer.getIp().contains(":");
+										boolean has_v4 = !has_v6;
+										
+										if ( peer.getAlternativeIPv6() != null ){
+											
+											has_v6 = true;
+										}
+										
+										if ( has_v4 ){
+											
+											try{
+												better_bind = network_admin.getSingleHomedServiceBindAddress( NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4 );
+												
+											}catch( Throwable e ){	
+											}
+										}
+										
+										if ( better_bind == null && has_v6 ){
+											
+											try{
+												better_bind = network_admin.getSingleHomedServiceBindAddress( NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 );
+												
+											}catch( Throwable e ){	
+											}
+										}
+										
+										if ( better_bind != null ){
+											
+											udp_bind = better_bind;
+										}
+									}
 								}
 								
 								if ( udp_bind != null && !udp_bind.isAnyLocalAddress()){
