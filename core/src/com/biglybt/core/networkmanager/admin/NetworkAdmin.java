@@ -33,8 +33,6 @@ import com.biglybt.core.util.IndentWriter;
 public abstract class
 NetworkAdmin
 {
-	private static NetworkAdminImpl	singleton;
-
 	public static final String PR_NETWORK_INTERFACES			= "Network Interfaces";
 	public static final String PR_DEFAULT_BIND_ADDRESS			= "Default Bind IP";
 	public static final String PR_ADDITIONAL_SERVICE_ADDRESS	= "Additional Service Address";
@@ -55,15 +53,10 @@ NetworkAdmin
 	
 	public static final String 		DNS_SPI_TEST_HOST	= "http://dns.test.client.biglybittorrent.com/";
 	
-	public static synchronized NetworkAdminImpl
+	public static NetworkAdmin
 	getSingleton()
 	{
-		if ( singleton == null ){
-
-			singleton = new NetworkAdminImpl();
-		}
-
-		return( singleton );
+		return( NetworkAdminImpl.getSingleton());
 	}
 
 	public InetAddress getSingleHomedServiceBindAddress() {return getSingleHomedServiceBindAddress(IP_PROTOCOL_VERSION_AUTO);}

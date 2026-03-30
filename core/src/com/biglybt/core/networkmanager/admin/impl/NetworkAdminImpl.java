@@ -78,6 +78,22 @@ NetworkAdminImpl
 	extends NetworkAdmin
 	implements AEDiagnosticsEvidenceGenerator
 {
+	private static NetworkAdminImpl	singleton;
+
+	public static NetworkAdminImpl
+	getSingleton()
+	{
+		synchronized( NetworkAdminImpl.class ){
+	
+			if ( singleton == null ){
+
+				singleton = new NetworkAdminImpl();
+			}
+
+			return( singleton );
+		}
+	}
+	
 	private static final LogIDs LOGID = LogIDs.NWMAN;
 
 	private static final boolean	FULL_INTF_PROBE	= false;
@@ -5473,10 +5489,12 @@ addressLoop:
 					
 					return;
 				}
-							
-				getSingleton().checkNetworkInterfaces( false, true );
+					
+				NetworkAdminImpl na = getSingleton();
 				
-				getSingleton().checkDefaultBindAddress( false );
+				na.checkNetworkInterfaces( false, true );
+				
+				na.checkDefaultBindAddress( false );
 			});
 	}
 	
