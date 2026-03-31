@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.mainwindow;
 import java.util.LinkedList;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -383,6 +384,11 @@ public class ClipboardCopy {
 					  }
 					  
 					  return( text );
+					  
+				  }else if ( control instanceof StyledText ){
+					 
+					  return(((StyledText)control).getText());
+					  
 				  }else{
 					  
 					  return( String.valueOf( o ));

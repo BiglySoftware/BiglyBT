@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Listener;
 import com.biglybt.core.html.HTMLUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 
 public class
 LinkArea
@@ -47,7 +48,7 @@ LinkArea
 	  // the links, but I didn't want to risk a chance of any other styles
 	  // being in there that I don't know about (plus managing the URL)
 
-	private ArrayList links = new ArrayList();
+	private ArrayList<linkInfo> links = new ArrayList<>();
 
 	private int	ofs;
 
@@ -243,6 +244,19 @@ LinkArea
 		addLine( str, false );
 	}
 	
+	public List<String>
+	getLinks()
+	{
+		List<String>	result = new ArrayList<>();
+		
+		for ( linkInfo l: links ){
+			
+			result.add( l.url );
+		}
+		
+		return( result );
+	}
+	
 	public void
 	setLayoutData(
 		Object	obj )
@@ -262,6 +276,32 @@ LinkArea
 	setNoFocus()
 	{
 		styled_text.addListener( SWT.FocusIn, (ev)->styled_text.traverse( SWT.TRAVERSE_TAB_NEXT ));
+	}
+	
+	public void
+	enableLinkCopy()
+	{
+		ClipboardCopy.addCopyToClipMenu(
+				getComponent(),
+				()->{
+					List<String> links = getLinks();
+					
+					if ( links.isEmpty()){
+						
+						return( getText());
+						
+					}else{
+						
+						String result = "";
+						
+						for (String l: links ){
+							
+							result += (result.isEmpty()?"":"\n") + l;
+						}
+						
+						return( result );
+					}
+				});
 	}
 	
 	private static class linkInfo {

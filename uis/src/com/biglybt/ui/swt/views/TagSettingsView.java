@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
@@ -45,6 +46,7 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.LinkArea;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -1905,20 +1907,11 @@ public class TagSettingsView
 					
 					params.constraintWeight.setEnabled( tag_dl != null );
 					
-					Link lblAboutConstraint = new Link(cConstraintOptions, SWT.WRAP);
-					lblAboutConstraint.setText(
-							MessageText.getString("tag.constraints.info"));
-					lblAboutConstraint.addListener(SWT.Selection, new Listener() {
-						@Override
-						public void handleEvent(Event event) {
-							if (event.text != null && (event.text.startsWith("http://")
-									|| event.text.startsWith("https://"))) {
-								Utils.launch(event.text);
-							}
-						}
-					});
-
-					ClipboardCopy.addCopyToClipMenu(lblAboutConstraint);
+					LinkArea lblAboutConstraint = new LinkArea(cConstraintOptions, SWT.NULL );
+					lblAboutConstraint.setNoFocus();
+					lblAboutConstraint.enableLinkCopy();
+					lblAboutConstraint.setBackground(cConstraintOptions.getBackground());
+					lblAboutConstraint.setText(	MessageText.getString("tag.constraints.info"));
 					
 					Composite cApplySort = new Composite(gConstraint, SWT.NULL);
 					cApplySort.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
