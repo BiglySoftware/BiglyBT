@@ -62,6 +62,7 @@ import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableViewImpl;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
@@ -1836,8 +1837,65 @@ public class MyTorrentsView
 	}
 
 	@Override
-	public void selectionChanged(TableRowCore[] selected_rows, TableRowCore[] deselected_rows){
-		updateSelectedContent();
+	public void 
+	selectionChanged(
+		TableRowCore[] selected_rows, 
+		TableRowCore[] deselected_rows)
+	{	
+		boolean force_sc = false;
+		
+			// if we own the current selection and something has been removed from it then we really
+			// need to force the update. 
+			// this could possibly be relaxed to "if we own the current selection" but this area is nasty so
+			// just fixing a bug where removal of a datasource is being left active in sub-tabs
+		
+		if ( 	deselected_rows.length > 0 &&
+				SelectedContentManager.getCurrentlySelectedTableView() == tv &&
+				SelectedContentManager.getCurrentySelectedViewID() == tv.getTableID()){
+			
+			ISelectedContent[] sc = SelectedContentManager.getCurrentlySelectedContent();
+			
+			if ( sc != null ){
+				
+				for ( TableRowCore row: deselected_rows ){
+					
+					Object ds = row.getDataSource( true );
+				
+					SelectedContent dsc	= null;
+					DownloadManager	dm	= null;
+					
+					if (ds instanceof DownloadManager) {
+						dm = (DownloadManager) ds;
+						dsc = new SelectedContent( dm );
+					} else if (ds instanceof DiskManagerFileInfo) {
+						DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
+						dm = fileInfo.getDownloadManager();
+						dsc = new SelectedContent(dm, fileInfo.getIndex());
+					}
+					
+					if ( dsc != null ){ // && dm.isDestroyed()){
+						
+						for ( ISelectedContent s: sc ){
+							
+							if ( s.sameAs( dsc )){
+								
+								force_sc = true;
+								
+								break;
+							}
+						}
+						
+						if ( force_sc ){
+							
+							break;
+						}
+					}
+				}
+			}
+		}		
+		
+		updateSelectedContent( force_sc );
+		
 	  	refreshTorrentMenu();
 	}
 	

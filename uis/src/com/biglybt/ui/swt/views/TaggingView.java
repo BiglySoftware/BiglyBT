@@ -499,9 +499,13 @@ public class TaggingView
 					
 						for (Taggable taggable : taggables) {
 							if (doTag) {
-								tag.addTaggable(taggable);
+								if ( !tag.hasTaggable(taggable)){
+									tag.addTaggable(taggable);
+								}
 							} else {
-								tag.removeTaggable(taggable);
+								if ( tag.hasTaggable(taggable)){
+									tag.removeTaggable(taggable);
+								}
 							}
 							painter.setSelected(doTag);
 						}
