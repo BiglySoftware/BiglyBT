@@ -274,6 +274,10 @@ public class GeneralView
     	buildView();
     
     	viewBuilt = true;
+    	
+    		// without this the details->General view doesn't rebuild correctly
+    	
+    	parent.layout( true, true );
     }
     
     boolean persistent = manager.isPersistent();
