@@ -853,10 +853,11 @@ public class GeneralView
     Messages.setLanguageText(label, "GeneralView.label.user_comment");
 
     userComment = new LinkArea(cComments, SWT.NULL);
-
+    userComment.setNoFocus();
+    
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    userComment.getComponent().setLayoutData(gridData);
-
+    userComment.setLayoutData( gridData );
+    userComment.setBackground( cComments.getBackground());
     label.addMouseListener(new MouseAdapter() {
     	private void editComment() {
     		TorrentUtil.promptUserForComment(new DownloadManager[] {manager});
@@ -874,10 +875,11 @@ public class GeneralView
     Messages.setLanguageText(label, "GeneralView.label.comment");
 
    	torrentComment = new LinkArea(cComments, SWT.NULL );
- 
+   	torrentComment.setNoFocus();
+   	
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    torrentComment.getComponent().setLayoutData(gridData);
-    
+    torrentComment.setLayoutData( gridData );
+    torrentComment.setBackground( cComments.getBackground());    
     
     Composite pad1 = new Composite(cComments, SWT.NULL);
     gridData = new GridData(GridData.FILL_BOTH);

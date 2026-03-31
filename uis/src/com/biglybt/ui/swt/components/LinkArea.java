@@ -26,6 +26,7 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
@@ -242,7 +243,28 @@ LinkArea
 		addLine( str, false );
 	}
 	
-	public static class linkInfo {
+	public void
+	setLayoutData(
+		Object	obj )
+	{
+		styled_text.setLayoutData(obj);
+	}
+	
+	public void
+	setBackground(
+		Color	c )
+	{
+		styled_text.setBackground(c);
+	}
+	
+	
+	public void
+	setNoFocus()
+	{
+		styled_text.addListener( SWT.FocusIn, (ev)->styled_text.traverse( SWT.TRAVERSE_TAB_NEXT ));
+	}
+	
+	private static class linkInfo {
 		int ofsStart;
 		int ofsEnd;
 		String url;
