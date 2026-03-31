@@ -67,6 +67,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.components.LinkArea;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -159,11 +160,11 @@ public class GeneralView
 
   BufferedLabel pieceNumber;
   BufferedLabel pieceSize;
-  Control lblComment;
+  LinkArea		torrentComment;
   BufferedLabel creation_date;
   MenuItem[]	date_menus;
   BufferedLabel privateStatus;
-  Control user_comment;
+  LinkArea		userComment;;
   BufferedLabel hashFails;
   BufferedLabel shareRatio;
 
@@ -851,20 +852,10 @@ public class GeneralView
     Utils.setLinkForeground(label);
     Messages.setLanguageText(label, "GeneralView.label.user_comment");
 
-    try {
-    	user_comment = new Link(cComments, SWT.LEFT | SWT.WRAP);
-    	((Link)user_comment).addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					Utils.launch(e.text);
-				}
-			});
-    } catch (Throwable e) {
-    	user_comment = new Label(cComments, SWT.LEFT | SWT.WRAP);
-    }
+    userComment = new LinkArea(cComments, SWT.NULL);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    user_comment.setLayoutData(gridData);
+    userComment.getComponent().setLayoutData(gridData);
 
     label.addMouseListener(new MouseAdapter() {
     	private void editComment() {
@@ -882,19 +873,10 @@ public class GeneralView
     label.setLayoutData(gridData);
     Messages.setLanguageText(label, "GeneralView.label.comment");
 
-    try {
-    	lblComment = new Link(cComments, SWT.LEFT | SWT.WRAP);
-    	((Link)lblComment).addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					Utils.launch(e.text);
-				}
-			});
-    } catch (Throwable e) {
-    	lblComment = new Label(cComments, SWT.LEFT | SWT.WRAP);
-    }
+   	torrentComment = new LinkArea(cComments, SWT.NULL );
+ 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    lblComment.setLayoutData(gridData);
+    torrentComment.getComponent().setLayoutData(gridData);
     
     
     Composite pad1 = new Composite(cComments, SWT.NULL);
@@ -910,14 +892,14 @@ public class GeneralView
     pad2.setLayoutData(gridData);
     
     ClipboardCopy.addCopyToClipMenu( 
-    	lblComment,
+    	torrentComment.getComponent(),
     	new ClipboardCopy.copyToClipProvider(){
 			
 			@Override
 			public String getText(){
-				String comment = (String)lblComment.getData( "comment" );
+				String comment = torrentComment.getText();
 				
-				return( comment==null?"":comment );
+				return( comment );
 			}
 		});
     
@@ -1865,8 +1847,8 @@ public class GeneralView
 				creation_date.setText(_creation_date);
 				privateStatus.setText(isPrivateAndSource);
 				boolean do_relayout = false;
-				do_relayout = setCommentAndFormatLinks(lblComment, _comment.length() > 5000 && Constants.isWindowsXP ? _comment.substring(0, 5000) : _comment ) | do_relayout;
-				do_relayout = setCommentAndFormatLinks(user_comment, _user_comment) | do_relayout;
+				do_relayout = setCommentAndFormatLinks(torrentComment, _comment.length() > 5000 && Constants.isWindowsXP ? _comment.substring(0, 5000) : _comment ) | do_relayout;
+				do_relayout = setCommentAndFormatLinks(userComment, _user_comment) | do_relayout;
 				if (do_relayout)
 				{
 					gInfo.layout(true, true);
@@ -1876,63 +1858,63 @@ public class GeneralView
 		});
 	}
 
-  private static boolean setCommentAndFormatLinks(Control c, String new_comment) {
-	  String old_comment = (String)c.getData("comment");
-	  if (new_comment == null) {new_comment = "";}
-	  if (new_comment.equals(old_comment)) {return false;}
-
-	  c.setData("comment", new_comment);
-	  if (c instanceof Label) {
-		  ((Label) c).setText(new_comment);
-	  } else if (c instanceof Link) {
-						String sNewComment;
-		  sNewComment = new_comment.replaceAll(
-								"([^=\">][\\s]+|^)((?:https?://|chat:)[\\S]+)", "$1<A HREF=\"$2\">$2</A>");
-						// need quotes around url
-		  sNewComment = sNewComment.replaceAll("(href=)(htt[^\\s>]+)", "$1\"$2\"");
-
-		  	// probably want to URL decode the link text if it is a URL
-
-		  try{
-			  Pattern p = Pattern.compile("(?i)(<A HREF=[^>]*>)([^<]*</A>)");
-
-			  Matcher m = p.matcher( sNewComment );
-
-			  boolean result = m.find();
-
-			  if ( result ){
-
-				  StringBuffer sb = new StringBuffer();
-
-				  while( result ){
-
-					  m.appendReplacement(sb, m.group(1));
-
-					  String str = m.group(2);
-
-					  sb.append( UrlUtils.decode( str ));
-
-					  result = m.find();
-				  }
-
-				  m.appendTail(sb);
-
-				  sNewComment = sb.toString();
-
-			  }}catch( Throwable e ){
-			  }
-
-						// Examples:
-						// http://cowbow.com/fsdjl&sdfkj=34.sk9391 moo
-						// <A HREF=http://cowbow.com/fsdjl&sdfkj=34.sk9391>moo</a>
-						// <A HREF="http://cowbow.com/fsdjl&sdfkj=34.sk9391">moo</a>
-						// <A HREF="http://cowbow.com/fsdjl&sdfkj=34.sk9391">http://moo.com</a>
-			((Link)c).setText(sNewComment);
-		  // Reduce white flicker on Windows ever so slightly
-			c.redraw();
-			c.update();
+  private static boolean setCommentAndFormatLinks(LinkArea c, String new_comment) {
+	  
+	  String old_comment = (String)c.getComponent().getData("comment");
+	  
+	  if ( old_comment == null ){
+		  old_comment = "";
+	  }
+	  
+	  if ( new_comment == null ){
+		  new_comment = "";
+	  }
+	  
+	  if (new_comment.equals(old_comment)){
+		  return false;
 	  }
 
+	  c.getComponent().setData("comment", new_comment );
+	  
+	  new_comment = new_comment.replaceAll(
+			  "([^=\">][\\s]+|^)((?:https?://|chat:)[\\S]+)", "$1<A HREF=\"$2\">$2</A>");
+	  // need quotes around url
+	  new_comment = new_comment.replaceAll("(href=)(htt[^\\s>]+)", "$1\"$2\"");
+
+	  // probably want to URL decode the link text if it is a URL
+
+	  try{
+		  Pattern p = Pattern.compile("(?i)(<A HREF=[^>]*>)([^<]*</A>)");
+
+		  Matcher m = p.matcher( new_comment );
+
+		  boolean result = m.find();
+
+		  if ( result ){
+
+			  StringBuffer sb = new StringBuffer();
+
+			  while( result ){
+
+				  m.appendReplacement(sb, m.group(1));
+
+				  String str = m.group(2);
+
+				  sb.append( UrlUtils.decode( str ));
+
+				  result = m.find();
+			  }
+
+			  m.appendTail(sb);
+
+			  new_comment = sb.toString();
+
+		  }
+	  }catch( Throwable e ){
+	  }
+	  
+	  c.setText( new_comment );
+	  
 	  return true;
   }
 

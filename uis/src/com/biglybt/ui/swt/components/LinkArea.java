@@ -29,12 +29,12 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import com.biglybt.core.html.HTMLUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.Colors;
 
 public class
 LinkArea
@@ -56,7 +56,16 @@ LinkArea
 	LinkArea(
 		Composite	comp )
 	{
-		styled_text = new StyledText(comp,SWT.BORDER | SWT.READ_ONLY | SWT.H_SCROLL | SWT.V_SCROLL);
+		this( comp, SWT.BORDER | SWT.READ_ONLY | SWT.H_SCROLL | SWT.V_SCROLL );
+	}
+	
+	public
+	LinkArea(
+		Composite	comp,
+		int			style )
+	{
+		styled_text = new StyledText(comp, style );
+		styled_text.setEditable(false);
 		styled_text.setWordWrap(true);
 
 		styled_text.addListener(SWT.MouseUp, new Listener() {
@@ -124,7 +133,7 @@ LinkArea
 		});
 	}
 
-	public Composite
+	public Control
 	getComponent()
 	{
 		return( styled_text );
@@ -154,6 +163,14 @@ LinkArea
 	addLine(
 		String	line )
 	{
+		addLine( line, true );
+	}
+	
+	public void
+	addLine(
+		String	line,
+		boolean	add_nl )
+	{
 		if( styled_text.isDisposed()){
 			return;
 		}
@@ -165,7 +182,7 @@ LinkArea
 
 			String	modified_line = (String)url_details[0];
 
-			styled_text.append(modified_line + "\n");
+			styled_text.append(modified_line + (add_nl?"\n":"" ));
 
 			List	urls = (List)url_details[1];
 
@@ -202,10 +219,29 @@ LinkArea
 
 			Debug.printStackTrace( e );
 
-			styled_text.append(line + "\n");
+			styled_text.append(line + (add_nl?"\n":"" ));
 		}
 	}
 
+	public String
+	getText()
+	{
+		return( styled_text.getText());
+	}
+	
+	public void
+	setText(
+		String	str )
+	{
+		styled_text.setText("");
+		
+		links.clear();
+		
+		ofs = 0;
+		
+		addLine( str, false );
+	}
+	
 	public static class linkInfo {
 		int ofsStart;
 		int ofsEnd;
