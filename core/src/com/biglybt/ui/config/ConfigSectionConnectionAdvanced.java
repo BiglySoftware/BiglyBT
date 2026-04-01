@@ -139,6 +139,10 @@ public class ConfigSectionConnectionAdvanced
 				BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL, "ConfigView.label.ignore.bind.ipv6.non.global");
 		add(paramIgnoreBindIPv6NonGlobal, listSocket);
 
+		BooleanParameterImpl paramIgnoreBindIPv6Temporary = new BooleanParameterImpl(
+				BCFG_NETWORK_IGNORE_BIND_IPV6_TEMPORARY, "ConfigView.label.ignore.bind.ipv6.temporary");
+		add(paramIgnoreBindIPv6Temporary, listSocket);
+		
 		BooleanParameterImpl paramIgnoreBindLAN = new BooleanParameterImpl(
 				BCFG_NETWORK_IGNORE_BIND_FOR_LAN, "ConfigView.label.ignore.bind.for.lan");
 		add(paramIgnoreBindLAN, listSocket);

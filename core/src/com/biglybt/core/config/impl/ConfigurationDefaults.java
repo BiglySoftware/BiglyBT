@@ -500,6 +500,7 @@ public class ConfigurationDefaults {
     def.put( ConfigKeys.Connection.SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS, "" );
     def.put( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_FOR_LAN, FALSE );
     def.put( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL, TRUE );
+    def.put( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_TEMPORARY, TRUE );
     
     
     def.put( "Stats Period", Long.valueOf(30) );

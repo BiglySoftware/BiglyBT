@@ -20,12 +20,16 @@
 
 package com.biglybt.core.networkmanager.admin.impl;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.*;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.UnsupportedAddressTypeException;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
@@ -124,6 +128,7 @@ NetworkAdminImpl
 	private static final int ROUTE_CHECK_MILLIS		= 60*1000;
 	private static final int ROUTE_CHECK_TICKS		= ROUTE_CHECK_MILLIS / INTERFACE_CHECK_MILLIS;
 
+	private static volatile Set<Inet6Address>	temporary_ipv6_addresses = new HashSet<>();
 
 	private Set<NetworkInterface>					old_network_interfaces;
 	private final Map<String,AddressHistoryRecord>	address_history			= new HashMap<>();
@@ -137,7 +142,7 @@ NetworkAdminImpl
 	
 	private boolean						IPv6_enabled;
 	private boolean						preferIPv6;
-	
+		
 	private InetAddress[]				additionalServiceBindIPs;
 	
 	private volatile boolean			testedIPv6Routing;
@@ -661,6 +666,12 @@ NetworkAdminImpl
 
 					if ( changed || force ){
 
+						
+						if ( IPv6_enabled ){
+							
+							temporary_ipv6_addresses = getTemporaryIPv6Addresses();
+						}
+						
 						if ( changed ){
 							
 							testedIPv6Routing = false;
@@ -808,6 +819,7 @@ NetworkAdminImpl
 			}
 			*/
 			
+	
 			if ( fire_stuff ){
 
 				interfacesChanged( first_time );
@@ -4649,7 +4661,13 @@ addressLoop:
 				writer.println( "bindable: " + getString( getBindableAddresses()));
 
 				writer.println( "ipv6_enabled=" + IPv6_enabled );
+				
+				writer.println( "ignore_v6_non_global=" + ignore_v6_non_global );
+				
+				writer.println( "ignore_v6_temporary=" + ignore_v6_temporary );
 
+				writer.println( "temporary_v6=" + temporary_ipv6_addresses );
+				
 				writer.println( "ipv4_potential=" + hasIPV4Potential());
 				writer.println( "ipv6_potential=" + hasIPV6Potential(false) + "/" + hasIPV6Potential(true));
 
@@ -5470,18 +5488,21 @@ addressLoop:
 	private static volatile boolean	ignore_v4;
 	private static volatile boolean	ignore_v6;
 	private static volatile boolean	ignore_v6_non_global;
+	private static volatile boolean ignore_v6_temporary;
 	
 	static{
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
 				ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES,
-				ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL },
+				ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL,
+				ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_TEMPORARY },
 			(n)->{
 				ignore_v4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
 				ignore_v6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
 				
-				ignore_v6_non_global = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL );
+				ignore_v6_non_global	= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_NON_GLOBAL );
+				ignore_v6_temporary		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_TEMPORARY );
 				
 				if ( n == null ){
 					
@@ -5540,12 +5561,33 @@ addressLoop:
 			if ( ignore_v6_non_global && num_v6 >= 2 && has_v6_global ){
 				
 				Iterator<InetAddress> it = result.iterator();
-				
+							
 				while( it.hasNext()){
 					
 					InetAddress ia = it.next();
 					
 					if ( ia instanceof Inet6Address && !AddressUtils.isGlobalAddressV6( ia )){
+						
+						num_v6--;
+						
+						it.remove();
+					}
+				}
+			}
+			
+			if ( ignore_v6_temporary && num_v6 >= 2 ){
+				
+				Set<Inet6Address> temp = temporary_ipv6_addresses;
+				
+				Iterator<InetAddress> it = result.iterator();
+				
+				while( it.hasNext() && num_v6 > 1 ){
+					
+					InetAddress ia = it.next();
+					
+					if ( ia instanceof Inet6Address && temp.contains( ia )){
+						
+						num_v6--;
 						
 						it.remove();
 					}
@@ -5563,6 +5605,151 @@ addressLoop:
 		}
 	}
 
+	
+	private Set<Inet6Address> 
+	getTemporaryIPv6Addresses() 
+	{
+		Object[] result = {null};
+		
+		AESemaphore sem = new AESemaphore( "getTemporaryIPv6Addresses" );
+		
+		AEThread2.createAndStartDaemon(
+			"getTemporaryIPv6Addresses",
+			()->{
+				try{
+					Set<Inet6Address>  x = getTemporaryIPv6AddressesSupport();
+					
+					synchronized( result ){
+						
+						result[0] = x;
+					}
+				}finally{
+					
+					sem.release();
+				}
+			});
+	
+		if ( !sem.reserve( 10*1000 )){
+			
+			Debug.out( "Timeout waiting for temporary IPv6 addresses" );
+			
+			return( new HashSet<Inet6Address>());
+		}
+		
+		synchronized( result ){
+			
+			return((Set<Inet6Address>)result[0]);
+		}
+	}
+	
+	private Set<Inet6Address> 
+	getTemporaryIPv6AddressesSupport() 
+	{
+		Set<Inet6Address> result = new HashSet<>();
+
+		try{
+			ProcessBuilder pb;
+
+			if ( Constants.isWindows ){
+
+				String system_root = "C:\\Windows";
+				
+				try{
+					String str = System.getenv( "systemroot" );
+					
+					if ( str != null && new File( str ).exists()){
+						
+						system_root = str;
+					}
+				}catch( Throwable e ){				
+				}
+
+				String[] locs = { 
+						system_root + "\\system32\\WindowsPowerShell\\v1.0\\powershell.exe",
+						system_root + "\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe"
+				};
+
+				String ps_exe = "powershell.exe";
+				
+				for ( String loc: locs ){
+					
+					if ( new File( loc ).exists()){
+						
+						ps_exe = loc;
+						
+						break;
+					}
+				}
+				
+				pb = new ProcessBuilder(
+						ps_exe, 
+						"-NoProfile", 
+						"-Command",
+						"(Get-NetIPAddress -AddressFamily IPv6 | Where-Object { $_.SuffixOrigin -eq 'Random' -and $_.PrefixOrigin -eq 'RouterAdvertisement' }).IPAddress");
+
+			}else if ( Constants.isLinux ){
+
+				pb = new ProcessBuilder("bash", "-c", "ip -6 addr show | grep temporary");
+
+			}else if ( Constants.isOSX ){
+
+				pb = new ProcessBuilder("bash", "-c", "ifconfig | grep 'inet6.*temporary'");
+				
+			}else{
+				
+				return( result );
+			}
+
+			Process process = pb.start();
+
+			try( BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))){
+
+				String line;
+
+				while ((line = reader.readLine()) != null){
+
+					Inet6Address extracted = extractIPv6(line);
+
+					if ( extracted != null ){
+
+						result.add(extracted);
+					}
+				}
+			}
+
+			process.waitFor();
+
+		} catch (Throwable e) {
+		}
+
+		return( result );
+	}
+
+	private final Pattern ipv6Pattern = Pattern.compile("([a-fA-F0-9:]+:[a-fA-F0-9:]+)");
+
+	private Inet6Address 
+	extractIPv6(
+		String input ) 
+	{        
+		Matcher matcher = ipv6Pattern.matcher( input );
+
+		if ( matcher.find()){
+
+			String addr = matcher.group(1);
+
+			if ( addr.contains(":") && addr.length() > 3){
+
+				try{
+					return((Inet6Address)InetAddress.getByName(addr));
+
+				}catch( Throwable e ){
+				}
+			}
+		}
+
+		return( null );
+	}
+	
 	public static void
 	main(
 		String[]	args )
@@ -5601,18 +5788,9 @@ addressLoop:
 
 			}
 
-			IndentWriter iw = new IndentWriter( new PrintWriter( System.out ));
+			NetworkAdminImpl admin = getSingleton();
 
-			iw.setForce( true );
-
-			COConfigurationManager.initialise();
-
-			CoreFactory.create();
-
-			NetworkAdmin admin = getSingleton();
-
-			//admin.logNATStatus( iw );
-			admin.generateDiagnostics( iw );
+			System.out.println( admin.getTemporaryIPv6Addresses());
 
 		}catch( Throwable e){
 
