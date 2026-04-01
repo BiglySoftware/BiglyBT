@@ -667,9 +667,13 @@ NetworkAdminImpl
 					if ( changed || force ){
 
 						
-						if ( IPv6_enabled ){
+						if ( IPv6_enabled && ignore_v6_temporary){
 							
 							temporary_ipv6_addresses = getTemporaryIPv6Addresses();
+							
+						}else{
+							
+							temporary_ipv6_addresses = new HashSet<>();
 						}
 						
 						if ( changed ){
@@ -5526,7 +5530,7 @@ addressLoop:
 	{
 		List<InetAddress> result = null;
 
-		if ( ignore_v4 || ignore_v6 || ignore_v6_non_global ){
+		if ( ignore_v4 || ignore_v6 || ignore_v6_non_global || ignore_v6_temporary ){
 			
 			result = new ArrayList<>();
 			
@@ -5604,7 +5608,13 @@ addressLoop:
 			return( new Vector<>( result ).elements());
 		}
 	}
-
+	
+	public boolean
+	isIgnoredBindAddress(
+		InetAddress		ia )
+	{
+		return( ignore_v6_temporary && temporary_ipv6_addresses.contains(ia));
+	}
 	
 	private Set<Inet6Address> 
 	getTemporaryIPv6Addresses() 

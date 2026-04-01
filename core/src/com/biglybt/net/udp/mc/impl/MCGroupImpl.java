@@ -30,6 +30,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.networkmanager.VirtualAbstractChannelSelector;
 import com.biglybt.core.networkmanager.VirtualAbstractChannelSelector.VirtualSelectorListener;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.*;
 import com.biglybt.net.udp.mc.MCGroup;
 import com.biglybt.net.udp.mc.MCGroupAdapter;
@@ -57,6 +58,8 @@ MCGroupImpl
 
 	private static AsyncDispatcher		async_dispatcher = new AsyncDispatcher();
 
+	private static NetworkAdmin	network_admin = NetworkAdmin.getSingleton();
+	
 	private volatile boolean	ignore_v4;
 	private volatile boolean	ignore_v6;
 	
@@ -345,6 +348,11 @@ MCGroupImpl
 					if ( ni_address instanceof Inet6Address ){
 						
 						if ( ni_address.isLinkLocalAddress()){
+							
+							continue;
+						}
+						
+						if ( network_admin.isIgnoredBindAddress( ni_address )){
 							
 							continue;
 						}
@@ -700,6 +708,11 @@ MCGroupImpl
 						continue;
 					}
 					
+					if ( network_admin.isIgnoredBindAddress( ni_address )){
+						
+						continue;
+					}
+					
 					if ( !ni_address.isLoopbackAddress()){
 
 						socket_key = ni_address.toString();
@@ -838,6 +851,11 @@ MCGroupImpl
 					if (	ipv6 && ni_address instanceof Inet4Address ||
 							!ipv6 && ni_address instanceof Inet6Address ){
 
+						continue;
+					}
+					
+					if ( network_admin.isIgnoredBindAddress( ni_address )){
+						
 						continue;
 					}
 					

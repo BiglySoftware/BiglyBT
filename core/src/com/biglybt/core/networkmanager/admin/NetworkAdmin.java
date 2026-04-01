@@ -140,6 +140,10 @@ NetworkAdmin
 	public abstract String
 	getBindStatus();
 
+	public abstract boolean
+	isIgnoredBindAddress(
+		InetAddress		ia );
+	
 	public abstract NetworkAdminNetworkInterface[]
 	getInterfaces();
 
