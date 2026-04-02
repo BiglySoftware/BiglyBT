@@ -21,6 +21,7 @@
 package com.biglybt.core.networkmanager.admin;
 
 import java.io.IOException;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.UnsupportedAddressTypeException;
@@ -143,6 +144,9 @@ NetworkAdmin
 	public abstract boolean
 	isIgnoredBindAddress(
 		InetAddress		ia );
+	
+	public abstract List<Inet6Address>
+	getIgnoredTemporaryIPv6();
 	
 	public abstract NetworkAdminNetworkInterface[]
 	getInterfaces();

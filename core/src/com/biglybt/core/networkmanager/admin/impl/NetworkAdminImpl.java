@@ -5616,6 +5616,19 @@ addressLoop:
 		return( ignore_v6_temporary && temporary_ipv6_addresses.contains(ia));
 	}
 	
+	public List<Inet6Address>
+	getIgnoredTemporaryIPv6()
+	{
+		if ( ignore_v6_temporary ){
+			
+			return( new ArrayList<>( temporary_ipv6_addresses ));
+			
+		}else{
+			
+			return( Collections.emptyList());
+		}
+	}
+	
 	private Set<Inet6Address> 
 	getTemporaryIPv6Addresses() 
 	{
