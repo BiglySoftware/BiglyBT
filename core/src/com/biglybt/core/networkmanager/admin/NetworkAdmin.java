@@ -247,6 +247,7 @@ NetworkAdmin
 	public abstract boolean
 	canTraceRoute();
 
+	/*
 	public abstract void
 	getRoutes(
 		final InetAddress					target,
@@ -254,7 +255,9 @@ NetworkAdmin
 		final NetworkAdminRoutesListener	listener )
 
 		throws NetworkAdminException;
-
+	*/
+	
+	/*
 	public abstract boolean
 	canPing();
 
@@ -265,7 +268,8 @@ NetworkAdmin
 		final NetworkAdminRoutesListener	listener )
 
 		throws NetworkAdminException;
-
+	*/
+	
 	public abstract boolean
 	isRecentPublicIPAddress(
 		InetAddress	address );

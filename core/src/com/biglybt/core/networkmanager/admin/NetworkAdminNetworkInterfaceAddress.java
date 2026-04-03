@@ -34,6 +34,7 @@ NetworkAdminNetworkInterfaceAddress
 	public boolean
 	isLoopback();
 
+	/*
 	public NetworkAdminNode[]
 	getRoute(
 		InetAddress					target,
@@ -49,7 +50,8 @@ NetworkAdminNetworkInterfaceAddress
 		NetworkAdminRouteListener	listener )
 
 		throws NetworkAdminException;
-
+	*/
+	
 	public abstract InetAddress
 	testProtocol(
 		NetworkAdminProtocol	protocol )
