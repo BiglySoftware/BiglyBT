@@ -247,7 +247,7 @@ BackupManagerImpl
 
 					String current_ver = Constants.BIGLYBT_VERSION;
 
-					if ( !last_ver.equals( current_ver )){
+					if ( !last_ver.equals( current_ver ) && !Constants.isCVSVersion()){
 
 						COConfigurationManager.setParameter( "br.backup.config.info.ver", current_ver );
 
