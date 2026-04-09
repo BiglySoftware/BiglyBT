@@ -719,7 +719,7 @@ NetworkAdminImpl
 					if ( changed || force ){
 
 						
-						if ( IPv6_enabled && ignore_v6_temporary){
+						if ( IPv6_enabled && ignore_v6_temporary && !ignore_v6 ){
 							
 							temporary_ipv6_addresses = getTemporaryIPv6Addresses();
 							
