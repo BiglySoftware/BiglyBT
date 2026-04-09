@@ -75,6 +75,8 @@ import com.biglybt.platform.PlatformManagerPingCallback;
 import com.biglybt.plugin.upnp.UPnPPlugin;
 import com.biglybt.plugin.upnp.UPnPPluginService;
 import com.biglybt.plugin.upnp.UPnPPluginServiceWAN;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 
 public class
 NetworkAdminImpl
@@ -199,7 +201,9 @@ NetworkAdminImpl
 
 	private final List<NetworkAdminASN> as_history = new ArrayList<>();
 
-	private final AsyncDispatcher		async_asn_dispacher 	= new AsyncDispatcher();
+	private final AsyncDispatcher		async_dispatcher 		= new AsyncDispatcher();
+	
+	private final AsyncDispatcher		async_asn_dispatcher 	= new AsyncDispatcher();
 	
 	private static final int	MAX_ASYNC_ASN_LOOKUPS	= 1024;
 
@@ -262,10 +266,13 @@ NetworkAdminImpl
 					ignore_v6_temporary		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_IPV6_TEMPORARY );
 					
 					if ( !start_of_day ){
-											
-						checkNetworkInterfaces( false, true );
+							
+						async_dispatcher.dispatch(()->{
+							
+							checkNetworkInterfaces( false, true );
 					
-						checkDefaultBindAddress( false );
+							checkDefaultBindAddress( false );
+						});
 					}
 				});
 
@@ -295,7 +302,10 @@ NetworkAdminImpl
 					parameterChanged(
 						String parameterName )
 					{
-						checkDefaultBindAddress( false );
+						async_dispatcher.dispatch(()->{
+						
+							checkDefaultBindAddress( false );
+						});
 					}
 				});
 			
@@ -315,7 +325,19 @@ NetworkAdminImpl
 		COConfigurationManager.addAndFireParameterListener(
 				ConfigKeys.Connection.SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS,	
 				(n)->{
-						setupAdditionalServiceBindIPs( COConfigurationManager.getStringParameter( n ));
+						boolean start_of_day = n == null;
+						
+						if ( start_of_day ){
+						
+							setupAdditionalServiceBindIPs( COConfigurationManager.getStringParameter( n ));
+							
+						}else{
+							
+							async_dispatcher.dispatch(()->{
+								
+								setupAdditionalServiceBindIPs( COConfigurationManager.getStringParameter( n ));
+							});
+						}
 					});
 
 			// populate initial values
@@ -615,9 +637,12 @@ NetworkAdminImpl
 
 		if ( !start_of_day ){
 
-			checkNetworkInterfaces( false, true );
+			async_dispatcher.dispatch(()->{
+				
+				checkNetworkInterfaces( false, true );
 
-			checkDefaultBindAddress( false );
+				checkDefaultBindAddress( false );
+			});
 		}
 	}
 
@@ -628,8 +653,8 @@ NetworkAdminImpl
 		return( IPv6_enabled );
 	}
 
-	private List<NetworkInterface> 	last_getni_result;
-	private final Object					getni_lock = new Object();
+	private List<NetworkInterface> 		last_getni_result;
+	private final Object				getni_lock = new Object();
 
 	protected boolean
 	checkNetworkInterfaces(
@@ -1210,6 +1235,18 @@ NetworkAdminImpl
 	parseAddresses(
 		String		str )
 	{
+		if ( Constants.isCVSVersion()){
+		
+				// potential address resolution can stall for a long time
+			
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+			
+			if ( uif != null && uif.isUIThread()){
+				
+				Debug.out( "Don't call this on the UI thread" );
+			}
+		}
+		
 		if ( str == null ){
 			str = "";
 		}
@@ -3064,7 +3101,7 @@ addressLoop:
 			}
 		}
 
-		int	queue_size = async_asn_dispacher.getQueueSize();
+		int	queue_size = async_asn_dispatcher.getQueueSize();
 
 		if ( queue_size >= MAX_ASYNC_ASN_LOOKUPS ){
 
@@ -3072,7 +3109,7 @@ addressLoop:
 
 		}else{
 
-			async_asn_dispacher.dispatch(
+			async_asn_dispatcher.dispatch(
 				new AERunnable()
 				{
 					@Override
@@ -3750,19 +3787,68 @@ addressLoop:
 	public static final int BS_WARNING	= 2;
 	public static final int BS_ERROR	= 3;
 
-	long		bs_last_calc 	= 0;
+	Object				bs_lock			= new Object();
+	boolean				bs_pending;
+	long				bs_last_calc 	= 0;
 	private Object[]	bs_last_value 	= null;
 
 	public Object[]
 	getBindingStatus()
 	{
-		long now = SystemTime.getMonotonousTime();
+		String 	bind_ips 	= COConfigurationManager.getStringParameter("Bind IP", "").trim();
 
-		if ( bs_last_value != null && now - bs_last_calc < 30*1000 ){
+		if ( bind_ips.length() == 0 ){
 
-			return( bs_last_value );
+			return( new Object[]{ BS_INACTIVE, "" });
 		}
+		
+		synchronized( bs_lock ){
+		
+			long now = SystemTime.getMonotonousTime();
 
+			Object[] result = bs_last_value;
+			
+			if ( result != null && ( bs_last_calc > 0 && now - bs_last_calc < 15*1000 )){
+	
+				return( result );
+			}
+
+			if ( result == null ){
+				
+				result = new Object[]{ BS_WARNING, MessageText.getString( "PeersView.state.pending" )};
+			}
+			
+			if ( !bs_pending ){
+				
+				bs_pending = true;
+				
+					async_dispatcher.dispatch(()->{
+						
+						Object[] r = null;
+						
+						try{
+							r = getBindingStatusSupport();
+							
+						}finally{
+							
+							synchronized( bs_lock ){
+								
+								bs_last_value	= r;
+								bs_last_calc	= SystemTime.getMonotonousTime();
+								
+								bs_pending		= false;
+							}
+						}
+					});
+			}
+			
+			return( result );
+		}
+	}
+	
+	private Object[]
+	getBindingStatusSupport()
+	{
 		String 	bind_ips 	= COConfigurationManager.getStringParameter("Bind IP", "").trim();
 
 		if ( bind_ips.length() == 0 ){
@@ -3981,10 +4067,7 @@ addressLoop:
 			status = enforceBind?BS_ERROR:BS_WARNING;
 		}
 
-		bs_last_value 	= new Object[]{ status, str };
-		bs_last_calc	= now;
-
-		return( bs_last_value );
+		return( new Object[]{ status, str });
 	}
 
 	private String
@@ -4420,7 +4503,10 @@ addressLoop:
 						Debug.out( e);
 					}
 
-					bs_last_calc = 0;
+					synchronized( bs_lock ){
+					
+						bs_last_calc = 0;
+					}
 
 					ui_manager.showMessageBox(
 								"settings.updated.title",
