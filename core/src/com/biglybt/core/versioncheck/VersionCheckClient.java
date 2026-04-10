@@ -954,9 +954,9 @@ public class VersionCheckClient {
 	 			throw( new IOException( e.getMessage()));
 	 		}
 
-	 		url = (URL)http_properties.get( ClientIDGenerator.PR_URL );
+	 		URL url2 = (URL)http_properties.get( ClientIDGenerator.PR_URL );
 
-			HttpURLConnection	url_connection = (HttpURLConnection)url.openConnection();
+			HttpURLConnection	url_connection = (HttpURLConnection)url2.openConnection();
 
 			url_connection.setConnectTimeout( 10*1000 );
 			url_connection.setReadTimeout( 10*1000 );
