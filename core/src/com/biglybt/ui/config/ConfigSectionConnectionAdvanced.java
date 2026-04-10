@@ -19,6 +19,7 @@
 package com.biglybt.ui.config;
 
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -126,6 +127,23 @@ public class ConfigSectionConnectionAdvanced
 					"\n\t" + network_admin.getNetworkInterfacesAsString(
 							paramInterfaceWithAddresses.getValue()).replaceAll(
 							"\n", "\n\t" );
+			
+			InetAddress[] binds = network_admin.getAllBindAddresses( false );
+			
+			if ( binds.length > 0 ){
+				
+				String tmp_str = "";
+				
+				for ( InetAddress bind: binds ){
+					
+					if ( bind != null ){
+						
+						tmp_str += (tmp_str.isEmpty()?"":", ") + bind.getHostAddress();
+					}
+				}
+				
+				str += "\n\t" + MessageText.getString("label.bind.addresses", new String[]{ tmp_str }) + "\n";
+			}
 			
 			if ( paramIgnoreBindIPv6Temporary.getValue()){
 			
