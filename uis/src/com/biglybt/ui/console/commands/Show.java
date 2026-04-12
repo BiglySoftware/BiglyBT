@@ -84,7 +84,7 @@ public class Show extends IConsoleCommand {
 		out.println("\t\ttransferring\tx\tShow only transferring torrents.");
 		out.println("\t\tactive\t\ta\tShow only active torrents.");
 		out.println("\t\tcomplete\tc\tShow only complete torrents.");
-		out.println("\t\terror\tr\tShow only torrents with errors.");
+		out.println("\t\terror\t\te\tShow only torrents with errors.");
 		out.println("\t\tincomplete\ti\tShow only incomplete torrents.");
 		out.println("\t\tdead [days]\td [days]Show only dead torrents (complete and not uploaded for [days] (default 7) uptime (NOT elapsed)).");
 		out.println("\te.g. show t a *Az* - shows all active torrents with 'Az' occurring in their name." );
