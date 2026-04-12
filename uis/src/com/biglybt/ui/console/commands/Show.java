@@ -84,6 +84,7 @@ public class Show extends IConsoleCommand {
 		out.println("\t\ttransferring\tx\tShow only transferring torrents.");
 		out.println("\t\tactive\t\ta\tShow only active torrents.");
 		out.println("\t\tcomplete\tc\tShow only complete torrents.");
+		out.println("\t\terror\tr\tShow only torrents with errors.");
 		out.println("\t\tincomplete\ti\tShow only incomplete torrents.");
 		out.println("\t\tdead [days]\td [days]Show only dead torrents (complete and not uploaded for [days] (default 7) uptime (NOT elapsed)).");
 		out.println("\te.g. show t a *Az* - shows all active torrents with 'Az' occurring in their name." );
@@ -122,6 +123,7 @@ public class Show extends IConsoleCommand {
 			PEPeerManagerStats ps;
 			boolean bShowOnlyActive = false;
 			boolean bShowOnlyComplete = false;
+			boolean bShowOnlyError = false;
 			boolean bShowOnlyIncomplete = false;
 			boolean bShowOnlyTransferring = false;
 			int	bShowDeadForDays=0;
@@ -130,6 +132,9 @@ public class Show extends IConsoleCommand {
 				String arg = (String) iter.next();
 				if ("active".equalsIgnoreCase(arg) || "a".equalsIgnoreCase(arg)) {
 					bShowOnlyActive = true;
+					iter.remove();
+				} else if ("error".equalsIgnoreCase(arg) || "e".equalsIgnoreCase(arg)) {
+					bShowOnlyError = true;
 					iter.remove();
 				} else if ("complete".equalsIgnoreCase(arg) || "c".equalsIgnoreCase(arg)) {
 					bShowOnlyComplete = true;
@@ -188,6 +193,11 @@ public class Show extends IConsoleCommand {
 				if (bCanShow && bShowOnlyActive) {
 					int dmstate = dm.getState();
 					bCanShow = (dmstate == DownloadManager.STATE_SEEDING) || (dmstate == DownloadManager.STATE_DOWNLOADING) || (dmstate == DownloadManager.STATE_CHECKING) || (dmstate == DownloadManager.STATE_INITIALIZING) || (dmstate == DownloadManager.STATE_ALLOCATING);
+				}
+
+				if (bCanShow && bShowOnlyError) {
+					int dmstate = dm.getState();
+					bCanShow = (dmstate == DownloadManager.STATE_ERROR);
 				}
 
 				if (bCanShow && bShowOnlyTransferring) {
