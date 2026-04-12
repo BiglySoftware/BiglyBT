@@ -1127,7 +1127,7 @@ public class GeneralView
     String	remaining;
     String	eta			= DisplayFormatters.formatETA(manager.getStats().getSmoothedETA());
 
-    if ( dm != null ){
+    if ( dm != null && !manager.isMetadataDownload()){
 
     	long	rem = dm.getRemainingExcludingDND();
 
@@ -1252,13 +1252,14 @@ public class GeneralView
 	    }
     }
     
+    boolean isMetadata = manager.isMetadataDownload();
     setInfos(
       manager.getDisplayName(),
-	  DisplayFormatters.formatByteCountToKiBEtc(manager.getSize()),
+      isMetadata?"":DisplayFormatters.formatByteCountToKiBEtc(manager.getSize()),
 	  DisplayFormatters.formatDownloadStatus(manager), manager.getState()==DownloadManager.STATE_ERROR,
       manager.getSaveLocation().toString(),
       TorrentUtils.nicePrintTorrentHash(torrent_maybe_null),
-      piecesDoneAndSum,
+      isMetadata?"":piecesDoneAndSum,
       manager.getPieceLength(),
       manager.getTorrentComment(),
       creation_date,
