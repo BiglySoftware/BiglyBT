@@ -37,7 +37,7 @@ public class RemainingPiecesItem
 {
   /** Default Constructor */
   public RemainingPiecesItem(String TableID) {
-    super("remaining", ALIGN_TRAIL, POSITION_LAST, 60, TableID);
+    super("remainingpieces", ALIGN_TRAIL, POSITION_LAST, 60, TableID);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

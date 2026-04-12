@@ -118,6 +118,7 @@ public class FilesView
 			new SizeBytesItem(tableID),
 			new DoneItem(tableID),
 			new PercentItem(tableID),
+			new RemainingItem(tableID),
 			new FirstPieceItem(tableID),
 			new LastPieceItem(tableID),
 			new PieceCountItem(tableID),
