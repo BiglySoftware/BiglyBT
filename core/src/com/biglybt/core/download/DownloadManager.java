@@ -460,6 +460,12 @@ DownloadManager
     	boolean		expected_to_be_allocated,
     	boolean		test_only );
 
+    public default boolean
+    isMetadataDownload()
+    {
+    	return( getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+    }
+    
     /**
      * Download must be stopped - used at start-of-day to recover error state
      * @param errorType

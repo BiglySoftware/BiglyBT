@@ -55,7 +55,7 @@ public class PiecesDoneAndCountItem
     int total 	= -1;
     int	done	= -1;
     
-	if ( fileInfo != null ){
+	if ( fileInfo != null && !fileInfo.isMetadataDownload()){
 
 		total = fileInfo.getNbPieces();
 

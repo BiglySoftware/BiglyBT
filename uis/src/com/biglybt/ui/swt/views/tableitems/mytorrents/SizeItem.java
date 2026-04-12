@@ -74,19 +74,28 @@ public class SizeItem
 		boolean simpleSort = cell.useSimpleSortValue();
 		long remaining;
 		long size;
+		DownloadManager dm;
 		if (ds instanceof DownloadManager) {
-			DownloadManager dm = (DownloadManager) ds;
+			dm = (DownloadManager) ds;
 
 			remaining = dm.getStats().getRemainingExcludingDND();
 			size = dm.getStats().getSizeExcludingDND();
 		} else if (ds instanceof DiskManagerFileInfo) {
 			DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
+			dm = fileInfo.getDownloadManager();
 			remaining = fileInfo.getLength() - fileInfo.getDownloaded();
 			size = fileInfo.getLength();
 		} else {
 			return;
 		}
 
+		if ( dm != null && dm.isMetadataDownload()){
+			
+			cell.setSortValue(-1);
+			cell.setText("");
+			return;
+		}
+		
 		boolean showSecondLine = cell.getMaxLines() > 1 && remaining > 0
 				&& cell.getWidth() > 150;
 		sizeitemsort value = new sizeitemsort(size, simpleSort ? 0 : remaining,

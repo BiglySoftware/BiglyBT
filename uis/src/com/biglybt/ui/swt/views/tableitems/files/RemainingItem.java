@@ -59,7 +59,7 @@ RemainingItem
 
 		long value;
 
-		if ( fileInfo == null || fileInfo.isSkipped()){
+		if ( fileInfo == null || fileInfo.isSkipped() || fileInfo.isMetadataDownload()){
 
 			value = -1;
 			

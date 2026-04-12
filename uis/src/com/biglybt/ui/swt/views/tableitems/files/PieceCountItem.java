@@ -47,7 +47,7 @@ public class PieceCountItem
   @Override
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
-    long value = (fileInfo == null) ? 0 : fileInfo.getNbPieces();
+    long value = (fileInfo == null) ? 0 : (fileInfo.isMetadataDownload()?-1:fileInfo.getNbPieces());
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {
       return;

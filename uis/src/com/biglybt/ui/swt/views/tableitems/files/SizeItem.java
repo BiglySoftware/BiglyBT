@@ -23,10 +23,8 @@ import java.text.NumberFormat;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.pif.ui.tables.*;
 
@@ -58,7 +56,7 @@ public class SizeItem
     
     boolean internal = fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf();
     
-    long value = (fileInfo == null) ? 0 : fileInfo.getLength();
+    long value = (fileInfo == null) ? 0 : ( fileInfo.isMetadataDownload()?-1:fileInfo.getLength());
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {
       return;

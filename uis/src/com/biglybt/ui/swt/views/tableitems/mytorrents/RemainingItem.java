@@ -69,18 +69,23 @@ public class RemainingItem
       return;
     }
 
-    cell.setText(DisplayFormatters.formatByteCountToKiBEtc(lRemaining));
+    cell.setText(lRemaining<0?"":DisplayFormatters.formatByteCountToKiBEtc(lRemaining));
   }
 
   private long getRemaining(TableCell cell) {
   	Object ds = cell.getDataSource();
   	if (ds instanceof DownloadManager) {
-      DownloadManager manager = (DownloadManager)cell.getDataSource();
-      if (manager != null) {
+      DownloadManager manager = (DownloadManager)ds;
+    	if ( manager.isMetadataDownload()){
+    		  return(-1);
+    	}
       	return( manager.getStats().getRemainingExcludingDND());
-      }
+      
   	} else if (ds instanceof DiskManagerFileInfo) {
   		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
+  		if ( fileInfo.isMetadataDownload()){
+  		  return(-1);
+  		}
   		return fileInfo.getLength() - fileInfo.getDownloaded();
   	}
   	return 0;

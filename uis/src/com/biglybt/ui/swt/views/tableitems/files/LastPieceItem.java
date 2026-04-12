@@ -45,8 +45,8 @@ public class LastPieceItem
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
     long sort_value;
 
-    if ( fileInfo == null ){
-    	sort_value = 0;
+    if ( fileInfo == null || fileInfo.isMetadataDownload()){
+    	sort_value = -1;
     }else{
     	sort_value = fileInfo.getLastPieceNumber();
 

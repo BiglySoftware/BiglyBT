@@ -57,7 +57,7 @@ public class RemainingPiecesItem
 
     if( fileInfo != null ){
     	
-    	if ( fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf()){
+    	if ( fileInfo.isMetadataDownload() || ( fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf())){
 	
     		remaining	= -1;
     		

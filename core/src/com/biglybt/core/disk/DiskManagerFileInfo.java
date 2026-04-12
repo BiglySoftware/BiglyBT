@@ -172,6 +172,14 @@ DiskManagerFileInfo
 
 	public DownloadManager	getDownloadManager();
 
+	public default boolean
+	isMetadataDownload()
+	{
+		DownloadManager dm = getDownloadManager();
+		
+		return( dm != null && dm.isMetadataDownload());
+	}
+	
 	public DiskManager getDiskManager();
 
 	public File getFile( boolean follow_link );

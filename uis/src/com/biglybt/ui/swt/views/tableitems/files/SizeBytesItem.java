@@ -50,7 +50,7 @@ public class SizeBytesItem
     
     boolean internal = fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf();
     
-    long value = (fileInfo == null) ? 0 : fileInfo.getLength();
+    long value = (fileInfo == null) ? 0 : ( fileInfo.isMetadataDownload()?-1:fileInfo.getLength());
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {
       return;
