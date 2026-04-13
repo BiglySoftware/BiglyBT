@@ -438,6 +438,7 @@ public class ConfigurationDefaults {
     def.put( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE, FALSE );
     def.put( "Prioritize Most Completed Files", FALSE );
     def.put( ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PIECE, ZERO );
+    def.put( ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PERCENT, ZERO );
     def.put( "Piece Picker Request Hint Enabled", TRUE );
     def.put( "Use Lazy Bitfield", FALSE );
     def.put( "Zero New", FALSE );

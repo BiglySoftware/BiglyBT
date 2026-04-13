@@ -391,18 +391,29 @@ public class ConfigSectionTransfer
 		pfp.addEnabledOnSelection( pfpf );
 		pfp.addEnabledOnSelection( pMB );
 		
-		// Further prioritize High priority files according to % complete and size of file
+			// Further prioritize High priority files according to % complete and size of file
+		
 		add(new BooleanParameterImpl(BCFG_PRIORITIZE_MOST_COMPLETED_FILES,
 				"ConfigView.label.prioritizemostcompletedfiles"),
 				Parameter.MODE_INTERMEDIATE);
 
+			// remaining pieces priority
+		
 		IntParameterImpl sfp =new IntParameterImpl( ICFG_SET_FILE_PRIORITY_REM_PIECE, "ConfigView.label.set.file.pri.pieces.rem", 0, Integer.MAX_VALUE);
 		
 		sfp.setGenerateIntermediateEvents( false );
 		
 		add( sfp, Parameter.MODE_INTERMEDIATE);
 		
-		// ignore ports
+			// remaining percentage priority
+		
+		IntParameterImpl sfpct = new IntParameterImpl( ICFG_SET_FILE_PRIORITY_REM_PERCENT, "ConfigView.label.set.file.pri.percent.rem", 0, 100 );
+		
+		sfpct.setGenerateIntermediateEvents( false );
+		
+		add( sfpct, Parameter.MODE_INTERMEDIATE);	
+		
+			// ignore ports
 
 		StringParameterImpl paramIgnorePeerPorts = new StringParameterImpl(
 				SCFG_IGNORE_PEER_PORTS, "ConfigView.label.transfer.ignorepeerports");

@@ -752,7 +752,8 @@ DownloadManagerImpl
     private volatile int		tcp_port_override;
 
     private volatile int		set_file_priority_high_pieces_rem	= 0;
-
+    private volatile int		set_file_priority_high_percent_rem	= 0;
+    
 	private AtomicLong tagMutationCounter = new AtomicLong();
 
 	// Only call this with STATE_QUEUED, STATE_WAITING, or STATE_STOPPED unless you know what you are doing
@@ -1177,7 +1178,8 @@ DownloadManagerImpl
 
 					 				tc.resetTrackerUrl( false );
 					 			}
-							}else if ( attribute_name.equals( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE )){
+							}else if (	attribute_name.equals( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE ) ||
+										attribute_name.equals( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PERCENT )){
 								
 								readFilePriorityConfig( false, false );
 							}
@@ -1188,6 +1190,7 @@ DownloadManagerImpl
 				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN);
 				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_NETWORKS, DownloadManagerStateAttributeListener.WRITTEN);
 				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE, DownloadManagerStateAttributeListener.WRITTEN);
+				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PERCENT, DownloadManagerStateAttributeListener.WRITTEN);
 
 				 torrent	= download_manager_state.getTorrent();
 
@@ -1756,14 +1759,32 @@ DownloadManagerImpl
 			sfp = COConfigurationManager.getIntParameter( ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PIECE );
 		}
 		
+		int sfpct		= getDownloadState().getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PERCENT );
+		
+		if ( sfpct == 0 ){
+			
+			sfpct = COConfigurationManager.getIntParameter( ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PERCENT );
+		}
+		
+		boolean changed = false;
+		
 		if ( sfp != set_file_priority_high_pieces_rem ){
 		
 			set_file_priority_high_pieces_rem = sfp;
+		
+			changed = true;
+		}
+		
+		if ( sfpct != set_file_priority_high_percent_rem ){
 			
-			if ( !init ){
+			set_file_priority_high_percent_rem = sfpct;
+		
+			changed = true;
+		}
+		
+		if ( changed && !init ){
 				
-				checkFilePriorities( global_change );
-			}
+			checkFilePriorities( global_change );
 		}
 	}
 	
@@ -4272,15 +4293,16 @@ DownloadManagerImpl
 			// on global change to zero we reset file priorities as user seems to want to disable the default and manually clearing priorities across
 			// all downloads is a pain
 		
-		int sfp_pieces = set_file_priority_high_pieces_rem;
+		int sfp_pieces	= set_file_priority_high_pieces_rem;
+		int sfp_percent	= set_file_priority_high_percent_rem;
 		
-		if ( global_change || sfp_pieces > 0 ){
+		if ( global_change || sfp_pieces > 0 || sfp_percent > 0 ){
 			
 			DiskManager	dm = getDiskManager();
 			
 			if ( dm != null ){
 
-				long sfp_bytes = dm.getPieceLength() * sfp_pieces;
+				long sfp_pieces_bytes = dm.getPieceLength() * sfp_pieces;
 				
 				DiskManagerFileInfoSet set = getDiskManagerFileInfoSet();
 				
@@ -4290,10 +4312,17 @@ DownloadManagerImpl
 						
 				for ( DiskManagerFileInfo file: files ){
 					
-					long	rem = file.getLength() - file.getDownloaded();
+					long file_length = file.getLength();
+					
+					long sfp_percent_bytes = (file_length*sfp_percent)/100;
+
+					long	rem = file_length - file.getDownloaded();
 		    		
-		    		int expected = sfp_bytes==0?0:( rem <= sfp_bytes?1:0);
-		    					    				
+		    		int pieces_expected		= sfp_pieces_bytes==0?0:( rem <= sfp_pieces_bytes?1:0);
+		    		int percent_expected	= sfp_percent_bytes==0?0:( rem <= sfp_percent_bytes?1:0);  
+		    		
+		    		int expected = Math.max( pieces_expected, percent_expected );
+		    		
 		    		int existing = file.getPriority();
 		    		
 		    		if ( expected != existing && ( existing == 0 || existing == 1 )){
@@ -4440,15 +4469,16 @@ DownloadManagerImpl
 	informPieceDoneChanged(
 		DiskManagerPiece	piece )
 	{
-		int sfp_pieces = set_file_priority_high_pieces_rem;
+		int sfp_pieces	= set_file_priority_high_pieces_rem;
+		int sfp_percent	= set_file_priority_high_percent_rem;
 		
-		if ( sfp_pieces > 0 ){
+		if ( sfp_pieces > 0 || sfp_percent > 0 ){
 			
 			DiskManager	dm = getDiskManager();
 			
 			if ( dm != null ){
 					
-				long sfp_bytes = dm.getPieceLength() * sfp_pieces;	// easier to work with bytes and close enough
+				long sfp_pieces_bytes = dm.getPieceLength() * sfp_pieces;	// easier to work with bytes and close enough
 
 				DMPieceList list = piece.getPieceList();
 				
@@ -4458,9 +4488,14 @@ DownloadManagerImpl
 	
 					DiskManagerFileInfo file = entry.getFile();
 					
-					long	rem = file.getLength() - file.getDownloaded();
+					long file_length = file.getLength();
+					
+					long sfp_percent_bytes = (file_length*sfp_percent)/100;
+					
+					long	rem = file_length - file.getDownloaded();
 
-		    		if ( rem <= sfp_bytes ){
+		    		if (	(sfp_pieces_bytes > 0 && rem <= sfp_pieces_bytes ) ||
+		    				(sfp_percent_bytes > 0 && rem <= sfp_percent_bytes )){
     						    			
 		    			file.setPriority( 1 );
 		    		}

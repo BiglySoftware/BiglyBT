@@ -1045,7 +1045,10 @@ public class GlobalManagerImpl
     file_merger = new GlobalManagerFileMerger( this );
     
     COConfigurationManager.addParameterListener(
-    	ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PIECE,
+    	new String[]{
+    			ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PIECE,
+    			ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PERCENT,
+    	},
     	(n)->{
     		for ( DownloadManager dm: managers_list_cow ){
     			

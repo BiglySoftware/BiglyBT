@@ -7422,6 +7422,18 @@ public class Utils
 		Integer				def,
 		Consumer<Integer>	cons )
 	{
+		numberPrompt( title_resource, text_resource, def, Integer.MIN_VALUE, Integer.MAX_VALUE, cons );
+	}
+	
+	public static void
+	numberPrompt(
+		String				title_resource,
+		String				text_resource,
+		Integer				def,
+		int					min,
+		int					max,
+		Consumer<Integer>	cons )
+	{
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow( title_resource, text_resource );
 				
 		if ( def != null ){
@@ -7451,6 +7463,8 @@ public class Utils
 					
 					try{
 						int num = Integer.valueOf(sReturn).intValue();
+						
+						num = Math.max(min, Math.min(max, num));
 						
 						cons.accept( num );
 						

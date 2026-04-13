@@ -1349,7 +1349,7 @@ public class TorrentUtil
 		
 			// set file priority when pieces remaining
 		
-		MenuItem itemSetFilePriority = new MenuItem(menuFiles, SWT.PUSH);
+		MenuItem itemSetFilePriorityPieces = new MenuItem(menuFiles, SWT.PUSH);
 				
 		String sfp_text = MessageText.getString( "ConfigView.label.set.file.pri.pieces.rem" );
 		
@@ -1368,9 +1368,9 @@ public class TorrentUtil
 			sfp_def = -1;
 		}
 		
-		itemSetFilePriority.setText(sfp_text + "...");
+		itemSetFilePriorityPieces.setText(sfp_text + "...");
 		
-		itemSetFilePriority.addListener(SWT.Selection, new ListenerDMTask(dms) {
+		itemSetFilePriorityPieces.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
 				Utils.numberPrompt( "enter.number", "number.of.pieces", sfp_def>0?sfp_def:null, (num)->{
@@ -1381,7 +1381,44 @@ public class TorrentUtil
 			}
 		});
 
-		itemSetFilePriority.setEnabled( dms.length > 0 );
+		itemSetFilePriorityPieces.setEnabled( dms.length > 0 );
+		
+		
+			// set file priority when percent remaining
+		
+		MenuItem itemSetFilePriorityPercent = new MenuItem(menuFiles, SWT.PUSH);
+				
+		String sfpct_text = MessageText.getString( "ConfigView.label.set.file.pri.percent.rem" );
+		
+		int sfpct_def;
+		
+		if ( dms.length == 1 ){
+			
+			sfpct_def = dms[0].getDownloadState().getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PERCENT );
+			
+			if ( sfpct_def > 0 ){
+				
+				sfpct_text += " (" + sfpct_def + ")";
+			}
+		}else{
+			
+			sfpct_def = -1;
+		}
+		
+		itemSetFilePriorityPercent.setText(sfpct_text + "...");
+		
+		itemSetFilePriorityPercent.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				Utils.numberPrompt( "enter.number", "General.percent", sfpct_def>0?sfpct_def:null, 0, 100, (num)->{
+					for ( DownloadManager dm: dms ){
+						dm.getDownloadState().setIntAttribute(DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PERCENT, num);
+					}
+				});
+			}
+		});
+	
+		itemSetFilePriorityPercent.setEnabled( dms.length > 0 );
 		
 			// Advanced -> archive
 
