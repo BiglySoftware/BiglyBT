@@ -36,6 +36,7 @@ RemainingItem
 		String TableID )
 	{
 		super("remaining", ALIGN_TRAIL, POSITION_LAST, 70, TableID);
+		setRefreshInterval(INTERVAL_LIVE);
 	}
 
 	@Override
