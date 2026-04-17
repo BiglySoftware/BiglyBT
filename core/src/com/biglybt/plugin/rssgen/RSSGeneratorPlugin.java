@@ -155,21 +155,7 @@ RSSGeneratorPlugin
 	public String
 	getURL()
 	{
-		InetAddress bind_ip = getServerBindIP();
-
-		InetAddress address;
-		
-		if ( bind_ip.isAnyLocalAddress()){
-
-			address = NetworkAdmin.getSingleton().getLoopbackAddress();
-			
-
-		}else{
-
-			address = bind_ip;
-		}
-
-		return( getProtocol().toLowerCase( Locale.US ) + "://" + UrlUtils.getURLForm( address, getPort()) + "/" );
+		return( getServerURL());
 	}
 
 	@Override

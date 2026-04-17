@@ -2497,8 +2497,16 @@ WebPlugin
 		
 		if ( bind_ip.isAnyLocalAddress()){
 
-			address = NetworkAdmin.getSingleton().getLoopbackAddress();
-			
+			InetAddress bip = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress();
+
+			if ( bip == null || bip.isAnyLocalAddress()){
+
+				address = NetworkAdmin.getSingleton().getLoopbackAddress();
+
+			}else{
+
+				address = bip;
+			}			
 		}else{
 
 			address = bind_ip;
