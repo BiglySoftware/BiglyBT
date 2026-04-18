@@ -154,6 +154,12 @@ public class FilesView
   public static final String MSGID_PREFIX = "FilesView";
 
   private String view_sub_id;
+
+  private String
+  getViewKey()
+  {
+  	return( view_sub_id != null ? MSGID_PREFIX + "." + view_sub_id : MSGID_PREFIX );
+  }
   
   private DownloadManager[] managers = new DownloadManager[0];
 
@@ -529,7 +535,7 @@ public class FilesView
 				
 				if ( map != null ){
 					
-					Map<String,Object> view = map.get( "FilesView" );
+					Map<String,Object> view = map.get( getViewKey() );
 					
 					if ( view != null ){
 						
@@ -1049,13 +1055,13 @@ public class FilesView
 					map = new HashMap<>( map );
 				}
 				
-				Map<String,Object> view = map.get( "FilesView" );
+				Map<String,Object> view = map.get( getViewKey() );
 				
 				if ( view == null ){
 					
 					view = new HashMap<>();
 					
-					map.put( "FilesView", view );
+					map.put( getViewKey(), view );
 				}
 				
 				MapUtils.setMapString( view, "filter", filter);
