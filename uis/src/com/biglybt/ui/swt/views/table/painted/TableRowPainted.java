@@ -1765,71 +1765,81 @@ public class TableRowPainted
 	sortSubRows(
 		List<TableColumnCore> cols)
 	{
-		synchronized (subRows_sync) {
-			if ( subRows == null ){
-				return( false );
-			}
-			
-			boolean changed = false;
-			boolean	sorted	= true;
+			// unfortunately the comparables aren't stable and can result in TimSort throwing a wobbly and
+			// 'general contract violated' exception. We don't really care so...
+
+		for ( int z=0;z<10;z++){
+			try{
+				synchronized (subRows_sync){
 					
-			TableRowCore prev = null;
-			
-			for ( TableRowCore r: subRows ){
-				
-				if ( sorted ){
+					if ( subRows == null ){
+						return( false );
+					}
 					
-					if ( prev != null ){
-					
-						for ( TableColumnCore col: cols ){
+					boolean changed = false;
+					boolean	sorted	= true;
 							
-							if ( col.compare( prev,  r ) > 0 ){
-								
-								sorted = false;
-								
-								break;
+					TableRowCore prev = null;
+					
+					for ( TableRowCore r: subRows ){
+						
+						if ( sorted ){
+							
+							if ( prev != null ){
+							
+								for ( TableColumnCore col: cols ){
+									
+									if ( col.compare( prev,  r ) > 0 ){
+										
+										sorted = false;
+										
+										break;
+									}
+								}
 							}
+							
+							prev = r;
+						}
+						
+						if ( r.sortSubRows(cols)){
+							
+							changed = true;
 						}
 					}
 					
-					prev = r;
-				}
-				
-				if ( r.sortSubRows(cols)){
+					if ( !sorted ){
 					
-					changed = true;
+						if ( cols.size() == 1 ){
+						
+							Arrays.sort( subRows, cols.get(0));
+							
+						}else{
+							
+							Arrays.sort(
+								subRows,
+								(o1, o2) -> {
+									for (TableColumnCore sortColumn : cols) {
+										int compare = sortColumn.compare(o1, o2);
+										if (compare != 0) {
+											return compare;
+										}
+									}
+									return 0;
+								});
+						}		
+						
+						for ( int i=0; i<subRows.length;i++){
+							subRows[i].setTableItem(i);
+						}
+						
+						changed = true;
+					}
+		
+					return( changed );
 				}
+			}catch( IllegalArgumentException e ){		
 			}
-			
-			if ( !sorted ){
-			
-				if ( cols.size() == 1 ){
-				
-					Arrays.sort( subRows, cols.get(0));
-					
-				}else{
-					
-					Arrays.sort(
-						subRows,
-						(o1, o2) -> {
-							for (TableColumnCore sortColumn : cols) {
-								int compare = sortColumn.compare(o1, o2);
-								if (compare != 0) {
-									return compare;
-								}
-							}
-							return 0;
-						});
-				}		
-				
-				for ( int i=0; i<subRows.length;i++){
-					subRows[i].setTableItem(i);
-				}
-				
-				changed = true;
-			}
-
-			return( changed );
 		}
+		return( true );
 	}
 }

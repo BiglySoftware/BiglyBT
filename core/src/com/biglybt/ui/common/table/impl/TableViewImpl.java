@@ -1762,19 +1762,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				}
 				if (hasSortValueChanged) {
 					lLastSortedOn = SystemTime.getCurrentTime();
-					if (sortColumns.size() == 1) {
-						sortedRows.sort(sortColumns.get(0));
-					} else {
-						sortedRows.sort((o1, o2) -> {
-							for (TableColumnCore sortColumn : sortColumns) {
-								int compare = sortColumn.compare(o1, o2);
-								if (compare != 0) {
-									return compare;
-								}
-							}
-							return 0;
-						});
-					}
+					
+					safeSort();
 					
 					for ( TableRowCore r: sortedRows ){
 						// TODO: Change to sortColumn list
@@ -2084,22 +2073,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						
 						synchronized( rows_sync ){
 								
-							if ( numSortCols == 1 ){
-		
-								sortedRows.sort(sortColumns.get(0));
-							
-							}else{
-								
-								sortedRows.sort((o1, o2) -> {
-									for (TableColumnCore sortColumn : sortColumns) {
-										int compare = sortColumn.compare(o1, o2);
-										if (compare != 0) {
-											return compare;
-										}
-									}
-									return 0;
-								});
-							}
+							safeSort();
 						}
 					}
 				}
@@ -2138,6 +2112,38 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	}
 
+	private void
+	safeSort()
+	{
+			// unfortunately the comparables aren't stable and can result in TimSort throwing a wobbly and
+			// 'general contract violated' exception. We don't really care so...
+	
+		for ( int z=0;z<10;z++){
+			try{
+				if ( sortColumns.size() == 1 ){
+					
+					sortedRows.sort(sortColumns.get(0));
+				
+				}else{
+					
+					sortedRows.sort((o1, o2) -> {
+						for (TableColumnCore sortColumn : sortColumns) {
+							int compare = sortColumn.compare(o1, o2);
+							if (compare != 0) {
+								return compare;
+							}
+						}
+						return 0;
+					});
+				}
+				
+				break;
+				
+			}catch( IllegalArgumentException e ){		
+			}
+		}
+	}
+	
 	// @see TableStructureModificationListener#cellInvalidate(TableColumnCore, java.lang.Object)
 	@Override
 	public void cellInvalidate(TableColumnCore tableColumn,
