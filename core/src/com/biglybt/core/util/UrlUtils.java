@@ -2563,6 +2563,22 @@ public class UrlUtils
 		throw( last_error );
 	}
 	
+	private static final int MAX_URL_ADDRESS_CACHE		= 512;
+	private static final int URL_ADDRESS_CACHE_TIMEOUT	= 2*60*1000;
+
+	private static Map<String,Object[]> url_address_cache =
+		new LinkedHashMap<String,Object[]>(MAX_URL_ADDRESS_CACHE,0.75f,true)
+		{
+			@Override
+			protected boolean
+			removeEldestEntry(
+		   		Map.Entry<String,Object[]> eldest)
+			{
+				return size() > MAX_URL_ADDRESS_CACHE;
+			}
+		};
+
+		
 	public static List<InetSocketAddress>
 	getURLAddresses(
 		URL		url )
@@ -2576,16 +2592,43 @@ public class UrlUtils
 		}
 		
 		List<InetAddress> addresses = null;
+		
+		long now = SystemTime.getMonotonousTime();
+		
+		synchronized( url_address_cache ){
 			
-		try{
-			addresses = DNSUtils.getSingleton().getAllByName( host );
+			Object[] entry = url_address_cache.get( host );
+			
+			if ( entry != null ){
 				
-		}catch( Throwable e ){
+				long time = (Long)entry[0];
 				
+				if ( now - time < URL_ADDRESS_CACHE_TIMEOUT ){
+										
+					addresses = (List<InetAddress>)entry[1];
+				}
+			}
+		}
+		
+		if ( addresses == null ){
+			
 			try{
-				addresses = Arrays.asList( InetAddress.getAllByName( host ));
+				addresses = DNSUtils.getSingleton().getAllByName( host );
 					
-			}catch( Throwable f ){
+			}catch( Throwable e ){
+					
+				try{
+					addresses = Arrays.asList( InetAddress.getAllByName( host ));
+						
+				}catch( Throwable f ){
+					
+					addresses = Collections.emptyList();
+				}
+			}
+			
+			synchronized( url_address_cache ){
+				
+				url_address_cache.put( host, new Object[]{ now + RandomUtils.nextInt( 20*1000 ), addresses });
 			}
 		}
 		
