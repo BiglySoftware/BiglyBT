@@ -8582,16 +8582,41 @@ public class OpenTorrentOptionsWindow
 			}
 
 			TorrentOpenFileOptions[] files = torrentOptions.getFiles();
+			
+				// try to minimise the File::exists calls as might be over a network
+			
+			Set<String> missing_parents = new HashSet<>();
+			Set<String> valid_parents 	= new HashSet<>();
+			
 			for (int j = 0; j < files.length; j++) {
 				TorrentOpenFileOptions fileInfo = files[j];
-				if (fileInfo.getDestFileFullName().exists()) {
-					sExistingFiles += fileInfo.getOriginalFullName() + " - "
-							+ torrentOptions.getTorrentName() + "\n";
-					iNumExistingFiles++;
-					if (iNumExistingFiles > 5) {
-						// this has the potential effect of adding 5 files from the first
-						// torrent and then 1 file from each of the remaining torrents
-						break;
+				File f = fileInfo.getDestFileFullName();
+				String parent = f.getParent();
+				if ( parent == null || !missing_parents.contains( parent )){
+					if (f.exists()){
+						sExistingFiles += fileInfo.getOriginalFullName() + " - "
+								+ torrentOptions.getTorrentName() + "\n";
+						iNumExistingFiles++;
+						if (iNumExistingFiles > 5) {
+							// this has the potential effect of adding 5 files from the first
+							// torrent and then 1 file from each of the remaining torrents
+							break;
+						}
+					}else{
+						File pf = f.getParentFile();
+						while( pf != null ){
+							String path = pf.getPath();
+							if ( valid_parents.contains( path )){
+								break;
+							}
+							if ( pf.exists()){
+								valid_parents.add( path );
+								break;
+							}else{
+								missing_parents.add( path );
+								pf = pf.getParentFile();
+							}
+						}
 					}
 				}
 			}
