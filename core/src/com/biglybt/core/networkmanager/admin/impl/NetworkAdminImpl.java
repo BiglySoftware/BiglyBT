@@ -1313,20 +1313,74 @@ addressLoop:
 			}
 			
 			Enumeration<InetAddress> interfaceAddresses = filter( netInterface.getInetAddresses());
-			if(ifaces.length != 2)
-				while(interfaceAddresses.hasMoreElements())
-					addrs.add(interfaceAddresses.nextElement());
-			else
-			{
-				int selectedAddress = 0;
-				try { selectedAddress = Integer.parseInt(ifaces[1]); }
-				catch (NumberFormatException e) {} // ignore, user could by typing atm
-				for(int j=0;interfaceAddresses.hasMoreElements();j++,interfaceAddresses.nextElement())
-					if(j==selectedAddress)
-					{
-						addrs.add((InetAddress)interfaceAddresses.nextElement());
-						continue addressLoop;
+			
+				// the order of addresses returned for an interfaces isn't deterministic...
+				// but the first address selected is significant as it is the "single homed bind address"
+			
+			if ( ifaces.length != 2 ){
+				List<InetAddress> l = new ArrayList<>();
+				while(interfaceAddresses.hasMoreElements()){
+					l.add(interfaceAddresses.nextElement());
+				}
+				l.sort((a1,a2)->{
+					boolean a1_4 = a1 instanceof Inet4Address;
+					boolean a2_4 = a2 instanceof Inet4Address;
+					if ( a1_4 && a2_4 ){
+						return(0);
+					}else if ( a1_4 || a2_4 ){
+						return( preferIPv6?1:-1);
+					}else{
+						return(0);
 					}
+				});
+				addrs.addAll( l );
+			}else{
+				int selectedAddress = 0;
+				
+				String indexStr = ifaces[1].toLowerCase( Locale.US );
+				
+					// as order is unstable and therefore indexing not great added (ip)v4/6 selectors
+				
+				Boolean proto_v4 = null;
+				
+				if ( indexStr.endsWith( "v4" )){
+					
+					proto_v4 = true;
+					
+				}else if ( indexStr.endsWith( "v6" )){
+					
+					proto_v4 = false;
+				}
+				
+				if ( proto_v4 != null ){
+					
+					while(interfaceAddresses.hasMoreElements()){
+						
+						InetAddress addr = interfaceAddresses.nextElement();
+						
+						if ( addr instanceof Inet4Address == proto_v4 ){
+
+							addrs.add(addr);
+						}
+					}
+				}else{
+					
+					try{
+						selectedAddress = Integer.parseInt( indexStr );
+						
+					}catch( NumberFormatException e ){
+						
+					
+						 // ignore, user could by typing atm
+					}
+					
+					for(int j=0;interfaceAddresses.hasMoreElements();j++,interfaceAddresses.nextElement()){
+						if(j==selectedAddress){
+							addrs.add((InetAddress)interfaceAddresses.nextElement());
+							continue addressLoop;
+						}
+					}
+				}
 			}
 		}
 
