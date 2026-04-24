@@ -1327,8 +1327,10 @@ addressLoop:
 					boolean a2_4 = a2 instanceof Inet4Address;
 					if ( a1_4 && a2_4 ){
 						return(0);
-					}else if ( a1_4 || a2_4 ){
+					}else if ( a1_4 ){
 						return( preferIPv6?1:-1);
+					}else if ( a2_4 ){
+						return( preferIPv6?-1:1);
 					}else{
 						return(0);
 					}
