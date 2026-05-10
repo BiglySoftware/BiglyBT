@@ -562,7 +562,7 @@ UPnPImpl
 				}
 			}catch( Throwable f ){
 
-				adapter.log(f);
+				// adapter.log(f);
 			}
 
 			if ( e instanceof SimpleXMLParserDocumentException ){
