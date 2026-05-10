@@ -835,84 +835,111 @@ UPnPImpl
 
 						HttpURLConnection	con1 = (HttpURLConnection)control.openConnection();
 
-						con1.setRequestProperty( "SOAPAction", "\""+ soap_action + "\"");
-
-						con1.setRequestProperty( "Content-Type", "text/xml; charset=\"utf-8\"" );
-
-						con1.setRequestProperty( "User-Agent", Constants.APP_NAME + " (UPnP/1.0)" );
-
-						con1.setRequestMethod( "POST" );
-
-						con1.setDoInput( true );
-						con1.setDoOutput( true );
-
-						OutputStream	os = con1.getOutputStream();
-
-						PrintWriter	pw = new PrintWriter( new OutputStreamWriter(os, "UTF-8" ));
-
-						pw.println( request );
-
-						pw.flush();
-
-						con1.connect();
-
-						if ( con1.getResponseCode() == 405 || con1.getResponseCode() == 500 ){
-
-								// gotta retry with M-POST method
-
-							try{
+						try{
+							con1.setRequestProperty( "SOAPAction", "\""+ soap_action + "\"");
+	
+							con1.setRequestProperty( "Content-Type", "text/xml; charset=\"utf-8\"" );
+	
+							con1.setRequestProperty( "User-Agent", Constants.APP_NAME + " (UPnP/1.0)" );
+	
+							con1.setRequestMethod( "POST" );
+	
+							con1.setDoInput( true );
+							con1.setDoOutput( true );
+	
+							OutputStream	os = con1.getOutputStream();
+	
+							PrintWriter	pw = new PrintWriter( new OutputStreamWriter(os, "UTF-8" ));
+	
+							pw.println( request );
+	
+							pw.flush();
+	
+							con1.connect();
+	
+							if ( con1.getResponseCode() == 405 || con1.getResponseCode() == 500 ){
+	
+									// gotta retry with M-POST method
+	
+								try{
+									
+									HttpURLConnection con2 = (HttpURLConnection)control.openConnection();
+	
+									try{
+										con2.setRequestProperty( "Content-Type", "text/xml; charset=\"utf-8\"" );
+		
+										con2.setRequestMethod( "M-POST" );
+		
+										con2.setRequestProperty( "MAN", "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=01" );
+		
+										con2.setRequestProperty( "01-SOAPACTION", "\""+ soap_action + "\"");
+		
+										con2.setDoInput( true );
+										con2.setDoOutput( true );
+		
+										os = con2.getOutputStream();
+		
+										pw = new PrintWriter( new OutputStreamWriter(os, "UTF-8" ));
+		
+										pw.println( request );
+		
+										pw.flush();
+		
+										con2.connect();
+		
+										InputStream is = con2.getInputStream();
+										
+										try{
+											return( parseXML( is ));
+											
+										}finally{
+											
+											is.close();
+										}
+										
+									}finally{
+										
+										con2.disconnect();
+									}
+								}catch( Throwable e ){
+	
+								}
+	
+								InputStream es = con1.getErrorStream();
+	
+								String	info = null;
+	
+								try{
+									info = FileUtil.readInputStreamAsString( es, 512 );
+	
+								}catch( Throwable e ){
+								}
+	
+								String error = "SOAP RPC failed: " + con1.getResponseCode() + " " + con1.getResponseMessage();
+	
+								if ( info != null ){
+	
+									error += " - " + info;
+								}
+	
+								throw( new IOException ( error ));
 								
-								HttpURLConnection con2 = (HttpURLConnection)control.openConnection();
+	
+							}else{
 
-								con2.setRequestProperty( "Content-Type", "text/xml; charset=\"utf-8\"" );
-
-								con2.setRequestMethod( "M-POST" );
-
-								con2.setRequestProperty( "MAN", "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=01" );
-
-								con2.setRequestProperty( "01-SOAPACTION", "\""+ soap_action + "\"");
-
-								con2.setDoInput( true );
-								con2.setDoOutput( true );
-
-								os = con2.getOutputStream();
-
-								pw = new PrintWriter( new OutputStreamWriter(os, "UTF-8" ));
-
-								pw.println( request );
-
-								pw.flush();
-
-								con2.connect();
-
-								return( parseXML(con2.getInputStream()));
-
-							}catch( Throwable e ){
-
+								InputStream is = con1.getInputStream();
+								
+								try{
+									return( parseXML( is ));
+									
+								}finally{
+									
+									is.close();
+								}
 							}
-
-							InputStream es = con1.getErrorStream();
-
-							String	info = null;
-
-							try{
-								info = FileUtil.readInputStreamAsString( es, 512 );
-
-							}catch( Throwable e ){
-							}
-
-							String error = "SOAP RPC failed: " + con1.getResponseCode() + " " + con1.getResponseMessage();
-
-							if ( info != null ){
-
-								error += " - " + info;
-							}
-
-							throw( new IOException ( error ));
-
-						}else{
-
-							return( parseXML(con1.getInputStream()));
+						}finally{
+							
+							con1.disconnect();
 						}
 					}finally{
 
@@ -920,30 +947,30 @@ UPnPImpl
 
 						AEProxySelectorFactory.getSelector().endNoProxy();
 					}
-				}	else{
+				}else{
 					final int CONNECT_TIMEOUT 	= 15*1000;
 					final int READ_TIMEOUT		= 30*1000;
 
 					Socket	socket = new Socket( Proxy.NO_PROXY );
 
-					InetSocketAddress target = new InetSocketAddress( control.getHost(), control.getPort());
-					
-					if ( do_bind ){
-						
-						try{
-							socket.bind( new InetSocketAddress( bind, 0 ));
-							
-						}catch( Throwable e ){
-								
-							Debug.out( e );
-						}
-					}
-					
-					socket.connect( target, CONNECT_TIMEOUT );
-
-					socket.setSoTimeout( READ_TIMEOUT );
-
 					try{
+						InetSocketAddress target = new InetSocketAddress( control.getHost(), control.getPort());
+						
+						if ( do_bind ){
+							
+							try{
+								socket.bind( new InetSocketAddress( bind, 0 ));
+								
+							}catch( Throwable e ){
+									
+								Debug.out( e );
+							}
+						}
+						
+						socket.connect( target, CONNECT_TIMEOUT );
+
+						socket.setSoTimeout( READ_TIMEOUT );
+						
 						PrintWriter	pw = new PrintWriter(new OutputStreamWriter( socket.getOutputStream(), "UTF8" ));
 
 						String	url_target = control.toString();
