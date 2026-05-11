@@ -339,7 +339,7 @@ SpeedLimitHandler
 						"Pausing all downloads due to pause_all rule" );
 			}
 
-			gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
+			gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads, GlobalManager.PS_SPEED_LIMIT_HANDLER ));
 
 			rule_pause_all_active = true;
 
@@ -356,7 +356,7 @@ SpeedLimitHandler
 								"Resuming all downloads as pause_all rule no longer applies" );
 					}
 
-					gm_dispatcher.dispatch(()->gm.resumeDownloads( true ));
+					gm_dispatcher.dispatch(()->gm.resumeDownloads( true, GlobalManager.PS_SPEED_LIMIT_HANDLER ));
 				}
 			}
 
@@ -381,7 +381,7 @@ SpeedLimitHandler
 					"Pausing all downloads as network limit exceeded" );
 			}
 
-			gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
+			gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads, GlobalManager.PS_SPEED_LIMIT_HANDLER ));
 
 			net_limit_pause_all_active = true;
 
@@ -398,7 +398,7 @@ SpeedLimitHandler
 							"Resuming all downloads as network limit no longer exceeded" );
 					}
 
-					gm.resumeDownloads( true );
+					gm.resumeDownloads( true, GlobalManager.PS_SPEED_LIMIT_HANDLER );
 				}
 			}
 
@@ -3755,7 +3755,7 @@ SpeedLimitHandler
 
 						if ( gm.canPauseDownloads( pause_forced_downloads )){
 
-							gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
+							gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads, GlobalManager.PS_SPEED_LIMIT_HANDLER ));
 						}
 					}
 				}
@@ -3801,7 +3801,7 @@ SpeedLimitHandler
 
 			if ( gm.canPauseDownloads( pause_forced_downloads )){
 
-				gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
+				gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads, GlobalManager.PS_SPEED_LIMIT_HANDLER ));
 			}
 		}
 	}
@@ -5913,6 +5913,8 @@ SpeedLimitHandler
 			getStats(
 				String		id )
 			{
+				TagFeatureRateLimit current_tag_rl = tag_rl;
+				
 				if ( tag_type == ip_set_tag_type ){
 
 						// need to re-resolve this
@@ -5921,28 +5923,30 @@ SpeedLimitHandler
 
 					if ( t != tag_rl ){
 
-						tag_rl = t;
+						current_tag_rl = tag_rl = t;
 					}
-
 				}
 					// currently protocol/data isn't separated so lump it all in as data
 
-				long[] up 	= tag_rl.getTagUploadTotal();
-				long[] down = tag_rl.getTagDownloadTotal();
-
 				long[] result = new long[4];
 
-				if ( up != null ){
-
-					result[LongTermStats.ST_DATA_UPLOAD] = up[0];
-
+				if ( current_tag_rl != null ){
+					
+					long[] up 	= current_tag_rl.getTagUploadTotal();
+					long[] down = current_tag_rl.getTagDownloadTotal();
+	
+					if ( up != null ){
+	
+						result[LongTermStats.ST_DATA_UPLOAD] = up[0];
+					}
+					
+					if ( down != null ){
+	
+						result[LongTermStats.ST_DATA_DOWNLOAD] = down[0];
+	
+					}
 				}
-				if ( down != null ){
-
-					result[LongTermStats.ST_DATA_DOWNLOAD] = down[0];
-
-				}
-
+				
 				return( result );
 			}
 		}

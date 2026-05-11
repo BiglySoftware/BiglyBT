@@ -38,6 +38,11 @@ import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
  * (DownloadManager objects) that the client controls.
  */
 public interface GlobalManager extends CoreComponent, TaggableResolver, DataSourceImporter {
+	
+	public static final int PS_ANY					= 0;
+	public static final int PS_GENERAL				= 1;
+	public static final int PS_SPEED_LIMIT_HANDLER	= 2;
+	
 	/**
 	 * Create and add a Download Manager to the global list
 	 *
@@ -195,9 +200,17 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 		pauseDownloads( true );
 	}
 	
+	public default void 
+	pauseDownloads(
+		boolean pause_force_start )
+	{
+		pauseDownloads( pause_force_start, PS_GENERAL );
+	}
+	
 	public void 
 	pauseDownloads(
-		boolean pause_force_start );
+		boolean pause_force_start,
+		int		owner );
 
 	/**
 	 * pause any non-paused downloads and auto-resume all downloads after n seconds
@@ -229,7 +242,11 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	/**
 	 * Resumes (starts) all downloads paused by the previous pauseDownloads call.
 	 */
-	public void resumeDownloads();
+	public default void 
+	resumeDownloads()
+	{
+		resumeDownloads( false );
+	}
 
 	/**
 	 * Attempt to automatically resume downloads - request may be denied if manual override in effect
@@ -237,7 +254,17 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * @return whether operation was accepted
 	 */
 
-	public boolean resumeDownloads( boolean is_auto_resume );
+	public default boolean 
+	resumeDownloads( 
+		boolean is_auto_resume )
+	{
+		return( resumeDownloads( is_auto_resume, PS_ANY ));
+	}
+
+	public boolean 
+	resumeDownloads( 
+		boolean		is_auto_resume,
+		int			owner );
 
 	/**
 	 * Indicates whether or not there are any paused downloads to resume.
