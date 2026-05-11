@@ -467,6 +467,13 @@ UPnPImpl
 			}
 		}finally{
 
+			try{
+				_is.close();
+				
+			}catch( Throwable e ){
+				
+			}
+			
 			baos.close();
 		}
 
@@ -1060,7 +1067,8 @@ UPnPImpl
 				trace_index = 1;
 			}
 
-			return( FileUtil.newFile( adapter.getTraceDir(), "upnp_trace" + trace_index + ".log" ));
+			return( FileUtil.newFile( FileUtil.getUserFile( "logs" ), "upnp_trace" + trace_index + ".log" ));
+			
 		}finally{
 
 			this_mon.exit();

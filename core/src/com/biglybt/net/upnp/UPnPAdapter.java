@@ -41,6 +41,10 @@ UPnPAdapter
 	public Comparator
 	getAlphanumericComparator();
 
+	/**
+	 * @deprecated - unused
+	 * @return
+	 */
 
 	public String
 	getTraceDir();
