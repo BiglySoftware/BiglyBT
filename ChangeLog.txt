@@ -48,6 +48,11 @@ CHANGE: UI     | Show the ignored IPv6 privacy addresses [Parg]
 CHANGE: UI     | Tidy up a few columns for metadata downloads [Parg]
 CHANGE: UI     | Show current bindings in config panel [Parg]
 CHANGE: UI     | Defer layout when building tag buttons for better performance [Parg]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | no_NO: Norwegian translation update [DandelionSprout]
+CHANGE: UI     | ru_RU: Russian translation update [adem4ik]
+CHANGE: UI     | zh_CN: Simplified Chinese translation update [l329978214]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
 
 BUGFIX: Plug   | Fix UPnP selected interfaces [Parg]
 BUGFIX: Plug   | Various UPnP IPv6 fixes [Parg]
@@ -90,7 +95,6 @@ BUGFIX: UI     | Fix de-selection of a row not affecting selected content [Parg]
 BUGFIX: UI     | Stop some potentially slow network admin ops from blocking the UI [Parg]
 BUGFIX: UI     | Ignore unstable sort errors in table columns [Parg]
 BUGFIX: UI     | Fix search filter bleed-through between Tags Overview and Torrent Details Files views [ThroneEmpire]
-
 
 2025.12.19 | BiglyBT 4.0.0.0
 
