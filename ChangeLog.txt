@@ -23,6 +23,7 @@ FEATURE: UI    | Added "show t e" to CLI to show error downloads [Parg]
 FEATURE: UI    | Added "apply tag sort" menu item to Tag context menu under Properties [Parg]
 
 CHANGE: Tag    | Ignore MOC "in def folder" constraint if Tag move + Tag init save loc [Parg]
+CHANGE: Tag    | Allow tag removal policy to apply to metadata downloads [Parg]
 CHANGE: Plug   | Added setSelection to TextViewerInfo for xcode plugin [Parg]
 CHANGE: Core   | Use original tracker URL in error message [Parg]
 CHANGE: Core   | Do connection performance tuning checks more frequently at start [Parg]
