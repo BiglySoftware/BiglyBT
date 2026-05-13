@@ -2190,6 +2190,11 @@ TRTrackerBTAnnouncerImpl
  			
  			List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
  			
+ 			if ( url_addresses.isEmpty()){
+ 				
+ 				throw( new Exception( "Host has no addresses" ));
+ 			}
+ 			
  			if ( url_addresses.size() > 1 ){
  				
  				Collections.shuffle(url_addresses);

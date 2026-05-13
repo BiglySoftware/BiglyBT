@@ -1641,6 +1641,11 @@ public class TrackerStatus {
 
 		List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
 
+		if ( url_addresses.isEmpty()){
+			
+			throw( new Exception( "Host has no addresses" ));
+		}
+		
 		Throwable last_error = null;
 
 		boolean ipv6_enabled =  NetworkAdmin.getSingleton().isIPV6Enabled();
