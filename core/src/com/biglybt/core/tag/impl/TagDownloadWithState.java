@@ -2910,7 +2910,7 @@ TagDownloadWithState
 
 				DownloadManager dm = it.next();
 
-				if ( dm.isPersistent()){
+				if ( dm.isPersistent() || ( dm.isMetadataDownload() && removal_strategy != RS_ARCHIVE )){
 
 					it.remove();
 
