@@ -33,6 +33,7 @@ CHANGE: Core   | Don't pre-allocate magnet download storage [Parg]
 CHANGE: Core   | Cache tracker address lookup results [Parg]
 CHANGE: Core   | Reduce calls to File::exists when accepting a torrent [Parg]
 CHANGE: Core   | Prevent the Speed Limit Handler from resuming downloads it didn't pause [Parg]
+CHANGE: Core   | Better error message when host has no addresses [Parg]
 CHANGE: UI     | Allow multi-file torrents with invalid save location to be added [Parg]
 CHANGE: UI     | Make tracker server ip address config field wider [Parg]
 CHANGE: UI     | Added an "allocate" group to Files config [Parg]
@@ -96,6 +97,7 @@ BUGFIX: UI     | Fix de-selection of a row not affecting selected content [Parg]
 BUGFIX: UI     | Stop some potentially slow network admin ops from blocking the UI [Parg]
 BUGFIX: UI     | Ignore unstable sort errors in table columns [Parg]
 BUGFIX: UI     | Fix search filter bleed-through between Tags Overview and Torrent Details Files views [ThroneEmpire]
+BUGFIX: UI     | Clear the FilesView filter correctly when changing download [Parg]
 
 2025.12.19 | BiglyBT 4.0.0.0
 
