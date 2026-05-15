@@ -576,11 +576,11 @@ public class FilesView
 				}
 			}
 			
-			if ( has_clash ){
+			if ( has_clash || overall_filter == null ){
 			
 				bubbleTextBox.setState( "", false );
 				
-			}else  if ( overall_filter != null ){
+			}else{
 				
 				bubbleTextBox.setState( overall_filter, overall_regex );
 				
