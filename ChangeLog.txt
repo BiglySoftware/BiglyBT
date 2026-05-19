@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2026.05.yy | BiglyBT 4.1.0.0
+2026.05.19 | BiglyBT 4.1.0.0
 
 FEATURE: Tag   | Allow complex argument to Tag constraint xToS functions [Parg]
 FEATURE: Plug  | Added "renameDownload" method to the simple-api plugin [Parg]
