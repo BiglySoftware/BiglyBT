@@ -1,6 +1,9 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2026.xx.yy | BiglyBT 4.1.0.1
+
+
 2026.05.19 | BiglyBT 4.1.0.0
 
 FEATURE: Tag   | Allow complex argument to Tag constraint xToS functions [Parg]
