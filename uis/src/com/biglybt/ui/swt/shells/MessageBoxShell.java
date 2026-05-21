@@ -47,7 +47,6 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter.URLInfo;
-import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
  * A messagebox that allows you config the button
@@ -65,6 +64,8 @@ public class MessageBoxShell
 	private final static int MIN_SIZE_Y_DEFAULT = 120;
 
 	private final static int MAX_SIZE_X_DEFAULT = 600;
+	
+	private final static int MAX_SIZE_Y_DEFAULT = -1;
 
 	private static final int MIN_BUTTON_SIZE = 70;
 
@@ -75,6 +76,7 @@ public class MessageBoxShell
 	private int min_size_x 	= MIN_SIZE_X_DEFAULT;
 	private int min_size_y 	= MIN_SIZE_Y_DEFAULT;
 	private int max_size_x	= MAX_SIZE_X_DEFAULT;
+	private int max_size_y	= MAX_SIZE_Y_DEFAULT;
 
 	private final String title;
 
@@ -830,16 +832,19 @@ public class MessageBoxShell
 
 		shell.pack();
 		Point size = shell.getSize();
-		if (size.x < min_size_x) {
+		if (min_size_x > 0 && size.x < min_size_x) {
 			size.x = min_size_x;
 			shell.setSize(size);
-		} else if (size.x > max_size_x) {
+		} else if (max_size_x > 0 && size.x > max_size_x) {
 			size = shell.computeSize(max_size_x, SWT.DEFAULT);
 			shell.setSize(size);
 		}
 
-		if (size.y < min_size_y) {
+		if (min_size_y > 0 && size.y < min_size_y) {
 			size.y = min_size_y;
+			shell.setSize(size);
+		}else if ( max_size_y > 0 && size.y > max_size_y) {
+			size.y = max_size_y;
 			shell.setSize(size);
 		}
 
@@ -991,6 +996,28 @@ public class MessageBoxShell
 		max_size_x	= width;
 		min_size_y	= height;
 	}
+	
+	public void
+	setSize(
+		int		min_width,
+		int		min_height,
+		int		max_width,
+		int		max_height )
+	{
+		if ( min_width > 0 ){
+			min_size_x	= min_width;
+		}
+		if ( min_height > 0 ){
+			min_size_y	= min_height;
+		}
+		if ( max_width > 0 ){
+			max_size_x	= max_width;
+		}
+		if ( max_height > 0 ){
+			max_size_y	= max_height;
+		}
+	}
+	
 	/**
 	 * @return the rememberID
 	 */

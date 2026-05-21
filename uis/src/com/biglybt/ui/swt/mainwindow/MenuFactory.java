@@ -2547,12 +2547,16 @@ public class MenuFactory
 													for ( String e: errors ){
 														
 														str += (str.isEmpty()?"":"\n\n") + e;
-													}
-														
+													}								
+
 													MessageBoxShell mb = new MessageBoxShell(
 															SWT.ICON_ERROR | SWT.OK,
 															"window.update.failed", new String[]{ str });
 
+													mb.setUseTextBox( true );
+													
+													mb.setSize( 400,  -1, -1, 600 );
+													
 													mb.open(null);												
 												}
 											}
