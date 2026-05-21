@@ -72,8 +72,19 @@ public class BDecoder
 
 	private MapDecodeListener mapDecodeListener;
 
-	private boolean force_utf8_keys;
+	public boolean force_utf8_keys;
 	
+	public void
+	setForceUTF8Keys(
+		boolean 	b )
+	{
+		force_utf8_keys = b;
+		
+		if ( b ){
+			
+			keyDecoderUTF8 = Constants.DEFAULT_ENCODING_CHARSET.newDecoder();
+		}
+	}
 	static{
 		byte[]	portable = null;
 

@@ -81,6 +81,26 @@ BEncoder
 
     private final byte[]		int_buffer			= new byte[12];
     
+    private boolean force_utf8_keys = false;
+    
+	public void
+	setForceUTF8Keys(
+		boolean 	b )
+	{
+		force_utf8_keys = b;
+	}
+	
+	public byte[]
+	encodeMap(
+		Map	map )
+	
+		throws IOException
+	{
+		encodeObject( map, false );
+
+    	return( toByteArray());
+	}
+	
     private void
    	encodeObject(
    		Object 					object,
@@ -102,10 +122,12 @@ BEncoder
     private boolean
    	encodeObject(
    		Object 					object,
-   		boolean					utf_key_expected )
+   		boolean					_utf_key_expected )
 
        	throws IOException
    	{
+    	boolean utf_key_expected = _utf_key_expected || force_utf8_keys;
+    	
         if (object instanceof BEncodableObject) {
             object = ((BEncodableObject)object).toBencodeObject();
         }

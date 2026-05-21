@@ -1396,7 +1396,11 @@ public class MenuFactory
 				BufferedInputStream bis = new BufferedInputStream( new FileInputStream( str ));
 
 				try{
-					Map map = BDecoder.decode( bis );
+					BDecoder decoder = new BDecoder();
+					
+			    	decoder.setForceUTF8Keys( true );
+			    	
+					Map map = decoder.decodeStream( bis );
 
 					if ( map == null ){
 
@@ -1512,7 +1516,11 @@ public class MenuFactory
 								}
 
 								try{
-									byte[] bytes = BEncoder.encode( map );
+									BEncoder encoder = new BEncoder();
+									
+									encoder.setForceUTF8Keys( true );
+									
+									byte[] bytes = encoder.encodeMap( map );
 
 									FileUtil.writeBytesAsFile( str2, bytes );
 
