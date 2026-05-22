@@ -6076,128 +6076,153 @@ DownloadManagerImpl
   }
 
   @Override
-	public void
-	copyDataFiles(
-		File									dest_parent_dir,
-		CoreOperationTask.ProgressCallback		cb )
+  public void
+  copyDataFiles(
+		  File									dest_parent_dir,
+		  List<DiskManagerFileInfo>				_selected_files,
+		  CoreOperationTask.ProgressCallback	cb )
 
-		throws DownloadManagerException
-	{
-		if ( FileUtil.exists( dest_parent_dir )){
+				  throws DownloadManagerException
+  {
+	  if ( FileUtil.exists( dest_parent_dir )){
 
-			if ( !dest_parent_dir.isDirectory()){
+		  if ( !dest_parent_dir.isDirectory()){
 
-				throw( new DownloadManagerException( "'" + dest_parent_dir + "' is not a directory" ));
-			}
-		}else{
+			  throw( new DownloadManagerException( "'" + dest_parent_dir + "' is not a directory" ));
+		  }
+	  }else{
 
-			if ( !dest_parent_dir.mkdirs()){
+		  if ( !dest_parent_dir.mkdirs()){
 
-				throw( new DownloadManagerException( "failed to create '" + dest_parent_dir + "'" ));
-			}
-		}
+			  throw( new DownloadManagerException( "failed to create '" + dest_parent_dir + "'" ));
+		  }
+	  }
 
-	  DiskManagerFileInfo[] files = controller.getDiskManagerFileInfoSet().getFiles();
+	  DiskManagerFileInfo[] all_files = controller.getDiskManagerFileInfoSet().getFiles();
+
+	  Set<DiskManagerFileInfo>	selected_files = new IdentityHashSet<>();
+
+	  if ( _selected_files == null ){
+		  
+		  _selected_files = Arrays.asList( all_files );
+	  }
+
+	  for ( DiskManagerFileInfo file: _selected_files ){
+		  
+		  if ( !file.isSkipped() && file.getDownloaded() == file.getLength()){
+			  
+			  if ( file.getDownloadManager() == this ){
+			  
+				  	// have to resolve the file as the one passed in could be a delegate and if it is
+				  	// the contains test will fail...
+				  
+				  selected_files.add( all_files[ file.getIndex()] );
+			  }
+		  }
+	  }
 
 	  FileUtil.ProgressListener pl = null;
-			  
-	  if ( cb != null ){
-		  
-		  long	_total_size = 0;
-		  
-		  for ( DiskManagerFileInfo file: files ){
 
-			  if ( !file.isSkipped() && file.getDownloaded() == file.getLength()){
+	  if ( cb != null ){
+
+		  long	_total_size = 0;
+
+		  for ( DiskManagerFileInfo file: all_files ){
+
+			  if ( selected_files.contains( file )){
 				  
 				  _total_size += file.getLength();
 			  }
 		  }
-		  
+
 		  long total_size = _total_size;
-		  
+
 		  cb.setSize( total_size );
-		  
+
 		  pl = 
-			new FileUtil.ProgressListener()
-		  	{
-			  	long	total_done 	= 0;
-			  	
-				public void
-				setTotalSize(
-					long	size )
-				{
-					// not used
-				}
-				
-				@Override
-				public void 
-				setCurrentFile(
-					File file )
-				{
-					cb.setSubTaskName( file.getName());
-				}
-				
-				public void
-				bytesDone(
-					long	num )
-				{
-					if ( total_size > 0 ){
-						
-						total_done += num;
-						
-						long prog = (total_done*1000)/total_size;
-						
-						cb.setProgress((int)prog);
-					}
-				}
-				
-				@Override
-				public int 
-				getState()
-				{
-					switch( cb.getTaskState()){
-					
-						case ProgressCallback.ST_PAUSE:{
-							return( ProgressListener.ST_PAUSED );
-						}
-						case ProgressCallback.ST_CANCEL:{
-							return( ProgressListener.ST_CANCELLED );
-						}
-						default:{
-							return( ProgressListener.ST_NORMAL );
-						}
-					}
-				}
-				
-				public void
-				complete()
-				{
-					cb.setProgress( 1000 );
-				}
-		  	};
+				  new FileUtil.ProgressListener()
+		  {
+			  long	total_done 	= 0;
+
+			  public void
+			  setTotalSize(
+					  long	size )
+			  {
+				  // not used
+			  }
+
+			  @Override
+			  public void 
+			  setCurrentFile(
+					  File file )
+			  {
+				  cb.setSubTaskName( file.getName());
+			  }
+
+			  public void
+			  bytesDone(
+					  long	num )
+			  {
+				  if ( total_size > 0 ){
+
+					  total_done += num;
+
+					  long prog = (total_done*1000)/total_size;
+
+					  cb.setProgress((int)prog);
+				  }
+			  }
+
+			  @Override
+			  public int 
+			  getState()
+			  {
+				  switch( cb.getTaskState()){
+
+				  case ProgressCallback.ST_PAUSE:{
+					  return( ProgressListener.ST_PAUSED );
+				  }
+				  case ProgressCallback.ST_CANCEL:{
+					  return( ProgressListener.ST_CANCELLED );
+				  }
+				  default:{
+					  return( ProgressListener.ST_NORMAL );
+				  }
+				  }
+			  }
+
+			  public void
+			  complete()
+			  {
+				  cb.setProgress( 1000 );
+			  }
+		  };
 	  }
-	  
-	  
+
+
 	  if ( torrent.isSimpleTorrent()){
 
-		  File file_from = files[0].getFile( true );
-
-		  try{
-			  File file_to = FileUtil.newFile( dest_parent_dir, file_from.getName());
-
-			  if ( FileUtil.exists( file_to )){
-
-				  if ( file_to.length() != file_from.length()){
-
-					  throw( new Exception( "target file '" + file_to + " already exists" ));
+		  if ( !selected_files.isEmpty()){
+			  
+			  File file_from = all_files[0].getFile( true );
+	
+			  try{
+				  File file_to = FileUtil.newFile( dest_parent_dir, file_from.getName());
+	
+				  if ( FileUtil.exists( file_to )){
+	
+					  if ( file_to.length() != file_from.length()){
+	
+						  throw( new Exception( "target file '" + file_to + " already exists" ));
+					  }
+				  }else{
+	
+					  FileUtil.copyFileWithException( file_from, file_to, pl );
 				  }
-			  }else{
-
-				  FileUtil.copyFileWithException( file_from, file_to, pl );
+			  }catch( Throwable e ){
+	
+				  throw( new DownloadManagerException( "copy of '" + file_from + "' failed", e ));
 			  }
-		  }catch( Throwable e ){
-
-			  throw( new DownloadManagerException( "copy of '" + file_from + "' failed", e ));
 		  }
 	  }else{
 
@@ -6211,17 +6236,17 @@ DownloadManagerImpl
 				  dest_parent_dir.mkdirs();
 			  }
 
-			  for ( DiskManagerFileInfo file: files ){
+			  for ( DiskManagerFileInfo file: all_files ){
 
-				  if ( !file.isSkipped() && file.getDownloaded() == file.getLength()){
+				  if ( selected_files.contains( file )){
 
 					  File file_from = file.getFile( true );
 
 					  if ( !FileUtil.exists( file_from ) && file.getTorrentFile().isPadFile()){
-						  
+
 						  continue;
 					  }
-					  
+
 					  try{
 						  String relativePath = FileUtil.getRelativePath(sl_file, file_from);
 
@@ -6310,7 +6335,10 @@ DownloadManagerImpl
   }
   
   public void
-  exportDownload( File parent_dir ) throws DownloadManagerException
+  exportDownload(
+	File parent_dir )
+  
+	throws DownloadManagerException
   {
 	  if ( !canExportDownload()){
 		  
@@ -6362,9 +6390,93 @@ DownloadManagerImpl
 						  CoreOperation operation)
 					  {
 						  try{
-							  copyDataFiles( parent_dir, cb );
+							  copyDataFiles( parent_dir, null, cb );
 
 							  copyTorrentFile( parent_dir );
+
+						  }catch( Throwable e ){
+
+							  throw( new RuntimeException( e ));
+						  }
+						  
+						  return( true );
+					  }
+
+					  @Override
+					  public ProgressCallback 
+					  getProgressCallback()
+					  {
+						  return( cb );
+					  }
+				  });
+		  
+	  }catch( Throwable e ){
+		  
+		  Throwable f = e.getCause();
+		  
+		  if ( f instanceof DownloadManagerException ){
+			  
+			  throw((DownloadManagerException)f);
+		  }
+		  
+		  throw( new DownloadManagerException( "Export failed", e ));
+	  }
+  }
+  
+  @Override
+  public void
+  exportFiles(
+	File						parent_dir,
+	List<DiskManagerFileInfo>	files )
+  
+	throws DownloadManagerException
+  {
+	  try{
+		  FileUtil.runAsTask(
+				  CoreOperation.OP_DOWNLOAD_EXPORT,
+				  new CoreOperationTask()
+				  {
+					  private ProgressCallback cb =
+						  new CoreOperationTask.ProgressCallbackAdapter()
+						  {
+						  	  private int state = ST_NONE;
+						  	
+							  @Override
+							  public int 
+							  getSupportedTaskStates()
+							  {
+								  return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
+							  }
+						  };
+
+					  @Override
+					  public String 
+					  getName()
+					  {
+						  return( getDisplayName());
+					  }
+
+					  @Override
+					  public DownloadManager 
+					  getDownload()
+					  {
+						  return( DownloadManagerImpl.this );
+					  }
+
+					  @Override
+					  public String[] 
+					  getAffectedFileSystems()
+					  {
+						  return( FileUtil.getFileStoreNames( getAbsoluteSaveLocation(), parent_dir ));
+					  }
+
+					  @Override
+					  public boolean
+					  runOperation(
+						  CoreOperation operation)
+					  {
+						  try{
+							  copyDataFiles( parent_dir, files, cb );
 
 						  }catch( Throwable e ){
 

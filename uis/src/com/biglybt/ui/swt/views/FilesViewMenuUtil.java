@@ -61,6 +61,7 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TextViewerWindow;
+import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.torrent.ColumnUnopened;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -260,6 +261,11 @@ public class FilesViewMenuUtil
 		itemRetarget.setData("retarget", Boolean.valueOf(true));
 		itemRetarget.setData("batch", Boolean.valueOf(false));
 
+		// export files
+		
+		final MenuItem itemExportFiles = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemExportFiles, "FilesView.menu.exportfiles");
+
 		// recheck
 
 		final MenuItem itemRecheckFiles = new MenuItem(menu, SWT.PUSH);
@@ -456,6 +462,7 @@ public class FilesViewMenuUtil
 			itemRetarget.setEnabled(false);
 			itemRevertFiles.setEnabled(false);
 			itemRecheckFiles.setEnabled(false);
+			itemExportFiles.setEnabled(false);
 			itemLocateFiles.setEnabled(false);
 			itemfindMore.setEnabled(false);
 			if ( itemClearLinks != null ){
@@ -676,6 +683,14 @@ public class FilesViewMenuUtil
 			itemfindMore.setEnabled( all_files.size() == 1 );
 		}
 
+		itemExportFiles.setEnabled( hasSelection );
+		itemExportFiles.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+
+				exportFiles( all_files );
+			}
+		});
 		
 		itemRecheckFiles.setEnabled( true );
 		itemRecheckFiles.addListener(SWT.Selection, new Listener() {
@@ -1496,6 +1511,31 @@ public class FilesViewMenuUtil
 		}
 	}
 
+	public static void
+	exportFiles(
+		List<DiskManagerFileInfo> file_list ) 
+	{
+
+		if (file_list == null || file_list.size() == 0) {
+			return;
+		}
+
+		Map<DownloadManager, List<DiskManagerFileInfo>> mapDMtoDMFI = new IdentityHashMap<>();
+
+		for ( DiskManagerFileInfo file: file_list ){
+
+			DownloadManager dm = file.getDownloadManager();
+			List<DiskManagerFileInfo> listFileInfos = mapDMtoDMFI.get(dm);
+			if (listFileInfos == null) {
+				listFileInfos = new ArrayList<>(1);
+				mapDMtoDMFI.put(dm, listFileInfos);
+			}
+			listFileInfos.add(file);
+		}
+
+		TorrentUtil.exportFiles(Utils.findAnyShell(), mapDMtoDMFI);
+	}
+	
 	public static void recheckFiles(List<DiskManagerFileInfo> file_list ) {
 
 		if (file_list == null || file_list.size() == 0) {

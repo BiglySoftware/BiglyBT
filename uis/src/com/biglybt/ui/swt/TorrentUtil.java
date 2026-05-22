@@ -3995,6 +3995,53 @@ public class TorrentUtil
 		}
 	}
 	
+	public static void 
+	exportFiles(
+		Shell 											shell, 
+		Map<DownloadManager,List<DiskManagerFileInfo>>	map )
+	{
+		if ( map != null && !map.isEmpty()) {
+
+			DirectoryDialog dd = new DirectoryDialog(shell);
+
+			String filter_path = TorrentOpener.getFilterPathExport();
+
+			// If we don't have a decent path, default to the path of the first
+			// torrent.
+			if (filter_path == null || filter_path.trim().length() == 0) {
+				filter_path = new File(map.keySet().iterator().next().getTorrentFileName()).getParent();
+			}
+
+			dd.setFilterPath(filter_path);
+
+			dd.setText(MessageText.getString("MyTorrentsView.menu.exportdownload.dialog"));
+
+			String path = dd.open();
+
+			if (path != null) {
+
+				TorrentOpener.setFilterPathExport(path);
+
+				File target = new File(path);
+
+				for ( Map.Entry<DownloadManager,List<DiskManagerFileInfo>> entry: map.entrySet()){
+					
+					AEThread2.createAndStartDaemon(
+						"Exporter",
+						()->{
+							try{
+								entry.getKey().exportFiles(target, entry.getValue());
+							} catch (Throwable e) {
+
+								Logger.log(new LogAlert(entry.getKey(), LogAlert.REPEATABLE,
+										"Download export operation failed", e));
+							}
+						});
+				}
+			}
+		}
+	}
+	
 	public static void repositionManual(final TableView<DownloadManager> tv,
 			final DownloadManager[] dms, final Shell shell,
 			final boolean isSeedingView) {

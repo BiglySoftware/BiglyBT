@@ -1299,7 +1299,7 @@ TagManagerImpl
 														CoreOperation operation)
 													{
 														try{
-															manager.copyDataFiles( new_loc, cb );
+															manager.copyDataFiles( new_loc, null, cb );
 
 														}catch( Throwable e ){
 
@@ -1327,23 +1327,7 @@ TagManagerImpl
 										}
 
 										throw( new DownloadManagerException( "Copy failed", e ));
-									}
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
+									}									
 									
 									Logger.logTextResource(
 										new LogAlert(

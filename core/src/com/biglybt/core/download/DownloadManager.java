@@ -653,10 +653,19 @@ DownloadManager
 
         throws DownloadManagerException;
 
+    /**
+     * 
+     * @param parent_dir
+     * @param selected_files	files to copy, null->all
+     * @param progress
+     * @throws DownloadManagerException
+     */
+    
     public void
     copyDataFiles(
-    	File				parent_dir,
-    	ProgressCallback	progress )
+    	File						parent_dir,
+    	List<DiskManagerFileInfo>	selected_files,
+    	ProgressCallback			progress )
 
     	throws DownloadManagerException;
 
@@ -930,7 +939,24 @@ DownloadManager
     canExportDownload();
     
     public void
-    exportDownload( File parent_dir ) throws DownloadManagerException;
+    exportDownload( 
+    	File parent_dir ) 
+    		
+    	throws DownloadManagerException;
+    
+    /**
+     * Copys the complete files, ignores incomplete files
+     * @param parent_dir
+     * @param files
+     * @throws DownloadManagerException
+     */
+    
+    public void
+    exportFiles( 
+    	File						parent_dir,
+    	List<DiskManagerFileInfo>	files )
+    			
+    	throws DownloadManagerException;
     
     public default void
     fireGlobalManagerEvent(
