@@ -799,6 +799,7 @@ public class ConfigurationDefaults {
     def.put( "br.backup.auto.everydays", ONE );
     def.put( "br.backup.auto.everyhours", ZERO );
     def.put( "br.backup.auto.retain", 5L );
+    def.put( ConfigKeys.BackupRestore.ICFG_BACKUP_AUTO_INIT_DELAY_MINS, 5 );
     def.put( ConfigKeys.BackupRestore.BCFG_BACKUP_PLUGINS, TRUE );
     def.put( ConfigKeys.BackupRestore.BCFG_BACKUP_PAUSE_DOWNLOADS, FALSE );
     

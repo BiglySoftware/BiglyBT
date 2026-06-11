@@ -36,6 +36,7 @@ public final class ConfigKeys {
 		public static final String ICFG_BACKUP_AUTO_EVERYDAYS = "br.backup.auto.everydays";
 		public static final String ICFG_BACKUP_AUTO_EVERYHOURS = "br.backup.auto.everyhours";
 		public static final String ICFG_BACKUP_AUTO_RETAIN = "br.backup.auto.retain";
+		public static final String ICFG_BACKUP_AUTO_INIT_DELAY_MINS = "br.backup.auto.init.delay.mins";
 		public static final String BCFG_BACKUP_NOTIFY = "br.backup.notify";
 		public static final String BCFG_RESTORE_AUTOPAUSE = "br.restore.autopause";
 		public static final String BCFG_BACKUP_PLUGINS = "br.restore.doplugins";

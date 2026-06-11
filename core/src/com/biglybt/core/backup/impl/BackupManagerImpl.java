@@ -265,10 +265,14 @@ BackupManagerImpl
 
 					if ( enabled ){
 
+						int	delay_mins = COConfigurationManager.getIntParameter( ConfigKeys.BackupRestore.ICFG_BACKUP_AUTO_INIT_DELAY_MINS );
+
+						delay_mins = Math.max( 1, delay_mins );
+						
 						backup_event =
 							SimpleTimer.addEvent(
 								"BM:startup",
-								SystemTime.getCurrentTime() + 5*60*1000,
+								SystemTime.getCurrentTime() + delay_mins*60*1000,
 								new TimerEventPerformer()
 								{
 									@Override

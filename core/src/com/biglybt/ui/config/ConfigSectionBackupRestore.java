@@ -141,6 +141,11 @@ public class ConfigSectionBackupRestore
 				Integer.MAX_VALUE);
 		add(paramAutoRetain, listBackupParams);
 
+		IntParameterImpl paramInitDelay = new IntParameterImpl(
+				ICFG_BACKUP_AUTO_INIT_DELAY_MINS, ICFG_BACKUP_AUTO_INIT_DELAY_MINS, 1,
+				Integer.MAX_VALUE);
+		add(paramInitDelay, listBackupParams);
+
 		BooleanParameterImpl paramNotify = new BooleanParameterImpl(
 				BCFG_BACKUP_NOTIFY, "br.backup.notify");
 		paramNotify.setAllowedUiTypes(UIInstance.UIT_SWT);
