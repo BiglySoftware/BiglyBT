@@ -795,48 +795,70 @@ BackupManagerImpl
 			}
 		}else{
 
-			if ( !FileUtil.copyFileWithDates( from_file, to_file )){
+			boolean copied = false;
+			
+			if ( FileUtil.copyFileWithDates( from_file, to_file )){
 
+				copied = true;
+				
+			}else{
+				
+					// retry
+				
 				try{
 					Thread.sleep( 5000 );
 
 				}catch( Throwable e ){
 				}
 
-				if ( !FileUtil.copyFileWithDates( from_file, to_file )){
-
-						// a few exceptions here (e.g. dasu plugin has a 'lock' file that breaks things)
-
-					String name = from_file.getName().toLowerCase( Locale.US );
-
-					String full_path = from_file.getAbsolutePath().toLowerCase( Locale.US );
+				if ( FileUtil.copyFileWithDates( from_file, to_file )){
 					
-					if ( 	name.startsWith( ".lock" ) 		||
-							name.startsWith( ".azlock" ) 	|| 	// i2phelper
-							name.startsWith( "lock" ) 		|| 	// dasu
-							name.equals( "stats.lck" ) 		||	// advanced stats plugin
-							name.endsWith( ".saving" )		||	// intermediate file
-							name.endsWith( ".gz" )			||	// most likely not interesting
-							name.endsWith( ".jar" )			||	// easy to recover later
-							name.endsWith( ".zip" )			||	// most likely not interesting
-							name.endsWith( ".dll" )			||	// might be in use, no big deal
-							name.endsWith( ".so" )			||	// might be in use, no big deal
-							FileUtil.containsPathSegment(from_file, "cache", false) || // caches can be in use, no big deal
-							FileUtil.containsPathSegment(from_file, "azneti2phelper" + File.separator + "netdb", false ) ||	// troublesome i2p files
-							FileUtil.containsPathSegment(from_file, "azneti2phelper" + File.separator + "peerprofiles", false )	|| // troublesome i2p files
-							full_path.endsWith( "aznettor" + File.separator + "data" + File.separator + "lock" )	// troublesome tor files
-							){
+					copied = true;
+					
+				}else{
 
-						return( new long[]{ total_files, total_copied });
+						// possible that from_file has been deleted in the meantime (e.g. some config files are removed when empty
+
+					if ( from_file.exists()){
+						
+							// a few exceptions here (e.g. dasu plugin has a 'lock' file that breaks things)
+	
+						String name = from_file.getName().toLowerCase( Locale.US );
+	
+						String full_path = from_file.getAbsolutePath().toLowerCase( Locale.US );
+						
+						if ( 	name.startsWith( ".lock" ) 		||
+								name.startsWith( ".azlock" ) 	|| 	// i2phelper
+								name.startsWith( "lock" ) 		|| 	// dasu
+								name.equals( "stats.lck" ) 		||	// advanced stats plugin
+								name.endsWith( ".saving" )		||	// intermediate file
+								name.endsWith( ".gz" )			||	// most likely not interesting
+								name.endsWith( ".jar" )			||	// easy to recover later
+								name.endsWith( ".zip" )			||	// most likely not interesting
+								name.endsWith( ".dll" )			||	// might be in use, no big deal
+								name.endsWith( ".so" )			||	// might be in use, no big deal
+								FileUtil.containsPathSegment(from_file, "cache", false) || // caches can be in use, no big deal
+								FileUtil.containsPathSegment(from_file, "azneti2phelper" + File.separator + "netdb", false ) ||	// troublesome i2p files
+								FileUtil.containsPathSegment(from_file, "azneti2phelper" + File.separator + "peerprofiles", false )	|| // troublesome i2p files
+								full_path.endsWith( "aznettor" + File.separator + "data" + File.separator + "lock" )	// troublesome tor files
+								){
+	
+								// ignore the failure
+							
+						}else{
+	
+							throw( new Exception( "Failed to copy file '" + from_file + "'" ));
+						}
 					}
-
-					throw( new Exception( "Failed to copy file '" + from_file + "'" ));
 				}
 			}
 
-			total_files++;
-
-			total_copied = from_file.length();
+			if ( copied ){
+				
+				total_files++;
+	
+				total_copied = to_file.length();
+			}
 		}
 
 		return( new long[]{ total_files, total_copied });
