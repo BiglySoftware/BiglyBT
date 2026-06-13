@@ -31,7 +31,7 @@ import java.util.Vector;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.lang.Entities;
+import org.apache.commons.text.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.*;
@@ -748,11 +748,11 @@ SimpleXMLParserDocumentImpl
 
 		     				}else{
 
-			     				int num = Entities.HTML40.entityValue( ref );
+			     				String decoded = StringEscapeUtils.unescapeHtml4("&" + ref + ";");
 
-		     					if ( num != -1 ){
+		     					if ( decoded != null && !decoded.equals("&" + ref + ";") ){
 
-		     						replacement = "&#" + num + ";";
+		     						replacement = decoded;
 
 		     					}else{
 
