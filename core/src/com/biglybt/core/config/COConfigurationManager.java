@@ -52,7 +52,7 @@ COConfigurationManager
 	    CONFIG_CACHE_SIZE_MAX_MB = size;
 	}
 
-	public static final boolean	ENABLE_MULTIPLE_UDP_PORTS	= false;
+	public static final boolean	ENABLE_MULTIPLE_UDP_PORTS	= true;
 
 	public static final int	MAX_DATA_SOCKS_PROXIES = 3;
 	
