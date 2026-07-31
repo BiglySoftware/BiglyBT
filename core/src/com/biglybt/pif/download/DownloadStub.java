@@ -22,6 +22,7 @@ package com.biglybt.pif.download;
 
 import java.io.File;
 
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 
@@ -39,6 +40,33 @@ DownloadStub
 	public String
 	getName();
 
+	/** 
+	 * @param original whether to return the original torrent name or any potential renames
+	 * @return
+	 */
+	
+	public default String
+	getName(
+		boolean		original )
+	{
+		if ( original ){
+			
+			try{
+				Torrent torrent = getTorrent();
+				
+				if (torrent != null ){
+					
+					return( torrent.getName());
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+			
+		return( getName());
+	}
+	
 	public byte[]
 	getTorrentHash();
 

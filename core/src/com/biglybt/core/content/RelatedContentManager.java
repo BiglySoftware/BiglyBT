@@ -125,7 +125,8 @@ RelatedContentManager
 	private static final String	CONFIG_FILE 				= "rcm.config";
 	private static final String	PERSIST_DEL_FILE 			= "rcmx.config";
 
-	private static final String	CONFIG_TOTAL_UNREAD	= "rcm.numunread.cache";
+	private static final String	CONFIG_TOTAL_UNREAD			= "rcm.numunread.cache";
+	private static final String	CONFIG_USE_TORRENT_NAMES	= "rcm.use.torrent.names";
 
 	private static RelatedContentManager	singleton;
 	private static Core core;
@@ -218,7 +219,8 @@ RelatedContentManager
 	
 	private int		max_search_level;
 	private int		max_results;
-
+	private boolean	use_torrent_names;
+	
 	private boolean		global_filter_active_only;
 	
 	private AtomicInteger	temporary_space = new AtomicInteger();
@@ -303,6 +305,7 @@ RelatedContentManager
 					"rcm.max_results",
 					"rcm.global.filter.active_only",
 					"rcm.use.bigly.dht",
+					CONFIG_USE_TORRENT_NAMES,
 				},
 				new ParameterListener()
 				{
@@ -317,6 +320,9 @@ RelatedContentManager
 						max_results		 	= COConfigurationManager.getIntParameter( "rcm.max_results", 500 );
 						
 						global_filter_active_only	= COConfigurationManager.getBooleanParameter( "rcm.global.filter.active_only", false );
+						
+						use_torrent_names = COConfigurationManager.getBooleanParameter( CONFIG_USE_TORRENT_NAMES, false );
+
 					}
 				});
 
@@ -680,8 +686,19 @@ RelatedContentManager
 		COConfigurationManager.setParameter( "rcm.global.filter.active_only", b );
 	}
 		
+	public void
+	setUseTorrentNames(
+		boolean	b )
+	{
+		COConfigurationManager.setParameter( CONFIG_USE_TORRENT_NAMES, b );
+	}
 
-
+	public boolean
+	getUseTorrentNames()
+	{
+		return( use_torrent_names );
+	}
+	
 	private DHTPluginBasicInterface
 	selectDHT(
 		byte		networks,
@@ -851,7 +868,7 @@ RelatedContentManager
 								version,
 								hash,
 								hash,
-								download.getName(),
+								download.getName( use_torrent_names ),
 								(int)rand,
 								torrent.isPrivate()?StringInterner.intern(torrent.getAnnounceURL().getHost()):null,
 								keys[0],
