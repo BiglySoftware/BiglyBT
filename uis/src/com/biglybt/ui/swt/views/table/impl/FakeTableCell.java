@@ -851,7 +851,7 @@ public class FakeTableCell
 			return false;
 		}
 		if (red < 0 || green < 0 || blue < 0) {
-			composite.setForeground(null);
+			Utils.setSkinnedForeground( composite, null );
 		} else {
 			composite.setForeground(ColorCache.getColor(composite.getDisplay(), red,
 					green, blue));
