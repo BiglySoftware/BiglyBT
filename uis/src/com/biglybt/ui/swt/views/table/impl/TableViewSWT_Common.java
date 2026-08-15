@@ -33,6 +33,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
@@ -62,8 +63,16 @@ public abstract class TableViewSWT_Common
 	private long lCancelSelectionTriggeredOn = -1;
 	private long lastSelectionTriggeredOn = -1;
 
-	private static final int ASYOUTYPE_UPDATEDELAY = 300;
+	private static int ASYOUTYPE_UPDATEDELAY = 300;
 
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+				"Filter Debounce ms",
+				(n)->{
+					ASYOUTYPE_UPDATEDELAY = COConfigurationManager.getIntParameter(n);
+				});
+	}
+	
 	private List<TableViewSWTMenuFillListener> listenersMenuFill = new ArrayList<>(
 			1);
 

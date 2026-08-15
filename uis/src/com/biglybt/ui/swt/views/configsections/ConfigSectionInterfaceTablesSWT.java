@@ -356,6 +356,11 @@ public class ConfigSectionInterfaceTablesSWT
 				"ConfigView.label.dm.enteraction", enterValues, enterLabels),
 				listLibrary);
 
+		add(new IntParameterImpl("Filter Debounce ms",
+				"ConfigView.section.style.filterDebounce"), Parameter.MODE_INTERMEDIATE,
+				listLibrary);
+
+		
 		// Library: Launch helpers
 		////////////////
 
