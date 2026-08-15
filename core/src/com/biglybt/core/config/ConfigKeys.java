@@ -129,6 +129,7 @@ public final class ConfigKeys {
 		public static final String BCFG_ALWAYS_CREATE_TORRENT_SUB_FOLDER = "Always Create Torrent Sub-Folder";
 		public static final String BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP = ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP;
 		public static final String BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR = "ui.addtorrent.openoptions.always.sidebar";
+		public static final String BCFG_UI_ADDTORRENT_OPENOPTIONS_ONTOP = "ui.addtorrent.openoptions.ontop";
 		public static final String ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS = "ui.addtorrent.openoptions.auto.close.secs";
 		public static final String BCFG_DEFAULT_DIR_AUTO_SAVE_AUTO_RENAME = "DefaultDir.AutoSave.AutoRename";
 		public static final String BCFG_DEFAULT_DIR_AUTO_UPDATE = "DefaultDir.AutoUpdate";

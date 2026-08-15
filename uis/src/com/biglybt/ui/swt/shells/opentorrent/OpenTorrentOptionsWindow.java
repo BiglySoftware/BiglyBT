@@ -842,15 +842,16 @@ public class OpenTorrentOptionsWindow
 		try{
 			if ( dlg == null ){
 
-				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP );
+				boolean	separate_dialogs	= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP );
+				boolean	ontop				= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ONTOP );
 
 					// if we only have one dialog then we can make it independent and 
 					// minimizable - user requested feature
 				
-				if ( separate_dialogs ){
+				if ( separate_dialogs || ontop ){
 					
 					dlg = new SkinnedDialog("skin3_dlg_opentorrent_options", "shell",
-							SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+							SWT.RESIZE | SWT.MAX | SWT.MIN | SWT.DIALOG_TRIM);
 
 				}else{
 					
@@ -2521,7 +2522,7 @@ public class OpenTorrentOptionsWindow
 
 						if ( !text.equals( toText )){
 
-							cmbDataDir.setText( toText );
+							cmbDataDirsetText( toText );
 						}
 					}
 				}
@@ -5194,7 +5195,7 @@ public class OpenTorrentOptionsWindow
 											public void
 											widgetSelected(SelectionEvent e) {
 
-												cmbDataDir.setText( str );
+												cmbDataDirsetText( str );
 											}
 										});
 								}
@@ -5243,7 +5244,7 @@ public class OpenTorrentOptionsWindow
 			for (String s : dirList) {
 				
 				if (torrentOptions == null || !s.equals(torrentOptions.getParentDir())) {
-					cmbDataDir.add(s);
+					cmbDataDiradd(s);
 				}
 			}
 
@@ -5274,7 +5275,7 @@ public class OpenTorrentOptionsWindow
 					sSavePath = dDialog.open();
 
 					if (sSavePath != null) {
-						cmbDataDir.setText(sSavePath);
+						cmbDataDirsetText(sSavePath);
 					}
 				}
 			});
@@ -8033,6 +8034,45 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
+		private void
+		cmbDataDiradd(
+			String		item )
+		{
+			String[] existing = cmbDataDir.getItems();
+			
+			for ( String e: existing ){
+				
+				if ( e.equals( item )){
+					
+					return;
+				}
+			}
+			
+			cmbDataDir.add( item );
+		}
+		
+		private void
+		cmbDataDirsetText(
+			String		text )
+		{
+			cmbDataDir.setText( text );
+			
+				// ensure that the text is one of the items otherwise expanding the combo to show
+				// the available items will cause the existing text value to be lost
+			
+			String[] existing = cmbDataDir.getItems();
+			
+			for ( String e: existing ){
+				
+				if ( e.equals( text )){
+					
+					return;
+				}
+			}
+			
+			cmbDataDir.add(text, 0);
+		}
+		
 		private void updateDataDirCombo() {
 
 			if (cmbDataDir == null) {
@@ -8065,17 +8105,17 @@ public class OpenTorrentOptionsWindow
 
 					if ( not_same ){
 
-						cmbDataDir.setText( COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH));
+						cmbDataDirsetText( COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH));
 
 					}else{
 
 							// prev_parent can be null when we're tearing down the dialog...
 
-						cmbDataDir.setText( prev_parent==null?"":prev_parent );
+						cmbDataDirsetText( prev_parent==null?"":prev_parent );
 					}
 				}else{
 
-					cmbDataDir.setText( torrentOptions.getParentDir());
+					cmbDataDirsetText( torrentOptions.getParentDir());
 				}
 
 			}finally{
@@ -8089,7 +8129,7 @@ public class OpenTorrentOptionsWindow
 			String	path )
 		{
 			if ( cmbDataDir != null ){
-				cmbDataDir.setText( path );
+				cmbDataDirsetText( path );
 			}
 		}
 

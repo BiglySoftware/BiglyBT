@@ -320,6 +320,8 @@ public class ConfigurationDefaults {
     def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, TRUE );
     def.put( ConfigKeys.File.ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS, ZERO );
     def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR, FALSE );
+    def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ONTOP, TRUE );
+    def.put( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_ALWAYS_SIDEBAR, FALSE );
 
 	File f = null;
 
