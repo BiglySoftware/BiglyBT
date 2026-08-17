@@ -8447,10 +8447,20 @@ public class OpenTorrentOptionsWindow
 
 						boolean filesTooBig = part.bytesToConsume > part.freeSpace.freeSpace;
 
+						long space = part.freeSpace.freeSpace;
+						
+						String freeSpace;
+						
+						if ( space < 0 ){
+							freeSpace = "?";
+						}else{
+							freeSpace = DisplayFormatters.formatByteCountToKiBEtc(space);
+						}
+						
 						String s = MessageText.getString("v3.MainWindow.xofx",
 								new String[] {
 							DisplayFormatters.formatByteCountToKiBEtc(part.bytesToConsume),
-							DisplayFormatters.formatByteCountToKiBEtc(part.freeSpace.freeSpace)
+							freeSpace
 						});
 
 						File root = part.root;
