@@ -148,14 +148,24 @@ public class BackGroundGraphic implements Graphic {
 
       bufferBackground = new Image(drawCanvas.getDisplay(),bounds);
 
-      Color colors[] = new Color[4];
-      colors[0] = colorWhite;
-      colors[1] = lightGrey;
-      colors[2] = lightGrey2;
-      colors[3] = lightGrey;
+      Color colors[];
+      
+      if (Utils.isDarkAppearanceNative()){
+    	  
+    	  colors = new Color[1];
+    	  colors[0] = drawCanvas.getBackground();
+      }else{
+    	  colors = new Color[4];
+      
+    	  colors[0] = colorWhite;
+    	  colors[1] = lightGrey;
+    	  colors[2] = lightGrey2;
+    	  colors[3] = lightGrey;
+      }
+      
       GC gcBuffer = new GC(bufferBackground);
       for(int i = 0 ; i < bounds.height - 2 ; i++) {
-        gcBuffer.setForeground(colors[i%4]);
+        gcBuffer.setForeground(colors[i%colors.length]);
         gcBuffer.drawLine(1,i+1,bounds.width-1,i+1);
       }
       gcBuffer.setForeground(colorBlack);
