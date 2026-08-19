@@ -238,50 +238,70 @@ public class MyTorrentsView
 	private boolean			created;
 	private DownloadManager	pendingAttention;
 	
-	public MyTorrentsView( boolean supportsTabs ) {
+	public 
+	MyTorrentsView(
+		BubbleTextBox	filterBox,
+		boolean			supportsTabs )
+	{
 		super("MyTorrentsView");
+		
+		setupFilterBox( filterBox );
+		
 		this.supportsTabs = supportsTabs;
 	}
 
-	public MyTorrentsView(String textPrefixID, boolean supportsTabs) {
+	public 
+	MyTorrentsView(
+		String			textPrefixID,
+		BubbleTextBox 	filterBox,
+		boolean			supportsTabs) 
+	{
 		super(textPrefixID);
+		
+		setupFilterBox( filterBox );
+		
 		this.supportsTabs = supportsTabs;
 	}
 
-  /**
-   * Initialize
-   *
-   * @param core
-   * @param isSeedingView
-   * @param basicItems
-   */
-  public
-  MyTorrentsView(
-  		Core				core,
-  		String				tableID,
-  		boolean 			isSeedingView,
-  		TableColumnCore[]	basicItems,
-		BubbleTextBox 		filterBox,
-  		boolean				supportsTabs )
-  {
+	public
+	MyTorrentsView(
+			Core				core,
+			String				tableID,
+			boolean 			isSeedingView,
+			TableColumnCore[]	basicItems,
+			BubbleTextBox 		filterBox,
+			boolean				supportsTabs )
+	{
 		super("MyTorrentsView");
-		this.filterBox = filterBox;
+
+		setupFilterBox( filterBox );
 		
-		String tooltip = MessageText.getString("MyTorrentsView.filter.tooltip");
-		
-		if ( Utils.getUserMode() > 0 ){
-			tooltip += MessageText.getString("column.filter.tt.line1");
-			tooltip += MessageText.getString("column.filter.tt.line3");
-			tooltip += MessageText.getString("column.filter.tt.line2");
-			tooltip += "\n" + MessageText.getString( "search.tt.tag.constraint" );
-		}
-		
-		filterBox.setTooltip(tooltip);
 		this.supportsTabs = supportsTabs;
 		init(core, tableID, isSeedingView
 				? DownloadTypeComplete.class : DownloadTypeIncomplete.class, basicItems);
-  }
+	}
 
+	private void
+	setupFilterBox(
+		BubbleTextBox	filterBox )	
+	{
+		this.filterBox = filterBox;
+
+		if ( filterBox != null ){
+			
+			String tooltip = MessageText.getString("MyTorrentsView.filter.tooltip");
+	
+			if ( Utils.getUserMode() > 0 ){
+				tooltip += MessageText.getString("column.filter.tt.line1");
+				tooltip += MessageText.getString("column.filter.tt.line3");
+				tooltip += MessageText.getString("column.filter.tt.line2");
+				tooltip += "\n" + MessageText.getString( "search.tt.tag.constraint" );
+			}
+	
+			filterBox.setTooltip(tooltip);
+		}
+	}
+	
   // @see com.biglybt.ui.swt.views.table.impl.TableViewTab#initYourTableView()
   @Override
   public TableViewSWT<DownloadManager> initYourTableView() {
@@ -1809,7 +1829,10 @@ public class MyTorrentsView
 	filterSet(
 		String filter) 
 	{
-		col_filter_helper.filterSet( filter );
+		if ( col_filter_helper != null ){
+		
+			col_filter_helper.filterSet( filter );
+		}
 		
 		Utils.execSWTThread(new AERunnable() {
 

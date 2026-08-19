@@ -38,11 +38,18 @@ public class MyTorrentsView_Big
 {
 	private final int torrentFilterMode;
 
-	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
-			Object dataSource, TableColumnCore[] basicItems, BubbleTextBox txtFilter ){
-		super(SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource) + "View", true );
+	public 
+	MyTorrentsView_Big(
+		Core _core, 
+		int torrentFilterMode,
+		Object dataSource, 
+		TableColumnCore[] basicItems, 
+		BubbleTextBox txtFilter )
+	{
+		super(SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource) + "View", txtFilter, true );
+		
 		this.torrentFilterMode = torrentFilterMode;
-		this.filterBox = txtFilter;
+
 		Class<?> forDataSourceType;
 		switch (torrentFilterMode) {
 			case SBC_LibraryView.TORRENTS_COMPLETE:

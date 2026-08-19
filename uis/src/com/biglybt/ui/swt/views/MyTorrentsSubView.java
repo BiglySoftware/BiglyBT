@@ -65,7 +65,7 @@ public class MyTorrentsSubView
 	private Tag[] tempTags;
 
 	public MyTorrentsSubView() {
-		super(MSGID_PREFIX, false);
+		super(MSGID_PREFIX, null, false);
 		neverShowCatButtons = true;
 		neverShowTagButtons = true;
 		isEmptyListOnNullDS = true;

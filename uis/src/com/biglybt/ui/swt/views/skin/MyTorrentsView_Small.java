@@ -35,12 +35,10 @@ public class MyTorrentsView_Small
 		int 				torrentFilterMode, 
 		Object 				dataSource,
 		TableColumnCore[] 	basicItems,
-		BubbleTextBox txtFilter )
+		BubbleTextBox		txtFilter )
 	{
-		super( true );
+		super( txtFilter, true );
 
-		this.filterBox = txtFilter;
-		
 		init( _core, SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, false, dataSource), Download.class, basicItems );
 	}
 }
