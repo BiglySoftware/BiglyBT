@@ -407,7 +407,22 @@ public class TorrentUIUtilsV3
 				}
 			}
 			if (path != null) {
-				image = ImageRepository.getPathIcon(path, big, false);
+				final String icon_path = path;
+
+					// the per-file icon may not be ready yet, in which case the
+					// placeholder gets cached below and nothing would replace it.
+					// when the real one turns up, refresh the cached thumbnail and
+					// let the listener repaint the cell
+				image = ImageRepository.getPathIcon(path, big, false,
+						()->{
+							Utils.execSWTThread(()->{
+								Image late = ImageRepository.getPathIcon( icon_path, big, false );
+								if ( late != null && !late.isDisposed() && imageLoaderThumb != null ){
+									imageLoaderThumb.addImageNoDipose( id, late );
+								}
+								l.contentImageLoaded( late, false );
+							});
+						});
 
 				if (image != null && !torrent.isSimpleTorrent()) {
 					Image parentPathIcon = ImageRepository.getPathIcon(new File(path).getParent(), false, false);

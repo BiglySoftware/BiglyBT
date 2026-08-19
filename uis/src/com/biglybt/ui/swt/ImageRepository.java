@@ -25,7 +25,9 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -41,10 +43,13 @@ import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AsyncDispatcher;
+import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.HostNameToIPResolver;
+import com.biglybt.core.util.SHA1Simple;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.utils.LocationProvider;
@@ -66,6 +71,42 @@ public class ImageRepository
 	};
 
 	private static final boolean forceNoAWT = Constants.isOSX || Constants.isWindows;
+
+	private static final AsyncDispatcher		async_icon_dispatcher = new AsyncDispatcher( "FileIconFetch" );
+
+		// files with a lookup in flight, mapped to whoever wants telling when it
+		// lands. a cell that has already painted won't ask for the icon again
+		// (its text hasn't changed), so it has to be nudged to repaint - same
+		// approach ColumnThumbAndName uses for async thumbnails
+
+	private static final Map<String,java.util.List<Runnable>>	async_icon_pending = new HashMap<>();
+
+		// per-file icons are shared by content: a path maps to a content key and
+		// identical icons (the common case - most .exe files carry one of a
+		// handful of installer icons) resolve to a single Image. the path->content
+		// map is bounded so a library with millions of files can't accumulate
+		// millions of path strings
+
+	private static final int	PER_FILE_CACHE_MAX = 512;
+
+		// marks a file whose icon lookup came back empty, so a failure doesn't
+		// have every repaint queue the lookup again; the entry ages out of the
+		// map normally, which lets a file that has become reachable retry
+
+	private static final String	PER_FILE_NONE = "";
+
+	private static final Map<String,String>	per_file_content_keys =
+		Collections.synchronizedMap(
+			new LinkedHashMap<String,String>( 128, 0.75f, true )
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+					Map.Entry<String,String> eldest )
+				{
+					return( size() > PER_FILE_CACHE_MAX );
+				}
+			});
 
 	/**public*/
 	static void addPath(String path, String id) {
@@ -125,15 +166,109 @@ public class ImageRepository
 		boolean bBig,
 		boolean minifolder) 
 	{
+		return( getIconFromExtension( file, ext, bBig, minifolder, null ));
+	}
+
+	public static Image 
+	getIconFromExtension(
+		File file, 
+		String ext, 
+		boolean bBig,
+		boolean minifolder,
+		Runnable icon_listener ) 
+	{
 		Image image = null;
 
 		try {
-			String key = "osicon" + ext;
+				// files whose extension is in noCacheExtList (e.g. .exe) can carry
+				// a per-file embedded icon, so they must not share a single icon
+				// cached under the extension key. use a per-file key and fetch the
+				// icon asynchronously to keep file I/O off the UI thread.
 
-			if (bBig)
-				key += "-big";
-			if (minifolder)
-				key += "-fold";
+			boolean per_file_icon = false;
+
+				// ignore_icon_exts is the user's "don't ask the shell about these"
+				// list; per-file lookups must honour it too
+
+			if ( !ignore_icon_exts.contains( ext.toLowerCase( Locale.US ))){
+
+				for ( int i = 0; i < noCacheExtList.length; i++ ){
+					if ( noCacheExtList[i].equalsIgnoreCase( ext )){
+						per_file_icon = true;
+						break;
+					}
+				}
+			}
+
+			String ext_key = "osicon" + ext;
+
+			if ( bBig ) ext_key += "-big";
+			if ( minifolder ) ext_key += "-fold";
+
+
+
+			if ( per_file_icon ){
+
+				String file_key = file.getAbsolutePath();
+
+				if ( bBig ) file_key += "-big";
+				if ( minifolder ) file_key += "-fold";
+
+				String content_key = per_file_content_keys.get( file_key );
+
+
+				if ( content_key != null ){
+
+					if ( !content_key.isEmpty()){
+
+						image = ImageLoader.getInstance().getImage( content_key );
+
+						if ( ImageLoader.isRealImage( image )){
+							return( image );
+						}
+
+						ImageLoader.getInstance().releaseImage( content_key );
+
+						per_file_content_keys.remove( file_key );
+
+						scheduleAsyncIconFetch( file, file_key, bBig, minifolder, icon_listener );
+					}
+				}else{
+
+					scheduleAsyncIconFetch( file, file_key, bBig, minifolder, icon_listener );
+				}
+
+
+					// return the shared extension icon until the per-file one arrives
+
+				image = ImageLoader.getInstance().getImage( ext_key );
+
+				if ( ImageLoader.isRealImage( image )){
+					return( image );
+				}
+
+				ImageLoader.getInstance().releaseImage( ext_key );
+
+				Program program = Program.findProgram( ext );
+
+				if ( program != null ){
+
+					ImageData id = program.getImageData();
+
+					if ( id != null ){
+
+						image = new Image( Display.getDefault(), id );
+						if ( !bBig ) image = force16height( image );
+						if ( minifolder ) image = minifolderize( file.getParent(), image, bBig );
+						ImageLoader.getInstance().addImageNoDipose( ext_key, image );
+						return( image );
+					}
+				}
+
+				return( ImageLoader.getInstance().getImage( minifolder ? "folder" : "transparent" ));
+			}
+
+			String key = ext_key;
 
 			image = ImageLoader.getInstance().getImage(key);
 			if (ImageLoader.isRealImage(image)) {
@@ -233,6 +368,187 @@ public class ImageRepository
 		return image;
 	}
 
+		// resolve a per-file icon without blocking the interface: the (potentially
+		// slow) file existence check runs on a background thread, the icon lookup
+		// itself is then handed to the SWT thread as getFileIcon requires
+
+	private static void
+	scheduleAsyncIconFetch(
+		final File		file,
+		final String	file_key,
+		final boolean	bBig,
+		final boolean	minifolder,
+		final Runnable	listener )
+	{
+		synchronized( async_icon_pending ){
+
+			java.util.List<Runnable> waiting = async_icon_pending.get( file_key );
+
+			if ( waiting != null ){
+
+					// a lookup is already in flight for this file; just join it
+
+				if ( listener != null && waiting.size() < 16 ){
+
+					waiting.add( listener );
+				}
+
+				return;
+			}
+
+			waiting = new java.util.ArrayList<>();
+
+			if ( listener != null ) waiting.add( listener );
+
+			async_icon_pending.put( file_key, waiting );
+		}
+
+		async_icon_dispatcher.dispatch(()->{
+			try{
+
+				boolean reachable = Utils.fileExistsWithTimeout( file );
+
+
+				if ( !reachable ){
+
+					per_file_content_keys.put( file_key, PER_FILE_NONE );
+
+					return;
+				}
+
+					// getFileIcon has to run on the SWT thread; block this background
+					// thread until it has done so, which leaves the dispatcher
+					// throttling the lookups one at a time instead of flooding the
+					// SWT queue with thousands of them
+
+				Utils.execSWTThread(()->{
+
+					Image icon = null;
+
+					if ( Constants.isWindows ){
+						try{
+							Class<?> cls = Class.forName( "com.biglybt.ui.swt.win32.Win32UIEnhancer" );
+							Method m = cls.getMethod( "getFileIcon", new Class[]{ File.class, boolean.class });
+							icon = (Image)m.invoke( null, new Object[]{ file, bBig });
+						}catch( Throwable e ){
+						}
+					}else if ( Constants.isOSX ){
+						try{
+							Class<?> cls = Class.forName( "com.biglybt.ui.swt.osx.CocoaUIEnhancer" );
+							Method m = cls.getMethod( "getFileIcon", new Class[]{ String.class, int.class });
+							icon = (Image)m.invoke( null, new Object[]{ file.getAbsolutePath(), (int)(bBig ? 128 : 16) });
+						}catch( Throwable e ){
+						}
+					}
+
+
+
+					if ( icon != null ){
+
+						cachePerFileIcon( file, file_key, icon, bBig, minifolder );
+
+					}else{
+
+						per_file_content_keys.put( file_key, PER_FILE_NONE );
+					}
+
+				}, false );
+
+			}catch( Throwable e ){
+
+			}finally{
+
+				java.util.List<Runnable> waiting;
+
+				synchronized( async_icon_pending ){
+
+					waiting = async_icon_pending.remove( file_key );
+				}
+
+				if ( waiting != null ){
+
+					for ( Runnable r: waiting ){
+
+						try{
+							r.run();
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+						}
+					}
+				}
+			}
+		});
+	}
+
+		// most files of a given type carry one of a handful of icons, so key the
+		// cached Image by icon content: a thousand installers sharing an icon end
+		// up sharing a single Image rather than a thousand copies
+
+	private static void
+	cachePerFileIcon(
+		File		file,
+		String		file_key,
+		Image		icon,
+		boolean		bBig,
+		boolean		minifolder )
+	{
+		boolean	cached = false;
+
+		try{
+			ImageData data = icon.getImageData();
+
+				// key on the pixels plus the geometry, so two icons that happen to
+				// share a byte pattern at different sizes or depths don't collide
+
+			String content_key =
+				"osicon-pfc:" + ByteFormatter.encodeString( new SHA1Simple().calculateHash( data.data )) +
+				"-" + data.width + "x" + data.height + "x" + data.depth;
+
+			if ( bBig ) content_key += "-big";
+			if ( minifolder ) content_key += "-fold";
+
+			boolean already_held = ImageLoader.isRealImage( ImageLoader.getInstance().getImage( content_key ));
+
+				// the lookup above takes a reference either way; this method hands
+				// the Image to nobody, so drop it again
+
+			ImageLoader.getInstance().releaseImage( content_key );
+
+			if ( already_held ){
+
+					// an identical icon is already cached, so drop this copy and
+					// point the file at the shared one
+
+				per_file_content_keys.put( file_key, content_key );
+
+				return;
+			}
+
+			if ( !bBig ) icon = force16height( icon );
+			if ( minifolder ) icon = minifolderize( file.getParent(), icon, bBig );
+
+			ImageLoader.getInstance().addImageNoDipose( content_key, icon );
+
+			cached = true;
+
+
+			per_file_content_keys.put( file_key, content_key );
+
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+		}finally{
+
+			if ( !cached && icon != null && !icon.isDisposed()){
+
+				icon.dispose();
+			}
+		}
+	}
+
 	private static Image minifolderize(String path, Image img, boolean big) {
 		Image imgFolder =  ImageLoader.getInstance().getImage(big ? "folder" : "foldersmall");
 		Rectangle folderBounds = imgFolder.getBounds();
@@ -286,6 +602,20 @@ public class ImageRepository
 		boolean bBig,
 		boolean minifolder) 
 	{
+		return( getPathIcon( path, bBig, minifolder, null ));
+	}
+
+		// icon_listener is run once an asynchronously resolved per-file icon has
+		// landed in the cache. a table cell that has already painted won't ask
+		// again on its own, so it uses this to invalidate itself and repaint.
+
+	public static Image 
+	getPathIcon(
+		final String path, 
+		boolean bBig,
+		boolean minifolder,
+		Runnable icon_listener ) 
+	{
 		if (path == null)
 			return null;
 
@@ -325,7 +655,7 @@ public class ImageRepository
 					key = ext;
 
 					if (noAWT)
-						return getIconFromExtension(file, ext, bBig, minifolder);
+						return getIconFromExtension(file, ext, bBig, minifolder, icon_listener);
 
 					// case-insensitive file systems
 					for (int i = 0; i < noCacheExtList.length; i++) {
@@ -424,7 +754,7 @@ public class ImageRepository
 			return ImageLoader.getInstance().getImage("folder");
 		}
 
-		return getIconFromExtension(file, ext, bBig, minifolder);
+		return getIconFromExtension(file, ext, bBig, minifolder, icon_listener);
 	}
 
 	private static LocationProvider	flag_provider;
