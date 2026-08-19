@@ -418,7 +418,8 @@ public class TorrentUIUtilsV3
 							Utils.execSWTThread(()->{
 								Image late = ImageRepository.getPathIcon( icon_path, big, false );
 								if ( late != null && !late.isDisposed() && imageLoaderThumb != null ){
-									imageLoaderThumb.addImageNoDipose( id, late );
+																			
+									imageLoaderThumb.replaceImageNoDipose( id, late );
 								}
 								l.contentImageLoaded( late, false );
 							});
