@@ -40,6 +40,7 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.content.RelatedContent;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -82,6 +83,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.table.painted.TableRowPainted;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
@@ -172,7 +174,10 @@ public class MyTorrentsView
 
   private String		lastSearchConstraintString;
   private TagConstraint	lastSearchConstraint;
-  
+
+  private TableColumnFilterHelper<DownloadManager>	col_filter_helper;
+
+	
   private Object	currentTagsLock = new Object();
   private Tag[]		_currentTags;
   private List<Tag>	allTags;
@@ -264,6 +269,9 @@ public class MyTorrentsView
 		String tooltip = MessageText.getString("MyTorrentsView.filter.tooltip");
 		
 		if ( Utils.getUserMode() > 0 ){
+			tooltip += MessageText.getString("column.filter.tt.line1");
+			tooltip += MessageText.getString("column.filter.tt.line3");
+			tooltip += MessageText.getString("column.filter.tt.line2");
 			tooltip += "\n" + MessageText.getString( "search.tt.tag.constraint" );
 		}
 		
@@ -357,6 +365,10 @@ public class MyTorrentsView
 
     tv = createTableView(forDataSourceType, tableID, basicItems);
 
+    if ( filterBox != null ){
+    	col_filter_helper = new TableColumnFilterHelper<DownloadManager>( tv, "tv:search" );
+    }
+    
     /*
      * 'Big' table has taller row height
      */
@@ -481,6 +493,8 @@ public class MyTorrentsView
 			tv.enableFilterCheck((BubbleTextBox) null, this);
 
 		} else {
+
+	    	col_filter_helper = new TableColumnFilterHelper<DownloadManager>( tv, "tv:search" );
 
 			Composite mainWidget = filterBox.getMainWidget();
 			Composite filterParent = mainWidget.getParent();
@@ -826,6 +840,8 @@ public class MyTorrentsView
 			}
 		});
   	
+	col_filter_helper = null;
+
     dispatcher.dispatch(
        	AERunnable.create(
        		()->{
@@ -1570,10 +1586,14 @@ public class MyTorrentsView
 					tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch, true );
 				}
 
+				boolean defaultMatch = true;
+				
 				for ( int i = 1; i < name_mapping.length; i++ ){
 
 					if ( tmpSearch.startsWith(name_mapping[i][0])) {
 
+						defaultMatch = false;
+						
 						tmpSearch = tmpSearch.substring(name_mapping[i][0].length());
 
 						if ( i == 1 ){
@@ -1656,29 +1676,8 @@ public class MyTorrentsView
 					}
 				}
 
-				boolean	match_result = true;
-
-				String expr;
-				
-				if ( bRegexSearch ){
+				if ( defaultMatch ){
 					
-					expr = tmpSearch;
-					
-					if ( expr.startsWith( "!" )){
-						
-						expr = expr.substring(1);
-
-						match_result = false;
-					}
-				}else{
-					
-					expr = RegExUtil.convertAndOrToExpr( tmpSearch );
-				}
-
-				Pattern pattern = RegExUtil.getCachedPattern( "tv:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-				if ( o_name instanceof String ){
-
 					String name = (String)o_name;
 					
 					if ( confusable ){
@@ -1686,25 +1685,60 @@ public class MyTorrentsView
 						name = GeneralUtils.getConfusableEquivalent( name, false );
 					}
 					
-					bOurs = pattern.matcher( name ).find() == match_result;
-
+					bOurs = col_filter_helper.filterCheck( dm, sLastSearch, bRegexSearch, name, false );
+					
 				}else{
-					List<String>	names = (List<String>)o_name;
-
-						// match_result: true -> at least one match; false -> any fail
-
-					bOurs = !match_result;
-
-					for ( String name: names ){
+					
+					boolean	match_result = true;
+	
+					String expr;
+					
+					if ( bRegexSearch ){
+						
+						expr = tmpSearch;
+						
+						if ( expr.startsWith( "!" )){
+							
+							expr = expr.substring(1);
+	
+							match_result = false;
+						}
+					}else{
+						
+						expr = RegExUtil.convertAndOrToExpr( tmpSearch );
+					}
+	
+					Pattern pattern = RegExUtil.getCachedPattern( "tv:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	
+					if ( o_name instanceof String ){
+	
+						String name = (String)o_name;
 						
 						if ( confusable ){
-						
+							
 							name = GeneralUtils.getConfusableEquivalent( name, false );
 						}
-
-						if ( pattern.matcher( name ).find()){
-							bOurs = match_result;
-							break;
+						
+						bOurs = pattern.matcher( name ).find() == match_result;
+	
+					}else{
+						List<String>	names = (List<String>)o_name;
+	
+							// match_result: true -> at least one match; false -> any fail
+	
+						bOurs = !match_result;
+	
+						for ( String name: names ){
+							
+							if ( confusable ){
+							
+								name = GeneralUtils.getConfusableEquivalent( name, false );
+							}
+	
+							if ( pattern.matcher( name ).find()){
+								bOurs = match_result;
+								break;
+							}
 						}
 					}
 				}
@@ -1723,7 +1757,12 @@ public class MyTorrentsView
 
 	// @see com.biglybt.ui.swt.views.table.TableViewFilterCheck#filterSet(java.lang.String)
 	@Override
-	public void filterSet(final String filter) {
+	public void 
+	filterSet(
+		String filter) 
+	{
+		col_filter_helper.filterSet( filter );
+		
 		Utils.execSWTThread(new AERunnable() {
 
 			@Override

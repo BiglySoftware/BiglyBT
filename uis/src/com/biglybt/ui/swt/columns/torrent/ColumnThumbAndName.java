@@ -35,7 +35,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Constants;
@@ -224,6 +223,7 @@ public class ColumnThumbAndName
 		}
 
 		cell.setSortValue(name);
+		cell.setTextEquivalent(name);
 	}
 
 	@Override

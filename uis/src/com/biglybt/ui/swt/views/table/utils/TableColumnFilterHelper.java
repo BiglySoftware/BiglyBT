@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views.table.utils;
 
 import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.util.DisplayFormatters;
@@ -48,8 +49,7 @@ TableColumnFilterHelper<T>
 
 	private volatile boolean 	col_filter_active;
 	
-	private TableColumn		col_cache;
-	private String			col_cache_name;
+	private Map<String,TableColumn>		col_cache		= new HashMap<>();
 
 	private String			date_cache_str;
 	private double			date_cache_time;
@@ -129,119 +129,162 @@ TableColumnFilterHelper<T>
 			return( true );
 		}
 
-		String	filter_text = null;
-		String	col_match_text 	= null;
+		String	filter_text		= null;
+		String	col_match_text	= null;
 	
 		int match_mode = MM_EQ;
 
 		double match_numeric = Double.NaN;
 		
-		int pos = original_filter.indexOf( ':' );
-		
-		if ( pos != -1 && !ignore_column_match ){
+		if ( !ignore_column_match ){
 			
-			String col_name 	= original_filter.substring( 0, pos ).trim();
-			String col_value	= original_filter.substring( pos+1 ).trim();
+			boolean done = false;
+					
+			TableRowSWT row = null;
+			
+			boolean row_is_fake = false;
+			
+				// for MM_EQ we support multiple columns with syntax
+				//     <col_name_1>:+<col_name_2>:+...<col_name_n>:<value>
+			
+			String col_filter = original_filter;
+			
+			try{
+				while( match_mode == MM_EQ && !done ){
+					
+					int pos = col_filter.indexOf( ':' );
+					
+					if ( pos == -1 ){
 						
-			if ( col_value.startsWith( ">" )){
-			
-				if ( col_value.startsWith( ">=" )){
-					
-					match_mode = MM_GE;
-					
-					col_value = col_value.substring(2);
-					
-				}else{
-				
-					match_mode = MM_GT;
-					
-					col_value = col_value.substring(1);
-				}
-			}else if ( col_value.startsWith( "<" )){
-				
-				if ( col_value.startsWith( "<=" )){
-				
-					match_mode = MM_LE;
-					
-					col_value = col_value.substring(2);
-					
-				}else{
-				
-					match_mode = MM_LT;
-					
-					col_value = col_value.substring(1);
-				}
-			}else{
-				
-				if ( col_value.startsWith( "=" )){
-					
-					col_value = col_value.substring(1);
-				}
-				
-				match_mode = MM_EQ;
-			}
-			
-			filter_text = col_value;
-			
-			TableColumn col;
-			
-			synchronized( refilter_lock ){
-				
-				if ( col_cache_name == null || !col_cache_name.equals( col_name )){
-					
-					col_cache = table_view.getTableColumn( col_name, true );
-					
-					col_cache_name = col_name;
-				}
-				
-				col = col_cache;
-			}
-		
-			if ( col != null ){
-
-				col_match_text = "";
-				
-				TableRowSWT row = table_view.getRowSWT( data_source );
-				
-				boolean is_fake = false;
-				
-				if ( row == null ){
-					
-						// row may not be visible (either just adding or already filtered)
-					
-					row = table_view.createFakeRow( data_source );
-					
-					is_fake = true;
-				}
-				
-				try{
-						// ensure cells are constructed
-					
-					row.setShown( true, true );
-					
-					TableCellCore cell = (TableCellCore)row.getTableCell(  col );
-					
-					if ( cell != null ){
-					
-							// pick up latest value
+						break;
+					}
 						
-						cell.refresh();
-											
-						col_match_text = cell.getTextEquivalent();
-						
-						if ( col_match_text == null ){
+					String col_name 	= col_filter.substring( 0, pos ).trim();
+					String col_value	= col_filter.substring( pos+1 ).trim();
+								
+					if ( col_value.startsWith( ">" )){
+					
+						if ( col_value.startsWith( ">=" )){
 							
-							col_match_text = cell.getText();
+							match_mode = MM_GE;
+							
+							col_value = col_value.substring(2);
+							
+						}else{
+						
+							match_mode = MM_GT;
+							
+							col_value = col_value.substring(1);
+						}
+					}else if ( col_value.startsWith( "<" )){
+						
+						if ( col_value.startsWith( "<=" )){
+						
+							match_mode = MM_LE;
+							
+							col_value = col_value.substring(2);
+							
+						}else{
+						
+							match_mode = MM_LT;
+							
+							col_value = col_value.substring(1);
+						}
+					}else{
+						
+						if ( col_value.startsWith( "=" )){
+							
+							done = true;
+							
+							col_value = col_value.substring(1);
 						}
 						
-						match_numeric = cell.getNumeric();
+						match_mode = MM_EQ;
 					}
-				}finally{
 					
-					if ( is_fake ){
+					filter_text = col_value;
+					
+					TableColumn col;
+					
+					synchronized( refilter_lock ){
 						
-						row.delete();
+						col = col_cache.get( col_name );
+							
+						if ( col == null ){
+							
+							col = table_view.getTableColumn( col_name, true );
+							
+							col_cache.put( col_name, col );
+						}
 					}
+				
+					if ( col != null ){
+								
+						if ( row == null ){
+						
+							row = table_view.getRowSWT( data_source );
+												
+							if ( row == null ){
+							
+									// row may not be visible (either just adding or already filtered)
+							
+								row = table_view.createFakeRow( data_source );
+							
+								row_is_fake = true;
+							}
+							
+								// ensure cells are constructed
+							
+							row.setShown( true, true );
+						}
+						
+						TableCellCore cell = (TableCellCore)row.getTableCell(  col );
+						
+						if ( cell != null ){
+						
+								// pick up latest value
+							
+							cell.refresh();
+												
+							String cell_match_text = cell.getTextEquivalent();
+							
+							if ( cell_match_text == null ){
+								
+								cell_match_text = cell.getText();
+							}
+							
+							if ( cell_match_text == null ){
+								
+								cell_match_text = "";
+							}
+							
+							if ( col_match_text == null ){
+							
+								col_match_text = cell_match_text;
+								
+							}else{
+								
+								col_match_text += " " + cell_match_text;
+							}
+							
+							match_numeric = cell.getNumeric();
+						}
+					}
+					
+					if ( !done && match_mode == MM_EQ && col_value.startsWith( "+" ) && col_value.length() > 1 ){
+						
+						
+						col_filter = col_value.substring(1);
+					}else{
+						
+						break;
+					}
+				}
+			}finally{
+				
+				if ( row != null && row_is_fake ){
+					
+					row.delete();
 				}
 			}
 		}
