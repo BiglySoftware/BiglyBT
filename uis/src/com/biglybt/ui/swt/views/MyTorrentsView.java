@@ -172,6 +172,7 @@ public class MyTorrentsView
   protected BubbleTextBox filterBox = null;
   private TimerEventPeriodic	txtFilterUpdateEvent;
 
+  private String		defaultFilterPrefix = "";
   private String		lastSearchConstraintString;
   private TagConstraint	lastSearchConstraint;
 
@@ -586,6 +587,7 @@ public class MyTorrentsView
 						"Library.ShowTagButtons.ImageOverride",
 						"Library.ShowTagButtons.Align",
 						"Library.ShowTagButtons.Inclusive",
+						"table.library.filter.prefix",
 					}, this);
 	
 	
@@ -747,6 +749,34 @@ public class MyTorrentsView
 		  }
 	  });
 	  
+	  final MenuItem searchHistoryDefaultPrefix = new MenuItem(searchMenu, SWT.PUSH);
+	  Messages.setLanguageText( searchHistoryDefaultPrefix, "menu.default.prefix" );
+
+	  searchHistoryDefaultPrefix.addSelectionListener(new SelectionAdapter() {
+		  @Override
+		  public void widgetSelected(SelectionEvent e) {
+			  SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+						"default.prefix.title", "default.prefix.message");
+				entryWindow.setPreenteredText(
+						COConfigurationManager.getStringParameter(
+								"table.library.filter.prefix", ""),
+						true);
+				entryWindow.selectPreenteredText(true);
+				entryWindow.prompt(new UIInputReceiverListener() {
+					@Override
+					public void UIInputReceiverClosed(UIInputReceiver receiver) {
+						if (!receiver.hasSubmittedInput()) {
+							return;
+						}
+
+						COConfigurationManager.setParameter(
+								"table.library.filter.prefix",
+								receiver.getSubmittedInput().trim());
+					}
+				});
+		  }
+	  });
+	  
 	  MenuItem menuEnableSimple;
 	  
 	  if ( Utils.isAZ3UI()){
@@ -812,6 +842,10 @@ public class MyTorrentsView
 			  menuItemShowTagBut.setEnabled( !neverShowTagButtons );
 
 			  searchHistoryEnable.setSelection(COConfigurationManager.getBooleanParameter( "table.filter.history.enabled", true ));
+
+			  String prefix = COConfigurationManager.getStringParameter( "table.library.filter.prefix", "");
+			  
+			  Messages.setLanguageText( searchHistoryDefaultPrefix, "menu.default.prefix", prefix.isEmpty()?"":(" (\"" + prefix + "\")"));
 
 			  if ( menuEnableSimple != null ){
 			  
@@ -881,7 +915,9 @@ public class MyTorrentsView
 						"Library.ShowTagButtons.FiltersOnly",
 						"Library.ShowTagButtons.ImageOverride",
 						"Library.ShowTagButtons.Align",
-						"Library.ShowTagButtons.Inclusive" },
+						"Library.ShowTagButtons.Inclusive",
+						"table.library.filter.prefix",
+						},
 					this);
        		}));
   }
@@ -1580,6 +1616,11 @@ public class MyTorrentsView
 				Object o_name = name_mapping[0][1];
 
 				String tmpSearch = sLastSearch;
+				
+				if ( !tmpSearch.contains( ":" )){
+					
+					tmpSearch = defaultFilterPrefix + tmpSearch;
+				}
 
 				if ( confusable ){
 				
@@ -1685,7 +1726,14 @@ public class MyTorrentsView
 						name = GeneralUtils.getConfusableEquivalent( name, false );
 					}
 					
-					bOurs = col_filter_helper.filterCheck( dm, sLastSearch, bRegexSearch, name, false );
+					String colSearch = sLastSearch;
+					
+					if ( !colSearch.contains( ":" )){
+						
+						colSearch = defaultFilterPrefix + colSearch;
+					}
+					
+					bOurs = col_filter_helper.filterCheck( dm, colSearch, bRegexSearch, name, false );
 					
 				}else{
 					
@@ -2983,6 +3031,8 @@ public class MyTorrentsView
 			
 			currentTagsAny = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.Inclusive" );
 		}
+		
+		defaultFilterPrefix = COConfigurationManager.getStringParameter( "table.library.filter.prefix", "" );
 		
 		if (parameterName != null ){
 			
