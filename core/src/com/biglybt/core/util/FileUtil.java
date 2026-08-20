@@ -4098,7 +4098,7 @@ public class FileUtil {
 		}
 	}
 	
-	private static AsyncDispatcher fot_dispatcher = new AsyncDispatcher( "FOT" );
+	private static ThreadPool<AERunnable> fot_dispatcher = new ThreadPool<>( "FOT", 8 );
 	
 	private static <T> T
 	runFileOpWithTimeoutEx(
@@ -4280,7 +4280,7 @@ public class FileUtil {
 			
 			Object[] result = { null };
 			
-			fot_dispatcher.dispatch(()->{
+			fot_dispatcher.run(AERunnable.create(()->{
 				
 				try{
 					
@@ -4301,7 +4301,7 @@ public class FileUtil {
 				
 					sem.release();
 				}
-			});
+			}));
 			
 			if ( sem.reserve( strict_timeout )){
 				
