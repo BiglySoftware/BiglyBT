@@ -185,6 +185,8 @@ public class Utils
 	public static final int SCT_BUBBLE_TEXT_BOX		= 1;
 	public static final int SCT_MENU_ITEM			= 2;
 	
+	public static final int SLOW_OPERATION_TIMEOUT_MS	= 250;
+	
 	/**
 	 * Debug/Diagnose SWT exec calls.  Provides useful information like how
 	 * many we are queuing up, and how long each call takes.  Good to turn on
@@ -7362,7 +7364,7 @@ public class Utils
 	isFileResponding(
 		File		file )
 	{
-		return( FileUtil.isResponding(file, 250 ));
+		return( FileUtil.isResponding(file, SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static boolean
@@ -7376,28 +7378,28 @@ public class Utils
 	fileExistsWithTimeout(
 		File		file )
 	{
-		return( FileUtil.existsWithTimeout( file, 250 ));
+		return( FileUtil.existsWithTimeout( file, SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static boolean
 	isDirectoryWithTimeout(
 		File		dir )
 	{
-		return( FileUtil.isDirectoryWithTimeout( dir, 250 ));
+		return( FileUtil.isDirectoryWithTimeout( dir, SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static boolean
 	canReadFileWithTimeout(
 		File		dir )
 	{
-		return( FileUtil.canReadWithTimeout( dir, 250 ));
+		return( FileUtil.canReadWithTimeout( dir, SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static long
 	fileLengthWithTimeout(
 		File		file )
 	{
-		return( FileUtil.lengthWithTimeout( file, 250 ));
+		return( FileUtil.lengthWithTimeout( file, SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static String
@@ -7406,13 +7408,13 @@ public class Utils
 	
 		throws IOException
 	{
-		return( FileUtil.getCanonicalPathWithTimeout( file, 250 ));
+		return( FileUtil.getCanonicalPathWithTimeout( file, SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static File[]
 	listFileRootsWithTimeout()
 	{
-		return( FileUtil.listRootsWithTimeout( 250 ));
+		return( FileUtil.listRootsWithTimeout( SLOW_OPERATION_TIMEOUT_MS ));
 	}
 	
 	public static void

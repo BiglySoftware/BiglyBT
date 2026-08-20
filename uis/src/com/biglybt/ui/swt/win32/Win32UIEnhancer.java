@@ -374,7 +374,7 @@ public class Win32UIEnhancer
 			}
 		});
 		
-		boolean ok = sem.reserve( 2500 );	//generous...
+		boolean ok = sem.reserve( Utils.SLOW_OPERATION_TIMEOUT_MS );
 		
 		synchronized( Win32UIEnhancer.class ){
 		
