@@ -3,6 +3,7 @@ package com.biglybt.core.util;
 import java.util.*;
 
 import com.biglybt.core.devices.Device;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -70,6 +71,13 @@ DataSourceResolver
 			
 			return( exportDataSource(((PEPeer)data_source).getDescriptor()));
 			
+		}else if ( data_source instanceof DiskManagerFileInfo ){
+			
+				// we can get here with a file when we really need a download manager
+				// quick fix is this...
+			
+			return( exportDataSource(((DiskManagerFileInfo)data_source).getDownloadManager()));
+					
 		}else if ( data_source == DEFAULT_DATASOURCE ){
 			
 			return( null );
