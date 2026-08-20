@@ -858,16 +858,16 @@ CacheFileManagerImpl
 	{
 		TOTorrentFile	tf = file.getTorrentFile();
 
-		if ( tf != null && torrent_to_cache_file_map.get( tf ) != null ){
+		try{
+			this_mon.enter();
 
-			try{
-				this_mon.enter();
+			if ( tf != null && torrent_to_cache_file_map.get( tf ) != null ){
 
 				torrent_to_cache_file_map.remove( tf );
-
-			}finally{
-				this_mon.exit();
 			}
+		}finally{
+			
+			this_mon.exit();
 		}
 	}
 
