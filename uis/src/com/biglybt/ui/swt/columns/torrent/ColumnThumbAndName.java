@@ -479,8 +479,16 @@ public class ColumnThumbAndName
 			
 			if ( imgThumbnail == null ){
 			
-				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), true, cellBounds.height >= 20, false) };
-		
+				Image image = 
+					ImageRepository.getPathIcon(
+						file.getPath(), true, cellBounds.height >= 20, false,
+						(result)->{
+							cell.setData( KEY_PATH_ICON, new Object[]{ file, new Image[]{ result }});
+							cell.invalidate();
+						});
+					
+				imgThumbnail = new Image[]{ image };
+				
 				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
 			}
 		}
@@ -591,6 +599,8 @@ public class ColumnThumbAndName
 			} catch (Throwable t) {
 				Debug.out(t);
 			}
+		}else{
+			System.out.println( "derp:" + fileInfo.getFile( true ) );
 		}
 
 		String s = getDisplayName( fileInfo );

@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 
@@ -43,6 +44,7 @@ import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
@@ -79,7 +81,7 @@ public class ImageRepository
 		// (its text hasn't changed), so it has to be nudged to repaint - same
 		// approach ColumnThumbAndName uses for async thumbnails
 
-	private static final Map<String,java.util.List<Runnable>>	async_icon_pending = new HashMap<>();
+	private static final Map<String,java.util.List<Consumer<Image>>>	async_icon_pending = new HashMap<>();
 
 		// per-file icons are shared by content: a path maps to a content key and
 		// identical icons (the common case - most .exe files carry one of a
@@ -175,7 +177,7 @@ public class ImageRepository
 		String ext, 
 		boolean bBig,
 		boolean minifolder,
-		Runnable icon_listener ) 
+		Consumer<Image> icon_listener ) 
 	{
 		Image image = null;
 
@@ -378,17 +380,17 @@ public class ImageRepository
 		final String	file_key,
 		final boolean	bBig,
 		final boolean	minifolder,
-		final Runnable	listener )
+		final Consumer<Image>	listener )
 	{
 		synchronized( async_icon_pending ){
 
-			java.util.List<Runnable> waiting = async_icon_pending.get( file_key );
+			java.util.List<Consumer<Image>> waiting = async_icon_pending.get( file_key );
 
 			if ( waiting != null ){
 
 					// a lookup is already in flight for this file; just join it
 
-				if ( listener != null && waiting.size() < 16 ){
+				if ( listener != null ){
 
 					waiting.add( listener );
 				}
@@ -404,6 +406,9 @@ public class ImageRepository
 		}
 
 		async_icon_dispatcher.dispatch(()->{
+			
+			Image[] result = { null };
+
 			try{
 
 				boolean reachable = Utils.fileExistsWithTimeout( file );
@@ -420,7 +425,7 @@ public class ImageRepository
 					// thread until it has done so, which leaves the dispatcher
 					// throttling the lookups one at a time instead of flooding the
 					// SWT queue with thousands of them
-
+											
 				Utils.execSWTThread(()->{
 
 					Image icon = null;
@@ -441,24 +446,25 @@ public class ImageRepository
 						}
 					}
 
-
-
 					if ( icon != null ){
+						
+						icon = cachePerFileIcon( file, file_key, icon, bBig, minifolder );
 
-						cachePerFileIcon( file, file_key, icon, bBig, minifolder );
-
+						synchronized( result ){
+							
+							result[0] = icon;
+						}
 					}else{
 
 						per_file_content_keys.put( file_key, PER_FILE_NONE );
 					}
-
 				}, false );
-
+				
 			}catch( Throwable e ){
 
 			}finally{
 
-				java.util.List<Runnable> waiting;
+				java.util.List<Consumer<Image>> waiting;
 
 				synchronized( async_icon_pending ){
 
@@ -467,10 +473,17 @@ public class ImageRepository
 
 				if ( waiting != null ){
 
-					for ( Runnable r: waiting ){
+					Image image;
+					
+					synchronized( result ){
+						
+						image = result[0];
+					}
+					
+					for ( Consumer<Image> r: waiting ){
 
 						try{
-							r.run();
+							r.accept( image );
 
 						}catch( Throwable e ){
 
@@ -486,7 +499,7 @@ public class ImageRepository
 		// cached Image by icon content: a thousand installers sharing an icon end
 		// up sharing a single Image rather than a thousand copies
 
-	private static void
+	private static Image
 	cachePerFileIcon(
 		File		file,
 		String		file_key,
@@ -509,7 +522,9 @@ public class ImageRepository
 			if ( bBig ) content_key += "-big";
 			if ( minifolder ) content_key += "-fold";
 
-			boolean already_held = ImageLoader.isRealImage( ImageLoader.getInstance().getImage( content_key ));
+			Image existing = ImageLoader.getInstance().getImage( content_key );
+			
+			boolean already_held = ImageLoader.isRealImage( existing );
 
 				// the lookup above takes a reference either way; this method hands
 				// the Image to nobody, so drop it again
@@ -523,7 +538,7 @@ public class ImageRepository
 
 				per_file_content_keys.put( file_key, content_key );
 
-				return;
+				return( existing );
 			}
 
 			if ( !bBig ) icon = force16height( icon );
@@ -536,10 +551,14 @@ public class ImageRepository
 
 			per_file_content_keys.put( file_key, content_key );
 
+			return( icon );
+			
 		}catch( Throwable e ){
 
 			Debug.out( e );
 
+			return( icon );
+			
 		}finally{
 
 			if ( !cached && icon != null && !icon.isDisposed()){
@@ -612,11 +631,11 @@ public class ImageRepository
 
 	public static Image 
 	getPathIcon(
-		String		path, 
-		Boolean		isFile,
-		boolean		bBig,
-		boolean		minifolder,
-		Runnable	icon_listener ) 
+		String			path, 
+		Boolean			isFile,
+		boolean			bBig,
+		boolean			minifolder,
+		Consumer<Image>	icon_listener ) 
 	{
 		if (path == null)
 			return null;
