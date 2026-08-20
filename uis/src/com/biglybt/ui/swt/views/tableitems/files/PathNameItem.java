@@ -122,7 +122,7 @@ public class PathNameItem extends CoreTableColumnSWT implements
 					if ( Utils.isSWTThread()){
 
 						icon = ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
-								cell.getHeight() > 32, false);
+								true, cell.getHeight() > 32, false);
 					}else{
 							// happens rarely (seen of filtering of file-view rows
 							// when a new row is added )
@@ -135,7 +135,7 @@ public class PathNameItem extends CoreTableColumnSWT implements
 								run()
 								{
 									Image icon = ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
-											_cell.getHeight() > 32, false);
+													true, _cell.getHeight() > 32, false);
 
 									_cell.setIcon(icon);
 

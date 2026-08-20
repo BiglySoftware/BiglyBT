@@ -598,11 +598,12 @@ public class ImageRepository
 	*/
 	public static Image 
 	getPathIcon(
-		final String path, 
-		boolean bBig,
-		boolean minifolder) 
+		String		path,
+		Boolean		isFile,
+		boolean		bBig,
+		boolean		minifolder) 
 	{
-		return( getPathIcon( path, bBig, minifolder, null ));
+		return( getPathIcon( path, isFile, bBig, minifolder, null ));
 	}
 
 		// icon_listener is run once an asynchronously resolved per-file icon has
@@ -611,10 +612,11 @@ public class ImageRepository
 
 	public static Image 
 	getPathIcon(
-		final String path, 
-		boolean bBig,
-		boolean minifolder,
-		Runnable icon_listener ) 
+		String		path, 
+		Boolean		isFile,
+		boolean		bBig,
+		boolean		minifolder,
+		Runnable	icon_listener ) 
 	{
 		if (path == null)
 			return null;
@@ -632,7 +634,7 @@ public class ImageRepository
 			// Mac OS X - Do not mix AWT with SWT (possible workaround: use IPC/Cocoa)
 
 			String key;
-			if ( Utils.isDirectoryWithTimeout( file )) {
+			if ( isFile==null?Utils.isDirectoryWithTimeout( file ):!isFile){
 				if (noAWT) {
 					if (Constants.isWindows || Constants.isOSX) {
 						return getIconFromExtension(file, "-folder", bBig, false);
@@ -1106,7 +1108,7 @@ public class ImageRepository
 
 			@Override
 			public void modifyText(ModifyEvent e) {
-				Image pathIcon = getPathIcon(text.getText(), false, false);
+				Image pathIcon = getPathIcon(text.getText(), null, false, false);
 				label.setImage(pathIcon);
 			}
 		});

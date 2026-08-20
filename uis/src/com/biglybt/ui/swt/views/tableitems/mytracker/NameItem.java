@@ -126,7 +126,7 @@ public class NameItem extends CoreTableColumnSWT implements
 
 						if ( Utils.isSWTThread()){
 
-							icon = ImageRepository.getPathIcon(path, false, !torrent.isSimpleTorrent());
+							icon = ImageRepository.getPathIcon(path, true, false, !torrent.isSimpleTorrent());
 						}else{
 								// happens rarely (seen of filtering of file-view rows
 								// when a new row is added )
@@ -138,7 +138,7 @@ public class NameItem extends CoreTableColumnSWT implements
 									public void
 									run()
 									{
-										Image icon = ImageRepository.getPathIcon(path, false, !torrent.isSimpleTorrent());
+										Image icon = ImageRepository.getPathIcon(path, true, false, !torrent.isSimpleTorrent());
 
 										_cell.setIcon(icon);
 

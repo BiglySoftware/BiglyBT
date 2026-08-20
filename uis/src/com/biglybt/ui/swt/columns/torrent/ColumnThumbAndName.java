@@ -479,7 +479,7 @@ public class ColumnThumbAndName
 			
 			if ( imgThumbnail == null ){
 			
-				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), cellBounds.height >= 20, false) };
+				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), true, cellBounds.height >= 20, false) };
 		
 				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
 			}

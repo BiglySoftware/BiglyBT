@@ -414,7 +414,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			
 			if ( imgThumbnail == null ){
 			
-				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), cell.getHeight() > 32, false) };
+				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), true, cell.getHeight() > 32, false) };
 		
 				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
 			}
