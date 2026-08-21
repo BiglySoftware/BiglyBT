@@ -43,7 +43,7 @@ public class ToolBarItemSO
 	private SWTSkinObjectText skinTitle;
 
 	private boolean isDown;
-
+	private boolean wasDown;
 	private UIToolBarItemImpl base;
 
 	private SWTSkinObject so;
@@ -138,8 +138,10 @@ public class ToolBarItemSO
 			setEnabled((state & UIToolBarItem.STATE_ENABLED) > 0);
 			isDown = (state & UIToolBarItem.STATE_DOWN) > 0;
 			if (skinButton != null) {
-				skinButton.getSkinObject().switchSuffix(isDown ? "-selected" : "", 4,
-						false);
+				if ( wasDown != isDown ){
+					skinButton.getSkinObject().switchSuffix(isDown ? "-selected" : "", 4, false);
+					wasDown = isDown;
+				}
 			}
 		}
 	}
