@@ -614,13 +614,13 @@ public class Utils
 				
 				Color def = (Color)control.getData( "utils:skinned-fg" );
 								
-				control.setForeground( def );
+				updateForeground( control, def );
 
 			}else{
 			
 				control.setData( "utils:skinned-fg-forced", true );
 				
-				control.setForeground( color );
+				updateForeground( control, color );
 			}
 						
 		}else{
@@ -629,12 +629,25 @@ public class Utils
 			
 			if ( def != null ){
 				
-				control.setForeground( color==null?def:color );
-				
+				updateForeground(control, color==null?def:color );
 			}else{
 				
-				control.setForeground( color );
+				updateForeground( control, color );
 			}
+		}
+	}
+	
+	private static void
+	updateForeground(
+		Control		control,
+		Color		color )
+	{
+		Color existing = control.getForeground();
+				
+		if (	( color != existing ) &&
+				( color == null || existing == null || !existing.equals(color ))){
+		
+			control.setForeground( color );
 		}
 	}
 	
@@ -691,6 +704,20 @@ public class Utils
 		}
 	}
 	
+	private static void
+	updateBackground(
+		Control		control,
+		Color		color )
+	{
+		Color existing = control.getBackground();
+				
+		if (	( color != existing ) &&
+				( color == null || existing == null || !existing.equals(color ))){
+		
+			control.setBackground(color);
+		}
+	}
+	
 	public static void
 	setSkinnedBackground(
 		Control		control,
@@ -715,13 +742,13 @@ public class Utils
 				
 				Color def = (Color)control.getData( "utils:skinned-bg" );
 								
-				control.setBackground( def );
+				updateBackground( control, def );
 	
 			}else{
 			
 				control.setData( "utils:skinned-bg-forced", true );
 				
-				control.setBackground( color );
+				updateBackground( control, color );
 			}			
 		}else{
 			
@@ -729,11 +756,11 @@ public class Utils
 			
 			if ( def != null ){
 				
-				control.setBackground( color==null?def:color );
+				updateBackground( control, color==null?def:color );
 				
 			}else{
 				
-				control.setBackground( color );
+				updateBackground( control, color );
 			}
 		}
 	}
@@ -743,7 +770,7 @@ public class Utils
 		Control		control,
 		Control		from )
 	{
-		control.setBackground( from.getBackground());
+		updateBackground( control, from.getBackground());
 		
 		control.setData( "utils:skinned-bg-forced", from.getData( "utils:skinned-bg-forced" ));
 	}
