@@ -109,19 +109,19 @@ public class PathNameItem extends CoreTableColumnSWT implements
 		//setText returns true only if the text is updated
 		if (cell.setText(fk) || !cell.isValid()) {
 			if (bShowIcon && !sortOnlyRefresh) {
-				Image icon = null;
+				ImageRepository.PathIcon pi = null;
 
 				final TableCellSWT _cell = (TableCellSWT)cell;
 
 				if (fileInfo == null) {
-					icon = null;
+					pi = null;
 				} else {
 
 					// Don't ever dispose of PathIcon, it's cached and may be used elsewhere
 
 					if ( Utils.isSWTThread()){
 
-						icon = ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
+						pi = ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
 								true, cell.getHeight() > 32, false);
 					}else{
 							// happens rarely (seen of filtering of file-view rows
@@ -134,10 +134,10 @@ public class PathNameItem extends CoreTableColumnSWT implements
 								public void
 								run()
 								{
-									Image icon = ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
+									ImageRepository.PathIcon pi = ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
 													true, _cell.getHeight() > 32, false);
 
-									_cell.setIcon(icon);
+									_cell.setIcon( pi.image );
 
 									_cell.redraw();
 								}
@@ -148,8 +148,8 @@ public class PathNameItem extends CoreTableColumnSWT implements
 				// cheat for core, since we really know it's a TabeCellImpl and want to use
 				// those special functions not available to Plugins
 
-				if ( icon != null ){
-					_cell.setIcon(icon);
+				if ( pi != null && pi.image != null  ){
+					_cell.setIcon( pi.image );
 				}
 			}
 		}

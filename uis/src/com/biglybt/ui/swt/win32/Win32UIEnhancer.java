@@ -311,7 +311,7 @@ public class Win32UIEnhancer
 	private static AsyncDispatcher	gfi_dispatcher		= new AsyncDispatcher( "gfi" );
 	private static List<Image>		gfi_pending_images	= new ArrayList<>();
 	
-	public static Image 
+	public static Object[] 
 	getFileIcon(
 		File file, boolean big) 
 	{
@@ -331,7 +331,7 @@ public class Win32UIEnhancer
 			
 			gfi_pending_images.clear();
 			
-			if ( gfi_active || gfi_consec_fails > 3 ){
+			if ( gfi_active || gfi_consec_fails > 50 ){
 				
 				return( null );
 			}
@@ -394,7 +394,7 @@ public class Win32UIEnhancer
 				gfi_pending_images.remove( img );
 			}
 			
-			return( img );
+			return( new Object[]{ img, !ok });
 		}
 	}
 	

@@ -1098,28 +1098,6 @@ public class ImageLoader
 			}
 		}
 	}
-
-	public void replaceImageNoDipose(String key, Image image) {
-		if (!Utils.isThisThreadSWT()) {
-			Debug.out("replaceImageNoDipose called on non-SWT thread");
-			return;
-		}
-		ImageLoaderRefInfo existing = _mapImages.get( key );
-		
-		if ( existing != null ){
-			
-			Image[] images = existing.getImages();
-			
-			if ( images != null && images.length > 0 && !isRealImage( images[0])){
-				
-				Debug.out("replaceImageNoDipose: existing image is real" );
-			}
-			
-			_mapImages.remove( key );
-		}
-		
-		addImageNoDipose( key, image );
-	}
 	
 	public static Image getNoImage(){
 		return( getNoImage( "explicit" ));

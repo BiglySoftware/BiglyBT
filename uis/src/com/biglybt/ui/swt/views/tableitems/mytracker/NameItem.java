@@ -118,7 +118,7 @@ public class NameItem extends CoreTableColumnSWT implements
 
 	  				if ( path != null ){
 
-	  					Image icon = null;
+	  					ImageRepository.PathIcon pi = null;
 
 	  					final TableCellSWT _cell = (TableCellSWT)cell;
 
@@ -126,7 +126,8 @@ public class NameItem extends CoreTableColumnSWT implements
 
 						if ( Utils.isSWTThread()){
 
-							icon = ImageRepository.getPathIcon(path, true, false, !torrent.isSimpleTorrent());
+							pi = ImageRepository.getPathIcon(path, true, false, !torrent.isSimpleTorrent());
+							
 						}else{
 								// happens rarely (seen of filtering of file-view rows
 								// when a new row is added )
@@ -138,9 +139,9 @@ public class NameItem extends CoreTableColumnSWT implements
 									public void
 									run()
 									{
-										Image icon = ImageRepository.getPathIcon(path, true, false, !torrent.isSimpleTorrent());
+										ImageRepository.PathIcon pi = ImageRepository.getPathIcon(path, true, false, !torrent.isSimpleTorrent());
 
-										_cell.setIcon(icon);
+										_cell.setIcon( pi.image );
 
 										_cell.redraw();
 									}
@@ -148,9 +149,9 @@ public class NameItem extends CoreTableColumnSWT implements
 						}
 
 
-						if ( icon != null ){
+						if ( pi.image != null ){
 
-							_cell.setIcon(icon);
+							_cell.setIcon( pi.image );
 						}
 	  				}
 				} catch (Exception e) {

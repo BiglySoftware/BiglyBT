@@ -44,14 +44,15 @@ import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.AENetworkClassifier;
-import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.HostNameToIPResolver;
+import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SHA1Simple;
+import com.biglybt.core.util.StringInterner;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.utils.LocationProvider;
@@ -81,7 +82,7 @@ public class ImageRepository
 		// (its text hasn't changed), so it has to be nudged to repaint - same
 		// approach ColumnThumbAndName uses for async thumbnails
 
-	private static final Map<String,java.util.List<Consumer<Image>>>	async_icon_pending = new HashMap<>();
+	private static final Map<IconFileKey,java.util.List<Consumer<PathIcon>>>	async_icon_pending = new HashMap<>();
 
 		// per-file icons are shared by content: a path maps to a content key and
 		// identical icons (the common case - most .exe files carry one of a
@@ -89,26 +90,28 @@ public class ImageRepository
 		// map is bounded so a library with millions of files can't accumulate
 		// millions of path strings
 
-	private static final int	PER_FILE_CACHE_MAX = 512;
+	private static final int	PER_FILE_CACHE_MAX = 1024;
 
 		// marks a file whose icon lookup came back empty, so a failure doesn't
 		// have every repaint queue the lookup again; the entry ages out of the
 		// map normally, which lets a file that has become reachable retry
 
-	private static final String	PER_FILE_NONE = "";
-
-	private static final Map<String,String>	per_file_content_keys =
-		Collections.synchronizedMap(
-			new LinkedHashMap<String,String>( 128, 0.75f, true )
+	private static final int	PFC_NONE	= 0;
+	private static final int	PFC_OK		= 1;
+	private static final int	PFC_TIMEOUT	= 2;
+	
+	
+	private static final Map<IconFileKey,PerFileContent>	per_file_content_keys =
+			new LinkedHashMap<IconFileKey,PerFileContent>( 128, 0.75f, true )
 			{
 				@Override
 				protected boolean
 				removeEldestEntry(
-					Map.Entry<String,String> eldest )
+					Map.Entry<IconFileKey,PerFileContent> eldest )
 				{
 					return( size() > PER_FILE_CACHE_MAX );
 				}
-			});
+			};
 
 	/**public*/
 	static void addPath(String path, String id) {
@@ -161,7 +164,7 @@ public class ImageRepository
 				"Ignore Icon Exts" );		
 	}
 	
-	public static Image 
+	public static PathIcon 
 	getIconFromExtension(
 		File file, 
 		String ext, 
@@ -171,13 +174,13 @@ public class ImageRepository
 		return( getIconFromExtension( file, ext, bBig, minifolder, null ));
 	}
 
-	public static Image 
+	public static PathIcon 
 	getIconFromExtension(
-		File file, 
-		String ext, 
-		boolean bBig,
-		boolean minifolder,
-		Consumer<Image> icon_listener ) 
+		File				file, 
+		String				ext, 
+		boolean				bBig,
+		boolean 			minifolder,
+		Consumer<PathIcon>	icon_listener ) 
 	{
 		Image image = null;
 
@@ -207,77 +210,102 @@ public class ImageRepository
 			if ( bBig ) ext_key += "-big";
 			if ( minifolder ) ext_key += "-fold";
 
-
-
 			if ( per_file_icon ){
 
-				String file_key = file.getAbsolutePath();
+				IconFileKey file_key = new IconFileKey( file, bBig, minifolder );
 
-				if ( bBig ) file_key += "-big";
-				if ( minifolder ) file_key += "-fold";
+				PerFileContent pfc;
+				
+				synchronized( per_file_content_keys ){
+					
+					pfc = per_file_content_keys.get( file_key );
+				}
+				
+				Image ext_key_image = ImageLoader.getInstance().getImage( ext_key );
 
-				String content_key = per_file_content_keys.get( file_key );
+				Image default_image;
+				
+				if ( ImageLoader.isRealImage( ext_key_image )){
 
+					default_image = ext_key_image;
+					
+				}else{
+					
+					default_image = ImageLoader.getInstance().getImage( minifolder ? "folder" : "transparent" );
+				}
+				
+				if ( pfc != null ){
 
-				if ( content_key != null ){
+					if ( pfc.type == PFC_OK || pfc.canRetry()){
 
-					if ( !content_key.isEmpty()){
-
-						image = ImageLoader.getInstance().getImage( content_key );
-
-						if ( ImageLoader.isRealImage( image )){
-							return( image );
+						String content_key = pfc.key;
+						
+						if ( content_key != null ){
+							
+							image = ImageLoader.getInstance().getImage( content_key );
+	
+							if ( ImageLoader.isRealImage( image )){
+								
+								return( new PathIcon( image, pfc.type != PFC_TIMEOUT ));
+							}
 						}
 
-						ImageLoader.getInstance().releaseImage( content_key );
-
-						per_file_content_keys.remove( file_key );
-
-						scheduleAsyncIconFetch( file, file_key, bBig, minifolder, icon_listener );
+						scheduleAsyncIconFetch( file, file_key, bBig, minifolder, default_image, icon_listener );
 					}
 				}else{
 
-					scheduleAsyncIconFetch( file, file_key, bBig, minifolder, icon_listener );
+					scheduleAsyncIconFetch( file, file_key, bBig, minifolder, default_image, icon_listener );
 				}
 
 
 					// return the shared extension icon until the per-file one arrives
 
-				image = ImageLoader.getInstance().getImage( ext_key );
+				Image pending_image = null;
+				
+				if ( ImageLoader.isRealImage( ext_key_image )){
+				
+					pending_image = ext_key_image;
+					
+				}else{
 
-				if ( ImageLoader.isRealImage( image )){
-					return( image );
-				}
+					Program program = Program.findProgram( ext );
 
-				ImageLoader.getInstance().releaseImage( ext_key );
+					if ( program != null ){
 
-				Program program = Program.findProgram( ext );
+						ImageData id = program.getImageData();
 
-				if ( program != null ){
+						if ( id != null ){
 
-					ImageData id = program.getImageData();
-
-					if ( id != null ){
-
-						image = new Image( Display.getDefault(), id );
-						if ( !bBig ) image = force16height( image );
-						if ( minifolder ) image = minifolderize( file.getParent(), image, bBig );
-						ImageLoader.getInstance().addImageNoDipose( ext_key, image );
-						return( image );
+							pending_image = new Image( Display.getDefault(), id );
+							
+							if ( !bBig ) pending_image = force16height( pending_image );
+							
+							if ( minifolder ) pending_image = minifolderize( file.getParent(), pending_image, bBig );
+							
+							ImageLoader.getInstance().addImageNoDipose( ext_key, pending_image );
+						}		
 					}
 				}
+				
+				if ( pending_image == null ){
+					
+					pending_image = ImageLoader.getInstance().getImage( minifolder ? "folder" : "transparent" );
+				}
 
-				return( ImageLoader.getInstance().getImage( minifolder ? "folder" : "transparent" ));
+				return( new PathIcon( pending_image, true ));
 			}
 
+				// from here on we are setting up the shared, non-file specific, image for the given extension
+			
 			String key = ext_key;
 
 			image = ImageLoader.getInstance().getImage(key);
+			
 			if (ImageLoader.isRealImage(image)) {
-				return image;
+				
+				return( new PathIcon( image ));
 			}
 
-			ImageLoader.getInstance().releaseImage(key);
 			image = null;
 
 			if ( Utils.isFileResponding( file )){
@@ -290,11 +318,11 @@ public class ImageRepository
 					
 					if ( ignore_icon_exts.contains( ext.toLowerCase( Locale.US  ))){
 						
-						return ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent");
+						return( new PathIcon( ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent")));
 					}
 					
 					try {
-						//Image icon = Win32UIEnhancer.getFileIcon(new File(path), big);
+						//Object[] result = Win32UIEnhancer.getFileIcon(new File(path), big);
 	
 						Class<?> enhancerClass = Class.forName("com.biglybt.ui.swt.win32.Win32UIEnhancer");
 						Method method = enhancerClass.getMethod("getFileIcon",
@@ -302,17 +330,20 @@ public class ImageRepository
 									File.class,
 									boolean.class
 								});
-						image = (Image) method.invoke(null, new Object[] {
+						Object[] result = (Object[])method.invoke(null, new Object[] {
 							file,
 							bBig
 						});
-						if (image != null) {
-							if (!bBig)
-								image = force16height(image);
-							if (minifolder)
-								image = minifolderize(file.getParent(), image, bBig);
-							ImageLoader.getInstance().addImageNoDipose(key, image);
-							return image;
+						if (result != null) {
+							image = (Image)result[0];
+							if ( image != null ){
+								if (!bBig)
+									image = force16height(image);
+								if (minifolder)
+									image = minifolderize(file.getParent(), image, bBig);
+								ImageLoader.getInstance().addImageNoDipose(key, image);
+								return( new PathIcon( image ));
+							}
 						}
 					} catch (Exception e) {
 						Debug.printStackTrace(e);
@@ -335,7 +366,7 @@ public class ImageRepository
 							if (minifolder)
 								image = minifolderize(file.getParent(), image, bBig);
 							ImageLoader.getInstance().addImageNoDipose(key, image);
-							return image;
+							return( new PathIcon( image ));
 						}
 					} catch (Throwable t) {
 						Debug.printStackTrace(t);
@@ -365,9 +396,9 @@ public class ImageRepository
 		}
 
 		if (image == null) {
-			return ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent");
+			return( new PathIcon( ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent")));
 		}
-		return image;
+		return( new PathIcon( image ));
 	}
 
 		// resolve a per-file icon without blocking the interface: the (potentially
@@ -376,15 +407,16 @@ public class ImageRepository
 
 	private static void
 	scheduleAsyncIconFetch(
-		final File		file,
-		final String	file_key,
-		final boolean	bBig,
-		final boolean	minifolder,
-		final Consumer<Image>	listener )
+		final File					file,
+		final IconFileKey			file_key,
+		final boolean				bBig,
+		final boolean				minifolder,
+		final Image					default_icon,
+		final Consumer<PathIcon>	listener )
 	{
 		synchronized( async_icon_pending ){
 
-			java.util.List<Consumer<Image>> waiting = async_icon_pending.get( file_key );
+			java.util.List<Consumer<PathIcon>> waiting = async_icon_pending.get( file_key );
 
 			if ( waiting != null ){
 
@@ -407,17 +439,30 @@ public class ImageRepository
 
 		async_icon_dispatcher.dispatch(()->{
 			
-			Image[] result = { null };
+			PathIcon[] result = { new PathIcon( null, false ) };
 
 			try{
 
 				boolean reachable = Utils.fileExistsWithTimeout( file );
 
-
 				if ( !reachable ){
 
-					per_file_content_keys.put( file_key, PER_FILE_NONE );
-
+					synchronized( per_file_content_keys ){
+					
+						PerFileContent pfc = per_file_content_keys.get( file_key );
+					
+						if ( pfc != null && pfc.type == PFC_TIMEOUT ){
+							
+							pfc.setFailed();
+							
+						}else{
+						
+							per_file_content_keys.put( file_key, new PerFileContent( PFC_TIMEOUT, null ));
+						}
+					}
+					
+					result[0] = new PathIcon( default_icon, true );
+					
 					return;
 				}
 
@@ -429,12 +474,17 @@ public class ImageRepository
 				Utils.execSWTThread(()->{
 
 					Image icon = null;
-
+					boolean	timeout = false;
+					
 					if ( Constants.isWindows ){
 						try{
 							Class<?> cls = Class.forName( "com.biglybt.ui.swt.win32.Win32UIEnhancer" );
 							Method m = cls.getMethod( "getFileIcon", new Class[]{ File.class, boolean.class });
-							icon = (Image)m.invoke( null, new Object[]{ file, bBig });
+							Object[] temp = (Object[])m.invoke( null, new Object[]{ file, bBig });
+							if ( temp != null ){
+								icon = (Image)temp[0];
+								timeout = (Boolean)temp[1];
+							}
 						}catch( Throwable e ){
 						}
 					}else if ( Constants.isOSX ){
@@ -452,19 +502,28 @@ public class ImageRepository
 
 						synchronized( result ){
 							
-							result[0] = icon;
+							result[0] = new PathIcon( icon );
 						}
 					}else{
+						synchronized( result ){
+							
+							result[0] = new PathIcon( default_icon, timeout );
+						}
 
-						per_file_content_keys.put( file_key, PER_FILE_NONE );
+						synchronized( per_file_content_keys ){
+						
+							per_file_content_keys.put( file_key, new PerFileContent( PFC_NONE, null ));
+						}
 					}
 				}, false );
 				
 			}catch( Throwable e ){
 
+				Debug.out( e );
+				
 			}finally{
 
-				java.util.List<Consumer<Image>> waiting;
+				java.util.List<Consumer<PathIcon>> waiting;
 
 				synchronized( async_icon_pending ){
 
@@ -473,17 +532,17 @@ public class ImageRepository
 
 				if ( waiting != null ){
 
-					Image image;
+					PathIcon pi;
 					
 					synchronized( result ){
 						
-						image = result[0];
+						pi = result[0];
 					}
 					
-					for ( Consumer<Image> r: waiting ){
+					for ( Consumer<PathIcon> r: waiting ){
 
 						try{
-							r.accept( image );
+							r.accept( pi );
 
 						}catch( Throwable e ){
 
@@ -501,11 +560,11 @@ public class ImageRepository
 
 	private static Image
 	cachePerFileIcon(
-		File		file,
-		String		file_key,
-		Image		icon,
-		boolean		bBig,
-		boolean		minifolder )
+		File			file,
+		IconFileKey		file_key,
+		Image			icon,
+		boolean			bBig,
+		boolean			minifolder )
 	{
 		boolean	cached = false;
 
@@ -526,17 +585,22 @@ public class ImageRepository
 			
 			boolean already_held = ImageLoader.isRealImage( existing );
 
-				// the lookup above takes a reference either way; this method hands
-				// the Image to nobody, so drop it again
-
-			ImageLoader.getInstance().releaseImage( content_key );
-
 			if ( already_held ){
 
 					// an identical icon is already cached, so drop this copy and
 					// point the file at the shared one
 
-				per_file_content_keys.put( file_key, content_key );
+				synchronized( per_file_content_keys ){
+					
+					PerFileContent pfc = per_file_content_keys.get( file_key );
+				
+					if ( pfc == null || pfc.type != PFC_OK ){
+				
+						pfc = new PerFileContent( PFC_OK, content_key );
+					}
+				
+					per_file_content_keys.put( file_key, pfc );
+				}
 
 				return( existing );
 			}
@@ -548,9 +612,11 @@ public class ImageRepository
 
 			cached = true;
 
-
-			per_file_content_keys.put( file_key, content_key );
-
+			synchronized( per_file_content_keys ){
+			
+				per_file_content_keys.put( file_key, new PerFileContent( PFC_OK, content_key ));
+			}
+			
 			return( icon );
 			
 		}catch( Throwable e ){
@@ -615,7 +681,7 @@ public class ImageRepository
 	* @param path Absolute path to the file or directory
 	* @return The image
 	*/
-	public static Image 
+	public static PathIcon 
 	getPathIcon(
 		String		path,
 		Boolean		isFile,
@@ -629,17 +695,18 @@ public class ImageRepository
 		// landed in the cache. a table cell that has already painted won't ask
 		// again on its own, so it uses this to invalidate itself and repaint.
 
-	public static Image 
+	public static PathIcon 
 	getPathIcon(
-		String			path, 
-		Boolean			isFile,
-		boolean			bBig,
-		boolean			minifolder,
-		Consumer<Image>	icon_listener ) 
+		String				path, 
+		Boolean				isFile,
+		boolean				bBig,
+		boolean				minifolder,
+		Consumer<PathIcon>	icon_listener ) 
 	{
-		if (path == null)
-			return null;
-
+		if (path == null){
+			return( new PathIcon( null ));
+		}
+		
 		File file = null;
 		boolean bDeleteFile = false;
 
@@ -658,7 +725,7 @@ public class ImageRepository
 					if (Constants.isWindows || Constants.isOSX) {
 						return getIconFromExtension(file, "-folder", bBig, false);
 					}
-					return ImageLoader.getInstance().getImage("folder");
+					return( new PathIcon( ImageLoader.getInstance().getImage("folder")));
 				}
 
 				key = file.getPath();
@@ -701,9 +768,8 @@ public class ImageRepository
 			// other platforms - try sun.awt
 			Image image = ImageLoader.getInstance().getImage(key);
 			if (ImageLoader.isRealImage(image)) {
-				return image;
+				return( new PathIcon( image ));
 			}
-			ImageLoader.getInstance().releaseImage(key);
 			image = null;
 
 			bDeleteFile = !Utils.fileExistsWithTimeout(file);
@@ -759,7 +825,7 @@ public class ImageRepository
 				if (bDeleteFile && file != null && Utils.fileExistsWithTimeout( file )) {
 					file.delete();
 				}
-				return image;
+				return( new PathIcon( image ));
 			}
 		} catch (Exception e) {
 			//Debug.printStackTrace(e);
@@ -772,7 +838,7 @@ public class ImageRepository
 		// Possible scenario: Method call before file creation
 		String ext = FileUtil.getExtension(path);
 		if (ext.length() == 0) {
-			return ImageLoader.getInstance().getImage("folder");
+			return( new PathIcon( ImageLoader.getInstance().getImage("folder")));
 		}
 
 		return getIconFromExtension(file, ext, bBig, minifolder, icon_listener);
@@ -1113,8 +1179,117 @@ public class ImageRepository
 		return( flag );
 	}
 
+	static class
+	IconFileKey
+	{
+		final StringInterner.FileKey		file_key;
+		final byte							modifier;
+		
+		IconFileKey(
+			File		file,
+			boolean		big,
+			boolean		minifolder )
+		{
+			file_key = new StringInterner.FileKey( file );
+			
+			short mod = 0;
+			
+			if ( big ){
+				mod += 1;
+			}
+			if ( minifolder ){
+				mod += 2;
+			}
+			modifier = (byte)mod;
+		}
+		
+		public int
+		hashCode()
+		{
+			return( file_key.hashCode() + modifier );
+		}
+		
+		public boolean
+		equals(
+			Object	_other )
+		{
+			IconFileKey other = (IconFileKey)_other;
+			
+			return( other.file_key.equals( file_key ) && other.modifier == modifier );
+		}
+	}
 
+	static class
+	PerFileContent
+	{
+		final long		time = SystemTime.getMonotonousTime();
 
+		final int		type;
+		final String	key;
+		
+		int		fail_count;
+		
+		PerFileContent(
+			int		_type,
+			String	_key )
+		{
+			type	= _type;
+			key		= _key;
+			
+			if ( type == PFC_TIMEOUT ){
+				
+				fail_count = 1;
+			}
+		}
+		
+		void
+		setFailed()
+		{
+			if ( fail_count < 20 ){
+				
+				fail_count++;
+			}
+		}
+		
+		boolean
+		canRetry()
+		{
+			if ( type == PFC_TIMEOUT ){
+				
+				long elapsed = SystemTime.getMonotonousTime() - time;
+				
+				long delay = fail_count * ( 30*1000 + RandomUtils.nextInt( 10*1000 ));
+				
+				return( elapsed > delay );
+				
+			}else{
+				
+				return( false );
+			}
+		}
+	}
+
+	public static class
+	PathIcon
+	{
+		final public Image		image;
+		final public boolean	temporary;
+		
+		PathIcon(
+			Image		_image )
+		{
+			this( _image, false );
+		}
+			
+		PathIcon(
+			Image		_image,
+			boolean		_t )
+		{
+			image		= _image;
+			temporary	= _t;
+		}
+	}
+	
 	public static void main(String[] args) {
 		Display display = new Display();
 		Shell shell = new Shell(display, SWT.SHELL_TRIM);
@@ -1127,8 +1302,8 @@ public class ImageRepository
 
 			@Override
 			public void modifyText(ModifyEvent e) {
-				Image pathIcon = getPathIcon(text.getText(), null, false, false);
-				label.setImage(pathIcon);
+				ImageRepository.PathIcon pi = getPathIcon(text.getText(), null, false, false);
+				label.setImage(pi.image);
 			}
 		});
 
