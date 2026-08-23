@@ -1569,8 +1569,8 @@ public class MyTorrentsView
 	public boolean 
 	filterCheck(
 		DownloadManager 	dm, 
-		String 				sLastSearch, 
-		boolean 			bRegexSearch,
+		String 				currentSearch, 
+		boolean 			regexSearch,
 		boolean				confusable )
 	{
 		if ( dm == null ){
@@ -1578,18 +1578,19 @@ public class MyTorrentsView
 		}
 		
 		boolean bOurs;
-		if (sLastSearch.length() > 0) {
+		
+		if (currentSearch.length() > 0) {
 			
-			if ( !bRegexSearch ){
+			if ( !regexSearch ){
 				
 				try{
 					TagConstraint constraint = lastSearchConstraint;
 					
-					if ( constraint == null || !sLastSearch.equals( lastSearchConstraintString )){
+					if ( constraint == null || !currentSearch.equals( lastSearchConstraintString )){
 						
-						lastSearchConstraintString = sLastSearch;
+						lastSearchConstraintString = currentSearch;
 												
-						constraint = lastSearchConstraint = tagManager.compileConstraint( sLastSearch );
+						constraint = lastSearchConstraint = tagManager.compileConstraint( currentSearch );
 					}
 					
 					if ( constraint != null && constraint.getError() == null ){
@@ -1600,216 +1601,125 @@ public class MyTorrentsView
 				}
 			}
 			
-			try {
-				String	comment = dm.getDownloadState().getUserComment();
-				if ( comment == null ){
-					comment = "";
-				}
-
-				String[][] name_mapping = {
-					{
-						"",
-						dm.getDisplayName()
-					},
-					{
-						"t:",
-						"", 	// defer (index = 1)this as costly dm.getTorrent().getAnnounceURL().getHost()
-					},
-					{
-						"st:",
-						"" + dm.getState()
-					},
-					{
-						"c:",
-						comment
-					},
-					{
-						"f:",
-						"",		//defer (index = 4)
-					},
-					{
-						"tag:",
-						""
-					}
-				};
-
-				Object o_name = name_mapping[0][1];
-
-				String tmpSearch = sLastSearch;
-				
-				if ( !tmpSearch.contains( ":" )){
+			try{
+				TableColumnFilterHelper.MatchTextProvider mt_provider = (key)->{
 					
-					tmpSearch = defaultFilterPrefix + tmpSearch;
-				}
-
-				if ( confusable ){
-				
-					tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch, true );
-				}
-
-				boolean defaultMatch = true;
-				
-				for ( int i = 1; i < name_mapping.length; i++ ){
-
-					if ( tmpSearch.startsWith(name_mapping[i][0])) {
-
-						defaultMatch = false;
+					if ( key == null ){
 						
-						tmpSearch = tmpSearch.substring(name_mapping[i][0].length());
-
-						if ( i == 1 ){
-
-							List<String> names = new ArrayList<>();
-
-							o_name = names;
-
+						return( Arrays.asList( dm.getDisplayName()));
+					}
+					
+					List<String> result = new ArrayList<>();
+					
+					switch( key ){
+						case "c":{
+							String	comment = dm.getDownloadState().getUserComment();
+							
+							if ( comment == null ){
+								
+								comment = "";
+							}
+						
+							result.add( comment );
+							
+							break;
+						}
+						case "t":{
+					
 							TOTorrent t = dm.getTorrent();
-
+	
 							if ( t != null ){
-
-								names.add( t.getAnnounceURL().getHost());
-
+	
+								result.add( t.getAnnounceURL().getHost());
+	
 								TOTorrentAnnounceURLSet[] sets = t.getAnnounceURLGroup().getAnnounceURLSets();
-
+	
 								for ( TOTorrentAnnounceURLSet set: sets ){
-
+	
 									URL[] urls = set.getAnnounceURLs();
-
+	
 									for ( URL u: urls ){
-
-										names.add( u.getHost());
+	
+										result.add( u.getHost());
 									}
 								}
-
+	
 								try{
 									byte[] hash = t.getHash();
-
-									names.add( ByteFormatter.encodeString( hash ));
-									names.add( Base32.encode( hash ));
-
+	
+									result.add( ByteFormatter.encodeString( hash ));
+									result.add( Base32.encode( hash ));
+	
 								}catch( Throwable e ){
-
+	
 								}
 							}
-						}else if ( i == 4 ){
-
-							List<String> names = new ArrayList<>();
-
-							o_name = names;
-
+							
+							break;
+						}
+						case "st":{
+						
+							result.add( "" + dm.getState());
+							
+							break;
+						}
+						case "f":{
+					
+							boolean absolute = currentSearch.contains( File.separator );
+							
 							DiskManagerFileInfoSet file_set = dm.getDiskManagerFileInfoSet();
-
+	
 							DiskManagerFileInfo[] files = file_set.getFiles();
-
+	
 							for ( DiskManagerFileInfo f: files ){
-
+	
 								File file = f.getFile(true);
-
-								String name = tmpSearch.contains( File.separator )?file.getAbsolutePath():file.getName();
-
-								names.add( name );
+	
+								String name = absolute?file.getAbsolutePath():file.getName();
+	
+								result.add( name );
 							}
 							
-							names.add( dm.getSaveLocation().getAbsolutePath());		// always throw in matching against the full save path
-
-						} else if (i == 5) {
-							List<String> names = new ArrayList<String>();
-
-							o_name = names;
-
+							result.add( dm.getSaveLocation().getAbsolutePath());		// always throw in matching against the full save path
+							
+							break;
+						}
+						case "tag":{
+											
 							List<Tag> tags = tagManager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
-
+	
 							if ( tags.size() > 0 ){
-
+	
 								tags = TagUtils.sortTags( tags );
-
+	
 								for ( Tag t: tags ){
-
+	
 									String str = t.getTagName( true );
-									names.add(str);
-
+									
+									result.add(str);
 								}
 							}
-
-						}else{
-							o_name = name_mapping[i][1];
-						}
-					}
-				}
-
-				if ( defaultMatch ){
-					
-					String name = (String)o_name;
-					
-					if ( confusable ){
-						
-						name = GeneralUtils.getConfusableEquivalent( name, false );
-					}
-					
-					String colSearch = sLastSearch;
-					
-					if ( !colSearch.contains( ":" )){
-						
-						colSearch = defaultFilterPrefix + colSearch;
-					}
-					
-					bOurs = col_filter_helper.filterCheck( dm, colSearch, bRegexSearch, name, false );
-					
-				}else{
-					
-					boolean	match_result = true;
-	
-					String expr;
-					
-					if ( bRegexSearch ){
-						
-						expr = tmpSearch;
-						
-						if ( expr.startsWith( "!" )){
 							
-							expr = expr.substring(1);
-	
-							match_result = false;
-						}
-					}else{
-						
-						expr = RegExUtil.convertAndOrToExpr( tmpSearch );
-					}
-	
-					Pattern pattern = RegExUtil.getCachedPattern( "tv:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-	
-					if ( o_name instanceof String ){
-	
-						String name = (String)o_name;
-						
-						if ( confusable ){
-							
-							name = GeneralUtils.getConfusableEquivalent( name, false );
+							break;
 						}
 						
-						bOurs = pattern.matcher( name ).find() == match_result;
-	
-					}else{
-						List<String>	names = (List<String>)o_name;
-	
-							// match_result: true -> at least one match; false -> any fail
-	
-						bOurs = !match_result;
-	
-						for ( String name: names ){
-							
-							if ( confusable ){
-							
-								name = GeneralUtils.getConfusableEquivalent( name, false );
-							}
-	
-							if ( pattern.matcher( name ).find()){
-								bOurs = match_result;
-								break;
-							}
+						default:{
+							return( null );
 						}
 					}
-				}
+					
+					return( result );
+				};
+				
+				bOurs = 
+					col_filter_helper.filterCheck( 
+							dm, 
+							defaultFilterPrefix + currentSearch, 
+							regexSearch, 
+							mt_provider, 
+							confusable, 
+							false );
+					
 			} catch (Exception e) {
 				// Future: report PatternSyntaxException message to user.
 

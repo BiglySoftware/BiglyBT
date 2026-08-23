@@ -1524,7 +1524,7 @@ public abstract class TableCellSWTBase
 
     if (changed) {
     	setFlag(FLAG_VISUALLY_CHANGED_SINCE_REFRESH);
-    	if (tableRowSWT == null || tableRowSWT.isVisible()) {
+    	if (tableRowSWT != null && tableRowSWT.isVisible()) {
     		if ( !tableRowSWT.isInPaintItem()){
     			redraw();
     		}

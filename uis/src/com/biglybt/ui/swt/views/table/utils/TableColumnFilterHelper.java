@@ -117,12 +117,43 @@ TableColumnFilterHelper<T>
 	
 	public boolean
 	filterCheck(
-		T			data_source,
-		String		original_filter,
-		boolean		regex,
-		String[]	default_match_texts,
-		boolean		confusable,
-		boolean		ignore_column_match )
+		T				data_source,
+		String			original_filter,
+		boolean			regex,
+		String[]		default_match_texts,
+		boolean			confusable,
+		boolean			ignore_column_match )
+	{
+		return( filterCheck( data_source, original_filter, regex, Arrays.asList( default_match_texts ), confusable, ignore_column_match ));
+	}
+	
+	public boolean
+	filterCheck(
+		T				data_source,
+		String			original_filter,
+		boolean			regex,
+		List<String>	default_match_texts,
+		boolean			confusable,
+		boolean			ignore_column_match )
+	{
+		return(
+			filterCheck(
+				data_source, 
+				original_filter, 
+				regex, 
+				(key)->key==null?default_match_texts:null,
+				confusable, 
+				ignore_column_match ));
+	}
+	
+	public boolean
+	filterCheck(
+		T					data_source,
+		String				original_filter,
+		boolean				regex,
+		MatchTextProvider	mt_provider,
+		boolean				confusable,
+		boolean				ignore_column_match )
 	{
 		if ( original_filter == null || original_filter.isEmpty()){
 			
@@ -130,8 +161,9 @@ TableColumnFilterHelper<T>
 		}
 
 		String	filter_text		= null;
-		String	col_match_text	= null;
-	
+		
+		List<String> col_match_texts = null;
+		
 		int match_mode = MM_EQ;
 
 		double match_numeric = Double.NaN;
@@ -159,7 +191,7 @@ TableColumnFilterHelper<T>
 						break;
 					}
 						
-					String col_name 	= col_filter.substring( 0, pos ).trim();
+					String col_name 	= col_filter.substring( 0, pos ).trim();					
 					String col_value	= col_filter.substring( pos+1 ).trim();
 								
 					if ( col_value.startsWith( ">" )){
@@ -218,8 +250,21 @@ TableColumnFilterHelper<T>
 						}
 					}
 				
-					if ( col != null ){
+					if ( col == null ){
+							
+						List<String> mt_match_texts = mt_provider.getMatchTexts( col_name );
+						
+						if ( mt_match_texts != null ){
+							
+							if ( col_match_texts == null ){
 								
+								col_match_texts = new ArrayList<>();	
+							}
+							
+							col_match_texts.addAll( mt_match_texts );
+						}
+					}else{
+						
 						if ( row == null ){
 						
 							row = table_view.getRowSWT( data_source );
@@ -258,23 +303,22 @@ TableColumnFilterHelper<T>
 								cell_match_text = "";
 							}
 							
-							if ( col_match_text == null ){
+							if ( col_match_texts == null ){
 							
-								col_match_text = cell_match_text;
+								col_match_texts = new ArrayList<>();
 								
-							}else{
-								
-								col_match_text += " " + cell_match_text;
 							}
+								
+							col_match_texts.add( cell_match_text );
 							
 							match_numeric = cell.getNumeric();
 						}
 					}
 					
 					if ( !done && match_mode == MM_EQ && col_value.startsWith( "+" ) && col_value.length() > 1 ){
-						
-						
+											
 						col_filter = col_value.substring(1);
+						
 					}else{
 						
 						break;
@@ -288,42 +332,54 @@ TableColumnFilterHelper<T>
 				}
 			}
 		}
+			
+		col_filter_active = col_match_texts != null;
+
+		List<String> match_texts = new ArrayList<>();
 		
-		boolean col_match_active;
-		
-		String[] match_texts;
-		
-		if ( col_match_text == null || filter_text == null ){
+		if ( filter_text == null ){
 			
 			filter_text	= original_filter;
+		}
 			
-			match_texts	= default_match_texts;
+		List<String> default_match_texts;
+		
+		if ( col_filter_active ){
 			
-			if ( confusable ){
-				
-				filter_text = GeneralUtils.getConfusableEquivalent( filter_text, true );
-
-				for ( int i=0; i< match_texts.length; i++ ){
-				
-					match_texts[i] = GeneralUtils.getConfusableEquivalent( match_texts[i], false );
-				}
-			}
-			
-			col_match_active = false;
+			default_match_texts = Collections.emptyList();
 			
 		}else{
 			
-			match_texts	= new String[]{ col_match_text };
-			
-			col_match_active = true;
-		}
-				
-		if ( col_filter_active != col_match_active ){
-			
-			col_filter_active = col_match_active;
+			default_match_texts = mt_provider.getMatchTexts( null );
 		}
 		
-		if ( col_match_active && match_mode != MM_EQ ){
+		if ( confusable ){
+			
+			filter_text = GeneralUtils.getConfusableEquivalent( filter_text, true );
+
+			for ( String text: default_match_texts ){				
+				
+				match_texts.add( GeneralUtils.getConfusableEquivalent( text, false ));	
+			}
+			
+			if ( col_match_texts != null ){
+				
+				for ( String text: col_match_texts ){				
+					
+					match_texts.add( GeneralUtils.getConfusableEquivalent( text, false ));	
+				}
+			}
+		}else{
+				
+			match_texts.addAll( default_match_texts );
+			
+			if ( col_match_texts != null ){
+				
+				match_texts.addAll( col_match_texts );
+			}
+		}
+		
+		if ( col_filter_active && match_mode != MM_EQ ){
 			
 			double filter_num;
 			
@@ -352,7 +408,7 @@ TableColumnFilterHelper<T>
 				filter_num 	= getNumber( filter_text );
 			}
 			
-			double match_num	= Double.isNaN(match_numeric)?getNumber( match_texts[0] ):match_numeric;
+			double match_num	= Double.isNaN(match_numeric)?getNumber( match_texts.get(0)):match_numeric;
 			
 			if (  Double.isNaN( filter_num ) ||  Double.isNaN( match_num )){
 				
@@ -444,5 +500,13 @@ TableColumnFilterHelper<T>
 			
 			return( Double.NaN );
 		}
+	}
+	
+	public interface
+	MatchTextProvider
+	{
+		public List<String>
+		getMatchTexts(
+			String		key );
 	}
 }

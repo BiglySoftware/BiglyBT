@@ -108,6 +108,8 @@ public class SizeItem
 
 		cell.setSortValue(value);
 
+		cell.setNumeric(size);
+		
 		String s = DisplayFormatters.formatCustomSize( "column.size", value.size );
 
 		if ( s == null ){
