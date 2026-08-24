@@ -692,7 +692,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	@SuppressWarnings("unchecked")
-	public boolean refilter() {
+	public boolean refilter( boolean auto ){
 		if (filter == null) {
 			return false;
 		}
@@ -780,8 +780,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			redrawTable();
 		}
 
-		processDataSourceQueue(true);
-		return changed;
+			// only refocus if changed, it is annoying to have an auto-refilter bring a row
+			// back into view if it has been scrolled out of view
+		
+		processDataSourceQueue( !auto || changed);
+		
+		return( changed );
 	}
 
 	public boolean

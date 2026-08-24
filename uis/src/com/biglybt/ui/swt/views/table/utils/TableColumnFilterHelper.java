@@ -48,6 +48,7 @@ TableColumnFilterHelper<T>
 	private Object				refilter_lock = this;
 
 	private volatile boolean 	col_filter_active;
+	private volatile boolean	refilter_enabled;
 	
 	private Map<String,TableColumn>		col_cache		= new HashMap<>();
 
@@ -67,6 +68,8 @@ TableColumnFilterHelper<T>
 	filterSet(
 		String		filter )
 	{
+		refilter_enabled = true;
+		
 		synchronized( refilter_lock ){
 			
 			if ( filter.isEmpty()){
@@ -96,12 +99,22 @@ TableColumnFilterHelper<T>
 								return;
 							}
 						}else if ( col_filter_active ){
-															
-							table_view.refilter();
+								
+							if ( refilter_enabled ){
+							
+								table_view.refilter( true );
+							}
 						}
 					});
 			}
 		}
+	}
+	
+	public void
+	setAutoRefilterEnabled(
+		boolean		b )
+	{
+		refilter_enabled = b;
 	}
 	
 	public boolean
@@ -182,6 +195,8 @@ TableColumnFilterHelper<T>
 			String col_filter = original_filter;
 			
 			try{
+				Set<String>	done_matches = new HashSet<>();
+				
 				while( match_mode == MM_EQ && !done ){
 					
 					int pos = col_filter.indexOf( ':' );
@@ -250,68 +265,73 @@ TableColumnFilterHelper<T>
 						}
 					}
 				
-					if ( col == null ){
-							
-						List<String> mt_match_texts = mt_provider.getMatchTexts( col_name );
+					if ( !done_matches.contains( col_name )){
 						
-						if ( mt_match_texts != null ){
-							
-							if ( col_match_texts == null ){
+						done_matches.add( col_name );
+						
+						if ( col == null ){
 								
-								col_match_texts = new ArrayList<>();	
-							}
+							List<String> mt_match_texts = mt_provider.getMatchTexts( col_name );
 							
-							col_match_texts.addAll( mt_match_texts );
-						}
-					}else{
-						
-						if ( row == null ){
-						
-							row = table_view.getRowSWT( data_source );
-												
+							if ( mt_match_texts != null ){
+								
+								if ( col_match_texts == null ){
+									
+									col_match_texts = new ArrayList<>();	
+								}
+								
+								col_match_texts.addAll( mt_match_texts );
+							}
+						}else{
+							
 							if ( row == null ){
 							
-									// row may not be visible (either just adding or already filtered)
-							
-								row = table_view.createFakeRow( data_source );
-							
-								row_is_fake = true;
+								row = table_view.getRowSWT( data_source );
+													
+								if ( row == null ){
+								
+										// row may not be visible (either just adding or already filtered)
+								
+									row = table_view.createFakeRow( data_source );
+								
+									row_is_fake = true;
+								}
+								
+									// ensure cells are constructed
+								
+								row.setShown( true, true );
 							}
 							
-								// ensure cells are constructed
+							TableCellCore cell = (TableCellCore)row.getTableCell(  col );
 							
-							row.setShown( true, true );
-						}
-						
-						TableCellCore cell = (TableCellCore)row.getTableCell(  col );
-						
-						if ( cell != null ){
-						
-								// pick up latest value
+							if ( cell != null ){
 							
-							cell.refresh();
-												
-							String cell_match_text = cell.getTextEquivalent();
-							
-							if ( cell_match_text == null ){
+									// pick up latest value
 								
-								cell_match_text = cell.getText();
+								cell.refresh();
+													
+								String cell_match_text = cell.getTextEquivalent();
+								
+								if ( cell_match_text == null ){
+									
+									cell_match_text = cell.getText();
+								}
+								
+								if ( cell_match_text == null ){
+									
+									cell_match_text = "";
+								}
+								
+								if ( col_match_texts == null ){
+								
+									col_match_texts = new ArrayList<>();
+									
+								}
+									
+								col_match_texts.add( cell_match_text );
+								
+								match_numeric = cell.getNumeric();
 							}
-							
-							if ( cell_match_text == null ){
-								
-								cell_match_text = "";
-							}
-							
-							if ( col_match_texts == null ){
-							
-								col_match_texts = new ArrayList<>();
-								
-							}
-								
-							col_match_texts.add( cell_match_text );
-							
-							match_numeric = cell.getNumeric();
 						}
 					}
 					

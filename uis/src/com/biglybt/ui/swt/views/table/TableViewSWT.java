@@ -191,11 +191,15 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 * @since 4.4.0.7
 	 */
 	void addRowMouseListener(TableRowMouseListener listener);
-
-	/**
-	 * @since 4.5.0.5
-	 */
-	boolean refilter();
+	
+	default boolean
+	refilter(){
+		return( refilter( false ));
+	}
+	
+	boolean 
+	refilter(
+		boolean 	auto );
 
 	/**
 	 * @param menuEnabled

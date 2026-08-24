@@ -25,7 +25,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
@@ -40,7 +39,6 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.content.RelatedContent;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -1665,6 +1663,10 @@ public class MyTorrentsView
 						}
 						case "f":{
 					
+								// too inefficient to have this when matching on file names
+							
+							col_filter_helper.setAutoRefilterEnabled( false );
+							
 							boolean absolute = currentSearch.contains( File.separator );
 							
 							DiskManagerFileInfoSet file_set = dm.getDiskManagerFileInfoSet();
@@ -1711,10 +1713,28 @@ public class MyTorrentsView
 					return( result );
 				};
 				
+				String actualFilter;
+				
+				if ( defaultFilterPrefix.isEmpty()){
+					
+					actualFilter = currentSearch;
+					
+				}else{
+					
+					if ( currentSearch.contains( ":" )){
+						
+						actualFilter = defaultFilterPrefix + "+" + currentSearch;
+						
+					}else{
+					
+						actualFilter = defaultFilterPrefix + currentSearch;
+					}
+				}
+				
 				bOurs = 
 					col_filter_helper.filterCheck( 
 							dm, 
-							defaultFilterPrefix + currentSearch, 
+							actualFilter, 
 							regexSearch, 
 							mt_provider, 
 							confusable, 
