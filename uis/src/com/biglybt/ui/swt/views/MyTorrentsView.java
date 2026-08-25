@@ -3673,6 +3673,11 @@ public class MyTorrentsView
 			}
 		}
 		
+		if ( col_filter_helper != null && !col_filter_helper.getAutoRefilterEnabled()){
+			
+			return;
+		}
+		
 			// request to fully resync this tag
 
 		Collection<DownloadManager> dataSources = tv.getDataSources();

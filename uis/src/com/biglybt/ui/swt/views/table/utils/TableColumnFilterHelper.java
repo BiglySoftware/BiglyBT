@@ -110,6 +110,12 @@ TableColumnFilterHelper<T>
 		}
 	}
 	
+	public boolean
+	getAutoRefilterEnabled()
+	{
+		return( refilter_enabled );
+	}
+	
 	public void
 	setAutoRefilterEnabled(
 		boolean		b )
