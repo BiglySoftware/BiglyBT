@@ -28,6 +28,7 @@ import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.QTFastStartRAF;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -163,6 +164,21 @@ DiskManagerFileInfoDelegate
 		return( delegate.getFile(follow_link));
 	}
 
+	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		return( delegate.getFileName(follow_link));
+	}
+	
+	public FileKey 
+	getFileKey(
+		boolean follow_link )
+	{
+		return(delegate.getFileKey(follow_link));
+	}
+	
 	@Override
 	public int
 	getIndex()

@@ -22,6 +22,7 @@ package com.biglybt.pif.disk;
 
 import java.io.File;
 
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 
@@ -130,6 +131,14 @@ DiskManagerFileInfo
 	getFile(
 		boolean	follow_link );
 
+	public String
+	getFileName( 
+		boolean follow_link );
+
+	public FileKey 
+	getFileKey(
+		boolean follow_link );
+		
 	public int
 	getIndex();
 

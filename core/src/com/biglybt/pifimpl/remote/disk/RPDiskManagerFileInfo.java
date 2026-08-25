@@ -21,6 +21,7 @@ package com.biglybt.pifimpl.remote.disk;
 
 import java.io.File;
 
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.DiskManagerChannel;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.disk.DiskManagerListener;
@@ -206,7 +207,30 @@ RPDiskManagerFileInfo
 
 		return( file );
 	}
+	
+	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		if ( follow_link ){
 
+			notSupported();
+		}
+
+		return( file.getName());
+	}
+
+	@Override
+	public FileKey
+	getFileKey(
+		boolean follow_link )
+	{
+		notSupported();
+		
+		return( null );
+	}
+	
 	@Override
 	public int getFirstPieceNumber()
 	{

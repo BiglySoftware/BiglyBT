@@ -29,6 +29,7 @@ import com.biglybt.core.devices.TranscodeJob;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Simple;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -180,6 +181,22 @@ TranscodeJobOutputLeecher
 		return( save_to );
 	}
 
+	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		return( save_to.getName());
+	}
+	
+	@Override
+	public FileKey
+	getFileKey(
+		boolean follow_link )
+	{
+		return( new FileKey( save_to ));
+	}
+	
 	@Override
 	public int
 	getIndex()

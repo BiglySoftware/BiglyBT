@@ -44,6 +44,7 @@ import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.ImageRepository;
@@ -189,7 +190,7 @@ public class NameItem extends CoreTableColumnSWT implements
 	public void refresh(TableCell cell, boolean sortOnlyRefresh)
 	{
 		final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
-		String name = (fileInfo == null) ? "" : fileInfo.getFile(true).getName();
+		String name = (fileInfo == null) ? "" : fileInfo.getFileName(true);
 		if (name == null)
 			name = "";
 
@@ -398,7 +399,7 @@ public class NameItem extends CoreTableColumnSWT implements
 
 		if ( fileInfo != null ){
 			
-			File file = fileInfo.getFile(true);
+			FileKey fileKey = fileInfo.getFileKey(true);
 					
 			Object piCache = cell.getData( KEY_PATH_ICON );
 		
@@ -406,7 +407,7 @@ public class NameItem extends CoreTableColumnSWT implements
 				
 				Object[] temp = (Object[])piCache;
 				
-				if ( FileUtil.areFilePathsIdentical((File)temp[0],file )){
+				if ( FileUtil.areFilePathsIdentical(((FileKey)temp[0]).getFile(),fileKey.getFile() )){
 					
 					imgThumbnail = (Image[])temp[1];
 				}
@@ -416,17 +417,17 @@ public class NameItem extends CoreTableColumnSWT implements
 			
 				ImageRepository.PathIcon pi = 
 					ImageRepository.getPathIcon(
-						file.getPath(), true, cell.getHeight() > 32, false,
+						fileKey.getFile().getPath(), true, cell.getHeight() > 32, false,
 						(result)->{
 							if ( result != null ){
-								cell.setData( KEY_PATH_ICON, new Object[]{ file, new Image[]{ result.image }});
+								cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, new Image[]{ result.image }});
 								cell.invalidate();
 							}
 						});
 				
 				imgThumbnail = new Image[]{ pi.image };
 		
-				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
+				cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, imgThumbnail });
 			}
 		}
 

@@ -87,7 +87,7 @@ public class PathNameItem extends CoreTableColumnSWT implements
 	{
 		final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
 		
-		String file_name = (fileInfo == null) ? "" : fileInfo.getFile(true).getName();
+		String file_name = (fileInfo == null) ? "" : fileInfo.getFileName(true);
 		
 		if (file_name == null){
 			file_name = "";

@@ -1058,7 +1058,50 @@ DiskManagerUtil
 		            		return lazyGetFile();
 		            	}
 
-		            	private File lazyGetFile()
+		            	@Override
+		            	public String
+		            	getFileName(
+		            		boolean follow_link )
+		            	{
+
+		            		if ( follow_link ){
+
+		            			FileKey key = download_manager.getDownloadState().getFileLink( file_index, null );
+		            			
+		            			if ( key != null ){
+		            				
+		            				return( key.getName());
+		            			}
+		            		}
+		            		
+		            		return( lazyGetFileKey().getName());
+		            	}
+		            	
+		            	public FileKey 
+		            	getFileKey(
+		            		boolean follow_link )
+		            	{
+		            		if ( follow_link ){
+
+		            			FileKey key = download_manager.getDownloadState().getFileLink( file_index, null );
+		            			
+		            			if ( key != null ){
+		            				
+		            				return( key );
+		            			}
+		            		}
+		            		
+		            		return( lazyGetFileKey());
+		            	}
+		            	
+		            	private File 
+		            	lazyGetFile()
+		            	{
+		            		return( lazyGetFileKey().getFile());
+		            	}
+		            	
+		            	private FileKey 
+		            	lazyGetFileKey()
 		            	{
 		            		StringInterner.FileKey fk = dataFile.get();
 		            		
@@ -1082,7 +1125,7 @@ DiskManagerUtil
 			            		dataFile = new WeakReference<>( fk );
 		            		}
 		            		
-	            			return( fk.getFile());
+	            			return( fk );
 		            	}
 
 		            	@Override

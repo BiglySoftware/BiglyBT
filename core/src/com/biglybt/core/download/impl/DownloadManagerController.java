@@ -3530,6 +3530,20 @@ DownloadManagerController
 		}
 
 		@Override
+		public String
+		getFileName( boolean follow_link )
+		{
+			return( delegate.getFileName( follow_link ));
+		}
+
+		public FileKey 
+		getFileKey(
+			boolean follow_link )
+		{
+			return( delegate.getFileKey(follow_link));
+		}
+		
+		@Override
 		public TOTorrentFile
 		getTorrentFile()
 		{

@@ -38,6 +38,7 @@ import javax.net.ssl.SSLSession;
 import com.biglybt.core.security.SEPasswordListener;
 import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -359,6 +360,21 @@ DiskManagerFileInfoURL
 		return( file );
 	}
 
+	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		return( file.getName());
+	}
+	
+	public FileKey 
+	getFileKey(
+		boolean follow_link )
+	{
+		return( new FileKey( file ));
+	}
+	
 	@Override
 	public int
 	getIndex()

@@ -47,6 +47,7 @@ import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -3007,6 +3008,20 @@ public class FilesView
 		}
 
 		@Override
+		public String
+		getFileName( boolean follow_link )
+		{
+			return( node_path.getName());
+		}
+		
+		public FileKey 
+		getFileKey(
+			boolean follow_link )
+		{
+			return( node_path );
+		}
+		
+		@Override
 		public TOTorrentFile
 		getTorrentFile()
 		{
@@ -3344,7 +3359,21 @@ public class FilesView
 		{
 			return( delegate.getFile(follow_link));
 		}
+		
+		@Override
+		public String
+		getFileName( boolean follow_link )
+		{
+			return( delegate.getFileName( follow_link ));
+		}
 
+		public FileKey 
+		getFileKey(
+			boolean follow_link )
+		{
+			return( delegate.getFileKey(follow_link));
+		}
+		
 		@Override
 		public TOTorrentFile
 		getTorrentFile()

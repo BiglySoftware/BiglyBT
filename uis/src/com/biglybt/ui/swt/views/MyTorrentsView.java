@@ -1674,11 +1674,9 @@ public class MyTorrentsView
 							DiskManagerFileInfo[] files = file_set.getFiles();
 	
 							for ( DiskManagerFileInfo f: files ){
-	
-								File file = f.getFile(true);
-	
-								String name = absolute?file.getAbsolutePath():file.getName();
-	
+		
+								String name = absolute?f.getFile( true ).getAbsolutePath():f.getFileName( true );
+									
 								result.add( name );
 							}
 							

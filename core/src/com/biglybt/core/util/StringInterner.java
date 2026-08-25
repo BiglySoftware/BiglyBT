@@ -1091,6 +1091,14 @@ StringInterner
 			this( fk, tail, false );
 		}
 		
+		public
+		FileKey(
+			File	file,
+			FileKey	tail )
+		{
+			this( file, tail.toString(), false );
+		}
+		
 		protected
 		FileKey(
 			FileKey	fk,
@@ -1224,6 +1232,17 @@ StringInterner
 		getFile()
 		{
 			return( FileUtil.newFile( toString()));
+		}
+		
+		public String
+		getName()
+		{
+			if ( comps.length == 0 ){
+				
+				return( "" );
+			}
+			
+			return( comps[ 0 ] );
 		}
 		
 		public boolean

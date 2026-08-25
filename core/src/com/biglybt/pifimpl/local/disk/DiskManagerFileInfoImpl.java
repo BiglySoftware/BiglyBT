@@ -23,6 +23,7 @@ package com.biglybt.pifimpl.local.disk;
 import java.io.File;
 
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.DiskManagerChannel;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.disk.DiskManagerListener;
@@ -180,6 +181,14 @@ DiskManagerFileInfoImpl
 	}
 
 	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		return( core.getFileName(follow_link));
+	}
+	
+	@Override
 	public File
 	getFile(
 		boolean	follow_link )
@@ -187,6 +196,13 @@ DiskManagerFileInfoImpl
 		return( core.getFile( follow_link ));
 	}
 
+	public FileKey 
+	getFileKey(
+		boolean follow_link )
+	{
+		return( core.getFileKey(follow_link));
+	}
+	
 	@Override
 	public int getFirstPieceNumber() {
 	  return core.getFirstPieceNumber();

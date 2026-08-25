@@ -36,6 +36,7 @@ import com.biglybt.core.tracker.server.TRTrackerServerTorrent;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.DiskManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -367,6 +368,18 @@ PluginCoreUtils
 					}
 				}
 
+				@Override
+				public String
+				getFileName( boolean follow_link )
+				{
+					return( info.getFileName( follow_link ));
+				}
+				
+				@Override
+				public FileKey getFileKey(boolean follow_link){
+					return( info.getFileKey( follow_link ));
+				}
+				
 				@Override
 				public TOTorrentFile
 				getTorrentFile()

@@ -26,6 +26,7 @@ import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.QTFastStartRAF;
 import com.biglybt.core.util.SHA1Simple;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -157,6 +158,21 @@ DiskManagerFileInfoFile
 		return( file );
 	}
 
+	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		return( file.getName());
+	}
+	
+	public FileKey 
+	getFileKey(
+		boolean follow_link )
+	{
+		return( new FileKey( file ));
+	}
+	
 	@Override
 	public int
 	getIndex()

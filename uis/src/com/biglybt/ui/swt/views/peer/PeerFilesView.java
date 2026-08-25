@@ -267,7 +267,7 @@ public class PeerFilesView
 			TableCell cell )
 		{
 			PeersFilesViewRow row = (PeersFilesViewRow) cell.getDataSource();
-			String name = (row == null) ? "" : row.getFile().getFile(true).getName();
+			String name = (row == null) ? "" : row.getFile().getFileName(true);
 			if (name == null)
 				name = "";
 

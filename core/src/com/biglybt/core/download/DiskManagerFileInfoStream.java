@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.disk.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -189,6 +190,21 @@ DiskManagerFileInfoStream
 		return( save_to );
 	}
 
+	@Override
+	public String
+	getFileName(
+		boolean follow_link )
+	{
+		return( save_to.getName());
+	}
+	
+	public FileKey 
+	getFileKey(
+		boolean follow_link )
+	{
+		return( new FileKey( save_to ));
+	}
+	
 	@Override
 	public int
 	getIndex()
