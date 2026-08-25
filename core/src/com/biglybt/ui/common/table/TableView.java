@@ -312,7 +312,10 @@ public interface TableView<DATASOURCETYPE>
 	 * @param dataSource
 	 * @return
 	 */
-	boolean dataSourceExists(DATASOURCETYPE dataSource);
+	boolean 
+	hasDataSourceBeenAdded(
+		DATASOURCETYPE	dataSource,
+		boolean			include_filtered );
 
 	/**
 	 * @return

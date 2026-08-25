@@ -3662,7 +3662,18 @@ public class MyTorrentsView
 	taggableSync(
 		Tag 		tag )
 	{
-		// request to fully resync this tag
+		if ( tag instanceof Category ){
+			
+			if (((Category)tag).getType() == Category.TYPE_ALL ){
+				
+					// this is the default Tag for all views when other tags not selected
+					// membership always full, nothing to do.
+				
+				return;
+			}
+		}
+		
+			// request to fully resync this tag
 
 		Collection<DownloadManager> dataSources = tv.getDataSources();
 
@@ -3678,7 +3689,7 @@ public class MyTorrentsView
 
 			DownloadManager	manager = (DownloadManager)t;
 
-			if ( isOurDownloadManager( manager ) && !tv.dataSourceExists(manager)){
+			if ( isOurDownloadManager( manager ) && !tv.hasDataSourceBeenAdded(manager, true )){
 
 				tv.addDataSource(manager);
 			}

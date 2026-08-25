@@ -1082,9 +1082,18 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	// @see TableView#dataSourceExists(java.lang.Object)
 	@Override
-	public boolean dataSourceExists(DATASOURCETYPE dataSource) {
+	public boolean
+	hasDataSourceBeenAdded(
+		DATASOURCETYPE dataSource, 
+		boolean include_filtered )
+	{
 		synchronized (rows_sync) {
-			return mapDataSourceToRow.containsKey(dataSource) || dataSourcesToAdd.containsKey(dataSource);
+			if ( include_filtered ){
+				return listUnfilteredDataSources.containsKey(dataSource) || dataSourcesToAdd.containsKey(dataSource);
+
+			}else{
+				return mapDataSourceToRow.containsKey(dataSource) || dataSourcesToAdd.containsKey(dataSource);
+			}
 		}
 	}
 
