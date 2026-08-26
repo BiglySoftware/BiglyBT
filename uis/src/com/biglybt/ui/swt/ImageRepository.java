@@ -99,6 +99,12 @@ public class ImageRepository
 	private static final int	PFC_NONE	= 0;
 	private static final int	PFC_OK		= 1;
 	private static final int	PFC_TIMEOUT	= 2;
+
+		// a lookup that couldn't start because another was running. unlike a
+		// timeout this says nothing about the file being slow, so it is worth
+		// retrying almost immediately rather than after the timeout backoff.
+
+	private static final int	PFC_BUSY	= 3;
 	
 	
 	private static final Map<IconFileKey,PerFileContent>	per_file_content_keys =
@@ -475,6 +481,7 @@ public class ImageRepository
 
 					Image icon = null;
 					boolean	timeout = false;
+					boolean	busy	= false;
 					
 					if ( Constants.isWindows ){
 						try{
@@ -484,6 +491,7 @@ public class ImageRepository
 							if ( temp != null ){
 								icon = (Image)temp[0];
 								timeout = (Boolean)temp[1];
+								busy = temp.length > 2 && (Boolean)temp[2];
 							}
 						}catch( Throwable e ){
 						}
@@ -510,9 +518,32 @@ public class ImageRepository
 							result[0] = new PathIcon( default_icon, timeout );
 						}
 
+							// a timeout, or a lookup that couldn't run because
+							// another was in progress, says nothing about the
+							// file: record it as retryable. only a lookup that
+							// ran and came back empty means there is no icon.
+
 						synchronized( per_file_content_keys ){
 						
-							per_file_content_keys.put( file_key, new PerFileContent( PFC_NONE, null ));
+							int type = busy? PFC_BUSY: timeout? PFC_TIMEOUT: PFC_NONE;
+							
+							if ( type == PFC_NONE ){
+								
+								per_file_content_keys.put( file_key, new PerFileContent( PFC_NONE, null ));
+								
+							}else{
+								
+								PerFileContent pfc = per_file_content_keys.get( file_key );
+								
+								if ( pfc != null && pfc.type == type ){
+									
+									pfc.setFailed();
+									
+								}else{
+									
+									per_file_content_keys.put( file_key, new PerFileContent( type, null ));
+								}
+							}
 						}
 					}
 				}, false );
@@ -1227,7 +1258,10 @@ public class ImageRepository
 		final int		type;
 		final String	key;
 		
-		int		fail_count;
+			// written under the per_file_content_keys monitor but read by
+			// canRetry() outside it, so make the read see the current value
+
+		volatile int	fail_count;
 		
 		PerFileContent(
 			int		_type,
@@ -1236,7 +1270,7 @@ public class ImageRepository
 			type	= _type;
 			key		= _key;
 			
-			if ( type == PFC_TIMEOUT ){
+			if ( type == PFC_TIMEOUT || type == PFC_BUSY ){
 				
 				fail_count = 1;
 			}
@@ -1254,11 +1288,20 @@ public class ImageRepository
 		boolean
 		canRetry()
 		{
+			long elapsed = SystemTime.getMonotonousTime() - time;
+
 			if ( type == PFC_TIMEOUT ){
 				
-				long elapsed = SystemTime.getMonotonousTime() - time;
-				
 				long delay = fail_count * ( 30*1000 + RandomUtils.nextInt( 10*1000 ));
+				
+				return( elapsed > delay );
+				
+			}else if ( type == PFC_BUSY ){
+				
+					// the queue is serialised, so the next slot comes round
+					// quickly; back off a little if it keeps missing
+
+				long delay = Math.min( fail_count, 10 ) * ( 1000 + RandomUtils.nextInt( 500 ));
 				
 				return( elapsed > delay );
 				
