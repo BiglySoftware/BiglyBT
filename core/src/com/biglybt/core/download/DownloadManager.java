@@ -40,6 +40,7 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.IndentWriter;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.download.DownloadAnnounceResult;
@@ -369,6 +370,9 @@ DownloadManager
     public File
     getSaveLocation();
 
+    public FileKey
+    getSaveLocationFileKey();
+    
 		/**
 		 * @deprecated Use setTorrentSaveDir(FileUtil.newFile(sPath), false)
 		 * @implNote Remove once xmwebui stops using this method

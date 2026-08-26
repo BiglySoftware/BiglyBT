@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.tableitems.files;
 import java.io.File;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -62,9 +63,9 @@ public class RelocatedItem
     		
     	}else{
     		
-        	File source = fileInfo.getFile( false );
+        	FileKey source = fileInfo.getFileKey( false );
 
-	    	File target = fileInfo.getDownloadManager().getDownloadState().getFileLink( index );
+	    	FileKey target = fileInfo.getFileKey( true );
 	
 	    	if ( target == null ){
 	

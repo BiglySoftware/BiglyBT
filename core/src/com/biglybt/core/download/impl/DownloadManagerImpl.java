@@ -65,6 +65,8 @@ import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.core.util.FileUtil.ProgressListener;
+import com.biglybt.core.util.StringInterner.DirKey;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.download.Download;
@@ -3673,6 +3675,7 @@ DownloadManagerImpl
 
  	private File	cached_save_location;
 	private File	cached_save_location_result;
+	private FileKey	cached_save_location_fk_result;
 
   	@Override
 	public File
@@ -3688,14 +3691,17 @@ DownloadManagerImpl
   		}
 
  		File	res;
-
+ 		boolean	simple;
+ 		
  		if ( torrent == null || torrent.isSimpleTorrent()){
 
- 			res = download_manager_state.getFileLink( 0 );
-
+ 			res		= download_manager_state.getFileLink( 0 );
+ 			simple	= true;
+ 			
  		}else{
 
- 			res = save_location;
+ 			res		= save_location;
+ 			simple	= false;
  		}
 
  		if ( res == null || res.equals(save_location) ){
@@ -3706,14 +3712,27 @@ DownloadManagerImpl
  			res = FileUtil.getCanonicalFileSafe( res );
  		}
 
- 		cached_save_location		= save_location;
- 		cached_save_location_result	= res;
+ 		cached_save_location			= save_location;
+ 		cached_save_location_result		= res;
+ 		cached_save_location_fk_result	= simple?new FileKey( cached_save_location_result ):new DirKey( cached_save_location_result );;
 
  		return( res );
  	}
 
+	@Override
+	public FileKey
+	getSaveLocationFileKey()
+	{
+		if ( torrent_save_location != cached_save_location  ){
+
+			getSaveLocation();
+		}
+		
+  		return( cached_save_location_fk_result );
+	}
+	
   	@Override
-	  public File
+	public File
   	getAbsoluteSaveLocation()
   	{
   		return( torrent_save_location );

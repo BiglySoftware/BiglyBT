@@ -50,7 +50,7 @@ TableColumnFilterHelper<T>
 	private volatile boolean 	col_filter_active;
 	private volatile boolean	refilter_enabled;
 	
-	private Map<String,TableColumn>		col_cache		= new HashMap<>();
+	private Map<String,TableColumn[]>		col_cache		= new HashMap<>();
 
 	private String			date_cache_str;
 	private double			date_cache_time;
@@ -261,13 +261,17 @@ TableColumnFilterHelper<T>
 					
 					synchronized( refilter_lock ){
 						
-						col = col_cache.get( col_name );
+						TableColumn[] existing = col_cache.get( col_name );
 							
-						if ( col == null ){
+						if ( existing == null ){
 							
 							col = table_view.getTableColumn( col_name, true );
 							
-							col_cache.put( col_name, col );
+							col_cache.put( col_name, new TableColumn[]{ col });
+							
+						}else{
+							
+							col = existing[0];
 						}
 					}
 				

@@ -40,6 +40,7 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -463,7 +464,7 @@ public class ColumnThumbAndName
 
 		if ( showIcon && fileInfo != null ){
 			
-			File file = fileInfo.getFile(true);
+			FileKey fileKey = fileInfo.getFileKey(true);
 					
 			Object piCache = cell.getData( KEY_PATH_ICON );
 		
@@ -471,7 +472,7 @@ public class ColumnThumbAndName
 				
 				Object[] temp = (Object[])piCache;
 				
-				if ( FileUtil.areFilePathsIdentical((File)temp[0],file )){
+				if ( FileUtil.areFilePathsIdentical(((FileKey)temp[0]).getFile(),fileKey.getFile())){
 					
 					imgThumbnail = (Image[])temp[1];
 				}
@@ -481,17 +482,17 @@ public class ColumnThumbAndName
 			
 				ImageRepository.PathIcon pi =
 					ImageRepository.getPathIcon(
-						file.getPath(), true, cellBounds.height >= 20, false,
+						fileKey.getFile().getPath(), true, cellBounds.height >= 20, false,
 						(result)->{
 							if ( result != null ){
-								cell.setData( KEY_PATH_ICON, new Object[]{ file, new Image[]{ result.image }});
+								cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, new Image[]{ result.image }});
 								cell.invalidate();
 							}
 						});
 				
 				imgThumbnail = new Image[]{ pi.image };
 				
-				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
+				cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, imgThumbnail });
 			}
 		}
 
@@ -629,37 +630,28 @@ public class ColumnThumbAndName
 	getDisplayName(
 		DiskManagerFileInfo fileInfo )
 	{
+		/*
 		String prefix = fileInfo.getDownloadManager().getSaveLocation().toString() + File.separator;
 		String s = fileInfo.getFile(true).toString();
 		if (s.startsWith(prefix)) {
 			s = s.substring(prefix.length());
 		}
-		
-		/*
-		if ( fileInfo.isSkipped()){
-
-	    	String dnd_sf = fileInfo.getDownloadManager().getDownloadState().getAttribute( DownloadManagerState.AT_DND_SUBFOLDER );
-
-	    	if ( dnd_sf != null ){
-
-	    		dnd_sf = dnd_sf.trim();
-
-	    		if ( dnd_sf.length() > 0 ){
-
-	    			dnd_sf += File.separatorChar;
-
-	    			int pos = s.indexOf( dnd_sf );
-
-	    			if ( pos != -1 ){
-
-	    				s = s.substring( 0, pos ) + s.substring( pos + dnd_sf.length());
-	    			}
-	    		}
-	    	}
-		}
 		*/
 		
-		return( s );
+		FileKey saveLocation = fileInfo.getDownloadManager().getSaveLocationFileKey();
+		
+		FileKey fk = fileInfo.getFileKey(true);
+		
+		FileKey temp = fk.removePrefix( saveLocation );
+		
+		if ( temp == null ){
+		
+			return( fk.toString());
+			
+		}else{
+			
+			return( temp.toString());
+		}
 	}
 	
 	private void cellPaintName(TableCell cell, GC gc, Rectangle cellBounds,
