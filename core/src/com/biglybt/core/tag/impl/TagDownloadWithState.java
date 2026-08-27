@@ -991,11 +991,20 @@ TagDownloadWithState
 	{
 		synchronized( rate_lock ){
 
+			int[] ud_rate_lock = (int[])manager.getUserData( rate_lock );
+			
+			if ( ud_rate_lock == null ){
+				
+				ud_rate_lock = new int[]{ 0 };
+				
+				manager.setUserData( rate_lock, ud_rate_lock );
+			}
+			
 			if ( added ){
 
-				if ( manager.getUserData( rate_lock ) == null ){
+				if ( ud_rate_lock[0] == 0 ){
 
-					manager.setUserData( rate_lock, "" );
+					ud_rate_lock[0] = 1;
 
 					manager.addPeerListener( peer_listener, true );
 
@@ -1005,9 +1014,9 @@ TagDownloadWithState
 				}
 			}else{
 
-				if ( manager.getUserData( rate_lock ) != null ){
+				if ( ud_rate_lock[0] == 1 ){
 
-					manager.setUserData( rate_lock, null );
+					ud_rate_lock[0] = 0;
 
 					manager.removeRateLimiter( upload_limiter, true );
 

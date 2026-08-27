@@ -5471,6 +5471,8 @@ DownloadManagerImpl
 
 					}else{
 
+						//Debug.out( "set: " + key );
+						
 						data_ref = new LightHashMap<>(data_ref);
 
 						data_ref.remove( key );
@@ -5481,16 +5483,46 @@ DownloadManagerImpl
 				}
 			}else{
 
+				boolean already_present = false;
+				
 				if ( data_ref == null ){
 
 					data_ref = new LightHashMap<>();
 
 				}else{
 
-					data_ref = new LightHashMap<>(data_ref);
+					Object existing = data_ref.get( key );
+					
+					if ( existing != null ){
+						
+						if ( existing == value ){
+							
+							already_present = true;
+							
+						}else{
+							
+							if ( existing instanceof String && value instanceof String ){
+								
+								already_present = existing.equals(value);
+							}
+						}
+					}
+					
+					if ( !already_present ){
+					
+						//Debug.out( "set: " + key );
+						
+						data_ref = new LightHashMap<>(data_ref);
+						
+					}else{
+						    System.out.println( "Value already present: " + value );
+					}
 				}
 
-				data_ref.put( key, value );
+				if ( !already_present ){
+				
+					data_ref.put( key, value );
+				}
 			}
 
 			data = data_ref;

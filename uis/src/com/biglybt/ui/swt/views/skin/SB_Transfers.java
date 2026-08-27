@@ -1027,29 +1027,38 @@ public class SB_Transfers
 				}
 
 				synchronized (statsLock) {
+					
+					Integer _oldState = (Integer)dm.getUserData( DMStateKey );
+					
+					boolean wasStopped, wasQueued, wasSeeding, wasDownloading;
+					
+					if ( _oldState == null ){
+						wasStopped = wasQueued = wasSeeding = wasDownloading = false;
+					}else{
+						int oldState = _oldState;
+						wasStopped		= (oldState & DMS_WasStopped ) != 0;
+						wasQueued		= (oldState & DMS_WasQueued ) != 0;
+						wasSeeding		= (oldState & DMS_WasSeeding ) != 0;
+						wasDownloading	= (oldState & DMS_WasDownloading ) != 0;
+					}
+
 					if (dm.getAssumedComplete()) {
 						stats.numComplete--;
-						Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
-						if (wasDownloadingB != null && wasDownloadingB.booleanValue()) {
+						if ( wasDownloading ){
 							stats.numDownloading--;
 						}
 					} else {
 						stats.numIncomplete--;
-						Boolean wasSeedingB = (Boolean) dm.getUserData("wasSeeding");
-						if (wasSeedingB != null && wasSeedingB.booleanValue()) {
+						if ( wasSeeding ){
 							stats.numSeeding--;
 						}
 					}
 
-					Boolean wasStoppedB = (Boolean) dm.getUserData("wasStopped");
-					boolean wasStopped = wasStoppedB != null && wasStoppedB.booleanValue();
 					if (wasStopped) {
 						if (!dm.getAssumedComplete()) {
 							stats.numStoppedIncomplete--;
 						}
 					}
-					Boolean wasQueuedB = (Boolean) dm.getUserData("wasQueued");
-					boolean wasQueued = wasQueuedB != null && wasQueuedB.booleanValue();
 					if (wasQueued) {
 						stats.numQueued--;
 					}
@@ -1090,11 +1099,17 @@ public class SB_Transfers
 						}
 					} else {
 						stats.numIncomplete++;
+						Integer _oldState = (Integer)dm.getUserData( DMStateKey );
+						int oldState = _oldState==null?0:_oldState;
+						int newState = oldState;
 						if (dm_state == DownloadManager.STATE_DOWNLOADING) {
-							dm.setUserData("wasDownloading", Boolean.TRUE);
+							newState |= DMS_WasDownloading;
 							stats.numDownloading++;
 						} else {
-							dm.setUserData("wasDownloading", Boolean.FALSE);
+							newState &= ~DMS_WasDownloading;
+						}
+						if ( newState != oldState ){
+							dm.setUserData( DMStateKey, newState );
 						}
 					}
 					
@@ -1152,6 +1167,13 @@ public class SB_Transfers
 				});
 	}
 	
+	final static String DMStateKey = "SBT:state";
+	final static int	DMS_WasStopped		= 0x0001;
+	final static int	DMS_WasQueued		= 0x0002;
+	final static int	DMS_WasSeeding		= 0x0004;
+	final static int	DMS_WasDownloading	= 0x0008;
+	
+	
 	private void
 	resetStats(
 		GlobalManager				gm,
@@ -1175,9 +1197,14 @@ public class SB_Transfers
 				dm.addListener(listener, false);
 			}
 
+			Integer _oldState = (Integer)dm.getUserData( DMStateKey );
+
+			int oldState = _oldState==null?0:_oldState;
+			int newState = oldState;
+			
 			int dm_state = dm.getState();
 			if (dm_state == DownloadManager.STATE_STOPPED) {
-				dm.setUserData("wasStopped", Boolean.TRUE);
+				newState |= DMS_WasStopped;
 				if (!dm.getAssumedComplete()) {
 					statsWithLowNoise.numStoppedIncomplete++;
 				}
@@ -1186,18 +1213,18 @@ public class SB_Transfers
 						statsNoLowNoise.numStoppedIncomplete++;
 					}
 				}
-			} else {
-				dm.setUserData("wasStopped", Boolean.FALSE);
+			}else{
+				newState &= ~DMS_WasStopped;
 			}
 
 			if (dm_state == DownloadManager.STATE_QUEUED) {
-				dm.setUserData("wasQueued", Boolean.TRUE);
+				newState |= DMS_WasQueued;
 				statsWithLowNoise.numQueued++;
 				if (!lowNoise) {
 					statsNoLowNoise.numQueued++;
 				}
-			} else {
-				dm.setUserData("wasQueued", Boolean.FALSE);
+			}else{
+				newState &= ~DMS_WasQueued;
 			}
 			if (dm.getAssumedComplete()) {
 				statsWithLowNoise.numComplete++;
@@ -1205,13 +1232,13 @@ public class SB_Transfers
 					statsNoLowNoise.numComplete++;
 				}
 				if (dm_state == DownloadManager.STATE_SEEDING) {
-					dm.setUserData("wasSeeding", Boolean.TRUE);
+					newState |= DMS_WasSeeding;
 					statsWithLowNoise.numSeeding++;
 					if (!lowNoise) {
 						statsNoLowNoise.numSeeding++;
 					}
-				} else {
-					dm.setUserData("wasSeeding", Boolean.FALSE);
+				}else{
+					newState &= ~DMS_WasSeeding;
 				}
 			} else {
 				statsWithLowNoise.numIncomplete++;
@@ -1219,13 +1246,19 @@ public class SB_Transfers
 					statsNoLowNoise.numIncomplete++;
 				}
 				if (dm_state == DownloadManager.STATE_DOWNLOADING) {
+					newState |= DMS_WasDownloading;
 					statsWithLowNoise.numDownloading++;
 					if (!lowNoise) {
 						statsNoLowNoise.numDownloading++;
 					}
+				}else{
+					newState &= ~DMS_WasDownloading;
 				}
 			}
 
+			if ( newState != oldState ){
+				dm.setUserData( DMStateKey, newState );
+			}
 			if (!PlatformTorrentUtils.getHasBeenOpened(dm) && dm.getAssumedComplete()) {
 				statsNoLowNoise.numUnOpened++;
 			}
@@ -2535,14 +2568,22 @@ public class SB_Transfers
 		boolean isQueued;
 		boolean isStopped;
 
-		Boolean wasSeedingB = (Boolean) dm.getUserData("wasSeeding");
-		boolean wasSeeding = wasSeedingB != null && wasSeedingB.booleanValue();
-		Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
-		boolean wasDownloading = wasDownloadingB != null && wasDownloadingB.booleanValue();
-		Boolean wasStoppedB = (Boolean) dm.getUserData("wasStopped");
-		boolean wasStopped = wasStoppedB != null && wasStoppedB.booleanValue();
-		Boolean wasQueuedB = (Boolean) dm.getUserData("wasQueued");
-		boolean wasQueued = wasQueuedB != null && wasQueuedB.booleanValue();
+		Integer _oldState = (Integer)dm.getUserData( DMStateKey );
+
+		boolean wasStopped, wasQueued, wasSeeding, wasDownloading;
+		
+		int oldState;
+		
+		if ( _oldState == null ){
+			oldState = 0;
+			wasStopped = wasQueued = wasSeeding = wasDownloading = false;
+		}else{
+			oldState = _oldState;
+			wasStopped		= (oldState & DMS_WasStopped ) != 0;
+			wasQueued		= (oldState & DMS_WasQueued ) != 0;
+			wasSeeding		= (oldState & DMS_WasSeeding ) != 0;
+			wasDownloading	= (oldState & DMS_WasDownloading ) != 0;
+		}
 
 		int dm_state = dm.getState();
 
@@ -2559,38 +2600,43 @@ public class SB_Transfers
 
 		boolean lowNoise = PlatformTorrentUtils.isAdvancedViewOnly(dm);
 
+		int newState = oldState;
+		
 		if (isDownloading != wasDownloading) {
 			if (isDownloading) {
+				newState |= DMS_WasDownloading;
 				statsWithLowNoise.numDownloading++;
 				if (!lowNoise) {
 					statsNoLowNoise.numDownloading++;
 				}
 			} else {
+				newState &= ~DMS_WasDownloading;
 				statsWithLowNoise.numDownloading--;
 				if (!lowNoise) {
 					statsNoLowNoise.numDownloading--;
 				}
 			}
-			dm.setUserData("wasDownloading", Boolean.valueOf(isDownloading));
 		}
 
 		if (isSeeding != wasSeeding) {
 			if (isSeeding) {
+				newState |= DMS_WasSeeding;
 				statsWithLowNoise.numSeeding++;
 				if (!lowNoise) {
 					statsNoLowNoise.numSeeding++;
 				}
 			} else {
+				newState &= ~DMS_WasSeeding;
 				statsWithLowNoise.numSeeding--;
 				if (!lowNoise) {
 					statsNoLowNoise.numSeeding--;
 				}
 			}
-			dm.setUserData("wasSeeding", Boolean.valueOf(isSeeding));
 		}
 
 		if (isStopped != wasStopped) {
 			if (isStopped) {
+				newState |= DMS_WasStopped;
 				if (!dm.getAssumedComplete()) {
 					statsWithLowNoise.numStoppedIncomplete++;
 				}
@@ -2600,6 +2646,7 @@ public class SB_Transfers
 					}
 				}
 			} else {
+				newState &= ~DMS_WasStopped;
 				if (!dm.getAssumedComplete()) {
 					statsWithLowNoise.numStoppedIncomplete--;
 				}
@@ -2609,22 +2656,25 @@ public class SB_Transfers
 					}
 				}
 			}
-			dm.setUserData("wasStopped", Boolean.valueOf(isStopped));
 		}
 
 		if (isQueued != wasQueued) {
 			if (isQueued) {
+				newState |= DMS_WasQueued;
 				statsWithLowNoise.numQueued++;
 				if (!lowNoise) {
 					statsNoLowNoise.numQueued++;
 				}
 			} else {
+				newState &= ~DMS_WasQueued;
 				statsWithLowNoise.numQueued--;
 				if (!lowNoise) {
 					statsNoLowNoise.numQueued--;
 				}
 			}
-			dm.setUserData("wasQueued", Boolean.valueOf(isQueued));
+		}
+		if ( newState != oldState ){
+			dm.setUserData( DMStateKey, newState );
 		}
 		return( dm_state );
 	}

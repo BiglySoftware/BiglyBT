@@ -1134,7 +1134,12 @@ DHTTrackerPlugin
 			register_reason	= "";
 		}
 
-		download.setUserData( LATEST_REGISTER_REASON, register_reason );
+		String existing_rr = (String)download.getUserData( LATEST_REGISTER_REASON );
+		
+		if ( existing_rr == null || !existing_rr.equals( register_reason )){
+		
+			download.setUserData( LATEST_REGISTER_REASON, register_reason );
+		}
 
 		if ( register_reason.length() > 0 ){
 

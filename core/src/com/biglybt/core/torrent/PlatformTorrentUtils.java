@@ -455,58 +455,11 @@ public class PlatformTorrentUtils
 		}
 	}
 
-	public static boolean isAdvancedViewOnly(DownloadManager dm) {
-		Boolean oisUpdate = (Boolean) dm.getUserData("isAdvancedViewOnly");
-		if (oisUpdate != null) {
-			return oisUpdate.booleanValue();
-		}
-
-		boolean advanced_view = true;
-
-		if ( !dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE )){
-
-			advanced_view = false;
-			
-			/*
-			TOTorrent torrent = dm.getTorrent();
-			if (torrent == null) {
-				advanced_view = false;
-			} else {
-				URL announceURL = torrent.getAnnounceURL();
-
-				if (announceURL != null) {
-					String	host = announceURL.getHost();
-
-					if (!( host.endsWith(AELITIS_HOST_CORE)|| host.endsWith( VUZE_HOST_CORE ))){
-						advanced_view = false;
-					}
-				}
-
-				if (advanced_view) {
-					TOTorrentAnnounceURLSet[] sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
-
-					for (int i = 0; i < sets.length; i++) {
-
-						URL[] urls = sets[i].getAnnounceURLs();
-
-						for (int j = 0; j < urls.length; j++) {
-
-							String host = urls[j].getHost();
-
-							if (!( host.endsWith(AELITIS_HOST_CORE)|| host.endsWith( VUZE_HOST_CORE ))){
-								advanced_view = false;
-								break;
-							}
-						}
-					}
-				}
-			}
-			*/
-		}
-
-		dm.setUserData("isAdvancedViewOnly", Boolean.valueOf(advanced_view));
-
-		return advanced_view;
+	public static boolean 
+	isAdvancedViewOnly(
+		DownloadManager dm) 
+	{
+		return( dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
 	}
 
 	public static boolean isContentProgressive(TOTorrent torrent) {

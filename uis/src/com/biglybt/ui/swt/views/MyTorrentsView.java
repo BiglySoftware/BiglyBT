@@ -4039,9 +4039,9 @@ public class MyTorrentsView
 			}
 			if ( isIncompletedOnly ){
 					// if a download has removed from complete to incomplete then make it obvious
-				Long prev_removed = (Long)dm.getUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME );
+				Long[] prev_removed = (Long[])dm.getUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME );
 				if ( prev_removed != null ){
-					if ( SystemTime.getMonotonousTime() - prev_removed < 5000 ){						
+					if ( SystemTime.getMonotonousTime() - prev_removed[0] < 5000 ){						
 						dm.requestAttention();
 					}
 				}
@@ -4092,7 +4092,16 @@ public class MyTorrentsView
 			
 			DownloadManager dm = (DownloadManager)row.getDataSource( true );
 			
-			dm.setUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME, SystemTime.getMonotonousTime());
+			Long[] data = (Long[])dm.getUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME );
+			
+			if ( data == null ){
+				
+				data = new Long[]{ 0L };
+				
+				dm.setUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME, data );
+			}
+			
+			 data[0] = SystemTime.getMonotonousTime();
 		}
 		
 		TableRowCore[] selected = tv.getSelectedRows();

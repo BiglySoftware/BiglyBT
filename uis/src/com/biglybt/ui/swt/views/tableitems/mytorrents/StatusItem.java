@@ -389,15 +389,23 @@ public class StatusItem
 				int cursor_id;
 
 				if (!text.contains("http://")){
+					
+					if ( dm.getUserData( CLICK_KEY ) != null ){
 
-					dm.setUserData( CLICK_KEY, null );
+						dm.setUserData( CLICK_KEY, null );
+					}
 
 					cursor_id = SWT.CURSOR_ARROW;
 
 				}else{
 
-					dm.setUserData( CLICK_KEY, text );
-
+					String existing = (String)dm.getUserData( CLICK_KEY );
+					
+					if ( existing == null || !existing.equals(text)){
+					
+						dm.setUserData( CLICK_KEY, text );
+					}
+					
 					cursor_id = SWT.CURSOR_HAND;
 
 					clickable = true;

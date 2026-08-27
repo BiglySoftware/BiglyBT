@@ -5543,7 +5543,10 @@ public class GlobalManagerImpl
 							
 						Long old = (Long)dm.getUserData( ACTIVE_KEY );
 						
-						dm.setUserData( ACTIVE_KEY, total_data );
+						if ( old == null || old != total_data ){
+						
+							dm.setUserData( ACTIVE_KEY, total_data );
+						}
 						
 						boolean is_active =
 							(	stats.getDataReceiveRate() + stats.getDataSendRate() > 0 ||

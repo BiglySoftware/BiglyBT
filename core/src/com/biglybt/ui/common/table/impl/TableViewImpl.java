@@ -393,24 +393,36 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			return;
 		}
 		for ( TableSelectionListener l: listenersSelection) {
-			if (enter) {
-				l.mouseEnter(row);
-			} else {
-				l.mouseExit(row);
+			try{
+				if (enter) {
+					l.mouseEnter(row);
+				} else {
+					l.mouseExit(row);
+				}
+			}catch( Throwable e ){
+				Debug.out( e );
 			}
 		}
 	}
 
 	protected void triggerFocusChangedListeners(TableRowCore row) {
 		for ( TableSelectionListener l: listenersSelection) {
-			l.focusChanged(row);
+			try{
+				l.focusChanged(row);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
 	protected void triggerFocusRequested()
 	{
 		for ( TableSelectionListener l: listenersSelection) {
-			l.focusRequested();
+			try{
+				l.focusRequested();
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 	/**
@@ -418,7 +430,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 */
 	protected void triggerTableRefreshListeners() {
 		for (TableRefreshListener l: listenersRefresh ){
-			l.tableRefresh();
+			try{
+				l.tableRefresh();
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
@@ -461,7 +477,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				for (Iterator iter = listenersCountChange.iterator(); iter.hasNext();) {
 					TableCountChangeListener l = (TableCountChangeListener) iter.next();
 					for (TableRowCore row : rows) {
-						l.rowAdded(row);
+						try{
+							l.rowAdded(row);
+						}catch( Throwable e ){
+							Debug.out( e );
+						}
 					}
 				}
 			}
@@ -471,7 +491,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	protected void triggerListenerRowRemoved(TableRowCore row) {
 		for (Iterator iter = listenersCountChange.iterator(); iter.hasNext();) {
 			TableCountChangeListener l = (TableCountChangeListener) iter.next();
-			l.rowRemoved(row);
+			try{
+				l.rowRemoved(row);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
