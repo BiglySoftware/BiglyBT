@@ -654,8 +654,14 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		}
 	}
 
-	private volatile boolean immediateProcessingScheduled = false;
-
+	private final FrequencyLimitedDispatcher processDisp = 
+			new FrequencyLimitedDispatcher(
+				AERunnable.create(this::process), 250 );
+		
+	{
+		processDisp.setSingleThreaded();
+	}
+	
 	/** Listen to Download changes and recalc SR if needed
 	 */
 	private class StartStopDownloadListener implements DownloadListener
@@ -668,17 +674,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				// force a SR recalc, so that it gets position properly next process()
 				requestProcessCycle(dlData);
 				if ((new_state == Download.ST_READY || new_state == Download.ST_WAITING)) {
-					if (immediateProcessingScheduled) {
-						requestProcessCycle(dlData);
-					} else {
-						immediateProcessingScheduled = true;
-						new AEThread2("processReady", true) {
-							@Override
-							public void run() {
-								process();
-							}
-						}.start();
-					}
+					processDisp.dispatch();
 				}
 
 				if (bDebugLog)
@@ -2064,8 +2060,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				}
 				processLastCompleteMono = nowMono;
 			}
-
-			immediateProcessingScheduled = false;
 
 			this_mon.exit();
 		}
