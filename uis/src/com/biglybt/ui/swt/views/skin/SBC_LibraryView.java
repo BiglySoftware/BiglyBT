@@ -188,97 +188,99 @@ public class SBC_LibraryView
 			currentlySelectedContentChanged(
 					ISelectedContent[] currentContent,
 					String viewId) {
-				selection_count = currentContent.length;
-
-				long total_size = 0;
-				long total_done = 0;
-
-				List<DownloadManager> dms = new ArrayList<>(currentContent.length);
-
-					// doesn't make sense to double count a download's files if it also has its own selection
-				
-				Set<DownloadManager> dms_only = new IdentityHashSet<>();
-				
-				for (ISelectedContent sc : currentContent) {
-
-					DownloadManager dm = sc.getDownloadManager();
-
-					if ( dm != null ){
-
-						int file_index = sc.getFileIndex();
-
-						if (file_index == -1) {
-							
-							dms_only.add( dm );
+				Utils.getOffOfSWTThread(()->{
+					selection_count = currentContent.length;
+	
+					long total_size = 0;
+					long total_done = 0;
+	
+					List<DownloadManager> dms = new ArrayList<>(currentContent.length);
+	
+						// doesn't make sense to double count a download's files if it also has its own selection
+					
+					Set<DownloadManager> dms_only = new IdentityHashSet<>();
+					
+					for (ISelectedContent sc : currentContent) {
+	
+						DownloadManager dm = sc.getDownloadManager();
+	
+						if ( dm != null ){
+	
+							int file_index = sc.getFileIndex();
+	
+							if (file_index == -1) {
+								
+								dms_only.add( dm );
+							}
 						}
 					}
-				}
-						
-				Set<DiskManagerFileInfo>	processedFiles	= new IdentityHashSet<>();
-				Set<DownloadManager>		processedDMs	= new IdentityHashSet<>();
-				
-				for (ISelectedContent sc : currentContent) {
-
-					DownloadManager dm = sc.getDownloadManager();
-
-					if ( dm != null ){
-
-						dms.add(dm);
-
-						int file_index = sc.getFileIndex();
-
-						if ( file_index == -1 ){
-								
-							if ( !processedDMs.contains( dm )){
-								
-								processedDMs.add( dm );
-								
-								DiskManagerFileInfo[] file_infos = dm.getDiskManagerFileInfoSet().getFiles();
+							
+					Set<DiskManagerFileInfo>	processedFiles	= new IdentityHashSet<>();
+					Set<DownloadManager>		processedDMs	= new IdentityHashSet<>();
+					
+					for (ISelectedContent sc : currentContent) {
 	
-								for (DiskManagerFileInfo file_info : file_infos) {
+						DownloadManager dm = sc.getDownloadManager();
 	
+						if ( dm != null ){
+	
+							dms.add(dm);
+	
+							int file_index = sc.getFileIndex();
+	
+							if ( file_index == -1 ){
+									
+								if ( !processedDMs.contains( dm )){
+									
+									processedDMs.add( dm );
+									
+									DiskManagerFileInfo[] file_infos = dm.getDiskManagerFileInfoSet().getFiles();
+		
+									for (DiskManagerFileInfo file_info : file_infos) {
+		
+										if ( !processedFiles.contains( file_info )){
+											
+											processedFiles.add( file_info );
+											
+											if ( !file_info.isSkipped()){
+			
+												total_size += file_info.getLength();
+												total_done += file_info.getDownloaded();
+											}
+										}
+									}
+								}
+							} else {
+	
+								if ( !dms_only.contains( dm )){
+									
+									DiskManagerFileInfo file_info = dm.getDiskManagerFileInfoSet().getFiles()[file_index];
+		
 									if ( !processedFiles.contains( file_info )){
 										
 										processedFiles.add( file_info );
 										
-										if ( !file_info.isSkipped()){
-		
+										if (!file_info.isSkipped()) {
+			
 											total_size += file_info.getLength();
 											total_done += file_info.getDownloaded();
 										}
 									}
 								}
 							}
-						} else {
-
-							if ( !dms_only.contains( dm )){
-								
-								DiskManagerFileInfo file_info = dm.getDiskManagerFileInfoSet().getFiles()[file_index];
-	
-								if ( !processedFiles.contains( file_info )){
-									
-									processedFiles.add( file_info );
-									
-									if (!file_info.isSkipped()) {
-		
-										total_size += file_info.getLength();
-										total_done += file_info.getDownloaded();
-									}
-								}
-							}
 						}
 					}
-				}
-
-				selection_size = total_size;
-				selection_done = total_done;
-
-				selection_dms = dms.toArray(new DownloadManager[dms.size()]);
-
-				SB_Transfers transfers = MainMDISetup.getSb_transfers();
-				if (transfers != null) {
-					transfers.triggerCountRefreshListeners();
-				}
+	
+					selection_size = total_size;
+					selection_done = total_done;
+	
+					selection_dms = dms.toArray(new DownloadManager[dms.size()]);
+	
+					SB_Transfers transfers = MainMDISetup.getSb_transfers();
+					if (transfers != null) {
+						transfers.triggerCountRefreshListeners();
+					}
+				});
 			}
 		};
 		SelectedContentManager.addCurrentlySelectedContentListener(
