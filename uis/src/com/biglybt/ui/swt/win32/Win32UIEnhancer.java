@@ -344,7 +344,12 @@ public class Win32UIEnhancer
 			
 			if ( gfi_active ){
 				
-				return( null );
+					// nothing is wrong with the file, we just can't look at it
+					// right now. the third element marks this as "busy" rather
+					// than a timeout, so the caller can come back promptly
+					// instead of recording the file as having no icon.
+				
+				return( new Object[]{ null, true, true });
 			}
 			
 			if ( gfi_consec_fails >= GFI_MAX_FAILS ){
@@ -430,7 +435,7 @@ public class Win32UIEnhancer
 				gfi_pending_images.remove( img );
 			}
 			
-			return( new Object[]{ img, !ok });
+			return( new Object[]{ img, !ok, false });
 		}
 	}
 	
