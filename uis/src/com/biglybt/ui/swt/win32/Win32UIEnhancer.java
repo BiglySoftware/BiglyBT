@@ -315,7 +315,7 @@ public class Win32UIEnhancer
 		// made. give it another go periodically so a bad patch - a slow volume
 		// spinning up, say - doesn't leave icons switched off for the session
 
-	private static long		gfi_breaker_time = 0;
+	private static long		gfi_breaker_time = -1;
 
 	private static final int	GFI_MAX_FAILS		= 50;
 	private static final long	GFI_RETRY_AFTER		= 30*1000;
@@ -347,7 +347,7 @@ public class Win32UIEnhancer
 				return( null );
 			}
 			
-			if ( gfi_consec_fails > GFI_MAX_FAILS ){
+			if ( gfi_consec_fails >= GFI_MAX_FAILS ){
 				
 				long now = SystemTime.getMonotonousTime();
 				
