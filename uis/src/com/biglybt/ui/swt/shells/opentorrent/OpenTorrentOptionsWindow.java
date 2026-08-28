@@ -2790,6 +2790,10 @@ public class OpenTorrentOptionsWindow
 		private void
 		layout()
 		{
+			/*
+			 * Don't appear to need this anymore (famous last words...)
+			 * It is very costly to do the layouts so let's hope
+			 
 			SWTSkinObjectExpandItem so = (SWTSkinObjectExpandItem)skin.getSkinObject("expanditem-saveto");
 
 			if ( so != null ){
@@ -2803,6 +2807,7 @@ public class OpenTorrentOptionsWindow
 					item.relayout();
 				}
 			}
+			*/
 		}
 
 		private void
