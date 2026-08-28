@@ -211,19 +211,6 @@ public class ImageRepository
 				}
 			}
 
-				// a directory that isn't there yet can't be asked about: the shell
-				// call sets SHGFI_USEFILEATTRIBUTES for a missing path and the
-				// attributes handed to it come from file.isDirectory(), which is
-				// false for something that doesn't exist. it then returns the
-				// icon for a plain file, and since folder icons are cached under
-				// one shared key that answer becomes the folder icon for every
-				// row until the client restarts.
-
-			if ( ext.equals( "-folder" ) && !file.exists()){
-
-				return( new PathIcon( ImageLoader.getInstance().getImage( "folder" )));
-			}
-
 			String ext_key = "osicon" + ext;
 
 			if ( bBig ) ext_key += "-big";
@@ -326,8 +313,23 @@ public class ImageRepository
 			}
 
 			image = null;
+		
+			boolean responding = Utils.isFileResponding( file );
+			
+			if ( responding ){
 
-			if ( Utils.isFileResponding( file )){
+					// a directory that isn't there yet can't be asked about: the shell
+					// call sets SHGFI_USEFILEATTRIBUTES for a missing path and the
+					// attributes handed to it come from file.isDirectory(), which is
+					// false for something that doesn't exist. it then returns the
+					// icon for a plain file, and since folder icons are cached under
+					// one shared key that answer becomes the folder icon for every
+					// row until the client restarts.
+
+				if ( ext.equals( "-folder" ) && !file.exists()){
+					
+					return( new PathIcon( ImageLoader.getInstance().getImage( "folder" )));
+				}
 
 				ImageData imageData = null;
 
@@ -409,12 +411,22 @@ public class ImageRepository
 					ImageLoader.getInstance().addImageNoDipose(key, image);
 				}
 			}
-		} catch (Throwable e) {
+		}catch( Throwable e ){
+			
 			// seen exceptions thrown here, due to images.get failing in Program.hashCode
 			// ignore and use default icon
 		}
 
 		if (image == null) {
+			
+			// not responding or failed for some other reason
+			// assume it doesn't exist for folder icon purposes
+			
+			if ( ext.equals( "-folder" )){
+				
+				return( new PathIcon( ImageLoader.getInstance().getImage( "folder" )));
+			}
+
 			return( new PathIcon( ImageLoader.getInstance().getImage( fallback_key )));
 		}
 		return( new PathIcon( image ));
