@@ -351,7 +351,7 @@ public class Win32UIEnhancer
 				
 				long now = SystemTime.getMonotonousTime();
 				
-				if ( gfi_breaker_time == 0 ){
+				if ( gfi_breaker_time == -1 ){
 					
 					gfi_breaker_time = now;
 				}
@@ -408,12 +408,15 @@ public class Win32UIEnhancer
 		
 		boolean ok = sem.reserve( Utils.SLOW_OPERATION_TIMEOUT_MS );
 		
+			// note that we are single-threaded on the SWT thread here so there is no chance
+			// that another call has disposed of the potential result image in gfi_pending_images
+		
 		synchronized( Win32UIEnhancer.class ){
 		
 			if ( ok ){
 				
 				gfi_consec_fails	= 0;
-				gfi_breaker_time	= 0;
+				gfi_breaker_time	= -1;
 				
 			}else{
 				
