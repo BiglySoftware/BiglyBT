@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.AsyncDispatcher;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.platform.win32.access.AEWin32Manager;
@@ -308,6 +309,16 @@ public class Win32UIEnhancer
 
 	private static boolean	gfi_active = false;
 	private static int		gfi_consec_fails = 0;
+
+		// once the failure count trips the limit nothing else would ever be
+		// looked up, as only a successful call resets it and no calls are being
+		// made. give it another go periodically so a bad patch - a slow volume
+		// spinning up, say - doesn't leave icons switched off for the session
+
+	private static long		gfi_breaker_time = 0;
+
+	private static final int	GFI_MAX_FAILS		= 50;
+	private static final long	GFI_RETRY_AFTER		= 30*1000;
 	private static AsyncDispatcher	gfi_dispatcher		= new AsyncDispatcher( "gfi" );
 	private static List<Image>		gfi_pending_images	= new ArrayList<>();
 	
@@ -331,9 +342,30 @@ public class Win32UIEnhancer
 			
 			gfi_pending_images.clear();
 			
-			if ( gfi_active || gfi_consec_fails > 50 ){
+			if ( gfi_active ){
 				
 				return( null );
+			}
+			
+			if ( gfi_consec_fails > GFI_MAX_FAILS ){
+				
+				long now = SystemTime.getMonotonousTime();
+				
+				if ( gfi_breaker_time == 0 ){
+					
+					gfi_breaker_time = now;
+				}
+				
+				if ( now - gfi_breaker_time < GFI_RETRY_AFTER ){
+					
+					return( null );
+				}
+				
+					// let one through; if it works the count resets, if not we
+					// wait out another interval
+				
+				gfi_consec_fails 	= GFI_MAX_FAILS;
+				gfi_breaker_time	= now;
 			}
 			
 			gfi_active = true;
@@ -380,7 +412,8 @@ public class Win32UIEnhancer
 		
 			if ( ok ){
 				
-				gfi_consec_fails = 0;
+				gfi_consec_fails	= 0;
+				gfi_breaker_time	= 0;
 				
 			}else{
 				
