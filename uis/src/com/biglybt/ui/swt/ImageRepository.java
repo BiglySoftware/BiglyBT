@@ -252,7 +252,7 @@ public class ImageRepository
 	
 							if ( ImageLoader.isRealImage( image )){
 								
-								return( new PathIcon( image, pfc.type != PFC_TIMEOUT ));
+								return( new PathIcon( image, pfc.type == PFC_TIMEOUT ));
 							}
 						}
 
