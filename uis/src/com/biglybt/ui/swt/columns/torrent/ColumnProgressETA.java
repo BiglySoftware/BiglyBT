@@ -451,7 +451,7 @@ public class ColumnProgressETA
 	public void cellPaint(GC gc, TableCellSWT cell) {
 		Object ds = cell.getDataSource();
 		if (ds instanceof DiskManagerFileInfo) {
-			TableRowCore row = cell.getTableRowCore();
+			TableRow row = cell.getTableRow();
 			if (row != null) {
 				fileProgress.fillInfoProgressETA(row, gc, (DiskManagerFileInfo) ds,
 						cell.getBounds());

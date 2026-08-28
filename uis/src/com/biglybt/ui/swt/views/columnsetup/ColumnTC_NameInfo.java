@@ -122,7 +122,7 @@ public class ColumnTC_NameInfo
 			final TableColumnManager tcm = TableColumnManager.getInstance();
 			columnInfo = tcm.getColumnInfo(column.getForDataSourceType(),
 					column.getTableID(), column.getName());
-			cell.getTableRowCore().setData("columninfo", columnInfo);
+			cell.getTableRow().setData("columninfo", columnInfo);
 		}
 		Rectangle profBounds = new Rectangle(bounds.width - 100, bounds.y - 2, 100, 20);
 		byte proficiency = columnInfo.getProficiency();
@@ -138,38 +138,40 @@ public class ColumnTC_NameInfo
 
 		if ( cell.getTableID().equals( TableColumnSetupWindow.TABLEID_AVAIL )){
 			Rectangle hitArea;
-			TableView<?> tv = ((TableCellCore) cell).getTableRowCore().getView();
-			TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
-			if (tvs.isColumnAdded(column)) {
-				hitArea = Utils.EMPTY_RECT;
-			} else {
-				int x = bounds.x + titleSize.x + 15;
-				int y = bounds.y - 1;
-				int h = 15;
-	
-				String textAdd = MessageText.getString("Button.add");
-				GCStringPrinter sp2 = new GCStringPrinter(gc, textAdd,
-						new Rectangle(x, y, 500, h), true, false, SWT.CENTER);
-				sp2.calculateMetrics();
-				int w = sp2.getCalculatedSize().x + 12;
-	
-				gc.setAdvanced(true);
-				gc.setAntialias(SWT.ON);
-				//gc.setBackground(ColorCache.getColor(gc.getDevice(), 255, 255, 255));
-				//gc.fillRoundRectangle(x, y, w, h, 15, h);
-				gc.setBackground(ColorCache.getColor(gc.getDevice(), 215, 215, 215));
-				gc.fillRoundRectangle(x + 2, y + 2, w, h, 15, h);
-				gc.setForeground(ColorCache.getColor(gc.getDevice(), 145, 145, 145));
-				gc.drawRoundRectangle(x+2, y+2, w, h, 15, h);
-	
-				gc.setForeground(ColorCache.getColor(gc.getDevice(), 50, 50, 50));
-				hitArea = new Rectangle(x+2, y+2, w + 2, h);
-				sp2.printString(gc, hitArea, SWT.CENTER);
-				bounds = cell.getBounds();
-				hitArea.x -= bounds.x;
-				hitArea.y -= bounds.y;
+			TableView<?> tv = ((TableCellCore) cell).getTableRow().getView();
+			if ( tv != null ){
+				TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
+				if (tvs.isColumnAdded(column)) {
+					hitArea = Utils.EMPTY_RECT;
+				} else {
+					int x = bounds.x + titleSize.x + 15;
+					int y = bounds.y - 1;
+					int h = 15;
+		
+					String textAdd = MessageText.getString("Button.add");
+					GCStringPrinter sp2 = new GCStringPrinter(gc, textAdd,
+							new Rectangle(x, y, 500, h), true, false, SWT.CENTER);
+					sp2.calculateMetrics();
+					int w = sp2.getCalculatedSize().x + 12;
+		
+					gc.setAdvanced(true);
+					gc.setAntialias(SWT.ON);
+					//gc.setBackground(ColorCache.getColor(gc.getDevice(), 255, 255, 255));
+					//gc.fillRoundRectangle(x, y, w, h, 15, h);
+					gc.setBackground(ColorCache.getColor(gc.getDevice(), 215, 215, 215));
+					gc.fillRoundRectangle(x + 2, y + 2, w, h, 15, h);
+					gc.setForeground(ColorCache.getColor(gc.getDevice(), 145, 145, 145));
+					gc.drawRoundRectangle(x+2, y+2, w, h, 15, h);
+		
+					gc.setForeground(ColorCache.getColor(gc.getDevice(), 50, 50, 50));
+					hitArea = new Rectangle(x+2, y+2, w + 2, h);
+					sp2.printString(gc, hitArea, SWT.CENTER);
+					bounds = cell.getBounds();
+					hitArea.x -= bounds.x;
+					hitArea.y -= bounds.y;
+				}
+				cell.getTableRow().setData("AddHitArea", hitArea);
 			}
-			cell.getTableRowCore().setData("AddHitArea", hitArea);
 		}
 	}
 
@@ -183,12 +185,14 @@ public class ColumnTC_NameInfo
 			if (data instanceof Rectangle) {
 				Rectangle hitArea = (Rectangle) data;
 				if (hitArea.contains(event.x, event.y)) {
-					TableView<?> tv = ((TableCellCore) event.cell).getTableRowCore().getView();
-					TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
-					Object dataSource = event.cell.getDataSource();
-					if (dataSource instanceof TableColumnCore) {
-						TableColumnCore column = (TableColumnCore) dataSource;
-						tvs.chooseColumn(column);
+					TableView<?> tv = ((TableCellCore) event.cell).getTableRow().getView();
+					if ( tv != null ){
+						TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
+						Object dataSource = event.cell.getDataSource();
+						if (dataSource instanceof TableColumnCore) {
+							TableColumnCore column = (TableColumnCore) dataSource;
+							tvs.chooseColumn(column);
+						}
 					}
 				}
 			}

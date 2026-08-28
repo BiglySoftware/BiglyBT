@@ -41,6 +41,7 @@ import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 
 import com.biglybt.pif.ui.tables.TableCellMouseEvent;
+import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 
 public class ColumnTorrentFileProgress
@@ -87,7 +88,7 @@ public class ColumnTorrentFileProgress
 		cBGskipped = skinProperties.getColor("color.progress.bg.cd");
 	}
 
-	void fillInfoProgressETA(TableRowCore row, GC gc,
+	void fillInfoProgressETA(TableRow row, GC gc,
 			DiskManagerFileInfo fileInfo, Rectangle cellArea) {
 		long percent = 0;
 		long bytesDownloaded = fileInfo.getDownloaded();

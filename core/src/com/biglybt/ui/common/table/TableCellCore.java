@@ -94,7 +94,7 @@ public interface TableCellCore extends TableCell, Comparable
 	/**
 	 * Retrieve the row that this cell belongs to
 	 *
-	 * @return the row that this cell belongs to
+	 * @return the row that this cell belongs to, null for fake cells
 	 */
 	public TableRowCore getTableRowCore();
 

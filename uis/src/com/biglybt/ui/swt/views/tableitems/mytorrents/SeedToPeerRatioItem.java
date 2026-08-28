@@ -22,7 +22,6 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.DisplayFormatters;
 
 import com.biglybt.pif.download.Download;
@@ -33,7 +32,6 @@ import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-import com.biglybt.ui.swt.views.table.TableCellSWT;
 
 
 

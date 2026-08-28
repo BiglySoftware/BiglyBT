@@ -139,12 +139,6 @@ public interface TableRowCore extends TableRow
 	isHidden();
 	
 	/**
-	 * @return
-	 */
-	@Override
-	public TableView getView();
-
-	/**
 	 * @param event
 	 *
 	 * @since 3.0.1.7

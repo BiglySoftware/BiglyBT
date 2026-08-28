@@ -69,15 +69,20 @@ public class ColumnTC_Sample
 	@Override
 	public void cellAdded(final TableCell cell) {
 		TableColumnCore column = (TableColumnCore) cell.getDataSource();
-		TableViewSWT<?> tv = (TableViewSWT<?>) ((TableCellCore) cell).getTableRowCore().getView();
-		TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
-		TableRowCore sampleRow = (TableRowCore) tvs.getSampleRow();
+		TableViewSWT<?> tv = (TableViewSWT<?>) ((TableCellCore) cell).getTableRow().getView();
 
-		Cell c = new Cell(cell, column, tv.getTableComposite(), sampleRow);
-		
-		cell.addListeners(c);
-		
-		cell.setData("Cell", c );
+		if ( tv != null ){
+			
+			TableColumnSetupWindow tvs = (TableColumnSetupWindow) tv.getParentDataSource();
+			
+			TableRowCore sampleRow = (TableRowCore) tvs.getSampleRow();
+
+			Cell c = new Cell(cell, column, tv.getTableComposite(), sampleRow);
+			
+			cell.addListeners(c);
+			
+			cell.setData("Cell", c );
+		}
 	}
 
 	private static class Cell

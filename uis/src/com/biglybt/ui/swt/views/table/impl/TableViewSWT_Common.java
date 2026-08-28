@@ -254,7 +254,7 @@ public abstract class TableViewSWT_Common
 		}
 	}
 
-	TableRowCore lastClickRow;
+	TableRow lastClickRow;
 
 	@Override
 	public void mouseDown(MouseEvent e) {
@@ -298,11 +298,11 @@ public abstract class TableViewSWT_Common
 					}
 				}
 				if (tc.hasInplaceEditorListener() && e.button == 1
-						&& lastClickRow == cell.getTableRowCore()) {
-					tv.editCell(tv.getTableColumnByOffset(e.x), cell.getTableRowCore().getIndex());
+						&& lastClickRow == cell.getTableRow()) {
+					tv.editCell(tv.getTableColumnByOffset(e.x), cell.getTableRow().getIndex());
 				}
 				if (e.button == 1) {
-					lastClickRow = cell.getTableRowCore();
+					lastClickRow = cell.getTableRow();
 				}
 			} else if (row != null) {
 				TableRowMouseEvent event = createMouseEvent(row, e,
