@@ -182,6 +182,12 @@ public class ImageRepository
 		boolean 			minifolder,
 		Consumer<PathIcon>	icon_listener ) 
 	{
+			// when nothing can be resolved we fall back to a stand-in; for a
+			// directory that has to be the folder icon, since callers can't tell
+			// the transparent one apart from a real answer and will cache it
+
+		String fallback_key = ( minifolder || ext.equals( "-folder" ))? "folder": "transparent";
+
 		Image image = null;
 
 		try {
@@ -203,6 +209,19 @@ public class ImageRepository
 						break;
 					}
 				}
+			}
+
+				// a directory that isn't there yet can't be asked about: the shell
+				// call sets SHGFI_USEFILEATTRIBUTES for a missing path and the
+				// attributes handed to it come from file.isDirectory(), which is
+				// false for something that doesn't exist. it then returns the
+				// icon for a plain file, and since folder icons are cached under
+				// one shared key that answer becomes the folder icon for every
+				// row until the client restarts.
+
+			if ( ext.equals( "-folder" ) && !file.exists()){
+
+				return( new PathIcon( ImageLoader.getInstance().getImage( "folder" )));
 			}
 
 			String ext_key = "osicon" + ext;
@@ -231,7 +250,7 @@ public class ImageRepository
 					
 				}else{
 					
-					default_image = ImageLoader.getInstance().getImage( minifolder ? "folder" : "transparent" );
+					default_image = ImageLoader.getInstance().getImage( fallback_key );
 				}
 				
 				if ( pfc != null ){
@@ -289,7 +308,7 @@ public class ImageRepository
 				
 				if ( pending_image == null ){
 					
-					pending_image = ImageLoader.getInstance().getImage( minifolder ? "folder" : "transparent" );
+					pending_image = ImageLoader.getInstance().getImage( fallback_key );
 				}
 
 				return( new PathIcon( pending_image, true ));
@@ -318,7 +337,7 @@ public class ImageRepository
 					
 					if ( ignore_icon_exts.contains( ext.toLowerCase( Locale.US  ))){
 						
-						return( new PathIcon( ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent")));
+						return( new PathIcon( ImageLoader.getInstance().getImage( fallback_key )));
 					}
 					
 					try {
@@ -396,7 +415,7 @@ public class ImageRepository
 		}
 
 		if (image == null) {
-			return( new PathIcon( ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent")));
+			return( new PathIcon( ImageLoader.getInstance().getImage( fallback_key )));
 		}
 		return( new PathIcon( image ));
 	}

@@ -365,7 +365,7 @@ public class TorrentUIUtilsV3
 				
 				Image parent_image = imageLoaderThumb.imageAdded(id_parent_icon) ? imageLoaderThumb.getImage(id_parent_icon) : null;
 
-				if ( !parent_image.isDisposed()){
+				if ( parent_image != null && !parent_image.isDisposed()){
 					
 					existing_images = new Image[]{ existing_image, parent_image };
 				}
