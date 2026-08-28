@@ -81,9 +81,12 @@ FMFilePadding
 	{	
 		file = new StringInterner.FileKey( new_file );
 		
-		pl.bytesDone( length );
+		if ( pl != null ){
 		
-		pl.complete();
+			pl.bytesDone( length );
+		
+			pl.complete();
+		}
 	}
 
 	public void
