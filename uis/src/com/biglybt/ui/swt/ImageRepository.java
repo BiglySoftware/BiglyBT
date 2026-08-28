@@ -522,7 +522,7 @@ public class ImageRepository
 							if ( temp != null ){
 								icon = (Image)temp[0];
 								timeout = (Boolean)temp[1];
-								busy = temp.length > 2 && (Boolean)temp[2];
+								busy = (Boolean)temp[2];
 							}
 						}catch( Throwable e ){
 						}
