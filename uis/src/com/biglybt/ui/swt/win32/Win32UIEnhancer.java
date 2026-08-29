@@ -21,6 +21,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.platform.win32.access.AEWin32Manager;
 import com.biglybt.platform.win32.access.impl.AEWin32AccessInterface;
@@ -321,21 +323,21 @@ public class Win32UIEnhancer
 	private static final long	GFI_RETRY_AFTER		= 30*1000;
 	private static AsyncDispatcher	gfi_dispatcher		= new AsyncDispatcher( "gfi" );
 	
-	private static final Map<FileKey,Image[]>	gfi_pending_images =
-			new LinkedHashMap<FileKey,Image[]>( 128, 0.75f, true )
+	private static final Map<FileKey,Object[]>	gfi_pending_images =
+			new LinkedHashMap<FileKey,Object[]>( 128, 0.75f, true )
 			{
 				@Override
 				protected boolean
 				removeEldestEntry(
-					Map.Entry<FileKey,Image[]> eldest )
+					Map.Entry<FileKey,Object[]> eldest )
 				{
 					if ( size() > 64 ){
 						
-						Image[] img = eldest.getValue();
+						Object[] img = eldest.getValue();
 						
 						if ( img[0] != null ){
 							
-							img[0].dispose();
+							((Image)img[0]).dispose();
 						}
 						
 						return( true );
@@ -346,7 +348,39 @@ public class Win32UIEnhancer
 					}
 				}
 			};
+		
+	static{
+	
+		SimpleTimer.addPeriodicEvent(
+			"Win32Enh",
+			2*60*1000,
+			(ev)->{
+				long now = SystemTime.getMonotonousTime();
 				
+				synchronized( Win32UIEnhancer.class ){
+					
+					Iterator<Object[]> it = gfi_pending_images.values().iterator();
+					
+					while( it.hasNext()){
+						
+						Object[] entry = it.next();
+						
+						if ( now - (Long)entry[1] > 60*1000 ){
+							
+							Image image = (Image)entry[0];
+							
+							if ( image != null ){
+								
+								image.dispose();
+							}
+							
+							it.remove();
+						}
+					}
+				}
+			});
+	}
+	
 	public static Object[] 
 	getFileIcon(
 		File file, boolean big) 
@@ -362,7 +396,7 @@ public class Win32UIEnhancer
 		
 		synchronized( Win32UIEnhancer.class ){
 			
-			Image[] existing = gfi_pending_images.remove( fk );
+			Object[] existing = gfi_pending_images.remove( fk );
 			
 			if ( existing != null ){
 				
@@ -400,11 +434,11 @@ public class Win32UIEnhancer
 						
 						synchronized( Win32UIEnhancer.class ){
 							
-							Image[] old = gfi_pending_images.put( fk, new Image[]{ res });
+							Object[] old = gfi_pending_images.put( fk, new Object[]{ res, SystemTime.getMonotonousTime() });
 							
 							if ( old != null && old[0] != null ){
 									
-								old[0].dispose();
+								((Image)old[0]).dispose();
 							}
 						}						
 					}, false );
@@ -464,11 +498,11 @@ public class Win32UIEnhancer
 					
 					gfi_active = false;
 															
-					Image[] old = gfi_pending_images.put( fk, new Image[]{ res });
+					Object[] old = gfi_pending_images.put( fk, new Object[]{ res, SystemTime.getMonotonousTime() });
 						
 					if ( old != null && old[0] != null ){
 							
-						old[0].dispose();
+						((Image)old[0]).dispose();
 					}
 				}
 				
@@ -480,7 +514,7 @@ public class Win32UIEnhancer
 				
 		synchronized( Win32UIEnhancer.class ){
 		
-			Image[] result = gfi_pending_images.remove( fk );
+			Object[] result = gfi_pending_images.remove( fk );
 			
 			boolean ok = result != null;
 			
@@ -488,7 +522,7 @@ public class Win32UIEnhancer
 			
 			if ( ok ){
 				
-				img = result[0];
+				img = (Image)result[0];
 				
 				gfi_consec_fails	= 0;
 				gfi_breaker_time	= -1;
