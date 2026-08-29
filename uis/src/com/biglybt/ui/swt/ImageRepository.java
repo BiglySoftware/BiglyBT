@@ -165,6 +165,14 @@ public class ImageRepository
 		return( false );
 	}
 
+	static{
+			// pre-init otherwise high chance initial icon load from disk will fail
+			// and ultimately ends up causing a rewrite of the (already existing)
+			// file cache when it finally turns up
+		
+		ensureDiskCache();
+	}
+	
 		// caller must hold the ImageRepository.class monitor
 
 	private static void
@@ -208,57 +216,60 @@ public class ImageRepository
 				}
 			};
 
-		try{
-			Map<String,Object> stored = FileUtil.readResilientFile( disk_cache_dir, "index", false );
-
-			Object entries = stored.get( "entries" );
-
-			if ( entries instanceof Map ){
-
-				for ( Map.Entry<?,?> e: ((Map<?,?>)entries).entrySet()){
-
-					Object v = e.getValue();
-
-					loaded.put(
-						String.valueOf( e.getKey()),
-						v instanceof byte[]? new String((byte[])v, Constants.UTF_8 ): String.valueOf( v ));
-				}
-			}
-		}catch( Throwable e ){
-
-				// a damaged index just means a cold cache
-		}
-
 		disk_index = loaded;
 
-			// entries age out of the index, but the icons they pointed at would
-			// otherwise sit in the directory forever; drop any that nothing
-			// refers to any more
-
-		Set<String> referenced = new HashSet<>();
-
-		for ( String entry: loaded.values()){
-
-			int pos = entry.indexOf( ' ' );
-
-			if ( pos > 0 ){
-
-				referenced.add( getDiskImageName( entry.substring( 0, pos )));
+		if ( !names.isEmpty()){
+			
+			try{
+				Map<String,Object> stored = FileUtil.readResilientFile( disk_cache_dir, "index", false );
+	
+				Object entries = stored.get( "entries" );
+	
+				if ( entries instanceof Map ){
+	
+					for ( Map.Entry<?,?> e: ((Map<?,?>)entries).entrySet()){
+	
+						Object v = e.getValue();
+	
+						loaded.put(
+							String.valueOf( e.getKey()),
+							v instanceof byte[]? new String((byte[])v, Constants.UTF_8 ): String.valueOf( v ));
+					}
+				}
+			}catch( Throwable e ){
+	
+					// a damaged index just means a cold cache
+			}	
+	
+				// entries age out of the index, but the icons they pointed at would
+				// otherwise sit in the directory forever; drop any that nothing
+				// refers to any more
+	
+			Set<String> referenced = new HashSet<>();
+	
+			for ( String entry: loaded.values()){
+	
+				int pos = entry.indexOf( ' ' );
+	
+				if ( pos > 0 ){
+	
+					referenced.add( getDiskImageName( entry.substring( 0, pos )));
+				}
 			}
-		}
-
-		for ( String name: new java.util.ArrayList<>( names )){
-
-			if ( name.equals( "index" ) || name.startsWith( "index." )){
-
-				continue;
-			}
-
-			if ( !referenced.contains( name )){
-
-				if ( FileUtil.newFile( disk_cache_dir, name ).delete()){
-
-					names.remove( name );
+	
+			for ( String name: new java.util.ArrayList<>( names )){
+	
+				if ( name.equals( "index" ) || name.startsWith( "index." )){
+	
+					continue;
+				}
+	
+				if ( !referenced.contains( name )){
+	
+					if ( FileUtil.newFile( disk_cache_dir, name ).delete()){
+	
+						names.remove( name );
+					}
 				}
 			}
 		}
@@ -463,7 +474,7 @@ public class ImageRepository
 						// earlier session
 
 					Image from_disk = getIconFromDisk( file, file_key );
-
+					
 					if ( from_disk != null ){
 
 						return( new PathIcon( from_disk ));
