@@ -21,8 +21,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -36,6 +35,7 @@ import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.StringInterner.FileKey;
 import com.biglybt.platform.win32.access.AEWin32Manager;
 import com.biglybt.platform.win32.access.impl.AEWin32AccessInterface;
 import com.biglybt.ui.swt.Utils;
@@ -320,8 +320,33 @@ public class Win32UIEnhancer
 	private static final int	GFI_MAX_FAILS		= 50;
 	private static final long	GFI_RETRY_AFTER		= 30*1000;
 	private static AsyncDispatcher	gfi_dispatcher		= new AsyncDispatcher( "gfi" );
-	private static List<Image>		gfi_pending_images	= new ArrayList<>();
 	
+	private static final Map<FileKey,Image[]>	gfi_pending_images =
+			new LinkedHashMap<FileKey,Image[]>( 128, 0.75f, true )
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+					Map.Entry<FileKey,Image[]> eldest )
+				{
+					if ( size() > 64 ){
+						
+						Image[] img = eldest.getValue();
+						
+						if ( img[0] != null ){
+							
+							img[0].dispose();
+						}
+						
+						return( true );
+						
+					}else{
+						
+						return( false );
+					}
+				}
+			};
+				
 	public static Object[] 
 	getFileIcon(
 		File file, boolean big) 
@@ -333,16 +358,58 @@ public class Win32UIEnhancer
 			return( null );
 		}
 		
+		FileKey fk = new FileKey( file );
+		
 		synchronized( Win32UIEnhancer.class ){
 			
-			for ( Image img: gfi_pending_images ){
-
-				img.dispose();
+			Image[] existing = gfi_pending_images.remove( fk );
+			
+			if ( existing != null ){
+				
+				return( new Object[]{ existing[0], false, false });
 			}
 			
-			gfi_pending_images.clear();
-			
 			if ( gfi_active ){
+				
+				if ( gfi_dispatcher.getQueueSize() < 64 ){
+					
+						// kick off a background fetch so that hopefully when a subsequent call is made for this
+						// file the result is already available
+					
+					gfi_dispatcher.dispatch(()->{
+						
+						synchronized( Win32UIEnhancer.class ){
+						
+							if ( gfi_pending_images.containsKey( fk )){
+							
+								return;
+							}
+						}
+						
+						Image res = null;
+						
+						try{
+								// user has this hanging for ages so protect against it a bit
+							
+							res = getFileIconSupport( file, big );
+											
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+						
+						synchronized( Win32UIEnhancer.class ){
+							
+							Image[] old = gfi_pending_images.put( fk, new Image[]{ res });
+							
+							if ( old != null && old[0] != null ){
+									
+								old[0].dispose();
+							}
+						}						
+					}, false );
+							
+				}
 				
 					// nothing is wrong with the file, we just can't look at it
 					// right now. the third element marks this as "busy" rather
@@ -377,9 +444,7 @@ public class Win32UIEnhancer
 		}
 	
 		AESemaphore sem = new AESemaphore( "gfi" );
-		
-		Image[]		result = { null };
-		
+				
 		gfi_dispatcher.dispatch(()->{
 			
 			Image res = null;
@@ -398,43 +463,43 @@ public class Win32UIEnhancer
 				synchronized( Win32UIEnhancer.class ){
 					
 					gfi_active = false;
-					
-					result[0] = res;
-					
-					if ( res != null ){
+															
+					Image[] old = gfi_pending_images.put( fk, new Image[]{ res });
 						
-						gfi_pending_images.add( res );
+					if ( old != null && old[0] != null ){
+							
+						old[0].dispose();
 					}
 				}
 				
 				sem.release();
 			}
-		});
+		}, true );
 		
-		boolean ok = sem.reserve( Utils.SLOW_OPERATION_TIMEOUT_MS );
-		
-			// note that we are single-threaded on the SWT thread here so there is no chance
-			// that another call has disposed of the potential result image in gfi_pending_images
-		
+		sem.reserve( Utils.SLOW_OPERATION_TIMEOUT_MS );
+				
 		synchronized( Win32UIEnhancer.class ){
 		
+			Image[] result = gfi_pending_images.remove( fk );
+			
+			boolean ok = result != null;
+			
+			Image img;
+			
 			if ( ok ){
+				
+				img = result[0];
 				
 				gfi_consec_fails	= 0;
 				gfi_breaker_time	= -1;
 				
 			}else{
 				
+				img = null;
+				
 				gfi_consec_fails++;
 			}
-			
-			Image img = result[0];
-			
-			if ( img != null ){
-				
-				gfi_pending_images.remove( img );
-			}
-			
+						
 			return( new Object[]{ img, !ok, false });
 		}
 	}

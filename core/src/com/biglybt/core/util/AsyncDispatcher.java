@@ -73,6 +73,14 @@ AsyncDispatcher
 	
 	public void
 	dispatch(
+		Runnable	r,
+		boolean		priority )
+	{
+		dispatch( AERunnable.create( r ), priority);
+	}
+	
+	public void
+	dispatch(
 		AERunnable	target )
 	{
 		dispatch( target, false );
