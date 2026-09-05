@@ -403,11 +403,17 @@ public class NameItem extends CoreTableColumnSWT implements
 					
 			Object piCache = cell.getData( KEY_PATH_ICON );
 		
+			boolean file_complete = fileInfo.getDownloaded() == fileInfo.getLength();
+			
 			if ( piCache != null ){
 				
 				Object[] temp = (Object[])piCache;
 				
-				if ( FileUtil.areFilePathsIdentical(((FileKey)temp[0]).getFile(),fileKey.getFile() )){
+					// the icon a partial file resolves to isn't the one it will
+					// have once complete, so completion is part of the identity
+				
+				if ( 	FileUtil.areFilePathsIdentical(((FileKey)temp[0]).getFile(),fileKey.getFile()) &&
+						((Boolean)temp[2]) == file_complete ){
 					
 					imgThumbnail = (Image[])temp[1];
 				}
@@ -418,16 +424,25 @@ public class NameItem extends CoreTableColumnSWT implements
 				ImageRepository.PathIcon pi = 
 					ImageRepository.getPathIcon(
 						fileKey.getFile().getPath(), true, cell.getHeight() > 32, false,
+						file_complete,
 						(result)->{
 							if ( result != null ){
-								cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, new Image[]{ result.image }});
+								cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, new Image[]{ result.image }, file_complete });
 								cell.invalidate();
+								cell.redraw();
 							}
 						});
 				
 				imgThumbnail = new Image[]{ pi.image };
 		
-				cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, imgThumbnail });
+					// a placeholder is what we get when the lookup couldn't run;
+					// caching it here would leave the row showing it until the
+					// cell is rebuilt, as nothing comes back to replace it
+
+				if ( !pi.temporary ){
+					
+					cell.setData( KEY_PATH_ICON, new Object[]{ fileKey, imgThumbnail, file_complete });
+				}
 			}
 		}
 
