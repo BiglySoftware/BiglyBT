@@ -131,6 +131,24 @@ public class ImageRepository
 
 	private static final AsyncDispatcher	disk_dispatcher = new AsyncDispatcher( "FileIconDisk" );
 
+		// an entry only needs checking against the file once per session: the
+		// icon is served from the cache on every repaint, and stat'ing the file
+		// each time turns a scroll through a large library into thousands of
+		// filesystem hits
+
+	private static final Set<String>	disk_checked =
+		Collections.newSetFromMap(
+			new LinkedHashMap<String,Boolean>( 128, 0.75f, false )
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+					Map.Entry<String,Boolean> eldest )
+				{
+					return( size() > DISK_INDEX_MAX );
+				}
+			});
+
 		// returns true once the on-disk index is available; kicks off the read
 		// the first time it is asked
 
@@ -756,6 +774,8 @@ public class ImageRepository
 					synchronized( ImageRepository.class ){
 
 						disk_index.remove( disk_key );
+					disk_checked.remove( disk_key );
+						disk_checked.remove( disk_key );
 					}
 
 					saveDiskIndex();
@@ -771,7 +791,17 @@ public class ImageRepository
 				per_file_content_keys.put( file_key, new PerFileContent( PFC_OK, content_key ));
 			}
 
-			scheduleDiskStaleCheck( file, file_key, disk_key, bits[1], bits[2] );
+			boolean check_needed;
+
+			synchronized( ImageRepository.class ){
+
+				check_needed = disk_checked.add( disk_key );
+			}
+
+			if ( check_needed ){
+
+				scheduleDiskStaleCheck( file, file_key, disk_key, bits[1], bits[2] );
+			}
 
 			return( image );
 
