@@ -1944,7 +1944,15 @@ public class ImageRepository
 
 			if ( type == PFC_TIMEOUT ){
 				
-				long delay = fail_count * ( 30*1000 + RandomUtils.nextInt( 10*1000 ));
+					// a lookup that times out isn't abandoned - it finishes in the
+					// background and leaves the image in Win32UIEnhancer's pending
+					// cache, which holds it for a minute. backing off past that
+					// window means arriving after the image has been discarded and
+					// starting the whole thing again, so on a file too big to read
+					// inside the timeout the icon never lands. cap the wait below
+					// the window rather than growing indefinitely.
+				
+				long delay = Math.min( fail_count, 2 ) * ( 20*1000 + RandomUtils.nextInt( 5*1000 ));
 				
 				return( elapsed > delay );
 				
