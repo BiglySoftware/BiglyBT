@@ -349,9 +349,25 @@ public class TorrentUIUtilsV3
 
 		int thumbnailVersion = PlatformTorrentUtils.getContentVersion(torrent);
 
+			// a file that is still being written has no embedded icon yet, so what
+			// the shell hands back is the generic one for the type - a real answer
+			// as far as the lookup is concerned, and cached as such. the icon the
+			// finished file resolves to is a different one, so completion has to
+			// be part of the key or the placeholder is served for good.
+
+		boolean primary_complete;
+
+		{
+			DownloadManager thumb_dm = DataSourceUtils.getDM( datasource );
+
+			DiskManagerFileInfo primary = thumb_dm == null? null: thumb_dm.getDownloadState().getPrimaryFile();
+
+			primary_complete = primary == null || primary.getDownloaded() == primary.getLength();
+		}
+
 			// add torrent size here to differentiate meta-data downloads from actuals
 
-		final String id = "Thumbnail." + hash + "." + torrent.getSize() + "." + thumbnailVersion + (big ? ".big" : "");
+		final String id = "Thumbnail." + hash + "." + torrent.getSize() + "." + thumbnailVersion + (big ? ".big" : "") + (primary_complete ? "" : ".inc");
 
 		Image existing_image = imageLoaderThumb.imageAdded(id) ? imageLoaderThumb.getImage(id) : null;
 		
