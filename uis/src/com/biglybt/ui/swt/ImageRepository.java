@@ -792,7 +792,7 @@ public class ImageRepository
 					synchronized( ImageRepository.class ){
 
 						disk_index.remove( disk_key );
-					disk_checked.remove( disk_key );
+					
 						disk_checked.remove( disk_key );
 					}
 
