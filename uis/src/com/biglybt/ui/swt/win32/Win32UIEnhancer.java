@@ -323,13 +323,52 @@ public class Win32UIEnhancer
 	private static final long	GFI_RETRY_AFTER		= 30*1000;
 	private static AsyncDispatcher	gfi_dispatcher		= new AsyncDispatcher( "gfi" );
 	
-	private static final Map<FileKey,Object[]>	gfi_pending_images =
-			new LinkedHashMap<FileKey,Object[]>( 128, 0.75f, true )
+		// small and large icons for the same file are different images, so the
+		// size has to be part of the key - otherwise a lookup for one size is
+		// answered with whatever the other size cached
+
+	private static class
+	IconKey
+	{
+		final FileKey	file_key;
+		final boolean	big;
+
+		IconKey(
+			File		file,
+			boolean		_big )
+		{
+			file_key	= new FileKey( file );
+			big			= _big;
+		}
+
+		public int
+		hashCode()
+		{
+			return( file_key.hashCode() + ( big?1:0 ));
+		}
+
+		public boolean
+		equals(
+			Object		_other )
+		{
+			if ( !( _other instanceof IconKey )){
+
+				return( false );
+			}
+
+			IconKey other = (IconKey)_other;
+
+			return( other.big == big && other.file_key.equals( file_key ));
+		}
+	}
+
+	private static final Map<IconKey,Object[]>	gfi_pending_images =
+			new LinkedHashMap<IconKey,Object[]>( 128, 0.75f, true )
 			{
 				@Override
 				protected boolean
 				removeEldestEntry(
-					Map.Entry<FileKey,Object[]> eldest )
+					Map.Entry<IconKey,Object[]> eldest )
 				{
 					if ( size() > 64 ){
 						
@@ -392,7 +431,7 @@ public class Win32UIEnhancer
 			return( null );
 		}
 		
-		FileKey fk = new FileKey( file );
+		IconKey fk = new IconKey( file, big );
 		
 		synchronized( Win32UIEnhancer.class ){
 			
