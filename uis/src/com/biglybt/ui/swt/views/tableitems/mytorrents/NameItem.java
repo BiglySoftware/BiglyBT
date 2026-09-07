@@ -165,6 +165,7 @@ public class NameItem extends CoreTableColumnSWT implements
 					ImageRepository.PathIcon pi = ImageRepository.getPathIcon(
 							fileInfo.getFile(true).getPath(), true, false, torrent != null
 									&& !torrent.isSimpleTorrent(),
+							fileInfo.getDownloaded() == fileInfo.getLength(),
 							(result)->{
 									// the icon arrived after this cell had already
 									// painted; the name hasn't changed so nothing
