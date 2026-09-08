@@ -250,6 +250,9 @@ public class BDecoder
 			
 		}catch( Throwable e ){
 			
+				// prevent potentially malicious errors from escaping
+				// e.g. stack overflow due to nested lists (credit to haoxucu)
+
 			throw( new IOException( e ));
 		}
 	}
@@ -281,6 +284,9 @@ public class BDecoder
 			throw( e );
 			
 		}catch( Throwable e ){
+			
+				// prevent potentially malicious errors from escaping
+				// e.g. stack overflow due to nested lists (credit to haoxucu)
 			
 			throw( new IOException( e ));
 		}
