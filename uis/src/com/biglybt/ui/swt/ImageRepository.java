@@ -131,6 +131,10 @@ public class ImageRepository
 
 	private static final AsyncDispatcher	disk_dispatcher = new AsyncDispatcher( "FileIconDisk" );
 
+		// extension keys we are currently trying to fill with a generic icon
+
+	private static final Set<String>	ext_icon_pending = new HashSet<>();
+
 		// an entry only needs checking against the file once per session: the
 		// icon is served from the cache on every repaint, and stat'ing the file
 		// each time turns a scroll through a large library into thousands of
@@ -516,7 +520,22 @@ public class ImageRepository
 						return( new PathIcon( from_disk ));
 					}
 
-					scheduleAsyncIconFetch( file, file_key, bBig, minifolder, default_image, icon_listener );
+						// a file that is still being written has no icon of its own
+						// yet, so the shell answers with the generic one for the
+						// type. that answer also lands in the pending-image cache,
+						// which is keyed by path and size only, and the lookup done
+						// once the file is complete picks it up and takes it for the
+						// real thing. ask about the extension instead - same answer,
+						// no per-file entry left behind.
+
+					if ( file_complete ){
+
+						scheduleAsyncIconFetch( file, file_key, bBig, minifolder, default_image, icon_listener );
+
+					}else{
+
+						scheduleExtensionIcon( ext, ext_key, bBig );
+					}
 				}
 
 
@@ -1006,6 +1025,78 @@ public class ImageRepository
 
 			}catch( Throwable e ){
 			}
+		});
+	}
+
+		// fill the shared extension key with a generic icon of the right size.
+		// Program only knows about extensions that open with something, so for
+		// .exe it has nothing and the row would fall back to the transparent
+		// image. asking the shell about a path that doesn't exist answers from
+		// the extension alone - SHGFI_USEFILEATTRIBUTES - so it costs no disk
+		// access and leaves no per-file state behind.
+
+	private static void
+	scheduleExtensionIcon(
+		String		ext,
+		String		ext_key,
+		boolean		bBig )
+	{
+		if ( !Constants.isWindows ){
+
+			return;
+		}
+
+		synchronized( ext_icon_pending ){
+
+			if ( !ext_icon_pending.add( ext_key )){
+
+				return;
+			}
+		}
+
+		async_icon_dispatcher.dispatch(()->{
+
+			Utils.execSWTThread(()->{
+
+				boolean got_one = false;
+
+				try{
+					File temp = File.createTempFile( "AZ", "." + ext );
+
+					temp.delete();
+
+					Class<?> cla = Class.forName( "com.biglybt.ui.swt.win32.Win32UIEnhancer" );
+
+					Method method = cla.getMethod( "getFileIcon", File.class, boolean.class );
+
+					Object[] result = (Object[])method.invoke( null, temp, bBig );
+
+					if ( result != null && result[0] != null ){
+
+						Image image = (Image)result[0];
+
+						if ( !bBig ) image = force16height( image );
+
+						ImageLoader.getInstance().addImageNoDipose( ext_key, image );
+
+						got_one = true;
+					}
+				}catch( Throwable e ){
+
+				}finally{
+
+						// a lookup that couldn't run leaves the key unfilled; let a
+						// later paint try again rather than giving up for good
+
+					if ( !got_one ){
+
+						synchronized( ext_icon_pending ){
+
+							ext_icon_pending.remove( ext_key );
+						}
+					}
+				}
+			}, false );
 		});
 	}
 
