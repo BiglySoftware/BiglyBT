@@ -465,7 +465,14 @@ public class TorrentUIUtilsV3
 			// when the real one turns up, refresh the cached thumbnail and
 			// let the listener repaint the cell
 		
+			// pass the completion state through: the five-argument overload
+			// assumes the file is finished, so while it is still being written
+			// the generic icon the shell returns is treated as its real one -
+			// cached in memory and written to the disk cache under the key the
+			// finished file will use, where it survives a restart
+
 		ImageRepository.PathIcon pi = ImageRepository.getPathIcon(path, isFile, big, false,
+				primary_complete,
 				(result)->{
 					Utils.execSWTThread(()->{
 						if ( result != null && !result.temporary ){
