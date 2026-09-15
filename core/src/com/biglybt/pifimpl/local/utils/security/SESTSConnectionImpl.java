@@ -143,7 +143,7 @@ SESTSConnectionImpl
 	private boolean		sent_keys;
 	private boolean		sent_auth;
 
-	private PooledByteBuffer	pending_message;
+	private List<PooledByteBuffer>	pending_messages = new ArrayList<>();
 
 	private AESemaphore	crypto_complete	= new AESemaphore( "SESTSConnection:send" );
 
@@ -509,8 +509,10 @@ SESTSConnectionImpl
 
 						setupBlockCrypto();
 
-						if ( pending_message != null ){
+						if ( !pending_messages.isEmpty()){
 
+							PooledByteBuffer pending_message = pending_messages.get(0);
+							
 							byte[]	pending_bytes = pending_message.toByteArray();
 
 							int	pending_size = pending_bytes.length;
@@ -537,9 +539,9 @@ SESTSConnectionImpl
 									out_buffer.put( pending_bytes );
 								}
 
-									// don't deallocate the pending message, the original caller does this
-
-								pending_message	= null;
+								pending_message.returnToPool();
+								
+								pending_messages.remove( pending_message );
 							}
 						}
 
@@ -588,7 +590,22 @@ SESTSConnectionImpl
 
 				out_buffer.flip();
 
-				connection.send( new PooledByteBufferImpl( new DirectByteBuffer( out_buffer )));
+				PooledByteBufferImpl temp = new PooledByteBufferImpl( new DirectByteBuffer( out_buffer ));
+				
+				try{
+					connection.send( temp );
+					
+					temp = null;
+					
+				}catch( Throwable e ){
+					
+					if ( temp != null ){
+						
+						temp.returnToPool();
+					}
+					
+					throw( e );
+				}
 			}
 
 			if ( crypto_completed ){
@@ -694,35 +711,29 @@ SESTSConnectionImpl
 
 				synchronized( this ){
 
-					if ( pending_message == null ){
-
-						pending_message = message;
-					}
+					pending_messages.add( message );
 				}
 			}
 
 			crypto_complete.reserve();
-
-			if ( closed || failed ){
-				
-				throw( new MessageException( "Connection failed" ));
-			}
 			
 				// if the pending message couldn't be piggy backed it'll still be allocated
+				// if not then it has been sent and deallocated, treat as success regardless
+				// of the current connection state
 
-			boolean	send_it = false;
+			boolean	send_it;
 
 			synchronized( this ){
 
-				if ( pending_message == message ){
-
-					pending_message	= null;
-
-					send_it	= true;
-				}
+				send_it = pending_messages.remove( message );
 			}
 
 			if ( send_it ){
+
+				if ( closed || failed ){
+					
+					throw( new MessageException( "Connection failed" ));
+				}
 
 				sendContent( message );
 			}

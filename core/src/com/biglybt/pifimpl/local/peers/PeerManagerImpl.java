@@ -230,18 +230,29 @@ PeerManagerImpl
 		PooledByteBuffer 	data,
 		Peer 				sender)
 	{
+		PooledByteBufferImpl	impl = (PooledByteBufferImpl)data;
+
 		manager.writeBlock(
 			request.getPieceNumber(),
 			request.getOffset(),
-			((PooledByteBufferImpl)data).getBuffer(),
+			impl.getBuffer( false ),
 			mapForeignPeer( sender ),
             false);
-
-		PeerForeignDelegate	delegate = lookupForeignPeer( sender );
-
-		if ( delegate != null ){
-
-			delegate.dataReceived();
+		
+			// take control of the buffer
+		
+		impl.getBuffer( true );
+		
+		try{
+			PeerForeignDelegate	delegate = lookupForeignPeer( sender );
+	
+			if ( delegate != null ){
+	
+				delegate.dataReceived();
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
 	}
 

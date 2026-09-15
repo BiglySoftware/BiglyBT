@@ -672,8 +672,12 @@ GenericMessageConnectionDirect
 
 		try{
 			connection.getOutgoingMessageQueue().addMessage(
-					new GenericMessage( msg_id, msg_desc, impl.getBuffer(), false ), false );
+					new GenericMessage( msg_id, msg_desc, impl.getBuffer( false ), false ), false );
 
+				// take ownership
+			
+			impl.getBuffer( true );
+			
 		}catch( Throwable e ){
 
 			throw( new MessageException( "send failed", e ));

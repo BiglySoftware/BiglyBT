@@ -178,10 +178,11 @@ DirectByteBuffer
 	protected static final int		TRACE_BUFFER_SIZE	= 64;		// must be even
 
 
-	private ByteBuffer 				buffer;
-	private DirectByteBufferPool	pool;
-	private byte					allocator;
-	private byte					flags;
+	private ByteBuffer 					buffer;
+	private final DirectByteBufferPool	pool;
+	private final byte					allocator;
+	
+	private byte						flags;
 	//private boolean                 was_returned_to_pool = false;
 
 
@@ -741,6 +742,12 @@ DirectByteBuffer
 		return( buffer );
 	}
 
+	public boolean
+	isPooled()
+	{
+		return( pool != null );
+	}
+	
 	public void
 	returnToPool()
 	{

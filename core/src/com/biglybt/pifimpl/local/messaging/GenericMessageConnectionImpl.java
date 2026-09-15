@@ -760,7 +760,7 @@ GenericMessageConnectionImpl
 
 		throws MessageException
 	{
-		int	size = ((PooledByteBufferImpl)message).getBuffer().remaining( DirectByteBuffer.SS_EXTERNAL );
+		int	size = ((PooledByteBufferImpl)message).getBuffer( false ).remaining( DirectByteBuffer.SS_EXTERNAL );
 
 		if ( size > getMaximumMessageSize()){
 

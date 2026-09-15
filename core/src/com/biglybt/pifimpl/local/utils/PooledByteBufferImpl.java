@@ -21,17 +21,92 @@ package com.biglybt.pifimpl.local.utils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
+import java.util.*;
 
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.DirectByteBufferPool;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.utils.PooledByteBuffer;
 
 public class
 PooledByteBufferImpl
 	implements PooledByteBuffer
 {
+	final static boolean TRACK = false;
+	
+	final static Map<PooledByteBufferImpl,BufferRecord> allocated = TRACK?new IdentityHashMap<>():null; 
+	
+	static class
+	BufferRecord
+	{
+		final PooledByteBufferImpl		buffer;
+		final long						allocate_time;
+		final Throwable					stack;
+		
+		BufferRecord(
+			PooledByteBufferImpl	b )
+		{
+			buffer			= b;
+			allocate_time	= SystemTime.getMonotonousTime();
+			stack			= new Throwable();
+			
+			stack.fillInStackTrace();
+		}
+	}
+	
+	static void
+	allocated(
+		PooledByteBufferImpl	b )
+	{
+		if ( b.buffer.isPooled()){
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			synchronized( allocated ){
+				
+				allocated.put( b, new BufferRecord( b ));
+				
+				int freed = 0;
+				
+				for ( BufferRecord record: allocated.values()){
+					
+					if ( record.buffer.buffer.hasBeenReturnedToPool()){
+						
+						freed++;
+						
+					}else{
+						
+						if ( now - record.allocate_time > 3*60*1000 ){
+							
+							record.stack.printStackTrace();
+						}
+					}
+				}
+				
+				
+				System.out.println( "allocated: " + allocated.size() + ", freed=" + freed );
+			}
+		}
+	}
+	
+	static void
+	removed(
+		PooledByteBufferImpl	b )
+	{
+		if ( b.buffer.isPooled()){
+			
+			synchronized( allocated ){
+				
+				if ( allocated.remove(b) == null ){
+				
+					System.out.println( "removed: not found" );
+				}
+			}
+		}
+	}
+	
+	
 	private DirectByteBuffer	buffer;
 
 	public
@@ -39,6 +114,10 @@ PooledByteBufferImpl
 		DirectByteBuffer	_buffer )
 	{
 		buffer	= _buffer;
+		
+		if ( TRACK ){
+			allocated( this );
+		}
 	}
 
 	public
@@ -46,6 +125,10 @@ PooledByteBufferImpl
 		int		size )
 	{
 		buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, size );
+		
+		if ( TRACK ){
+			allocated( this );
+		}
 	}
 
 	public
@@ -57,6 +140,10 @@ PooledByteBufferImpl
 		buffer.put( DirectByteBuffer.AL_EXTERNAL, data );
 
 		buffer.position( DirectByteBuffer.AL_EXTERNAL, 0 );
+		
+		if ( TRACK ){
+			allocated( this );
+		}
 	}
 
 	public
@@ -70,6 +157,10 @@ PooledByteBufferImpl
 		buffer.put( DirectByteBuffer.AL_EXTERNAL, data, offset, length );
 
 		buffer.position( DirectByteBuffer.AL_EXTERNAL, 0 );
+		
+		if ( TRACK ){
+			allocated( this );
+		}
 	}
 
 	@Override
@@ -106,8 +197,15 @@ PooledByteBufferImpl
 	}
 
 	public DirectByteBuffer
-	getBuffer()
+	getBuffer(
+		boolean		take_ownership )
 	{
+		if ( TRACK ){			
+			if ( take_ownership ){				
+				removed( this );
+			}
+		}
+		
 		return( buffer );
 	}
 
@@ -115,6 +213,10 @@ PooledByteBufferImpl
 	public void
 	returnToPool()
 	{
+		if ( TRACK ){
+			removed( this );
+		}
+		
 		buffer.returnToPool();
 	}
 }

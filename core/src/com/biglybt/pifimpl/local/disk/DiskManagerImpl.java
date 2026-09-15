@@ -118,7 +118,9 @@ DiskManagerImpl
 
 		throws DiskManagerException
 	{
-		DirectByteBuffer buffer = ((PooledByteBufferImpl)data).getBuffer();
+		PooledByteBufferImpl	impl = (PooledByteBufferImpl)data;
+
+		DirectByteBuffer buffer = impl.getBuffer( false );
 
 		if ( !disk_manager.checkBlockConsistencyForWrite( "plugin", piece_number, offset, buffer )){
 
@@ -167,6 +169,10 @@ DiskManagerImpl
 				}
 			});
 
+			// take control of the buffer
+		
+		impl.getBuffer( true );
+		
 		return( request );
 	}
 
