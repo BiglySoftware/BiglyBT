@@ -626,6 +626,63 @@ public class PeerUtils {
 
 	public static String[]
 	getCountryDetails(
+		InetSocketAddress		address )
+	{
+		if ( address == null ){
+
+			return( null );
+		}
+		
+		InetAddress ia = address.getAddress();
+		
+		if ( ia != null ){
+			
+			return( getCountryDetails( ia ));
+		}
+		
+		String ip = AddressUtils.getHostAddress(address);
+		
+		String[] details = null;
+		
+		if ( HostNameToIPResolver.isDNSName( ip )){
+
+			try{
+				InetAddress peer_address = HostNameToIPResolver.syncResolve( ip );
+	
+				LocationProvider lp = getCountryProvider();
+	
+				String code = lp.getISO3166CodeForIP( peer_address );
+				String name = lp.getCountryNameForIP( peer_address, Locale.getDefault());
+	
+				if ( code != null && name != null ){
+	
+					details = new String[]{ code, name };
+	
+				}else{
+	
+					details = new String[0];
+				}
+			}catch( Throwable e ){
+			}
+		}else{
+
+			String cat =  AENetworkClassifier.categoriseAddress( ip );
+
+			if ( cat != AENetworkClassifier.AT_PUBLIC ){
+
+				details = new String[]{ cat, cat };
+
+			}else{
+
+				details = new String[0];
+			}
+		}
+		
+		return( details );
+	}
+		
+	public static String[]
+	getCountryDetails(
 		InetAddress		address )
 	{
 		if ( address == null ){

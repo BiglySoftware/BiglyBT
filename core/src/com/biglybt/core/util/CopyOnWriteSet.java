@@ -243,6 +243,12 @@ CopyOnWriteSet<T>
 		}
 	}
 
+	public String
+	toString()
+	{
+		return( set.toString());
+	}
+	
 	private class
 	CopyOnWriteSetIterator
 		implements Iterator<T>

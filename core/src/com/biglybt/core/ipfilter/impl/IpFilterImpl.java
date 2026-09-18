@@ -423,7 +423,7 @@ IpFilterImpl
 
 	  	//never block lan local addresses
 
-	  if ( AddressUtils.isLANLocalAddress( ipAddress ) == AddressUtils.LAN_LOCAL_YES ){
+	  if ( AddressUtils.isLANLocalAddress( ipAddress, true ) == AddressUtils.LAN_LOCAL_YES ){
 
 		  return false;
 	  }
@@ -570,7 +570,7 @@ IpFilterImpl
 
 	  	//never block lan local addresses
 
-	  if ( AddressUtils.isLANLocalAddress( new InetSocketAddress( ipAddress, 0 )) == AddressUtils.LAN_LOCAL_YES ){
+	  if ( AddressUtils.isLANLocalAddress( new InetSocketAddress( ipAddress, 0 ), true ) == AddressUtils.LAN_LOCAL_YES ){
 
 		  return false;
 	  }

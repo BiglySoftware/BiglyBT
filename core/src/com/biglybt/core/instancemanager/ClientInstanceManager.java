@@ -67,7 +67,8 @@ ClientInstanceManager
 
 	public boolean
 	isLANAddress(
-		InetSocketAddress	address );
+		InetSocketAddress	address,
+		boolean				ignore_peer_sets );
 
 	public boolean
 	addLANSubnet(
@@ -75,6 +76,20 @@ ClientInstanceManager
 
 		throws PatternSyntaxException;
 
+	public boolean
+	removeLANSubnet(
+		String				subnet )
+
+		throws PatternSyntaxException;
+	
+	public boolean
+	addLANPeerSet(
+		String				ps );
+
+	public boolean
+	removeLANPeerSet(
+		String				ps );
+	
 	public void
 	addExplicitLANAddress(
 		InetSocketAddress	address );

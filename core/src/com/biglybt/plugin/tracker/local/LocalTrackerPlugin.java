@@ -76,9 +76,15 @@ LocalTrackerPlugin
 
 	private Map<String,Map<String,Long>>	track_times	= new HashMap<>();
 
-	private String				last_autoadd	= "";
-	private String				last_subnets	= "";
+	private String				last_autoadd		= "";
+	
+	private String				last_subnets		= "";
+	private Set<String>			last_subnets_added	= new HashSet<>();
 
+	private String				last_peersets		= "";
+	private Set<String>			last_peersets_added	= new HashSet<>();
+
+	
 	private BooleanParameter	enabled;
 
 	private long				plugin_start_time;
@@ -129,6 +135,10 @@ LocalTrackerPlugin
 		config.addLabelParameter2( "Plugin.localtracker.autoadd.info" );
 
 		final StringParameter autoadd = config.addStringParameter2( "Plugin.localtracker.autoadd", "Plugin.localtracker.autoadd", "" );
+
+		config.addLabelParameter2( "Plugin.localtracker.peersets.info" );
+
+		final StringParameter peersets = config.addStringParameter2( "Plugin.localtracker.peersets", "Plugin.localtracker.peersets", "" );
 
 		/*
 		 * actually these parameters affect LAN detection as a whole, not just the local tracker,
@@ -197,12 +207,14 @@ LocalTrackerPlugin
 					{
 						processSubNets( subnets.getValue(),include_wellknown.getValue() );
 						processAutoAdd( autoadd.getValue());
+						processPeerSets( peersets.getValue());
 					}
 				});
 
 		processSubNets(subnets.getValue(), include_wellknown.getValue());
 		processAutoAdd(autoadd.getValue());
-
+		processPeerSets( peersets.getValue());
+		
 		final DelayedTask dt = plugin_interface.getUtilities().createDelayedTask(new Runnable()
 			{
 				@Override
@@ -976,36 +988,53 @@ LocalTrackerPlugin
 		String	subnets,
 		boolean	include_well_known )
 	{
-		if ( include_well_known != instance_manager.getIncludeWellKnownLANs()){
-
-			instance_manager.setIncludeWellKnownLANs( include_well_known );
-
-			log.log( "Include well known local networks set to " + include_well_known );
-		}
-
-		if ( subnets.equals( last_subnets )){
-
-			return;
-		}
-
-		last_subnets = subnets;
-
-		StringTokenizer	tok = new StringTokenizer( subnets, ";");
-
-		while( tok.hasMoreTokens()){
-
-			String	net = tok.nextToken().trim();
-
-			try{
-
-				if ( instance_manager.addLANSubnet( net )){
-
-					log.log( "Added network '" + net + "'" );
+		synchronized( this ){
+			
+			if ( include_well_known != instance_manager.getIncludeWellKnownLANs()){
+	
+				instance_manager.setIncludeWellKnownLANs( include_well_known );
+	
+				log.log( "Include well known local networks set to " + include_well_known );
+			}
+	
+			if ( subnets.equals( last_subnets )){
+	
+				return;
+			}
+	
+			last_subnets = subnets;
+	
+			Set<String> to_remove = new HashSet<>( last_subnets_added );
+			
+			StringTokenizer	tok = new StringTokenizer( subnets, ";");
+	
+			while( tok.hasMoreTokens()){
+	
+				String	net = tok.nextToken().trim();
+	
+				to_remove.remove( net );
+				
+				try{
+					if ( instance_manager.addLANSubnet( net )){
+	
+						last_subnets_added.add( net );
+						
+						log.log( "Added network '" + net + "'" );
+					}
+				}catch( Throwable e ){
+	
+					log.log( "Failed to add network '" + net + "'", e );
 				}
-
-			}catch( Throwable e ){
-
-				log.log( "Failed to add network '" + net + "'", e );
+			}
+			
+			for ( String net: to_remove ){
+				
+				if ( instance_manager.removeLANSubnet( net )){
+					
+					last_subnets_added.remove( net );
+					
+					log.log( "Removed network '" + net + "'" );
+				}
 			}
 		}
 	}
@@ -1014,30 +1043,82 @@ LocalTrackerPlugin
 	processAutoAdd(
 		String	autoadd )
 	{
-		if ( autoadd.equals( last_autoadd )){
-
-			return;
-		}
-
-		last_autoadd = autoadd;
-
-		StringTokenizer	tok = new StringTokenizer( autoadd, ";");
-
-		while( tok.hasMoreTokens()){
-
-			String	peer = tok.nextToken();
-
-			try{
-
-				InetAddress p = InetAddress.getByName( peer.trim());
-
-				if ( instance_manager.addInstance( p )){
-
-					log.log( "Added peer '" + peer + "'" );
+		synchronized( this ){
+			
+			if ( autoadd.equals( last_autoadd )){
+	
+				return;
+			}
+	
+			last_autoadd = autoadd;
+	
+			StringTokenizer	tok = new StringTokenizer( autoadd, ";");
+	
+			while( tok.hasMoreTokens()){
+	
+				String	peer = tok.nextToken();
+	
+				try{
+	
+					InetAddress p = InetAddress.getByName( peer.trim());
+	
+					if ( instance_manager.addInstance( p )){
+	
+						log.log( "Added peer '" + peer + "'" );
+					}
+				}catch( Throwable e ){
+	
+					log.log( "Failed to decode peer '" + peer + "'", e );
 				}
-			}catch( Throwable e ){
-
-				log.log( "Failed to decode peer '" + peer + "'", e );
+			}
+		}
+	}
+	
+	protected void
+	processPeerSets(
+		String	peersets )
+	{
+		synchronized( this ){
+			
+			if ( peersets.equals( last_peersets )){
+				
+				return;
+			}
+	
+			last_peersets = peersets;
+	
+			Set<String> to_remove = new HashSet<>( last_peersets_added );
+			
+			StringTokenizer	tok = new StringTokenizer( peersets, ";");
+	
+			while( tok.hasMoreTokens()){
+	
+				String	ps = tok.nextToken().trim();
+	
+				to_remove.remove( ps );
+				
+				try{
+	
+					if ( instance_manager.addLANPeerSet( ps )){
+	
+						last_peersets_added.add( ps );
+						
+						log.log( "Added Peer Set '" + ps + "'" );
+					}
+				}catch( Throwable e ){
+	
+					log.log( "Failed to add Peer Set '" + ps + "'", e );
+				}
+			}
+			
+			for ( String ps: to_remove ){
+				
+				if ( instance_manager.removeLANPeerSet( ps )){
+					
+					last_peersets_added.remove( ps );
+					
+					log.log( "Removed Peer Set '" + ps + "'" );
+				}
 			}
 		}
 	}

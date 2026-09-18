@@ -37,6 +37,10 @@ import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagPeer;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
 import com.biglybt.net.udp.mc.MCGroup;
 import com.biglybt.net.udp.mc.MCGroupAdapter;
@@ -195,6 +199,9 @@ ClientInstanceManagerImpl
 	private volatile List<Pattern>					lan_subnets		= new ArrayList<>();
 	private volatile List<InetSocketAddress>		explicit_peers 	= new ArrayList<>();
 
+	private CopyOnWriteSet<String>	peer_sets 		= new CopyOnWriteSet<>(false);
+	private volatile List<TagPeer>	peer_sets_cache = null;
+	
 	private CopyOnWriteSet<InetSocketAddress>	explicit_addresses = new CopyOnWriteSet<>(false);
 
 	private volatile boolean		include_well_known_lans	= true;
@@ -204,6 +211,8 @@ ClientInstanceManagerImpl
 
 	final AEMonitor	this_mon = new AEMonitor( "ClientInstanceManager" );
 
+	private volatile TagManager	tag_manager;
+	
 	boolean		closing;
 
 	protected ClientInstanceManagerImpl(
@@ -242,7 +251,7 @@ ClientInstanceManagerImpl
 								isa = InetSocketAddress.createUnresolved( ip, 0 );
 							}
 						
-							return( !isLANAddress( isa ));
+							return( !isLANAddress( isa, true ));
 							
 						}catch( Throwable e ){
 							
@@ -553,13 +562,15 @@ ClientInstanceManagerImpl
 
 				mc_group.sendToGroup( data, null );
 
-				if ( explicit_peers.size() > 0 ){
+				List<InetSocketAddress> ep = explicit_peers;
+				
+				if ( !ep.isEmpty()){
 
 					map.put( "explicit", new Long(1));
 
 					byte[]	explicit_data = BEncoder.encode( map );
 
-					Iterator	it = explicit_peers.iterator();
+					Iterator	it = ep.iterator();
 
 					while( it.hasNext()){
 
@@ -1047,7 +1058,8 @@ ClientInstanceManagerImpl
 	@Override
 	public boolean
 	isLANAddress(
-		InetSocketAddress			isa )
+		InetSocketAddress			isa,
+		boolean						ignore_peer_sets )
 	{
 		if ( DISABLE_LAN_LOCAL_STUFF ){
 
@@ -1079,11 +1091,9 @@ ClientInstanceManagerImpl
 			}
 	
 			String	host_address = address.getHostAddress();
-	
-			for (int i=0;i<lan_subnets.size();i++){
-	
-				Pattern	p = (Pattern)lan_subnets.get(i);
-	
+				
+			for ( Pattern p: lan_subnets ){
+		
 				if ( p.matcher( host_address ).matches()){
 	
 					return( true );
@@ -1095,13 +1105,15 @@ ClientInstanceManagerImpl
 				return( true );
 			}
 	
-			if ( explicit_peers.size() > 0 ){
+			List<InetSocketAddress> ep = explicit_peers;
+			
+			if ( !ep.isEmpty()){
 	
-				Iterator	it = explicit_peers.iterator();
+				Iterator<InetSocketAddress>	it = ep.iterator();
 	
 				while( it.hasNext()){
 	
-					if (((InetSocketAddress)it.next()).getAddress().equals( address )){
+					if (it.next().getAddress().equals( address )){
 	
 						return( true );
 					}
@@ -1114,7 +1126,52 @@ ClientInstanceManagerImpl
 			isa = setPort( isa, 0 );
 		}
 		
-		return( explicit_addresses.contains( isa ));
+		if ( explicit_addresses.contains( isa )){
+			
+			return( true );
+		}
+		
+		
+		if ( !ignore_peer_sets && !peer_sets.isEmpty()){
+						
+			Set<String> ps_copy = peer_sets.getSet();
+			
+			List<TagPeer> tps = peer_sets_cache;
+			
+			if ( tps == null ){
+			
+				if ( tag_manager == null ){
+					
+					tag_manager = TagManagerFactory.getTagManager();
+				}
+
+				tps = new ArrayList<>( peer_sets.size());
+				
+				for ( String ps: ps_copy ){
+					
+					TagPeer tp = (TagPeer)tag_manager.getTagType( TagType.TT_PEER_IPSET ).getTag( ps, true );
+				
+					if ( tp != null ){
+						
+						tps.add( tp );
+					}
+				}
+				
+				peer_sets_cache = tps;
+			}
+			
+			for ( TagPeer tp: tps ){
+			
+				boolean matches = tp.matches( isa );
+										
+				if ( matches ){
+						
+					return( true );
+				}
+			}
+		}
+		
+		return( false );
 	}
 
 	@Override
@@ -1194,18 +1251,18 @@ ClientInstanceManagerImpl
 
 		Pattern pattern = Pattern.compile( str );
 
-		for (int i=0;i<lan_subnets.size();i++){
-
-			if ( pattern.pattern().equals(((Pattern)lan_subnets.get(i)).pattern())){
-
-				return( false );
-			}
-		}
-
 		try{
 			this_mon.enter();
 
-			List	new_nets = new ArrayList( lan_subnets );
+			for ( Pattern p: lan_subnets ){
+	
+				if ( pattern.pattern().equals(p.pattern())){
+	
+					return( false );
+				}
+			}
+
+			List<Pattern>	new_nets = new ArrayList<>( lan_subnets );
 
 			new_nets.add( pattern );
 
@@ -1219,6 +1276,93 @@ ClientInstanceManagerImpl
 		return( true );
 	}
 
+	@Override
+	public boolean
+	removeLANSubnet(
+		String	subnet )
+
+		throws PatternSyntaxException
+	{
+		String	str = "";
+
+		for (int i=0;i<subnet.length();i++){
+
+			char	c = subnet.charAt(i);
+
+			if ( c == '*' ){
+
+				str += ".*?";
+
+			}else if ( c == '.' ){
+
+				str += "\\.";
+
+			}else{
+
+				str += c;
+			}
+		}
+
+		Pattern pattern = Pattern.compile( str );
+
+		boolean found = false;
+		
+		try{
+			this_mon.enter();
+
+			List<Pattern>	new_nets = new ArrayList<>();
+
+			for ( Pattern p: lan_subnets ){
+
+				if ( pattern.pattern().equals(p.pattern())){
+
+					found = true;
+					
+				}else{
+					
+					new_nets.add( p );
+				}
+			}
+
+			lan_subnets	= new_nets;
+
+		}finally{
+
+			this_mon.exit();
+		}
+
+		return( found );
+	}
+	
+	
+	@Override
+	public boolean
+	addLANPeerSet(
+		String	peerset )
+	{
+		try{
+			return( peer_sets.add(peerset));
+			
+		}finally{
+			
+			peer_sets_cache = null;
+		}
+	}
+
+	@Override
+	public boolean
+	removeLANPeerSet(
+		String	peerset )
+	{
+		try{
+			return( peer_sets.remove(peerset));
+	
+		}finally{
+			
+			peer_sets_cache = null;
+		}
+	}
+	
 	@Override
 	public void
 	setIncludeWellKnownLANs(
@@ -1251,24 +1395,23 @@ ClientInstanceManagerImpl
 
 		boolean	new_peer = false;
 
-		if ( !explicit_peers.contains( sad )){
+		try{
+			this_mon.enter();
 
-			try{
-				this_mon.enter();
+			if ( !explicit_peers.contains( sad )){
 
 				List	new_peers = new ArrayList( explicit_peers );
 
 				new_peers.add( sad );
 
 				explicit_peers	= new_peers;
-
-			}finally{
-
-				this_mon.exit();
+				
+				new_peer = true;
 			}
+			
+		}finally{
 
-			new_peer = true;
-
+			this_mon.exit();
 		}
 
 		if ( force_send_alive || new_peer ){

@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.views.tableitems.peers;
 
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
@@ -68,7 +69,7 @@ public class LANItem
 		
 		if (row instanceof TableRowSWT) {
 			
-			((TableRowSWT)row).requestForegroundColor( color_requester, lan ? Colors.blue : null );
+			((TableRowSWT)row).requestForegroundColor( color_requester, lan ?( Utils.isDarkAppearanceNative()?Colors.bluesFixed[Colors.BLUES_MIDDARK]: Colors.blue ): null );
 		}
 	}
 }

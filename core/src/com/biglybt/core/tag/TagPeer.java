@@ -20,9 +20,11 @@
 
 package com.biglybt.core.tag;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.pif.download.Download;
 
 public interface
 TagPeer
@@ -32,4 +34,16 @@ TagPeer
 
 	public List<PEPeer>
 	getTaggedPeers();
+	
+	public default boolean
+	matches(
+		InetSocketAddress	address )
+	{
+		return( matches( null, address ));
+	}
+	
+	public boolean
+	matches(
+		Download			download,
+		InetSocketAddress	address );
 }

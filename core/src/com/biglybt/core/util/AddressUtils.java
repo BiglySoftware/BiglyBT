@@ -224,7 +224,7 @@ AddressUtils
 		try{
 			InetAddress ad = InetAddress.getByName( address );
 
-			if ( isLANLocalAddress( address ) != LAN_LOCAL_NO ){
+			if ( isLANLocalAddress( address, true ) != LAN_LOCAL_NO ){
 
 				ClientInstanceManager im = getInstanceManager();
 
@@ -268,6 +268,14 @@ AddressUtils
 	isLANLocalAddress(
 		InetSocketAddress	socket_address )
 	{
+		return( isLANLocalAddress( socket_address, false ));
+	}
+	
+	public static byte
+	isLANLocalAddress(
+		InetSocketAddress	socket_address,
+		boolean				ignore_peer_sets )
+	{
 		ClientInstanceManager im = getInstanceManager();
 
 		if ( im == null || !im.isInitialized()){
@@ -275,23 +283,31 @@ AddressUtils
 			return( LAN_LOCAL_MAYBE );
 		}
 
-		return( im.isLANAddress( socket_address )? LAN_LOCAL_YES:LAN_LOCAL_NO);
+		return( im.isLANAddress( socket_address, ignore_peer_sets )? LAN_LOCAL_YES:LAN_LOCAL_NO);
 	}
 
 	public static byte
 	isLANLocalAddress(
 		String address )
 	{
+		return( isLANLocalAddress( address, false ));
+	}
+	
+	public static byte
+	isLANLocalAddress(
+		String 		address,
+		boolean		ignore_peer_sets )
+	{
 		byte is_lan_local = LAN_LOCAL_MAYBE;
 
 		try{
 			if ( AENetworkClassifier.categoriseAddress( address ) == AENetworkClassifier.AT_PUBLIC ){
 			
-				is_lan_local = isLANLocalAddress( new InetSocketAddress( HostNameToIPResolver.syncResolve( address ), 0 ));
+				is_lan_local = isLANLocalAddress( new InetSocketAddress( HostNameToIPResolver.syncResolve( address ), 0 ), ignore_peer_sets );
 				
 			}else{
 				
-				is_lan_local = isLANLocalAddress( InetSocketAddress.createUnresolved( address, 0 ));
+				is_lan_local = isLANLocalAddress( InetSocketAddress.createUnresolved( address, 0 ), ignore_peer_sets );
 			}
 		}catch( UnknownHostException e ){
 
