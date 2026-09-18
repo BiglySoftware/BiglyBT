@@ -31,10 +31,15 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.networkmanager.VirtualChannelSelector;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxySelector;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagPeer;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HostNameToIPResolver;
@@ -50,10 +55,17 @@ public class ProxyLoginHandler {
   private static final int	READ_NOT_DONE		= 1;
   private static final int	READ_NO_PROGRESS	= 2;
 
+  private static volatile boolean	proxy_data_enable;
+  
   private static Object								proxy_lock			= new Object();
   private static List<ProxyInfo> 					proxies 			= new ArrayList<>();
   private static Map<InetSocketAddress,ProxyInfo>	proxy_address_map 	= new HashMap<>();
   private static int								proxy_index;
+  
+  private static String		no_proxy_peer_set_old	= "";
+  
+  private static volatile String		no_proxy_peer_set = "";
+  private static volatile TagPeer[]		no_proxy_peer_set_tag;
   
   static{
 	  COConfigurationManager.addListener(
@@ -73,6 +85,8 @@ public class ProxyLoginHandler {
   static void
   readConfig()
   {
+	  proxy_data_enable = COConfigurationManager.getBooleanParameter( "Proxy.Data.Enable" );
+	  
 	  boolean socks_same = COConfigurationManager.getBooleanParameter( "Proxy.Data.Same" );
 	  
 	  String socks_host = COConfigurationManager.getStringParameter( socks_same ? "Proxy.Host" : "Proxy.Data.Host" );
@@ -133,7 +147,21 @@ public class ProxyLoginHandler {
 		  }
 	  }
 	  
+	  String no_proxy_ps = COConfigurationManager.getStringParameter( ConfigKeys.Connection.SCFG_PROXY_DATA_NO_PROXY_PEER_SET , "" );
+	  
+	  if ( no_proxy_ps == null ){
+		  
+		  no_proxy_ps = "";
+	  }
+	  	  
 	  synchronized( proxy_lock ){
+		  
+		  if ( !no_proxy_peer_set_old.equals( no_proxy_ps )){
+			  
+			  no_proxy_peer_set = no_proxy_peer_set_old = no_proxy_ps;
+			  
+			  no_proxy_peer_set_tag = null;
+		  }
 		  
 		  int size = latest_proxies.size();
 		  
@@ -176,6 +204,58 @@ public class ProxyLoginHandler {
 	  synchronized( proxy_lock ){
 		
 		  return( proxy_address_map.get( a ) != null );
+	  }
+  }
+  
+  protected static boolean
+  isSocksEnabled(
+	  InetSocketAddress	a )
+  {
+	  if ( proxy_data_enable ){
+
+		  TagPeer[] tp = no_proxy_peer_set_tag;
+
+		  if ( tp == null ){
+
+			  String ps = no_proxy_peer_set;
+
+			  TagPeer tag;
+
+			  if ( !ps.isEmpty()){
+
+				  tag = (TagPeer)TagManagerFactory.getTagManager().getTagType( TagType.TT_PEER_IPSET ).getTag( ps, true );
+
+
+			  }else{
+
+				  tag = null;
+			  }
+
+			  if ( tag == null ){
+
+				  tp = new TagPeer[0];
+
+			  }else{
+
+				  tp = new TagPeer[]{ tag };
+			  }
+
+			  no_proxy_peer_set_tag = tp;
+		  }
+
+		  if ( tp != null && tp.length > 0 ){
+
+			  // TODO figure out some way to handle Download related cat/tags...
+
+			  return( !tp[0].matches( a ));
+
+		  }else{
+
+			  return( true );
+		  }
+	  }else{
+
+		  return( false );
 	  }
   }
   

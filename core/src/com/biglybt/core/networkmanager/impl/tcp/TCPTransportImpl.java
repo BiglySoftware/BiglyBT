@@ -270,7 +270,7 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 
 		if ( plugin_proxy == null ){
 
-		   	is_socks = COConfigurationManager.getBooleanParameter( "Proxy.Data.Enable" );
+			is_socks = ProxyLoginHandler.isSocksEnabled( address );
 		}
     }
 

@@ -411,6 +411,8 @@ public class ConfigurationDefaults {
     	}
     }
 
+    def.put( ConfigKeys.Connection.SCFG_PROXY_DATA_NO_PROXY_PEER_SET, "" );
+    
     def.put( "DNS Alt Servers", "8.8.8.8" );
     def.put( "DNS Alt Servers SOCKS Enable", TRUE );
 

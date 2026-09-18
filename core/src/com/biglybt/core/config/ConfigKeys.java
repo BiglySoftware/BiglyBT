@@ -116,6 +116,7 @@ public final class ConfigKeys {
 		public static final String SCFG_PREFIX_PROXY_DATA_PORT = "Proxy.Data.Port";
 		public static final String SCFG_PREFIX_PROXY_DATA_USERNAME = "Proxy.Data.Username";
 		public static final String SCFG_PREFIX_PROXY_DATA_PASSWORD = "Proxy.Data.Password";
+		public static final String SCFG_PROXY_DATA_NO_PROXY_PEER_SET = "Proxy.Data.NoProxy.PeerSet";
 		public static final String BCFG_PROXY_SOCKS_DISABLE_PLUGIN_PROXIES = "Proxy.SOCKS.disable.plugin.proxies";
 		public static final String BCFG_PROXY_CHECK_ON_START = "Proxy.Check.On.Start";
 		public static final String BCFG_PROXY_SOCKS_SHOW_ICON = "Proxy.SOCKS.ShowIcon";

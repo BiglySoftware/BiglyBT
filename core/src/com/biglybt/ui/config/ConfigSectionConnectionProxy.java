@@ -184,6 +184,12 @@ public class ConfigSectionConnectionProxy
 			pp_params.add(pDataPass);
 		}
 
+		StringParameterImpl pNoProxyPS = new StringParameterImpl(
+				SCFG_PROXY_DATA_NO_PROXY_PEER_SET,
+				"ConfigView.section.proxy.noproxy.peer.set");
+		
+		add( pNoProxyPS, listProxyPeer );
+
 		ParameterGroupImpl gProxyPeerServers = new ParameterGroupImpl(null,
 				listProxyPeerServers);
 		gProxyPeerServers.setNumberOfColumns(
@@ -194,6 +200,7 @@ public class ConfigSectionConnectionProxy
 				"ConfigView.section.proxy.group.peer", listProxyPeer);
 		add("gProxyPeer", gProxyPeer);
 
+				
 		final ParameterImpl[] proxy_controls = new ParameterImpl[] {
 			enableSocks,
 			pHost,
@@ -221,15 +228,21 @@ public class ConfigSectionConnectionProxy
 		};
 
 		ParameterListener proxy_peer_enabler = p -> {
+			
+			boolean esp_enabled	= enableSocksPeer.getValue();
+			boolean sc			= sameConfig.getValue();
+			
 			for (ParameterImpl param : proxy_peer_controls) {
 
-				param.setEnabled(enableSocksPeer.getValue() && !sameConfig.getValue());
+				param.setEnabled( esp_enabled && !sc);
 			}
 
 			for (ParameterImpl detail : proxy_peer_details) {
 
-				detail.setEnabled(enableSocksPeer.getValue());
+				detail.setEnabled( esp_enabled );
 			}
+			
+			pNoProxyPS.setEnabled( esp_enabled );
 		};
 
 		enableSocksPeer.addListener(proxy_peer_enabler);
