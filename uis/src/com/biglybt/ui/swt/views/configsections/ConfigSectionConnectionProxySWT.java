@@ -18,16 +18,26 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.admin.NetworkAdminSocksProxy;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
+import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
@@ -36,7 +46,9 @@ import com.biglybt.ui.config.ConfigSectionConnectionProxy;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BaseSwtParameter;
-
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils.TagMenuOptions;
+import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterListener;
 
 import static com.biglybt.core.config.ConfigKeys.Connection.*;
@@ -45,6 +57,8 @@ public class ConfigSectionConnectionProxySWT
 	extends ConfigSectionConnectionProxy
 	implements BaseConfigSectionSWT
 {
+	private Map<ParameterImpl, BaseSwtParameter>		paramMap;
+
 	final NetworkAdminSocksProxy[] test_proxy = {
 		null
 	};
@@ -55,7 +69,12 @@ public class ConfigSectionConnectionProxySWT
 	}
 
 	@Override
-	public void configSectionCreate(Composite parent, Map<ParameterImpl, BaseSwtParameter> mapParamToSwtParam) {
+	public void 
+	configSectionCreate(
+		Composite parent, Map<ParameterImpl, BaseSwtParameter> mapParamToSwtParam) 
+	{
+		paramMap = mapParamToSwtParam;
+		
 		BooleanParameterImpl enableProxy = (BooleanParameterImpl) getPluginParam(
 				BCFG_ENABLE_PROXY);
 		BooleanParameterImpl enableSocks = (BooleanParameterImpl) getPluginParam(
@@ -127,6 +146,54 @@ public class ConfigSectionConnectionProxySWT
 		socks_adapter.parameterChanged(null); // init settings
 	}
 
+	protected ActionParameterImpl
+	addTagSelect(
+		StringParameterImpl		owner,
+		List<Parameter> 		listNoProxy )
+	{
+		ActionParameterImpl pNoProxyPSSelect = new ActionParameterImpl( "", "GeneralView.menu.selectTracker" );
+		
+		add( pNoProxyPSSelect, listNoProxy );
+		
+		pNoProxyPSSelect.addListener(param -> {
+			
+			Utils.execSWTThread(()->{
+				BaseSwtParameter swtParam = paramMap.get(  pNoProxyPSSelect );
+				
+				Control c = swtParam.getMainControl();
+				
+				Menu menu = new Menu( c );
+				
+				c.setMenu(menu);
+
+				String paramName = owner.getConfigKeyName();
+				
+				Map<Tag, Integer> mapTaggableCount = new HashMap<>();
+				String tagName = COConfigurationManager.getStringParameter(paramName);
+				if (tagName != null && !tagName.isEmpty()) {
+					TagManager tm = TagManagerFactory.getTagManager();
+					TagType tt = tm.getTagType(TagType.TT_PEER_IPSET);
+					Tag tag = tt.getTag(tagName, true);
+					if (tag != null) {
+						mapTaggableCount.put(tag, 1);
+					}
+				}
+				TagMenuOptions.Builder builder = TagMenuOptions.Builder()
+					.setTagType(TagType.TT_PEER_IPSET)
+					.setShowAddMenu( false )
+					.setMapTaggableCount(mapTaggableCount, 1)
+					.setTagSelectionListener(
+						(tag, checked) -> COConfigurationManager.setParameter(paramName,
+							tag.getTagName(true)));
+				TagUIUtils.createTagSelectionMenu(builder, menu);
+				
+				menu.setVisible( true );
+			});
+		});
+		
+		return( pNoProxyPSSelect );
+	}
+	
 	private void proxyTest() {
 
 		final NetworkAdminSocksProxy target;

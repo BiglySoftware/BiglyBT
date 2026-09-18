@@ -184,20 +184,30 @@ public class ConfigSectionConnectionProxy
 			pp_params.add(pDataPass);
 		}
 
+		List<Parameter> listNoProxy = new ArrayList<>();
+		
 		StringParameterImpl pNoProxyPS = new StringParameterImpl(
 				SCFG_PROXY_DATA_NO_PROXY_PEER_SET,
 				"ConfigView.section.proxy.noproxy.peer.set");
 		
-		add( pNoProxyPS, listProxyPeer );
+		add( pNoProxyPS, listNoProxy );
 
-		ParameterGroupImpl gProxyPeerServers = new ParameterGroupImpl(null,
-				listProxyPeerServers);
+		ActionParameterImpl pNoProxyPSSelect = addTagSelect( pNoProxyPS, listNoProxy );
+					
+		ParameterGroupImpl gNoProxy = new ParameterGroupImpl(null, listNoProxy);
+		gNoProxy.setNumberOfColumns(2);
+		
+		add( gNoProxy, listProxyPeer );
+		
+		ParameterGroupImpl gProxyPeerServers = new ParameterGroupImpl(null, listProxyPeerServers);
+		
 		gProxyPeerServers.setNumberOfColumns(
 				COConfigurationManager.MAX_DATA_SOCKS_PROXIES);
 		add("gProxyPeerServers", gProxyPeerServers, listProxyPeer);
 
 		ParameterGroupImpl gProxyPeer = new ParameterGroupImpl(
 				"ConfigView.section.proxy.group.peer", listProxyPeer);
+		
 		add("gProxyPeer", gProxyPeer);
 
 				
@@ -243,6 +253,11 @@ public class ConfigSectionConnectionProxy
 			}
 			
 			pNoProxyPS.setEnabled( esp_enabled );
+			
+			if ( pNoProxyPSSelect != null ){
+				
+				pNoProxyPSSelect.setEnabled( esp_enabled );
+			}
 		};
 
 		enableSocksPeer.addListener(proxy_peer_enabler);
@@ -287,5 +302,13 @@ public class ConfigSectionConnectionProxy
 		// username info
 
 		add(new LabelParameterImpl("ConfigView.section.proxy.username.info"));
+	}
+	
+	protected ActionParameterImpl
+	addTagSelect(
+		StringParameterImpl		owner,
+		List<Parameter> 		listNoProxy )
+	{
+		return( null );
 	}
 }
