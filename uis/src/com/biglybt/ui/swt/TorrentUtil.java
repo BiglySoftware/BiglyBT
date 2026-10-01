@@ -5294,6 +5294,8 @@ public class TorrentUtil
 				mb.setLeftImage("image.trash");
 				mb.addCheckBox("deletecontent.also.deletetorrent", 2, deleteTorrent);
 
+				mb.setShellMetricsID( "delete.data.shell.metrics" );
+				
 				final int index = i;
 
 				DownloadManager[] current_dms = dms.clone();
@@ -5468,6 +5470,8 @@ public class TorrentUtil
 				mb.setRelatedObject(dm);
 				mb.setLeftImage("image.trash");
 				mb.addCheckBox("deletecontent.also.deletetorrent", 2, deleteTorrent);
+
+				mb.setShellMetricsID( "delete.data.shell.metrics" );
 
 				final int index = i;
 

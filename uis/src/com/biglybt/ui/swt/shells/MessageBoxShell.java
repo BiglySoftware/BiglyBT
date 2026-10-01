@@ -120,6 +120,8 @@ public class MessageBoxShell
 
 	protected boolean isRemembered;
 
+	private String shellMetricsID;
+	
 	private boolean supportsApplyToAll;
 	private boolean	applyToAll;
 	
@@ -855,8 +857,21 @@ public class MessageBoxShell
 				centerRelativeToShell = cursorControl.getShell();
 			}
 		}
-		Utils.centerWindowRelativeTo(shell, centerRelativeToShell);
-
+		
+		boolean had_metrics = false;
+		
+		if ( shellMetricsID != null && !shellMetricsID.isEmpty()){
+			
+			had_metrics = Utils.hasShellMetricsConfig( shellMetricsID );
+			
+			Utils.linkShellMetricsToConfig(shell, shellMetricsID);
+		}
+		
+		if ( !had_metrics ){
+			Utils.centerWindowRelativeTo(shell, centerRelativeToShell);
+			Utils.verifyShellRect(shell, true);
+		}
+		
 		for (int i = 0; i < listeners.length; i++) {
 			listeners[i].skinAfterComponents(shell, this, relatedObjects);
 		}
@@ -1212,6 +1227,13 @@ public class MessageBoxShell
 		this.rememberOnlyIfButtonPos = rememberOnlyIfButton;
 	}
 
+	public void
+	setShellMetricsID(
+		String		smID )
+	{
+		shellMetricsID = smID;
+	}
+	
 	public Color getUrlColor() {
 		return urlColor;
 	}
