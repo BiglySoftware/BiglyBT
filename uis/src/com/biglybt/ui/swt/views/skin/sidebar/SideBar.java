@@ -1468,39 +1468,7 @@ public class SideBar
 
 				final Menu menuDropDown = new Menu(soDropDown.getControl());
 
-				menuDropDown.addMenuListener(new MenuListener() {
-					boolean bShown = false;
-
-					@Override
-					public void menuHidden(MenuEvent e) {
-						bShown = false;
-
-						if (Constants.isOSX) {
-							return;
-						}
-
-						// Must dispose in an asyncExec, otherwise SWT.Selection doesn't
-						// get fired (async workaround provided by Eclipse Bug #87678)
-						Utils.execSWTThreadLater(0, new AERunnable() {
-							@Override
-							public void runSupport() {
-								if (bShown || menuDropDown.isDisposed()) {
-									return;
-								}
-								Utils.disposeSWTObjects(menuDropDown.getItems());
-							}
-						});
-					}
-
-					@Override
-					public void menuShown(MenuEvent e) {
-						Utils.disposeSWTObjects(menuDropDown.getItems());
-
-						bShown = true;
-
-						fillDropDownMenu(menuDropDown, tree.getItems(), 0);
-					}
-				});
+				buildDropDownMenu( menuDropDown );
 
 				dropDownSelectionListener = new SelectionListener() {
 					@Override
@@ -1627,6 +1595,45 @@ public class SideBar
 		cPluginsArea.getParent().getParent().layout(true, true);
 	}
 
+	public void
+	buildDropDownMenu(
+		Menu	menuDropDown )
+	{
+		menuDropDown.addMenuListener(new MenuListener() {
+			boolean bShown = false;
+
+			@Override
+			public void menuHidden(MenuEvent e) {
+				bShown = false;
+
+				if (Constants.isOSX) {
+					return;
+				}
+
+				// Must dispose in an asyncExec, otherwise SWT.Selection doesn't
+				// get fired (async workaround provided by Eclipse Bug #87678)
+				Utils.execSWTThreadLater(0, new AERunnable() {
+					@Override
+					public void runSupport() {
+						if (bShown || menuDropDown.isDisposed()) {
+							return;
+						}
+						Utils.disposeSWTObjects(menuDropDown.getItems());
+					}
+				});
+			}
+
+			@Override
+			public void menuShown(MenuEvent e) {
+				Utils.disposeSWTObjects(menuDropDown.getItems());
+
+				bShown = true;
+
+				fillDropDownMenu(menuDropDown, tree.getItems(), 0);
+			}
+		});
+	}
+	
 	private void addSideBarView(UISWTViewImpl view, Composite cPluginsArea) {
 		
 		synchronized( pluginViews ){

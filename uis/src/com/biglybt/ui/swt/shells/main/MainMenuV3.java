@@ -296,6 +296,20 @@ public class MainMenuV3
 						}
 					});
 
+			SideBar sidebar = (SideBar) SkinViewManager.getByClass(SideBar.class);
+			if (sidebar != null) {
+				if ( !sidebar.isVisible()){
+					
+					MenuItem itemSideBar = MenuFactory.createTopLevelMenuItem(viewMenu,	"");
+					
+					itemSideBar.setText( "    ..." );
+					
+					Menu menuSideBar = itemSideBar.getMenu();
+					
+					sidebar.buildDropDownMenu( menuSideBar );
+				}
+			}
+			
 			if (COConfigurationManager.getIntParameter("User Mode") > 1) {
 
 				SWTSkinObject plugin_bar = skin.getSkinObject(SkinConstants.VIEWID_PLUGINBAR);
