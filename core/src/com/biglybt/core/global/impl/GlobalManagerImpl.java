@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -3674,8 +3675,6 @@ public class GlobalManagerImpl
 	  moveTo( managers, positions );
   }
   
-  private static final Object MOVE_POS_KEY = new Object();
-
   @Override
   public void
   moveTo(
@@ -3738,6 +3737,8 @@ public class GlobalManagerImpl
 	  
 	  synchronized( managers_lock ){
 
+		  Map<DownloadManager,int[]> dm_map = new IdentityHashMap<>();
+		  
 		  DownloadManager[] dms_cow = managers_list_cow;
 		  
 		  int num_comp 		= 0;
@@ -3758,7 +3759,7 @@ public class GlobalManagerImpl
 			  
 			  int pos = dm.getPosition();
 			  
-			  dm.setUserData( MOVE_POS_KEY, new int[]{ pos, comp?1:0 } );
+			  dm_map.put( dm, new int[]{ pos, comp?1:0 });
 		  }
 		  
 		  	// remove all the old positions
@@ -3768,7 +3769,7 @@ public class GlobalManagerImpl
 			  DownloadManager	manager		= managers.get( i );
 			  int				newPosition = newPositions.get( i );
 
-			  int[] manager_entry = (int[])manager.getUserData( MOVE_POS_KEY );
+			  int[] manager_entry = dm_map.get( manager );
 			  
 			  if ( manager_entry == null ){
 				  
@@ -3792,7 +3793,7 @@ public class GlobalManagerImpl
 			  			  
 			  for ( DownloadManager dm: dms_cow ){
 				  
-				  int[] dm_entry = (int[])dm.getUserData( MOVE_POS_KEY );
+				  int[] dm_entry = dm_map.get( dm );
 				  
 				  boolean dmCompleted = dm_entry[1]==1;
 				  
@@ -3815,13 +3816,13 @@ public class GlobalManagerImpl
 			  DownloadManager	manager		= managers.get( i );
 			  int				newPosition = newPositions.get( i );
 			  		
-			  int[] manager_entry = (int[])manager.getUserData( MOVE_POS_KEY );
+			  int[] manager_entry = dm_map.get( manager );
 
 			  boolean curCompleted = manager_entry[1]==1;
 			  
 			  for ( DownloadManager dm: dms_cow ){
 
-				  int[] dm_entry = (int[])dm.getUserData( MOVE_POS_KEY );
+				  int[] dm_entry = dm_map.get( dm );
 				  
 				  boolean dmCompleted = dm_entry[1]==1;
 					
@@ -3841,7 +3842,7 @@ public class GlobalManagerImpl
 		  
 		  for ( DownloadManager dm: dms_cow ){
 			  
-			  int[] dm_entry = (int[])dm.getUserData( MOVE_POS_KEY );
+			  int[] dm_entry = dm_map.get( dm );
 			  		
 			  int dmPosition = dm_entry[0];
 			  
