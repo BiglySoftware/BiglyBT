@@ -52,6 +52,14 @@ public class
 NetTestPlugin
 	implements Plugin
 {
+	public static void
+	load(
+		PluginInterface		plugin_interface )
+	{
+		plugin_interface.getPluginProperties().setProperty( "plugin.version", 	"1.0" );
+		plugin_interface.getPluginProperties().setProperty( "plugin.name", 		"Net Test" );
+	}
+	
 	private PluginInterface	pi;
 	
 	private Tester		tor_tester;
@@ -361,7 +369,7 @@ NetTestPlugin
 			{
 				last_sent_time	= SystemTime.getMonotonousTime();
 				
-				log( "send " + map );
+				log( "send -> " + gmc.getEndpoint().getNotionalAddress() + ": " + map );
 				
 				PooledByteBuffer buffer = null;
 				
@@ -396,7 +404,7 @@ NetTestPlugin
 				try{
 					Map map = BDecoder.decode( message.toByteArray());
 						
-					log( gmc.getEndpoint().getNotionalAddress() + ": received " + map );
+					log( "recv <- " + gmc.getEndpoint().getNotionalAddress() + ": " + map );
 					
 				}catch( Throwable e ){
 											
