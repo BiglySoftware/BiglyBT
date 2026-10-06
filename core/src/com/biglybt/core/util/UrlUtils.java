@@ -2610,20 +2610,32 @@ public class UrlUtils
 			}
 		}
 		
+		List<InetSocketAddress> result = new ArrayList<>();
+
 		if ( addresses == null ){
 			
-			try{
-				addresses = DNSUtils.getSingleton().getAllByName( host );
-					
-			}catch( Throwable e ){
-					
+			if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+				
 				try{
-					addresses = Arrays.asList( InetAddress.getAllByName( host ));
+					addresses = DNSUtils.getSingleton().getAllByName( host );
 						
-				}catch( Throwable f ){
-					
-					addresses = Collections.emptyList();
+				}catch( Throwable e ){
+						
+					try{
+						addresses = Arrays.asList( InetAddress.getAllByName( host ));
+							
+					}catch( Throwable f ){
+						
+						addresses = Collections.emptyList();
+					}
 				}
+			}else{
+				
+				addresses = new ArrayList<>(1);
+				
+				result.add( InetSocketAddress.createUnresolved(host, port));
+				
+				return( result );
 			}
 			
 			synchronized( url_address_cache ){
@@ -2631,9 +2643,7 @@ public class UrlUtils
 				url_address_cache.put( host, new Object[]{ now + RandomUtils.nextInt( 20*1000 ), addresses });
 			}
 		}
-		
-		List<InetSocketAddress> result = new ArrayList<>();
-		
+				
 		if ( addresses == null ){
 			
 			result.add( new InetSocketAddress( host, port ));
