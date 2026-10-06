@@ -6012,15 +6012,7 @@ TorrentUtils
 						if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
 							
 							try{
-								List<InetAddress> host_addresses;
-								
-								try{
-									host_addresses = DNSUtils.getSingleton().getAllByName( host );
-									
-								}catch( Throwable e ){
-									
-									host_addresses = Arrays.asList( InetAddress.getAllByName( host ));
-								}
+								List<InetAddress> host_addresses = UrlUtils.getAllByName(host);
 								
 								for ( InetAddress a: host_addresses ){
 																	

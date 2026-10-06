@@ -2188,7 +2188,7 @@ TRTrackerBTAnnouncerImpl
  			
  			int retries = PRUDPPacketTracker.DEFAULT_RETRY_COUNT;
  			
- 			List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
+ 			List<InetSocketAddress>	url_addresses = UrlUtils.getAllByName( reqUrl );
  			
  			if ( url_addresses.isEmpty()){
  				

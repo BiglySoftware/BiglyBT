@@ -1639,7 +1639,7 @@ public class TrackerStatus {
 
 		int handler_port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
 
-		List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
+		List<InetSocketAddress>	url_addresses = UrlUtils.getAllByName( reqUrl );
 
 		if ( url_addresses.isEmpty()){
 			

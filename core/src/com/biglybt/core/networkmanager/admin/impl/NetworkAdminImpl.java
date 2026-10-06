@@ -1018,15 +1018,7 @@ NetworkAdminImpl
 	getSingleHomedServiceBinding( String host) 
 		throws UnknownHostException, UnsupportedAddressTypeException
 	{
-		List<InetAddress> addresses;
-		
-		try{
-			addresses = DNSUtils.getSingleton().getAllByName( host );
-			
-		}catch( Throwable e ){
-			
-			addresses = Arrays.asList( InetAddress.getAllByName( host ));
-		}
+		List<InetAddress> addresses = UrlUtils.getAllByName(host);
 		
 		List<Inet4Address> ip4 = new ArrayList<>();
 		List<Inet6Address> ip6 = new ArrayList<>();
@@ -1127,15 +1119,7 @@ NetworkAdminImpl
 	
 		throws UnknownHostException, UnsupportedAddressTypeException
 	{
-		List<InetAddress> addresses;
-		
-		try{
-			addresses = DNSUtils.getSingleton().getAllByName( host );
-			
-		}catch( Throwable e ){
-			
-			addresses = Arrays.asList( InetAddress.getAllByName( host ));
-		}
+		List<InetAddress> addresses = UrlUtils.getAllByName(host);
 		
 		InetAddress bind_v4 = null;
 		InetAddress bind_v6 = null;
