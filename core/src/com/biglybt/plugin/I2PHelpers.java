@@ -24,6 +24,7 @@ package com.biglybt.plugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -238,66 +239,66 @@ I2PHelpers
 		}
 	}
 	
-	private static boolean i2p_checked = false;
+	private static AtomicBoolean i2p_checked = new AtomicBoolean();;
 
 	public static void
 	checkI2PInstall(
 		final String	host_name )
 	{
-		synchronized( i2p_check_lock ){
+		if ( i2p_checked.get()){
+			
+			return;
+		}
 
-			if ( i2p_checked ){
+		try{
+			Core core = CoreFactory.getSingleton();
 
-				return;
-			}
+			if ( core != null ){
 
-			try{
-				Core core = CoreFactory.getSingleton();
+				if ( !i2p_checked.compareAndSet( false, true )){
 
-				if ( core != null ){
-
-					i2p_checked = true;
-
-					PluginInterface pi = core.getPluginManager().getDefaultPluginInterface();
-
-					pi.addListener(
-						new PluginAdapter()
-						{
-							@Override
-							public void
-							initializationComplete()
-							{
-								if ( I2PHelpers.isI2PInstalled()){
-
-									return;
-								}
-
-								final boolean[]	install_outcome = { false };
-
-								String enable_i2p_reason =
-									MessageText.getString( "azneti2phelper.install.reason.dns", new String[]{ host_name });
-
-								I2PHelpers.installI2PHelper(
-										enable_i2p_reason,
-										"azneti2phelper.install.dns.resolve",
-										install_outcome,
-										new Runnable()
-										{
-											@Override
-											public void
-											run()
-											{
-												if ( !install_outcome[0] ){
-
-												}
-											}
-										});
-							}
-						});
+					return;
 				}
-			}catch( Throwable e ){
+				
+				PluginInterface pi = core.getPluginManager().getDefaultPluginInterface();
 
+				pi.addListener(
+					new PluginAdapter()
+					{
+						@Override
+						public void
+						initializationComplete()
+						{
+							if ( I2PHelpers.isI2PInstalled()){
+
+								return;
+							}
+
+							final boolean[]	install_outcome = { false };
+
+							String enable_i2p_reason =
+								MessageText.getString( "azneti2phelper.install.reason.dns", new String[]{ host_name });
+
+							I2PHelpers.installI2PHelper(
+									enable_i2p_reason,
+									"azneti2phelper.install.dns.resolve",
+									install_outcome,
+									new Runnable()
+									{
+										@Override
+										public void
+										run()
+										{
+											if ( !install_outcome[0] ){
+
+											}
+										}
+									});
+						}
+					});
 			}
+		}catch( Throwable e ){
+
 		}
 	}
 }
