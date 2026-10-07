@@ -6,18 +6,13 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.NetUtils;
 import com.biglybt.core.util.TorrentUtils;
-import com.biglybt.pif.PluginAdapter;
-import com.biglybt.pif.PluginInterface;
 import com.biglybt.plugin.I2PHelpers;
 
 public class 
@@ -129,7 +124,7 @@ AENameServiceJava18
 						for ( String domain: domains ){
 	
 							try{
-								Object result = delegate_method.invoke( delegate, domain, args[1] );
+								delegate_method.invoke( delegate, domain, args[1] );
 		
 								last_error = null;
 								
@@ -259,8 +254,8 @@ AENameServiceJava18
 
 						//new Exception( "Prevented DNS leak for " + host_name ).printStackTrace();
 	
-						checkI2PInstall( host_name );
-	
+						I2PHelpers.checkI2PInstall( host_name );
+						
 						throw( new UnknownHostException( host_name ));
 	
 					}else if ( host_net == AENetworkClassifier.AT_TOR ){
@@ -292,70 +287,6 @@ AENameServiceJava18
 			}else{
 			
 				return( delegate_method.invoke( delegate, args ));
-			}
-		}
-	}
-
-	private static boolean i2p_checked = false;
-
-	private static void
-	checkI2PInstall(
-		final String	host_name )
-	{
-		synchronized( AENameServiceJava18.class ){
-
-			if ( i2p_checked ){
-
-				return;
-			}
-
-
-			try{
-				Core core = CoreFactory.getSingleton();
-
-				if ( core != null ){
-
-					i2p_checked = true;
-
-					PluginInterface pi = core.getPluginManager().getDefaultPluginInterface();
-
-					pi.addListener(
-						new PluginAdapter()
-						{
-							@Override
-							public void
-							initializationComplete()
-							{
-								if ( I2PHelpers.isI2PInstalled()){
-
-									return;
-								}
-
-								final boolean[]	install_outcome = { false };
-
-								String enable_i2p_reason =
-									MessageText.getString( "azneti2phelper.install.reason.dns", new String[]{ host_name });
-
-								I2PHelpers.installI2PHelper(
-										enable_i2p_reason,
-										"azneti2phelper.install.dns.resolve",
-										install_outcome,
-										new Runnable()
-										{
-											@Override
-											public void
-											run()
-											{
-												if ( !install_outcome[0] ){
-
-												}
-											}
-										});
-							}
-						});
-				}
-			}catch( Throwable e ){
-
 			}
 		}
 	}

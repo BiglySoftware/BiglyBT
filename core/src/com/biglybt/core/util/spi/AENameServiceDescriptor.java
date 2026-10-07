@@ -30,7 +30,6 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.AENetworkClassifier;
@@ -250,7 +249,7 @@ AENameServiceDescriptor
 					
 					// byte[][] or InetAddress[]
 
-					Class ret_type = method.getReturnType();
+					Class<?> ret_type = method.getReturnType();
 
 					if ( ret_type.equals( byte[][].class )){
 

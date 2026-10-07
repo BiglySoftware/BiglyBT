@@ -1265,7 +1265,7 @@ MagnetPlugin
 								
 								recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, added_time, true, dl_listener );
 								
-								if ( !sem.reserve(2500)){
+								if ( !sem.reserve(5000)){
 									
 									Debug.out( "Timeout waiting for magnet recovery to complete" );
 								}

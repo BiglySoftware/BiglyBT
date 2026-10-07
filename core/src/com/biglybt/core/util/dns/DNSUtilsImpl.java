@@ -37,6 +37,7 @@ import javax.naming.directory.InitialDirContext;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.DNSUtils;
 import com.biglybt.core.util.DNSUtils.DNSUtilsIntf;
+import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.core.util.Debug;
 
 public class
@@ -183,21 +184,29 @@ DNSUtilsImpl
 	private List<InetAddress>
 	getAllByName(
 		DNSUtils.DNSDirContext		context,
-		String						host,
+		String						host_name,
 		String[]					attributes )
 
 		throws UnknownHostException
 	{
-		if ( AENetworkClassifier.categoriseAddress( host ) != AENetworkClassifier.AT_PUBLIC ){
+		String host_net = AENetworkClassifier.categoriseAddress( host_name );
+		
+		if ( host_net == AENetworkClassifier.AT_PUBLIC ){
 			
-			throw( new UnknownHostException( host ));
+			List<InetAddress>	result = new ArrayList<>();
+			
+			// System.out.println( "DNSUtils::getAllByName: " + host_name );
+			
+			getAllByNameSupport(context, host_name, attributes, 1, result);
+			
+			return( result );
+			
+		}else if ( host_net == AENetworkClassifier.AT_I2P ){
+			
+			I2PHelpers.checkI2PInstall( host_name );
 		}
 		
-		List<InetAddress>	result = new ArrayList<>();
-		
-		getAllByNameSupport(context, host, attributes, 1, result);
-		
-		return( result );
+		throw( new UnknownHostException( host_name ));	
 	}
 		
 	private void

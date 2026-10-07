@@ -25,10 +25,12 @@ package com.biglybt.plugin;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.ui.UIFunctions;
@@ -38,7 +40,8 @@ import com.biglybt.ui.UIFunctionsUserPrompter;
 public class
 I2PHelpers
 {
-	private static final Object i2p_install_lock = new Object();
+	private static final Object i2p_check_lock		= new Object();
+	private static final Object i2p_install_lock	= new Object();
 
 	private static boolean i2p_installing = false;
 
@@ -231,6 +234,69 @@ I2PHelpers
 
 					declines.put( decline_key, SystemTime.getMonotonousTime());
 				}
+			}
+		}
+	}
+	
+	private static boolean i2p_checked = false;
+
+	public static void
+	checkI2PInstall(
+		final String	host_name )
+	{
+		synchronized( i2p_check_lock ){
+
+			if ( i2p_checked ){
+
+				return;
+			}
+
+			try{
+				Core core = CoreFactory.getSingleton();
+
+				if ( core != null ){
+
+					i2p_checked = true;
+
+					PluginInterface pi = core.getPluginManager().getDefaultPluginInterface();
+
+					pi.addListener(
+						new PluginAdapter()
+						{
+							@Override
+							public void
+							initializationComplete()
+							{
+								if ( I2PHelpers.isI2PInstalled()){
+
+									return;
+								}
+
+								final boolean[]	install_outcome = { false };
+
+								String enable_i2p_reason =
+									MessageText.getString( "azneti2phelper.install.reason.dns", new String[]{ host_name });
+
+								I2PHelpers.installI2PHelper(
+										enable_i2p_reason,
+										"azneti2phelper.install.dns.resolve",
+										install_outcome,
+										new Runnable()
+										{
+											@Override
+											public void
+											run()
+											{
+												if ( !install_outcome[0] ){
+
+												}
+											}
+										});
+							}
+						});
+				}
+			}catch( Throwable e ){
+
 			}
 		}
 	}
