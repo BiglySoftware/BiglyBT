@@ -195,9 +195,7 @@ public class SB_Dashboard
 									map.put( "data_source", key );
 									map.put( "control_type", 0L );
 									
-									main_dashboard.addItem( map );
-									
-									main_dashboard.fireChanged();
+									main_dashboard.addItem( map, true );
 								}
 							}});
 					}
@@ -556,9 +554,7 @@ public class SB_Dashboard
 	{
 		Map<String,Object> map = entry.exportStandAlone();
 				
-		main_dashboard.addItem( map );
-		
-		main_dashboard.fireChanged();
+		main_dashboard.addItem( map, true );
 	}
 	
 	public void
@@ -574,9 +570,7 @@ public class SB_Dashboard
 	{
 		Map<String,Object> map = entry.exportStandAlone();
 		
-		sidebar_dashboard.addItem( map );
-		
-		sidebar_dashboard.fireChanged();
+		sidebar_dashboard.addItem( map, true );
 	}
 
 	public DashboardInstance
@@ -591,9 +585,7 @@ public class SB_Dashboard
 	{
 		Map<String,Object> map = entry.exportStandAlone();
 				
-		rightbar_dashboard.addItem( map );
-		
-		rightbar_dashboard.fireChanged();
+		rightbar_dashboard.addItem( map, true );
 	}
 
 	public DashboardInstance
@@ -608,9 +600,7 @@ public class SB_Dashboard
 	{
 		Map<String,Object> map = entry.exportStandAlone();
 				
-		topbar_dashboard.addItem( map );
-		
-		topbar_dashboard.fireChanged();
+		topbar_dashboard.addItem( map, true );
 	}
 
 	public DashboardInstance
@@ -665,9 +655,7 @@ public class SB_Dashboard
 			items.add( map );
 		}
 				
-		topbar_dashboard.addItems( items );
-		
-		topbar_dashboard.fireChanged();
+		topbar_dashboard.addItems( items, true );
 	}
 	
 	public void
@@ -786,7 +774,8 @@ public class SB_Dashboard
 		private final String	config_prefix;
 		private final boolean	use_tabs_default;
 		
-		Composite main_composite;
+		private Composite			main_composite;
+		private List<CTabFolder>	tab_folders = new ArrayList<>();
 		
 		private CopyOnWriteList<DashboardItem>		items = new CopyOnWriteList<>();
 		
@@ -1036,7 +1025,7 @@ public class SB_Dashboard
 			map.put( "data_source", starting_url );
 			map.put( "control_type", 0L );
 			
-			addItem( map );
+			addItem( map, false );
 		}
 		
 		private int
@@ -1053,19 +1042,23 @@ public class SB_Dashboard
 		
 		private void
 		addItem(
-			Map		map )
+			Map			map,
+			boolean		fire_if_changed )
 		{
 			List<Map>	list = new ArrayList<>(1);
 			
 			list.add( map );
 			
-			addItems( list );
+			addItems( list, fire_if_changed );
 		}
 		
 		private void
 		addItems(
-			List<Map>	item_list )
+			List<Map>	item_list,
+			boolean		fire_if_changed )
 		{
+			List<DashboardItem> new_ditems = new ArrayList<>();
+			
 			synchronized( items ) {
 
 				int[][] initial_layout = getDashboardLayout();
@@ -1078,12 +1071,28 @@ public class SB_Dashboard
 					
 					items.add( item );
 					
+					new_ditems.add( item );
+					
 					layout = ensureUIDInLayout( layout, item.getUID());
 				}
 				
 				if ( layout != initial_layout ) {
 					
 					setDashboardLayout( layout, items.size(), false );
+				}
+			}
+			
+			if ( fire_if_changed ){
+				
+					// quick hack to append to tab folder without entire rebuild
+				
+				if ( getUseTabs() && tab_folders.size() == 1 && !new_ditems.isEmpty()){
+					
+					setupTabItems( tab_folders.get(0), new_ditems );
+					
+				}else{
+				
+					fireChanged();
 				}
 			}
 		}
@@ -1298,6 +1307,8 @@ public class SB_Dashboard
 		setupTabFolder(
 			CTabFolder	tf )
 		{
+			tab_folders.add( tf );
+			
 			tf.setUnselectedCloseVisible( false );
 			
 			tf.addCTabFolder2Listener(new CTabFolder2Adapter() {
@@ -1365,6 +1376,43 @@ public class SB_Dashboard
 				
 				tab_item.setData( "sb:itemtitleid", title_id );
 			}
+		}
+		
+		private void
+		setupTabItems(
+			CTabFolder			tf,
+			List<DashboardItem>	items )
+		{
+			Utils.execSWTThread(()->{
+				
+				CTabItem tab_item = null;
+				
+				for ( DashboardItem item: items ){
+					
+					tab_item = new CTabItem( tf, SWT.NULL );
+					
+					Composite tab_composite = new Composite( tf, SWT.NULL );
+					
+					tab_composite.setLayout( new FormLayout());
+					
+					tab_item.setControl( tab_composite );
+					
+					tab_composite.setLayoutData( Utils.getFilledFormData());
+					
+					build( tab_item, tab_composite, item, true );
+					
+					List<DashboardItem> temp = new ArrayList<>();
+					
+					temp.add( item );
+					
+					setupTabItem( tab_item, temp );
+				}
+				
+				if ( tab_item != null ){
+					
+					tf.setSelection( tab_item );
+				}
+			});
 		}
 		
 		private void
@@ -1719,6 +1767,8 @@ public class SB_Dashboard
 			Composite		dashboard_composite )
 		{
 			main_composite = dashboard_composite;
+			
+			tab_folders.clear();
 			
 			try{
 				building++;

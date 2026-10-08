@@ -335,6 +335,7 @@ public class UIConfigDefaultsSWT
 	    def.addParameter( "Side Bar Indent Expanders", true );
 	    def.addParameter( "Side Bar Compact View", false );
 	    def.addParameter( "Side Bar Hide Left Icon", false );
+	    def.addParameter( "Side Bar Hidden Add To Dash", false );
 	    
 		String orderDef = "";
 		for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){

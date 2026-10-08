@@ -383,11 +383,16 @@ public class ConfigSectionInterfaceDisplaySWT
 					MessageText.getString("sb.dblclick.action.independent"),
 				};
 
-				add(new IntListParameterImpl("Side Bar Double Click Action",
-						"sb.dblclick.action", new int[] {
-							0,
-							1,
-						}, pop_labs), listSideBar);
+			add(new IntListParameterImpl("Side Bar Double Click Action",
+					"sb.dblclick.action", new int[] {
+						0,
+						1,
+					}, pop_labs), listSideBar);
+			
+			
+			BooleanParameterImpl addToDash = new BooleanParameterImpl(
+					"Side Bar Hidden Add To Dash", "sidebar.hidden.add.to.dash");
+			add(addToDash, listSideBar);
 			
 			ParameterGroupImpl group = add(new ParameterGroupImpl("v3.MainWindow.menu.view.sidebar", listSideBar));
 			

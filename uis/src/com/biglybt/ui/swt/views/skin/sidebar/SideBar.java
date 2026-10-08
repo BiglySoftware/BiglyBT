@@ -132,13 +132,18 @@ public class SideBar
 	private Utils.SashWrapper		pluginSash;
 	
 	private final List<UISWTViewImpl> pluginViews = new ArrayList<>();
+	
+	private ParameterListener configListener;
 	private ParameterListener configShowSideBarListener;
 	private ParameterListener configRedrawListener;
 	private ParameterListener configBGColorListener;
+	
 	private SWTViewListener swtViewListener;
 
 	private SideBarEntrySWT	activeMenuEntry;
 	private SideBarEntrySWT	lastMenuEntry;
+	
+	private boolean addEntriesToDash = false;
 	
 	public SideBar() {
 		super(null, UISWTInstance.VIEW_MAIN, null);
@@ -570,6 +575,16 @@ public class SideBar
 
 		super.skinObjectInitialShow(skinObject, params);
 
+		configListener = (n)->{
+			
+			addEntriesToDash = COConfigurationManager.getBooleanParameter("Side Bar Hidden Add To Dash");
+		};
+		
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					"Side Bar Hidden Add To Dash",
+				}, configListener );
+		
 		configShowSideBarListener = new ParameterListener() {
 			@Override
 			public void
@@ -630,9 +645,11 @@ public class SideBar
 					uiUpdater.removeUpdater(this);
 				}
 			}
-		} catch (Exception e) {
+		} catch (Throwable  e) {
 			Debug.out(e);
 		}
+
+		COConfigurationManager.removeParameterListener( "Side Bar Hidden Add To Dash", configListener );
 
 		COConfigurationManager.removeParameterListener( "Show Side Bar", configShowSideBarListener);
 		COConfigurationManager.removeParameterListener(	"config.skin.color.sidebar.bg", configBGColorListener);
@@ -642,7 +659,7 @@ public class SideBar
 		COConfigurationManager.removeParameterListener( "Side Bar Indent Expanders", configRedrawListener );
 		COConfigurationManager.removeParameterListener( "Side Bar Compact View", configRedrawListener );
 		COConfigurationManager.removeParameterListener( "Side Bar Hide Left Icon", configRedrawListener );
-		
+				
 		if (swtViewListener != null) {
 			try {
 				ViewManagerSWT.getInstance().removeSWTViewListener(swtViewListener);
@@ -2177,6 +2194,19 @@ public class SideBar
 			return;
 		}
 
+		if ( oldEntry != null ){
+			
+			if ( addEntriesToDash && oldEntry.getId() == MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD ){
+				
+				if ( !isVisible()){
+					
+					MainMDISetup.getSb_dashboard().addItem((SideBarEntrySWT)newEntry );
+					
+					return;
+				}
+			}
+		}
+		
 		// show new
 		setSelectedEntry((MdiEntrySWT)newEntry );
 
