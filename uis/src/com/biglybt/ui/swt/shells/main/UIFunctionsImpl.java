@@ -971,6 +971,7 @@ public class UIFunctionsImpl
 	@Override
 	public void promptForSearch() {
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow("Button.search", "search.dialog.text");
+		entryWindow.setRememberLocationSize( "search.dialog.loc.and.size" );
 		entryWindow.prompt(new UIInputReceiverListener() {
 			@Override
 			public void UIInputReceiverClosed(UIInputReceiver receiver) {
