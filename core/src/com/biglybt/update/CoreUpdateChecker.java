@@ -28,6 +28,8 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -178,12 +180,53 @@ CoreUpdateChecker
 				
 				File file = (File)overrides.get( RES_EXPLICIT_FILE );
 				
+				String name = file.getName();
+				
+				String lv	= MessageText.getString( "label.explicit" );
+
+				try{			
+				
+						// two general possibilities
+						//		core_BiglyBTnnnn-Bnn...jar
+					
+					String regex = ".*?(\\d{4})-B(\\d{2})-.*";
+					
+			        Pattern pattern = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
+			        
+			        Matcher matcher = pattern.matcher(name);
+			        
+			        if ( matcher.matches()){
+			        	
+			        	String main = matcher.group(1).replaceAll("(\\d)", "$1.").replaceAll("\\.$", "");
+			        	String beta	= matcher.group(2);
+			        	
+			        	lv = main + "_B" + beta;
+			        	
+			        }else{
+			        	
+			        		// core_BiglyBTn.n.n.n.jar
+			        	
+						regex = ".*?(\\d(?:\\.\\d){3})..jar*";
+						
+				        pattern = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
+				        
+				        matcher = pattern.matcher(name);
+				        
+				        if ( matcher.matches()){
+				        					        	
+				        	lv = matcher.group(1);
+				        }
+			        }
+				}catch( Throwable e ){
+					
+				}
+				
+				String latest_version = lv;
+				
 				ResourceDownloader rd 		= rdf.create( file );
 				
 				String	current_version = plugin_interface.getApplicationVersion();
-				
-				String latest_version	= "explicit";
-				
+								
 				final Update update =
 						checker.addUpdate(
 								update_name,
