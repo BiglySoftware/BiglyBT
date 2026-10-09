@@ -1321,6 +1321,13 @@ public abstract class BaseMdiEntry
 		
 		result.put( "mdi", ( this instanceof SideBarEntrySWT )?"sidebar":"tabbed" );
 		
+		String image_left_id = getImageLeftID();
+		
+		if ( image_left_id != null && !image_left_id.isEmpty()){
+			
+			result.put( "mdi.image_left_id", image_left_id );
+		}
+		
 		String title = null;
 		
 		ViewTitleInfo vti = getViewTitleInfo();
@@ -1507,7 +1514,7 @@ public abstract class BaseMdiEntry
 		Runnable					callback )
 	{
 		//String	mdi_type = (String)map.get( "mdi" );
-		
+				
 		String		skin_ref = (String)map.get( "skin_ref" );
 		
 		String		skin_id	= (String)map.get( "skin_id" );
@@ -1815,15 +1822,27 @@ public abstract class BaseMdiEntry
 			}
 		}
 		
-		return( buildStandAlone(
+		SWTSkinObjectContainer result =
+			buildStandAlone(
 					soParent,
 					skin_ref,
 					skin,
 					id,
 					data_source,
 					control_type,
-					builder ));
+					builder );
 		
+		if ( result != null ){
+			
+			String 		mdi_image_left_id = (String)map.get( "mdi.image_left_id" );
+
+			if ( mdi_image_left_id != null ){
+			
+				result.setData( "mdi.image_left_id", mdi_image_left_id );
+			}
+		}
+		
+		return( result );
 	}
 
 	private static void tryInstallPlugin(String plugin_id, String plugin_name,

@@ -32,6 +32,7 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormLayout;
@@ -52,6 +53,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
@@ -1387,9 +1389,11 @@ public class SB_Dashboard
 				
 				CTabItem tab_item = null;
 				
+				int index = getAddNewHorizontal()?-1:0;
+				
 				for ( DashboardItem item: items ){
 					
-					tab_item = new CTabItem( tf, SWT.NULL );
+					tab_item = index==-1?new CTabItem( tf, SWT.NULL ):new CTabItem( tf, SWT.NULL, index++ );
 					
 					Composite tab_composite = new Composite( tf, SWT.NULL );
 					
@@ -1412,6 +1416,8 @@ public class SB_Dashboard
 					
 					tf.setSelection( tab_item );
 				}
+				
+				writeConfig();
 			});
 		}
 		
@@ -2474,7 +2480,7 @@ public class SB_Dashboard
 									
 									g.layout( true, true );
 									
-									item.setCurrentTab( parent_tab_item );
+									item.setCurrentTab( parent_tab_item, obj );
 								}
 							}else{
 								
@@ -2582,7 +2588,7 @@ public class SB_Dashboard
 				
 				c.setLayoutData( Utils.getFilledFormData());
 					
-				item.setCurrentTab( parent_tab_item );
+				item.setCurrentTab( parent_tab_item, imported );
 
 				c.addListener(
 					SWT.Show,
@@ -2592,7 +2598,7 @@ public class SB_Dashboard
 						public void handleEvent(Event arg0){
 							g.layout( true, true );
 							
-							item.setCurrentTab( parent_tab_item );
+							item.setCurrentTab( parent_tab_item, imported );
 						}
 					});
 			}catch( Throwable e ) {
@@ -3092,7 +3098,7 @@ public class SB_Dashboard
 					}
 				}
 				
-				return( title );
+				return( title.length() <= 32? title: ( title.substring(0,32) + "..." ));
 			}
 			
 			public Map<String,Object>
@@ -3103,7 +3109,8 @@ public class SB_Dashboard
 			
 			public void
 			setCurrentTab(
-				CTabItem		_item )
+				CTabItem				_item,
+				SWTSkinObjectContainer	_soc )
 			{
 				item	= _item;
 				
@@ -3148,6 +3155,26 @@ public class SB_Dashboard
 						if ( c instanceof Composite ){
 							
 							controls.add(((Composite)c).getChildren());
+						}
+					}
+				}
+				
+				if ( _soc != null ){
+										
+					String image_id = (String)_soc.getData( "mdi.image_left_id" );
+					
+					if ( image_id != null ){
+						
+						Image img = ImageLoader.getInstance().getImage( image_id );
+						
+						if ( img != null ){
+							
+							_item.setImage( img );
+							
+							_item.addDisposeListener((ev)->{
+								
+								ImageLoader.getInstance().releaseImage( image_id );
+							});
 						}
 					}
 				}
@@ -3205,10 +3232,14 @@ public class SB_Dashboard
 						setDashboardLayout( layout, items.size(), true );
 					}			
 				}
-				
+								
 				if ( items.size() == 0 || !already_disposed ){
 				
 					fireChanged();
+					
+				}else{
+					
+					writeConfig();
 				}
 			}
 		}		
