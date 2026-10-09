@@ -151,8 +151,8 @@ public abstract class BaseMdiEntry
 
 	private List<MdiAcceleratorListener> listAcceleratorListeners = null;
 	
-	private ViewTitleInfo viewTitleInfo;
-
+	private ViewTitleInfo	viewTitleInfo;
+	
 	/** Parent MDIEntry.  Doesn't mean that this view is embedded inside the parentID */
 	private String parentEntryID;
 
@@ -693,7 +693,6 @@ public abstract class BaseMdiEntry
 		}
 		redraw();
 	}
-
 
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.pifimpl.UISWTViewImpl2#setPluginSkinObject(com.biglybt.ui.swt.pif.PluginUISWTSkinObject, org.eclipse.swt.widgets.Composite)
@@ -1335,6 +1334,13 @@ public abstract class BaseMdiEntry
 		if ( vti != null ) {
 			
 			title = (String)vti.getTitleInfoProperty( ViewTitleInfo.TITLE_TEXT );
+			
+			String fid = (String)vti.getTitleInfoProperty( ViewTitleInfo.TITLE_FACTORY_ID );
+			
+			if ( fid != null ){
+				
+				result.put( "mdi.vti_fid", fid );
+			}
 		}
 		
 		if ( title == null || title.length() == 0 ) {
@@ -1834,11 +1840,15 @@ public abstract class BaseMdiEntry
 		
 		if ( result != null ){
 			
-			String 		mdi_image_left_id = (String)map.get( "mdi.image_left_id" );
-
-			if ( mdi_image_left_id != null ){
+			result.setData( "imported.data.source", data_source );
 			
-				result.setData( "mdi.image_left_id", mdi_image_left_id );
+			String[] to_copy = { "mdi.image_left_id", "mdi.vti_fid" };
+			
+			for ( String str: to_copy ){
+				Object 		o = (String)map.get( str );
+				if ( o != null ){
+					result.setData( str, o );
+				}
 			}
 		}
 		

@@ -213,6 +213,37 @@ public class MainMDISetup
 			}
 			);
 
+		mdi.registerViewTitleInfoFactory(
+			SIDEBAR_SECTION_ALLPEERS,
+			(ds)->{
+				PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
+
+				ViewTitleInfo title_info =
+					new ViewTitleInfo()
+					{
+						@Override
+						public Object
+						getTitleInfoProperty(
+							int propertyID)
+						{
+							if ( propertyID == TITLE_FACTORY_ID ){
+								
+								return( SIDEBAR_SECTION_ALLPEERS );
+								
+							}else if ( propertyID == TITLE_INDICATOR_TEXT ){
+								
+								int[] counts = scheduler.getPeerCount();
+								
+								return( counts[0] + " | " + counts[1] );
+							}
+							
+							return( null );
+						}
+					};
+						
+					return( title_info );
+			});
+		
 		mdi.registerEntry(SIDEBAR_SECTION_ALLPEERS,
 				id -> {
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
@@ -223,28 +254,11 @@ public class MainMDISetup
 					MdiEntry entry = mdi.createEntry(builder, true);
 
 					PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
-
-					ViewTitleInfo title_info =
-							new ViewTitleInfo()
-							{
-								@Override
-								public Object
-								getTitleInfoProperty(
-									int propertyID)
-								{
-									if ( propertyID == TITLE_INDICATOR_TEXT ){
-										
-										int[] counts = scheduler.getPeerCount();
-										
-										return( counts[0] + " | " + counts[1] );
-									}
-									
-									return( null );
-								}
-							};
 							
-					entry.setViewTitleInfo( title_info );
+					ViewTitleInfo title_info  = mdi.createViewTitleInfo( SIDEBAR_SECTION_ALLPEERS, null );
 
+					entry.setViewTitleInfo( title_info );
+					
 					entry.setImageLeftID("image.sidebar.allpeers");
 					
 					final TimerEventPeriodic	timer =

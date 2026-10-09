@@ -158,7 +158,7 @@ public interface MdiEntry extends UIPluginView
 	public ViewTitleInfo getViewTitleInfo();
 
 	public void setViewTitleInfo(ViewTitleInfo viewTitleInfo);
-
+		
 	public MultipleDocumentInterface getMDI();
 
 	public List<? extends MdiEntryVitalityImage> getVitalityImages();

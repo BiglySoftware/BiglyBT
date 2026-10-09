@@ -544,6 +544,44 @@ public abstract class BaseMDI
 		}
 	}
 
+	private Map<String,VTIFactory> vti_factories = new HashMap<>();
+	
+	@Override
+	public void 
+	registerViewTitleInfoFactory(
+		String		id, 
+		VTIFactory	factory )
+	{
+		synchronized( vti_factories ){
+			
+			if ( vti_factories.put( id, factory ) != null ){
+				
+				Debug.out( "Already registered: " + id );
+			}
+		}
+	}
+	
+	@Override
+	public ViewTitleInfo 
+	createViewTitleInfo(
+		String id, 
+		Object ds)
+	{
+		synchronized( vti_factories ){
+			
+			VTIFactory fact = vti_factories.get( id );
+			
+			if ( fact != null ){
+				
+				return( fact.create(ds));
+			}
+		}
+		
+		Debug.out( "No VTI factory for " + id );
+		
+		return( null );
+	}
+	
 	@Override
 	public boolean showEntryByID(String id) {
 		return loadEntryByID(id, true, false, null);

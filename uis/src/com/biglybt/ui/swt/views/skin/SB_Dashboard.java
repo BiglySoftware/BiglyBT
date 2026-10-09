@@ -44,6 +44,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoListener;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
@@ -536,6 +537,22 @@ public class SB_Dashboard
 				}
 			});
 		
+		SimpleTimer.addPeriodicEvent(
+				"dashboard:vti.refresh",
+				1000,
+				(ev)->{			
+					if ( bigly_ui ){
+						
+						main_dashboard.refresh( null );
+					
+						sidebar_dashboard.refresh( null );
+					
+						rightbar_dashboard.refresh( null );
+					}
+					
+					topbar_dashboard.refresh( null );
+				});
+		
 		MessageText.addListener((l1,l2)->{
 			if ( bigly_ui ){
 				
@@ -793,6 +810,8 @@ public class SB_Dashboard
 			config_prefix = "dashboard";
 			
 			use_tabs_default = false;
+			
+			init();
 		}
 		
 		private
@@ -803,6 +822,13 @@ public class SB_Dashboard
 			config_prefix = "dashboard." + _id;
 			
 			use_tabs_default = _use_tabs_default;
+			
+			init();
+		}
+		
+		private void
+		init()
+		{
 		}
 		
 		private void
@@ -3018,6 +3044,7 @@ public class SB_Dashboard
 			
 			private CTabItem		item;
 			private ViewTitleInfo	title_info;
+			private boolean			title_info_ours;
 			
 			private
 			DashboardItem(
@@ -3114,7 +3141,8 @@ public class SB_Dashboard
 			{
 				item	= _item;
 				
-				title_info = null;
+				title_info		= null;
+				title_info_ours	= false;
 				
 				if ( item == null ){
 					
@@ -3160,7 +3188,23 @@ public class SB_Dashboard
 				}
 				
 				if ( _soc != null ){
-										
+						
+					if ( title_info == null ){
+						
+						String vti_fid = (String)_soc.getData( "mdi.vti_fid" );
+						
+						if ( vti_fid != null ){
+							
+							MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+							
+							Object ds = _soc.getData( "imported.data.source" );
+							
+							title_info = mdi.createViewTitleInfo(vti_fid, ds );
+							
+							title_info_ours = true;
+						}
+					}
+					
 					String image_id = (String)_soc.getData( "mdi.image_left_id" );
 					
 					if ( image_id != null ){
@@ -3185,7 +3229,13 @@ public class SB_Dashboard
 			refresh(
 				ViewTitleInfo		info )
 			{
-				if ( info == title_info ){
+				if ( info == null ){
+					
+					if ( title_info_ours ){
+						
+						refreshTabFolder( this );
+					}
+				}else if ( info == title_info ){
 					
 					refreshTabFolder( this );
 				}

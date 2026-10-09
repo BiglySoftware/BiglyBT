@@ -264,4 +264,23 @@ public interface MultipleDocumentInterface
 	public void
 	runWhenIdle(
 		Runnable	r );
+	
+	public interface
+	VTIFactory
+	{
+		public ViewTitleInfo
+		create(
+			Object		ds );
+	}
+	
+	public void
+	registerViewTitleInfoFactory(
+		String			id,
+		VTIFactory		factory );
+	
+	public ViewTitleInfo
+	createViewTitleInfo(
+		String 		id,
+		Object		ds );
+	
 }

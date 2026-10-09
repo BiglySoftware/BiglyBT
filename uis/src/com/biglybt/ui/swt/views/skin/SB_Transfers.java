@@ -269,6 +269,130 @@ public class SB_Transfers
 	private boolean	show_tag_tab_views;
 
 	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi, boolean vuze_ui ) {
+		
+		mdi.registerViewTitleInfoFactory(
+			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Category",
+			(ds)->{
+				ViewTitleInfo viewTitleInfo = new ViewTitleInfo(){
+
+					@Override
+					public Object getTitleInfoProperty(int propertyID) {
+						
+						Category category = (Category)ds;
+						
+						if ( category == null ){
+							
+							return( null );
+						}
+						
+						if ( propertyID == TITLE_FACTORY_ID ){
+							
+							return( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Category" );
+							
+						}else  if (propertyID == TITLE_INDICATOR_TEXT) {
+							
+							if ( category.getType() == Category.TYPE_ALL ){
+								
+								int all = core.getGlobalManager().getDownloadManagers().size();
+								
+								return( String.valueOf( all ));
+								
+							}else if ( category.getType() == Category.TYPE_UNCATEGORIZED ){
+								
+								int all = core.getGlobalManager().getDownloadManagers().size();
+
+								int	num_cat = CategoryManager.getCategorisedDownloadCount();
+								
+								return( String.valueOf( all - num_cat ));
+
+							}else{
+								
+								List<?> dms = category.getDownloadManagers(null);
+								
+								if (dms != null) {
+									return "" + dms.size();
+								}
+							}
+						}else if ( propertyID == TITLE_INDICATOR_COLOR ){
+
+							TagType tag_type = category.getTagType();
+
+							int[] def_color = tag_type.getColorDefault();
+
+							int[] tag_color = category.getColor();
+
+							if ( tag_color != def_color ){
+
+								return( tag_color );
+							}
+
+						}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+
+							return( TagUtils.getTagTooltip( category ));
+						}
+						
+						return null;
+					}
+				};
+				
+				return( viewTitleInfo );
+			});
+		
+		mdi.registerViewTitleInfoFactory(
+			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Tag",
+			(ds)->{
+		
+				ViewTitleInfo viewTitleInfo = new ViewTitleInfo(){
+		
+						@Override
+						public Object
+						getTitleInfoProperty(
+							int pid )
+						{
+							Tag tag = (Tag)ds;
+							
+							if ( tag == null ){
+								
+								return( null );
+							}
+							
+							if ( pid == TITLE_FACTORY_ID ){
+								
+								return( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Tag" );
+
+							}else if ( pid == TITLE_TEXT ) {
+								
+								return( tag.getTagName( true ));
+								
+							}else if ( pid == TITLE_INDICATOR_TEXT ){
+			
+								return( String.valueOf( tag.getTaggedCount()));
+			
+							}else if ( pid == TITLE_INDICATOR_COLOR ){
+			
+								TagType tag_type = tag.getTagType();
+			
+								int[] def_color = tag_type.getColorDefault();
+			
+								int[] tag_color = tag.getColor();
+			
+								if ( tag_color != def_color ){
+			
+									return( tag_color );
+								}
+			
+							}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
+			
+								return( TagUtils.getTagTooltip( tag ));
+							}
+			
+							return null;
+						}
+					};
+					
+					return( viewTitleInfo );
+				});
+		
 		statsNoLowNoise = new stats();
 		statsNoLowNoise.includeLowNoise = false;
 		statsWithLowNoise = new stats();
@@ -1366,54 +1490,7 @@ public class SB_Transfers
 			loc_name = MessageText.getString( loc_name );
 		}
 
-		ViewTitleInfo viewTitleInfo = new ViewTitleInfo() {
-
-			@Override
-			public Object getTitleInfoProperty(int propertyID) {
-				if (propertyID == TITLE_INDICATOR_TEXT) {
-					if ( category.getType() == Category.TYPE_ALL ){
-						
-						int all = core.getGlobalManager().getDownloadManagers().size();
-						
-						return( String.valueOf( all ));
-						
-					}else if ( category.getType() == Category.TYPE_UNCATEGORIZED ){
-						
-						int all = core.getGlobalManager().getDownloadManagers().size();
-
-						int	num_cat = CategoryManager.getCategorisedDownloadCount();
-						
-						return( String.valueOf( all - num_cat ));
-
-					}else{
-						
-						List<?> dms = category.getDownloadManagers(null);
-						
-						if (dms != null) {
-							return "" + dms.size();
-						}
-					}
-				}else if ( propertyID == TITLE_INDICATOR_COLOR ){
-
-					TagType tag_type = category.getTagType();
-
-					int[] def_color = tag_type.getColorDefault();
-
-					int[] tag_color = category.getColor();
-
-					if ( tag_color != def_color ){
-
-						return( tag_color );
-					}
-
-				}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
-
-					return( TagUtils.getTagTooltip( category ));
-				}
-				
-				return null;
-			}
-		};
+		ViewTitleInfo viewTitleInfo = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Category", category );
 
 		String prev_id = getCatPosition( mdi, MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, loc_name );
 		
@@ -1879,43 +1956,7 @@ public class SB_Transfers
 			
 			boolean auto = tag.getTagType().isTagTypeAuto();
 
-			ViewTitleInfo viewTitleInfo =
-				new ViewTitleInfo()
-				{
-					@Override
-					public Object
-					getTitleInfoProperty(
-						int pid )
-					{
-						if ( pid == TITLE_TEXT ) {
-							
-							return( tag.getTagName( true ));
-							
-						}else if ( pid == TITLE_INDICATOR_TEXT ){
-
-							return( String.valueOf( tag.getTaggedCount()));
-
-						}else if ( pid == TITLE_INDICATOR_COLOR ){
-
-							TagType tag_type = tag.getTagType();
-
-							int[] def_color = tag_type.getColorDefault();
-
-							int[] tag_color = tag.getColor();
-
-							if ( tag_color != def_color ){
-
-								return( tag_color );
-							}
-
-						}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
-
-							return( TagUtils.getTagTooltip( tag ));
-						}
-
-						return null;
-					}
-				};
+			ViewTitleInfo viewTitleInfo = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Tag", tag );
 
 			MdiEntry entry;
 

@@ -52,14 +52,16 @@ ChatView
 		Composite	_parent_composite )
 	{
 		try{
-			if ( current_chat != null ){
+			ChatInstance cc = current_chat;
+			
+			if ( cc != null ){
 
 				Map<String,Object>	chat_properties = new HashMap<>();
 
 				chat_properties.put( BuddyPluginViewInterface.VP_SWT_COMPOSITE, _parent_composite );
 
 					//
-				chat_properties.put( BuddyPluginViewInterface.VP_CHAT, current_chat.getClone());
+				chat_properties.put( BuddyPluginViewInterface.VP_CHAT, cc.getClone());
 
 				chat_view =
 					BuddyPluginUtils.buildChatView(
@@ -75,7 +77,7 @@ ChatView
 							}
 						});
 
-				ChatMDIEntry	mdi_entry = (ChatMDIEntry)current_chat.getUserData( SBC_ChatOverview.MDI_KEY );
+				ChatMDIEntry	mdi_entry = (ChatMDIEntry)cc.getUserData( SBC_ChatOverview.MDI_KEY );
 
 				if ( mdi_entry != null ){
 
