@@ -1165,7 +1165,7 @@ DiskManagerImpl
 				}
 			}
 
-			DiskManagerFileInfoSetImpl allocated_fileset = new DiskManagerFileInfoSetImpl( allocated_files ,this );
+			DiskManagerFileInfoSetImpl allocated_fileset = new DiskManagerFileInfoSetImpl( download_manager, allocated_files ,this );
 
 			DiskManagerUtil.loadFilePriorities( download_manager, allocated_fileset );		
 			

@@ -63,6 +63,9 @@ DiskManagerFileInfoSet
 	 */
 	public void setSkipped(boolean[] toChange, boolean setSkipped);
 	
+	public int[]
+	getStorageTypes();
+	
 	public DiskManagerFileInfo[] getFiles();
 	
 	public int nbFiles();

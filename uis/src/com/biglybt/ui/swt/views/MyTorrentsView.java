@@ -3948,6 +3948,7 @@ public class MyTorrentsView
 		DiskManagerFileInfoSet fileInfos = dm.getDiskManagerFileInfoSet();
 		if (fileInfos != null) {
 			DiskManagerFileInfo[] files = fileInfos.getFiles();
+			int[] storageTypes = null;
 			boolean copied = false;
 			int pos = 0;
 			for (int i = 0; i < files.length; i++) {
@@ -3955,9 +3956,17 @@ public class MyTorrentsView
 				if ( fileInfo.getTorrentFile().isPadFile()){
 					continue;
 				}
-				if (	fileInfo.isSkipped()
-						&& (fileInfo.getStorageType() == DiskManagerFileInfo.ST_COMPACT || fileInfo.getStorageType() == DiskManagerFileInfo.ST_REORDER_COMPACT)) {
-					continue;
+				if ( fileInfo.isSkipped()){
+					
+					if ( storageTypes == null ){
+						
+						storageTypes = fileInfos.getStorageTypes();
+					}
+					
+					if ( storageTypes[i] == DiskManagerFileInfo.ST_COMPACT || storageTypes[i] == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+						
+						continue;
+					}
 				}
 				if (pos != i) {
 					if ( !copied ){

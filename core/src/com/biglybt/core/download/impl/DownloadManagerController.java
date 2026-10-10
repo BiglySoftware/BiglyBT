@@ -3178,6 +3178,11 @@ DownloadManagerController
 			return delegate.setStorageTypes(toChange, newStorageType, force );
 		}
 
+		@Override
+		public int[] getStorageTypes(){
+			return( delegate.getStorageTypes());
+		}
+		
 		/** XXX Don't call me, call makeSureFilesFacadeFilled() */
 		protected void fixupFileInfo(fileInfoFacade[] info) {
 

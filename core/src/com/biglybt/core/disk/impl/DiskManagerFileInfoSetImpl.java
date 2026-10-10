@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.util.Debug;
 
@@ -29,12 +30,19 @@ import com.biglybt.core.util.Debug;
  */
 public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 
-	final DiskManagerFileInfoImpl[] files;
-	final DiskManagerHelper diskManager;
+	final DownloadManager			downloadManager;
+	final DiskManagerFileInfoImpl[]	files;
+	final DiskManagerHelper			diskManager;
 
-	public DiskManagerFileInfoSetImpl(DiskManagerFileInfoImpl[] files, DiskManagerHelper dm) {
-		this.files = files;
-		this.diskManager = dm;
+	public 
+	DiskManagerFileInfoSetImpl(
+		DownloadManager				dm,
+		DiskManagerFileInfoImpl[]	files, 
+		DiskManagerHelper			diskManagerHelper ) 
+	{
+		downloadManager		= dm;
+		this.files			= files;
+		this.diskManager	= diskManagerHelper;
 	}
 
 	@Override
@@ -230,5 +238,14 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 		}
 
 		return modified;
+	}
+	
+	@Override
+	public int[] 
+	getStorageTypes()
+	{
+		String[]	sts = DiskManagerImpl.getStorageTypes( downloadManager );
+		
+		return( DiskManagerUtil.convertDMStorageTypeFromStrings( sts ));
 	}
 }

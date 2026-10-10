@@ -430,7 +430,7 @@ DiskManagerUtil
 
 	    if ( torrent == null ){
 
-	        return( new DiskManagerFileInfoSetImpl(new DiskManagerFileInfoImpl[0],null) );
+	        return( new DiskManagerFileInfoSetImpl(download_manager, new DiskManagerFileInfoImpl[0],null) );
 	    }
 
 		File tempRootDir = download_manager.getAbsoluteSaveLocation().getParentFile();
@@ -489,6 +489,15 @@ DiskManagerUtil
 						return res.length;
 					}
 
+					@Override
+					public int[] 
+					getStorageTypes()
+					{
+						String[] sts = DiskManagerImpl.getStorageTypes(download_manager);
+						
+						return( convertDMStorageTypeFromStrings( sts ));
+					}
+					
 					@Override
 					public void 
 					setPriority(
@@ -1428,7 +1437,7 @@ DiskManagerUtil
 
 	        Debug.printStackTrace(e);
 
-	        return( new DiskManagerFileInfoSetImpl(new DiskManagerFileInfoImpl[0],null) );
+	        return( new DiskManagerFileInfoSetImpl(download_manager, new DiskManagerFileInfoImpl[0],null) );
 
 	    }
 	}
@@ -1459,6 +1468,51 @@ DiskManagerUtil
 		return( DiskManagerFileInfo.ST_LINEAR );
 	}
 
+	public static int[]
+	convertDMStorageTypeFromStrings(
+		String[]		strs )
+	{
+		int[] result = new int[strs.length];
+		
+		for ( int i=0; i< strs.length; i++ ){
+			
+			String str = strs[i];
+			
+			char c = str.charAt(0);
+	
+			int x;
+			
+			switch( c ){
+				case 'L':{
+					x =  DiskManagerFileInfo.ST_LINEAR;
+					break;
+				}
+				case 'C':{
+					x =  DiskManagerFileInfo.ST_COMPACT;
+					break;
+				}
+				case 'R':{
+					x =  DiskManagerFileInfo.ST_REORDER;
+					break;
+				}
+				case 'X':{
+					x = DiskManagerFileInfo.ST_REORDER_COMPACT;
+					break;
+				}
+				default:{
+	
+					Debug.out( "eh?" );
+	
+					x = DiskManagerFileInfo.ST_LINEAR;
+				}
+			}
+			
+			result[i] = x;
+		}
+		
+		return( result );
+	}
+	
 	public static String
 	convertDMStorageTypeToString(
 		int		dm_type )
