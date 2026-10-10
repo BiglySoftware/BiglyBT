@@ -760,6 +760,12 @@ COConfigurationManager
   {
        return ConfigurationManager.getInstance().doesParameterNonDefaultExist(parameter);
   }
+  public static boolean
+  doesRGBParameterNonDefaultExist(
+	 String     parameter)
+  {
+       return ConfigurationManager.getInstance().doesRGBParameterNonDefaultExist(parameter);
+  }
   public static void
   registerExternalDefaults(
   	Map							addmap)

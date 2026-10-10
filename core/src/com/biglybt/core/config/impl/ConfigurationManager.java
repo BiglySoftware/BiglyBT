@@ -692,9 +692,24 @@ ConfigurationManager
 
 	public int[] getRGBParameter(String parameter) {
 		
-		int	r = getIntParameter( parameter + ".red", -1 );
-		int	g = getIntParameter( parameter + ".green", -1 );
-		int	b = getIntParameter( parameter + ".blue", -1 );
+		ConfigurationDefaults defaults = ConfigurationDefaults.getInstance();
+		
+		String red_key = parameter + ".red";
+		String green_key = parameter + ".green";
+		String blue_key = parameter + ".blue";
+		
+		int	r = getIntParameter( red_key, -1 );
+		if ( r == -1 ){
+			r = defaults.getIntParameter(red_key, -1);
+		}
+		int	g = getIntParameter( green_key, -1 );
+		if ( g == -1 ){
+			g = defaults.getIntParameter(green_key, -1);
+		}
+		int	b = getIntParameter( blue_key, -1 );
+		if ( b == -1 ){
+			b = defaults.getIntParameter(blue_key, -1);
+		}
 		
 		if ( 	r < 0 || r > 255 ||
 				g < 0 || g > 255 ||
@@ -778,7 +793,12 @@ ConfigurationManager
   {
     return propertiesMap.containsKey( parameter );
   }
-
+  public boolean
+  doesRGBParameterNonDefaultExist(
+  	String parameter )
+  {
+    return propertiesMap.containsKey( parameter + ".override" );
+  }
 
 
   private boolean  notifyParameterListenersIfChanged(String parameter, Long newValue, Long oldValue) {

@@ -263,7 +263,6 @@ public class ColorSwtParameter
 
 			setValue(newColorInts);
 		});
-
 	}
 
 	@Override

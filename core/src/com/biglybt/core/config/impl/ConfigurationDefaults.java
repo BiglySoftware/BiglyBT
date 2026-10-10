@@ -898,6 +898,14 @@ public class ConfigurationDefaults {
     return (String)o;
   }
 
+  public int getIntParameter(String p, int defdef ){
+	  Object obj = def.get(p);
+	  if ( obj instanceof Number ){
+		  return(((Number)obj).intValue());
+	  }else{
+		  return( defdef );
+	  }
+  }
   public int getIntParameter(String p) throws ConfigurationParameterNotFoundException {
 	    checkParameterExists(p);
 	    return ((Number) def.get(p)).intValue();

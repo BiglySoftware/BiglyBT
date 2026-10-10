@@ -50,7 +50,8 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 		Long.class,
 		Boolean.class,
 		byte[].class,
-		Float.class
+		Float.class,
+		int[].class,
 	};
 
 	@SuppressWarnings("rawtypes")
@@ -112,6 +113,8 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 			return (VALUETYPE) (Long) COConfigurationManager.getLongParameter(key);
 		} else if (byte[].class.equals(valueType)) {
 			return (VALUETYPE) COConfigurationManager.getByteParameter(key);
+		} else if (int[].class.equals(valueType)) {
+			return (VALUETYPE) COConfigurationManager.getRGBParameter(key);
 		}
 		return null;
 	}
@@ -160,6 +163,8 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 						changed = COConfigurationManager.setParameter(key, (Long) value);
 					} else if (byte[].class.equals(valueType)) {
 						changed = COConfigurationManager.setParameter(key, (byte[]) value);
+					} else if (int[].class.equals(valueType)) {
+						changed = COConfigurationManager.setRGBParameter(key, (int[]) value, true);
 					}
 
 					if (owner.DEBUG) {
@@ -178,7 +183,11 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 
 	@Override
 	public boolean isDefaultValue(PARAMTYPE p) {
-		return !COConfigurationManager.doesParameterNonDefaultExist(p.getParamID());
+		if ( int[].class.equals(valueType)){
+			return !COConfigurationManager.doesRGBParameterNonDefaultExist(p.getParamID());
+		}else{
+			return !COConfigurationManager.doesParameterNonDefaultExist(p.getParamID());
+		}
 	}
 
 	@Override
@@ -191,7 +200,11 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 
 	@Override
 	public boolean resetToDefault(PARAMTYPE p) {
-		return COConfigurationManager.removeParameter(p.getParamID());
+		if ( int[].class.equals(valueType)){
+			return COConfigurationManager.removeRGBParameter(p.getParamID());
+		}else{
+			return COConfigurationManager.removeParameter(p.getParamID());
+		}
 	}
 
 	@Override

@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.views.configsections;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +35,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
+import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ColorParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionImpl;
@@ -46,12 +51,18 @@ import com.biglybt.ui.swt.UI;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BaseSwtParameter;
 import com.biglybt.ui.swt.config.ColorSwtParameter;
+import com.biglybt.ui.swt.config.SwtParameter;
 import com.biglybt.ui.swt.config.SwtParameterValueProcessor;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.config.ActionParameter;
+import com.biglybt.pif.ui.config.BooleanParameter;
+import com.biglybt.pif.ui.config.ColorParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.pif.ui.config.LabelParameter;
 import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.config.ParameterGroup;
 
 public class ConfigSectionInterfaceColorSWT
 	extends ConfigSectionImpl
@@ -66,6 +77,8 @@ public class ConfigSectionInterfaceColorSWT
 
 	public static final String SECTION_ID = "color";
 
+	private List<SwtParameter<?>>	extraParameters = new ArrayList<>();
+	
 	public ConfigSectionInterfaceColorSWT() {
 		super(SECTION_ID, ConfigSection.SECTION_INTERFACE);
 	}
@@ -135,6 +148,183 @@ public class ConfigSectionInterfaceColorSWT
 
 		add(new ParameterGroupImpl("ConfigView.section.style.colorOverrides",
 				listOverride));
+		
+		List<Parameter> listPresetsOverall = new ArrayList<>();
+		
+		for ( int i=0; i<3; i++ ){
+				
+			int preset_index = i+1;
+			
+			String preset_key = "colour.scheme.preset." + preset_index;
+			
+			LabelParameterImpl lab = new LabelParameterImpl( "!" + MessageText.getString( "label.preset") + " " + preset_index + "!" );
+			
+			lab.setIndent( 1, false );
+			
+			listPresetsOverall.add( add( lab ));
+			
+			ActionParameterImpl save = add( new ActionParameterImpl( "", "ConfigView.button.save" ));
+			
+			listPresetsOverall.add( save );
+			
+			ActionParameterImpl load = add( new ActionParameterImpl( "", "label.load" ));
+			
+			load.setEnabled( COConfigurationManager.doesParameterNonDefaultExist(preset_key));
+			
+			listPresetsOverall.add( load );
+
+			save.addListener(
+				(n)->{
+					List<Parameter> params = new ArrayList<>(  mapPluginParams.values());
+					
+					Map<String,Object> saved = new HashMap<>();
+					
+					for ( Parameter p: params ){
+						
+						if ( p instanceof ParameterGroup || p instanceof ActionParameter || p instanceof LabelParameter ){
+							continue;
+						}
+						
+						String key = p.getConfigKeyName();
+						
+						if ( p instanceof BooleanParameter ){
+							
+							boolean b = COConfigurationManager.getBooleanParameter( key );
+							
+							saved.put( key, new Long(b?1:0));
+							
+						}else if ( p instanceof ColorParameter ){
+							
+							if ( COConfigurationManager.doesRGBParameterNonDefaultExist(key)){
+								
+								int[] colour = COConfigurationManager.getRGBParameter( key );
+								
+								List<Long> list = new ArrayList<>();
+								
+								if ( colour != null ){
+									
+									for ( int c: colour ){
+										
+										list.add((long)c );
+									}
+								}
+								
+								saved.put( key, list );
+							}
+						}else{
+							
+							Debug.out( "Unsupported parameter: " + p );
+						}
+					}
+					
+					for ( SwtParameter<?> p: extraParameters ){
+						
+						if ( p instanceof ColorSwtParameter ){
+							
+							ColorSwtParameter cp = (ColorSwtParameter)p;
+							
+							String key = cp.getParamID();
+							
+							int[] colour = cp.getValue();
+	
+							List<Long> list = new ArrayList<>();
+							
+							if ( colour != null ){
+								
+								for ( int c: colour ){
+									
+									list.add((long)c );
+								}
+							}
+							
+							saved.put( key, list );
+							
+						}else{
+							
+							Debug.out( "Unsupported parameter: " + p );
+						}
+					}
+							
+					load.setEnabled( true );
+					
+					COConfigurationManager.setParameter( preset_key, saved );
+					
+					COConfigurationManager.save();
+				});
+						
+			load.addListener(
+				(n)->{
+					Map<String,Object> loaded = (Map<String,Object>)COConfigurationManager.getMapParameter( preset_key, new HashMap<>());
+									
+					List<Parameter> params = new ArrayList<>(  mapPluginParams.values());
+									
+					for ( Parameter p: params ){
+						
+						if ( p instanceof ParameterGroup || p instanceof ActionParameter || p instanceof LabelParameter ){
+							
+							continue;
+						}
+						
+						String key = p.getConfigKeyName();
+						
+						if ( p instanceof BooleanParameter ){
+							
+							Long val = (Long)loaded.get( key );
+									
+							if ( val == null ){
+								
+								COConfigurationManager.removeParameter(key);
+								
+							}else{
+								
+								COConfigurationManager.setParameter( key, val==1 );
+							}
+							
+						}else if ( p instanceof ColorParameter ){
+							
+							List<Number> val = (List<Number>)loaded.get( key );
+							
+							if ( val == null || val.size() != 3 ){
+								
+								COConfigurationManager.removeRGBParameter(key);
+								
+							}else{
+								
+								COConfigurationManager.setRGBParameter( key, val.get(0).intValue(), val.get( 1 ).intValue(), val.get( 2 ).intValue(), true );
+							}
+						}
+					}
+					
+					for ( SwtParameter<?> p: extraParameters ){
+						
+						if ( p instanceof ColorSwtParameter ){
+							
+							ColorSwtParameter cp = (ColorSwtParameter)p;
+							
+							String key = cp.getParamID();
+							
+							List<Number> val = (List<Number>)loaded.get( key );
+							
+							if ( val == null || val.size() != 3 ){
+								
+								cp.resetToDefault();
+								
+							}else{
+								
+								cp.setColor(val.get(0).intValue(), val.get( 1 ).intValue(), val.get( 2 ).intValue());
+							}
+						}
+					}
+					
+					COConfigurationManager.save();
+				});
+		}
+		
+		ParameterGroupImpl gPresets = new ParameterGroupImpl("label.presets",listPresetsOverall );
+		
+		gPresets.setNumberOfColumns( 10 );
+		
+		add( gPresets );
 	}
 
 	@Override
@@ -190,8 +380,10 @@ public class ConfigSectionInterfaceColorSWT
 			String[] override_keys = override_keys_blocks[i];
 
 			for (final String key : override_keys) {
-				new ColorSwtParameter(cColorOverride, key, key, null, true,
+				ColorSwtParameter param = new ColorSwtParameter(cColorOverride, key, key, null, true,
 						skinColorValueProcessor);
+				
+				extraParameters.add( param );
 			}
 		}
 	}
