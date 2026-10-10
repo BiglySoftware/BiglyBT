@@ -1,0 +1,56 @@
+.TH BIGLYBT "1" "December 2019" "BitTorrent client" "User Commands"
+
+.SH NAME
+BiglyBT \- a BitTorrent client
+
+.SH SYNOPSIS
+.B biglybt [\fIoptions\fR] [torrent [torrent ...]]
+
+
+.SH DESCRIPTION
+BitTorrent is a peer-to-peer file distribution tool.
+
+BiglyBT offers multiple torrent downloads, queuing/priority systems
+(on torrents and files), start/stop seeding options and instant access
+to numerous pieces of information about your torrents.
+
+.SH OPTIONS
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show this help.
+
+.TP
+\fB\-u\fR, \fB\-\-ui\fR <uis>
+Run <uis>. ',' separated list of user interfaces to run (swt, console, telnet). The first one given
+will respond to requests without determinable source UI (e.g. further torrents added via command line).
+
+.TP
+\fB\-\-closedown\fR
+Shutdown an existing instance of BiglyBT
+
+.TP
+\fB\-\-shutdown\fR
+Shutdown an existing instance of BiglyBT
+
+.TP
+\fB\-\-restart\fR
+Restart an existing instance of BiglyBT
+
+.TP
+\fB\-\-open \fR
+Show the BiglyBT interface
+
+.TP
+\fB\-\-share\fR
+Share a resource
+
+.TP
+\fB\-\-savepath\fR <path>
+Specify the absolute save location for the torrent(s)
+
+.SH "SEE ALSO"
+http://www.biglybt.com
+
+The user guide, which may be accessed from the \fIHelp\fR menu within the program.
+
