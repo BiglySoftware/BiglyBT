@@ -74,6 +74,7 @@ import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
+import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.ui.swt.widgets.TabFolderRenderer;
 import com.biglybt.ui.swt.widgets.TabFolderRenderer.Adapter;
 import com.biglybt.ui.swt.widgets.TabFolderRenderer.TabbedEntry;
@@ -245,10 +246,15 @@ public class SB_Dashboard
 										main_dashboard.importDashboard( entry[1], false );
 										
 										SideBar sidebar = (SideBar) SkinViewManager.getByClass(SideBar.class);
-	
-										if ( sidebar != null && sidebar.isVisible()) {
 											
-											sidebar.flipSideBarVisibility();
+										if ( sidebar != null ){
+											
+											sidebar.loadEntryByID( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD, true );
+
+											if ( sidebar.isVisible()) {
+											
+												sidebar.flipSideBarVisibility();
+											}
 										}
 									}
 								});
