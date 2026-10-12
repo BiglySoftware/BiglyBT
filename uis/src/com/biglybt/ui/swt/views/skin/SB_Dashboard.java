@@ -3149,46 +3149,8 @@ public class SB_Dashboard
 					return;
 				}
 				
-				Control[] parent = new Control[]{ item.getControl()};
-				
-				LinkedList<Control[]> controls = new LinkedList<>();
-				
-				controls.add( parent );
-				
-				while( !controls.isEmpty()){
-				
-					Control[] cs = controls.removeFirst();
-					
-					for ( Control c: cs ){
-						
-						UISWTView view = (UISWTView)c.getData( "UISWTView" );
-						
-						if ( view instanceof UISWTViewCore ){
-								
-							title_info = ((UISWTViewCore)view).getViewTitleInfo();
-							
-							if ( title_info != null ){
-								
-								break;
-							}
-						}
-						
-						if ( c instanceof ViewTitleInfo ){
-							
-							title_info = (ViewTitleInfo)c;
-							
-							break;
-						}
-						
-						if ( c instanceof Composite ){
-							
-							controls.add(((Composite)c).getChildren());
-						}
-					}
-				}
-				
 				if ( _soc != null ){
-						
+					
 					if ( title_info == null ){
 						
 						String vti_fid = (String)_soc.getData( "mdi.vti_fid" );
@@ -3219,6 +3181,47 @@ public class SB_Dashboard
 								
 								ImageLoader.getInstance().releaseImage( image_id );
 							});
+						}
+					}
+				}
+				
+				if ( title_info == null ){
+					
+					Control[] parent = new Control[]{ item.getControl()};
+					
+					LinkedList<Control[]> controls = new LinkedList<>();
+					
+					controls.add( parent );
+					
+					while( !controls.isEmpty()){
+					
+						Control[] cs = controls.removeFirst();
+						
+						for ( Control c: cs ){
+							
+							UISWTView view = (UISWTView)c.getData( "UISWTView" );
+							
+							if ( view instanceof UISWTViewCore ){
+									
+								title_info = ((UISWTViewCore)view).getViewTitleInfo();
+								
+								if ( title_info != null ){
+									
+									break;
+								}
+							}
+							
+							if ( c instanceof ViewTitleInfo ){
+								
+								title_info = (ViewTitleInfo)c;
+								
+								break;
+							}
+							
+							if ( c instanceof Composite ){
+								
+								controls.add(((Composite)c).getChildren());
+							}
 						}
 					}
 				}

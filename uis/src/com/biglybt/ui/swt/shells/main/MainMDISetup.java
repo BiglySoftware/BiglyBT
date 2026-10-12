@@ -1152,6 +1152,49 @@ public class MainMDISetup
 					return entry;
 				});
 
+		mdi.registerViewTitleInfoFactory(
+				SIDEBAR_SECTION_MY_SHARES,
+				(ds)->{
+					ViewTitleInfo title_info =
+						new ViewTitleInfo()
+						{
+							final ShareManager sm;
+							
+							{
+								ShareManager temp;
+								
+								try{
+									temp = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getShareManager();
+									
+								}catch( Throwable e ){
+									
+									temp = null;
+								}
+								
+								sm = temp;
+							}
+						
+							@Override
+							public Object
+							getTitleInfoProperty(
+								int propertyID)
+							{
+								if ( propertyID == TITLE_FACTORY_ID ){
+									
+									return( SIDEBAR_SECTION_MY_SHARES );
+									
+								}else if ( propertyID == TITLE_INDICATOR_TEXT ){
+	
+									return( sm==null?null:String.valueOf( sm.getShareCount()));
+								}
+	
+								return null;
+							}
+						};
+							
+					return( title_info );
+				});
+		
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES,
 				id -> {
 					final ShareManager sm;
@@ -1169,24 +1212,6 @@ public class MainMDISetup
 						
 						sm = temp;
 					}
-	
-					ViewTitleInfo title_info =
-							new ViewTitleInfo()
-							{
-								
-								@Override
-								public Object
-								getTitleInfoProperty(
-									int propertyID)
-								{
-									if ( propertyID == TITLE_INDICATOR_TEXT ){
-
-										return( sm==null?null:String.valueOf( sm.getShareCount()));
-									}
-
-									return null;
-								}
-							};
 
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
 							MySharesView.class).setParentEntryID(
@@ -1194,6 +1219,8 @@ public class MainMDISetup
 											SB_Transfers.getSectionPosition(mdi, id));
 					MdiEntry entry = mdi.createEntry(builder, true);
 
+					ViewTitleInfo title_info = mdi.createViewTitleInfo( SIDEBAR_SECTION_MY_SHARES, null );
+					
 					entry.setViewTitleInfo( title_info );
 					
 					entry.setImageLeftID("image.sidebar.myshares");
@@ -1241,10 +1268,37 @@ public class MainMDISetup
 					return entry;
 				});
 
-		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,
+		TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
+
+		mdi.registerViewTitleInfoFactory(
+				SIDEBAR_SECTION_MY_TRACKER,
+				(ds)->{
+					ViewTitleInfo title_info =
+						new ViewTitleInfo()
+						{
+							@Override
+							public Object
+							getTitleInfoProperty(
+								int propertyID)
+							{
+								if ( propertyID == TITLE_FACTORY_ID ){
+									
+									return( SIDEBAR_SECTION_MY_TRACKER );
+									
+								}else if ( propertyID == TITLE_INDICATOR_TEXT ){
+	
+									return( String.valueOf( trackerHost.getTorrentCount()));
+								}
+	
+								return null;
+							}
+						};
+							
+					return( title_info );
+				});
+		
+		mdi.registerEntry(SIDEBAR_SECTION_MY_TRACKER,
 				id -> {
-					
-					TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
 					
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
 							MyTrackerView.class).setParentEntryID(
@@ -1254,23 +1308,7 @@ public class MainMDISetup
 
 					entry.setImageLeftID("image.sidebar.mytracker");
 
-					ViewTitleInfo title_info =
-							new ViewTitleInfo()
-							{
-								
-								@Override
-								public Object
-								getTitleInfoProperty(
-									int propertyID)
-								{
-									if ( propertyID == TITLE_INDICATOR_TEXT ){
-
-										return( String.valueOf( trackerHost.getTorrentCount()));
-									}
-
-									return null;
-								}
-							};
+					ViewTitleInfo title_info = mdi.createViewTitleInfo( SIDEBAR_SECTION_MY_TRACKER, null );
 					
 					entry.setViewTitleInfo( title_info );
 
@@ -1390,8 +1428,6 @@ public class MainMDISetup
 		try{
 			if ( !COConfigurationManager.getBooleanParameter( "my.tracker.view.auto.open.done", false )){
 	
-				// Load Tracker View on first host of file
-				TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
 				trackerHostListener = new TRHostListener() {
 					boolean done = false;
 		
