@@ -151,54 +151,106 @@ public class ConfigSectionInterfaceColorSWT
 		
 		List<Parameter> listPresetsOverall = new ArrayList<>();
 		
-		for ( int i=0; i<3; i++ ){
+			//last entry is reset
+		
+		final int num_presets = 3;
+		
+		for ( int i=0; i < num_presets+1; i++ ){
 				
 			int preset_index = i+1;
 			
 			String preset_key = "colour.scheme.preset." + preset_index;
 			
-			LabelParameterImpl lab = new LabelParameterImpl( "!" + MessageText.getString( "label.preset") + " " + preset_index + "!" );
+			ActionParameterImpl save = null;
+			ActionParameterImpl load = null;
 			
-			lab.setIndent( 1, false );
-			
-			listPresetsOverall.add( add( lab ));
-			
-			ActionParameterImpl save = add( new ActionParameterImpl( "", "ConfigView.button.save" ));
-			
-			listPresetsOverall.add( save );
-			
-			ActionParameterImpl load = add( new ActionParameterImpl( "", "label.load" ));
-			
-			load.setEnabled( COConfigurationManager.doesParameterNonDefaultExist(preset_key));
-			
-			listPresetsOverall.add( load );
+			if ( i < num_presets ){
+				LabelParameterImpl lab = new LabelParameterImpl( "!" + MessageText.getString( "label.preset") + " " + preset_index + "!" );
+				
+				lab.setIndent( 1, false );
+				
+				listPresetsOverall.add( add( lab ));
+				
+				save = add( new ActionParameterImpl( "", "ConfigView.button.save" ));
+				
+				listPresetsOverall.add( save );
+				
+				load = add( new ActionParameterImpl( "", "label.load" ));
+				
+				load.setEnabled( COConfigurationManager.doesParameterNonDefaultExist(preset_key));
+				
+				listPresetsOverall.add( load );
+			}else{
+				
+				LabelParameterImpl lab = new LabelParameterImpl( "!|!" );
+				
+				lab.setIndent( 1, false );
+				
+				listPresetsOverall.add( add( lab ));
 
-			save.addListener(
-				(n)->{
-					List<Parameter> params = new ArrayList<>(  mapPluginParams.values());
-					
-					Map<String,Object> saved = new HashMap<>();
-					
-					for ( Parameter p: params ){
+				load = add( new ActionParameterImpl( "", "Button.reset" ));
+									
+				listPresetsOverall.add( load );
+			}
+			
+			if ( save != null ){
+				
+				final ActionParameterImpl f_load = load;
+				
+				save.addListener(
+					(n)->{
+						List<Parameter> params = new ArrayList<>(  mapPluginParams.values());
 						
-						if ( p instanceof ParameterGroup || p instanceof ActionParameter || p instanceof LabelParameter ){
-							continue;
+						Map<String,Object> saved = new HashMap<>();
+						
+						for ( Parameter p: params ){
+							
+							if ( p instanceof ParameterGroup || p instanceof ActionParameter || p instanceof LabelParameter ){
+								continue;
+							}
+							
+							String key = p.getConfigKeyName();
+							
+							if ( p instanceof BooleanParameter ){
+								
+								boolean b = COConfigurationManager.getBooleanParameter( key );
+								
+								saved.put( key, new Long(b?1:0));
+								
+							}else if ( p instanceof ColorParameter ){
+								
+								if ( COConfigurationManager.doesRGBParameterNonDefaultExist(key)){
+									
+									int[] colour = COConfigurationManager.getRGBParameter( key );
+									
+									List<Long> list = new ArrayList<>();
+									
+									if ( colour != null ){
+										
+										for ( int c: colour ){
+											
+											list.add((long)c );
+										}
+									}
+									
+									saved.put( key, list );
+								}
+							}else{
+								
+								Debug.out( "Unsupported parameter: " + p );
+							}
 						}
 						
-						String key = p.getConfigKeyName();
-						
-						if ( p instanceof BooleanParameter ){
+						for ( SwtParameter<?> p: extraParameters ){
 							
-							boolean b = COConfigurationManager.getBooleanParameter( key );
-							
-							saved.put( key, new Long(b?1:0));
-							
-						}else if ( p instanceof ColorParameter ){
-							
-							if ( COConfigurationManager.doesRGBParameterNonDefaultExist(key)){
+							if ( p instanceof ColorSwtParameter ){
 								
-								int[] colour = COConfigurationManager.getRGBParameter( key );
+								ColorSwtParameter cp = (ColorSwtParameter)p;
 								
+								String key = cp.getParamID();
+								
+								int[] colour = cp.getValue();
+		
 								List<Long> list = new ArrayList<>();
 								
 								if ( colour != null ){
@@ -210,51 +262,35 @@ public class ConfigSectionInterfaceColorSWT
 								}
 								
 								saved.put( key, list );
-							}
-						}else{
-							
-							Debug.out( "Unsupported parameter: " + p );
-						}
-					}
-					
-					for ( SwtParameter<?> p: extraParameters ){
-						
-						if ( p instanceof ColorSwtParameter ){
-							
-							ColorSwtParameter cp = (ColorSwtParameter)p;
-							
-							String key = cp.getParamID();
-							
-							int[] colour = cp.getValue();
-	
-							List<Long> list = new ArrayList<>();
-							
-							if ( colour != null ){
 								
-								for ( int c: colour ){
-									
-									list.add((long)c );
-								}
+							}else{
+								
+								Debug.out( "Unsupported parameter: " + p );
 							}
-							
-							saved.put( key, list );
-							
-						}else{
-							
-							Debug.out( "Unsupported parameter: " + p );
 						}
-					}
-							
-					load.setEnabled( true );
-					
-					COConfigurationManager.setParameter( preset_key, saved );
-					
-					COConfigurationManager.save();
-				});
+								
+						f_load.setEnabled( true );
 						
+						COConfigurationManager.setParameter( preset_key, saved );
+						
+						COConfigurationManager.save();
+					});
+			}
+			
 			load.addListener(
 				(n)->{
-					Map<String,Object> loaded = (Map<String,Object>)COConfigurationManager.getMapParameter( preset_key, new HashMap<>());
+					Map<String,Object> loaded;
+					
+					if ( preset_index <= num_presets ){
+						
+						loaded = (Map<String,Object>)COConfigurationManager.getMapParameter( preset_key, new HashMap<>());
+						
+					}else{
+						
+							// reset action
+						
+						loaded = new HashMap<>();
+					}
 									
 					List<Parameter> params = new ArrayList<>(  mapPluginParams.values());
 									
@@ -322,7 +358,7 @@ public class ConfigSectionInterfaceColorSWT
 		
 		ParameterGroupImpl gPresets = new ParameterGroupImpl("label.presets",listPresetsOverall );
 		
-		gPresets.setNumberOfColumns( 10 );
+		gPresets.setNumberOfColumns( (num_presets+1) * 3 );
 		
 		add( gPresets );
 	}
