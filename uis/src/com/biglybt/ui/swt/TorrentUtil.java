@@ -2985,13 +2985,18 @@ public class TorrentUtil
 							
 							boolean compatible = true;
 							
-							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							DiskManagerFileInfoSet	fs	=	 dm.getDiskManagerFileInfoSet();
 							
-							for ( DiskManagerFileInfo dm_file: files ){
+							DiskManagerFileInfo[]	files			= fs.getFiles();
+							int[]					storage_types	= fs.getStorageTypes();
+							
+							for ( int i=0; i<files.length; i++ ){
+								
+								DiskManagerFileInfo dm_file = files[i];
 								
 								if ( dm_file.getTorrentFile().isPadFile()){
 									
-								}else if ( dm_file.getStorageType() != DiskManagerFileInfo.ST_LINEAR || dm_file.isLinked()){
+								}else if ( storage_types[i] != DiskManagerFileInfo.ST_LINEAR || dm_file.isLinked()){
 									
 									compatible = false;
 									

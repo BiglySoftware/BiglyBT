@@ -5300,18 +5300,23 @@ DownloadManagerImpl
 	protected void
 	deletePartialDataFiles()
 	{
-		DiskManagerFileInfo[] files = getDiskManagerFileInfoSet().getFiles();
-
+		DiskManagerFileInfoSet fs = getDiskManagerFileInfoSet();
+		
+		DiskManagerFileInfo[]	files			= fs.getFiles();
+		int[]					storage_types	= fs.getStorageTypes();
+		
 		String abs_root = torrent_save_location.getAbsolutePath();
 
-		for ( DiskManagerFileInfo file: files ){
+		for ( int i=0; i<files.length;i++ ){
+			
+			DiskManagerFileInfo file = files[i];
 
 			if ( !file.isSkipped()){
 
 				continue;
 			}
 			
-			int	storage_type = file.getStorageType() ;
+			int	storage_type = storage_types[i];
 
 			boolean compact = storage_type == DiskManagerFileInfo.ST_COMPACT || storage_type == DiskManagerFileInfo.ST_REORDER_COMPACT;
 

@@ -1228,7 +1228,8 @@ RDResumeHandler
 
 		boolean sharesAnyNeededPieces = false;
 
-		DiskManagerFileInfo[] files = fileSet.getFiles();
+		DiskManagerFileInfo[]	files			= fileSet.getFiles();
+		int[]					storage_types	= fileSet.getStorageTypes();
 		int firstPiece = file.getFirstPieceNumber();
 		int lastPiece = file.getLastPieceNumber();
 
@@ -1240,7 +1241,7 @@ RDResumeHandler
 			DiskManagerFileInfo currentFile = files[i];
 			if(currentFile.getLastPieceNumber() < firstPiece)
 				continue;
-			if (currentFile.getIndex() == file.getIndex() && resumePieces != null && file.getStorageType() != DiskManagerFileInfo.ST_COMPACT && file.getStorageType() != DiskManagerFileInfo.ST_REORDER_COMPACT)
+			if (currentFile.getIndex() == file.getIndex() && resumePieces != null && storage_types[i] != DiskManagerFileInfo.ST_COMPACT && storage_types[i] != DiskManagerFileInfo.ST_REORDER_COMPACT)
 				for (int j = firstPiece; j <= lastPiece && !sharesAnyNeededPieces; j++)
 					sharesAnyNeededPieces |= resumePieces[j] != PIECE_NOT_DONE;
 			if (currentFile.getFirstPieceNumber() > lastPiece)
