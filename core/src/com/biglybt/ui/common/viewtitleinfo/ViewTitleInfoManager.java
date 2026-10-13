@@ -23,6 +23,7 @@ package com.biglybt.ui.common.viewtitleinfo;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface.VTIMdiHelper;
 
 /**
  * @author TuxPaper
@@ -59,7 +60,7 @@ public class ViewTitleInfoManager
 		
 		if ( titleinfo instanceof ViewTitleInfo2 ){
 			
-			MdiEntry entry = ((ViewTitleInfo2)titleinfo).getLinkedMdiEntry();
+			VTIMdiHelper entry = ((ViewTitleInfo2)titleinfo).getLinkedMdiEntry();
 			
 			if ( entry != null ){
 				

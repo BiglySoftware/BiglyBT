@@ -566,11 +566,6 @@ public class PeersView
 	}
 
 	@Override
-	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry) {
-		
-	}
-
-	@Override
 	public Object getTitleInfoProperty(int propertyID) {
 		if (propertyID == ViewTitleInfo2.TITLE_INDICATOR_TEXT) {
 			return textIndicator;

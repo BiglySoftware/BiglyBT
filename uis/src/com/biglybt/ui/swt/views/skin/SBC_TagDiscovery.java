@@ -71,6 +71,7 @@ import com.biglybt.core.tag.*;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.MultipleDocumentInterface.VTIMdiHelper;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.columns.tag.ColumnTagName;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
@@ -105,7 +106,7 @@ public class SBC_TagDiscovery
 
 	private Map<String, TagDiscovery> mapTagDiscoveries = new HashMap<>();
 
-	private MdiEntry entry;
+	private VTIMdiHelper entry;
 
 	private SWTSkinObjectText soTitle;
 
@@ -240,13 +241,13 @@ public class SBC_TagDiscovery
 	public void 
 	titleInfoLinked(
 		MultipleDocumentInterface 	mdi, 
-		MdiEntry 					mdiEntry)
+		VTIMdiHelper 				mdiEntry)
 	{
 		entry = mdiEntry;
 	}
 	
 	@Override
-	public MdiEntry
+	public VTIMdiHelper
 	getLinkedMdiEntry()
 	{
 		return( entry );

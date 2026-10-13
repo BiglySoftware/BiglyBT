@@ -268,8 +268,19 @@ public interface MultipleDocumentInterface
 	public interface
 	VTIMdiHelper
 	{
+		public void
+		setViewTitleInfo(
+			ViewTitleInfo		vti );
+		
 		public MdiEntryVitalityImage 
 		addVitalityImage(String imageID);
+		
+		public void
+		redraw();
+		
+		public void
+		addListener(
+			MdiEntryDropListener	l );
 	}
 	
 	public interface
@@ -278,7 +289,7 @@ public interface MultipleDocumentInterface
 		public ViewTitleInfo
 		create(
 			VTIMdiHelper	mdiEntry,
-			Object		ds );
+			Object			ds );
 	}
 	
 	public void

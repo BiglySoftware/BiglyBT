@@ -22,6 +22,7 @@ package com.biglybt.ui.common.viewtitleinfo;
 
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.MultipleDocumentInterface.VTIMdiHelper;
 
 /**
  * @author TuxPaper
@@ -31,9 +32,16 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 public interface ViewTitleInfo2
 	extends ViewTitleInfo
 {
-	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry);
+		/**
+		 * " deprecated, use the VTIMdiHelper method below
+		 * @param mdi
+		 * @param mdiEntry
+		 */
+	public default void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry){};
 	
-	public default MdiEntry
+	public default void titleInfoLinked(MultipleDocumentInterface mdi, VTIMdiHelper mdiEntry){};
+	
+	public default VTIMdiHelper
 	getLinkedMdiEntry()
 	{
 		return( null );

@@ -1536,9 +1536,14 @@ public class SB_Dashboard
 		{
 			Utils.execSWTThread(()->{
 				
-				TabFolderRenderer renderer = (TabFolderRenderer)di.getTabbedEntryItem().getParent().getRenderer();
+				CTabFolder tf = di.getTabbedEntryItem().getParent();
 				
-				renderer.redraw( di );
+				if ( tf != null ){
+				
+					TabFolderRenderer renderer = (TabFolderRenderer)tf.getRenderer();
+				
+					renderer.redraw( di );
+				}
 			});
 		}
 		
@@ -3327,6 +3332,29 @@ public class SB_Dashboard
 					
 					refreshTabFolder( this );
 				}
+			}
+			
+			@Override
+			public void 
+			redraw()
+			{
+				refreshTabFolder( this );
+			}
+			
+			@Override
+			public void 
+			setViewTitleInfo(
+				ViewTitleInfo vti)
+			{
+				title_info		= vti;
+				title_info_ours	= false;
+			}
+			
+			@Override
+			public void 
+			addListener(
+				MdiEntryDropListener l)
+			{
 			}
 			
 			@Override

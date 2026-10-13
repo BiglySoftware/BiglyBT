@@ -66,6 +66,7 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.MultipleDocumentInterface.VTIMdiHelper;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
@@ -1023,7 +1024,7 @@ public abstract class PiecesViewBase
 	}
 
 	@Override
-	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry) {
+	public void titleInfoLinked(MultipleDocumentInterface mdi, VTIMdiHelper mdiEntry) {
 		if (mdi instanceof MultipleDocumentInterfaceSWT) {
 			this.mdi = (MultipleDocumentInterfaceSWT) mdi;
 		}

@@ -43,6 +43,7 @@ import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.MultipleDocumentInterface.VTIMdiHelper;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
@@ -892,7 +893,7 @@ DownloadActivityView
 
 	@Override
 	public void titleInfoLinked(MultipleDocumentInterface mdi,
-		MdiEntry mdiEntry) {
+		VTIMdiHelper mdiEntry) {
 		if (mdiEntry instanceof UISWTView) {
 			setSwtView((UISWTView) mdiEntry);
 		}

@@ -55,6 +55,7 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryDropListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.MultipleDocumentInterface.VTIMdiHelper;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
@@ -918,7 +919,7 @@ implements ShareManagerListener,
 
 	// @see ViewTitleInfo2#titleInfoLinked(MultipleDocumentInterface, MdiEntry)
 	@Override
-	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry) {
+	public void titleInfoLinked(MultipleDocumentInterface mdi, VTIMdiHelper mdiEntry) {
 		mdiEntry.addListener(new MdiEntryDropListener() {
 			@Override
 			public boolean mdiEntryDrop(MdiEntry entry, Object droppedObject) {
