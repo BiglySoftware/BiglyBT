@@ -161,7 +161,7 @@ UPnPSSWANIPv6FirewallControlImpl
 			UPnPActionInvocation add_inv = act.getInvocation();
 
 			add_inv.addArgument( "RemoteHost", 				"" );		// "" = wildcard for hosts, 0 = wildcard for ports
-			add_inv.addArgument( "RemotePort", 				"" + port );
+			add_inv.addArgument( "RemotePort", 				"0" );
 			add_inv.addArgument( "InternalClient",			AddressUtils.getHostAddressWithoutScopeID( local_address ));
 			add_inv.addArgument( "InternalPort", 			"" + port );
 			add_inv.addArgument( "Protocol", 				tcp?"6":"17" );	// IANA protocol numbers
