@@ -564,8 +564,9 @@ public abstract class BaseMDI
 	@Override
 	public ViewTitleInfo 
 	createViewTitleInfo(
-		String id, 
-		Object ds)
+		String			id, 
+		VTIMdiHelper	mdiEntry,
+		Object			ds)
 	{
 		synchronized( vti_factories ){
 			
@@ -573,7 +574,7 @@ public abstract class BaseMDI
 			
 			if ( fact != null ){
 				
-				return( fact.create(ds));
+				return( fact.create(mdiEntry,ds));
 			}
 		}
 		

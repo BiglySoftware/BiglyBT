@@ -6996,7 +6996,7 @@ public class Utils
 						if (!isMouseDown) {
 							return;
 						}
-						if (e.widget instanceof Control) {
+						if (e.widget instanceof Control && !e.widget.isDisposed()) {
 							Point size = ((Control) e.widget).getSize();
 							Rectangle bounds = new Rectangle(0, 0, size.x, size.y);
 							

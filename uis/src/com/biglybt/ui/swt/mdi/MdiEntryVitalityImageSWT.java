@@ -78,17 +78,20 @@ public class MdiEntryVitalityImageSWT
 	public MdiEntryVitalityImageSWT(final MdiEntry mdiEntry, String imageID) {
 		this.mdiEntry = mdiEntry;
 
-		mdiEntry.addListener(new MdiCloseListener() {
-
-			@Override
-			public void mdiEntryClosed(MdiEntry entry, boolean userClosed) {
-				ImageLoader imageLoader = ImageLoader.getInstance();
-				if (fullImageID != null && imageLoader != null) {
-					imageLoader.releaseImage(fullImageID);
+		if ( mdiEntry != null ){
+			mdiEntry.addListener(new MdiCloseListener() {
+	
+				@Override
+				public void mdiEntryClosed(MdiEntry entry, boolean userClosed) {
+					ImageLoader imageLoader = ImageLoader.getInstance();
+					if (fullImageID != null && imageLoader != null) {
+						imageLoader.releaseImage(fullImageID);
+						fullImageID = null;
+					}
 				}
-			}
-		});
-
+			});
+		}
+		
 		setImageID(imageID);
 	}
 
@@ -96,14 +99,6 @@ public class MdiEntryVitalityImageSWT
 	@Override
 	public String getImageID() {
 		return imageID;
-	}
-
-	/**
-	 * @return the sideBarEntry
-	 */
-	@Override
-	public MdiEntry getMdiEntry() {
-		return mdiEntry;
 	}
 
 	// @see com.biglybt.pif.ui.sidebar.SideBarVitalityImage#addListener(com.biglybt.pif.ui.sidebar.SideBarVitalityImageListener)
@@ -383,6 +378,14 @@ public class MdiEntryVitalityImageSWT
 	public void dispose() {
 		if (listeners.size() > 0) {
 			listeners.clear();
+		}
+		ImageLoader imageLoader = ImageLoader.getInstance();
+		if (fullImageID != null && imageLoader != null) {
+			imageLoader.releaseImage(fullImageID);
+			fullImageID = null;
+		}
+		if (timerEvent != null) {
+			timerEvent.cancel();
 		}
 	}
 }

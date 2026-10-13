@@ -272,7 +272,7 @@ public class SB_Transfers
 		
 		mdi.registerViewTitleInfoFactory(
 			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Category",
-			(ds)->{
+			(mdientry,ds)->{
 				ViewTitleInfo viewTitleInfo = new ViewTitleInfo(){
 
 					@Override
@@ -340,7 +340,7 @@ public class SB_Transfers
 		
 		mdi.registerViewTitleInfoFactory(
 			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Tag",
-			(ds)->{
+			(mdientry,ds)->{
 		
 				ViewTitleInfo viewTitleInfo = new ViewTitleInfo(){
 		
@@ -1490,15 +1490,18 @@ public class SB_Transfers
 			loc_name = MessageText.getString( loc_name );
 		}
 
-		ViewTitleInfo viewTitleInfo = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Category", category );
-
 		String prev_id = getCatPosition( mdi, MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, loc_name );
 		
 		MdiEntry entry = mdi.createEntryFromSkinRef(
 				MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id, "library",
-				name, viewTitleInfo, category, false, prev_id );
+				name, null, category, false, prev_id );
 		
 		if (entry != null) {
+			
+			ViewTitleInfo viewTitleInfo = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Category", entry, category );
+
+			entry.setViewTitleInfo(viewTitleInfo);
+			
 			entry.setImageLeftID("image.sidebar.library");
 
 			entry.setUserData( CAT_KEY, category );
@@ -1956,8 +1959,6 @@ public class SB_Transfers
 			
 			boolean auto = tag.getTagType().isTagTypeAuto();
 
-			ViewTitleInfo viewTitleInfo = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Tag", tag );
-
 			MdiEntry entry;
 
 			boolean closable = auto;
@@ -1969,7 +1970,7 @@ public class SB_Transfers
 				String name = tag.getTagName( true );
 
 				entry = mdi.createEntryFromSkinRef(
-						parent_id, id, "library", name, viewTitleInfo, tag, closable, prev_id );
+						parent_id, id, "library", name, null, tag, closable, prev_id );
 				
 				addGeneralLibraryMenus( mdi, entry, id );
 
@@ -1980,9 +1981,11 @@ public class SB_Transfers
 				builder.setParentEntryID(parent_id);
 				builder.setPreferredAfterID(prev_id).setInitialDatasource(tag);
 				entry = mdi.createEntry(builder, closable);
-
-				entry.setViewTitleInfo( viewTitleInfo );
 			}
+
+			ViewTitleInfo viewTitleInfo = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS + "::Tag", entry, tag );
+
+			entry.setViewTitleInfo( viewTitleInfo );
 
 			entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag );
 			

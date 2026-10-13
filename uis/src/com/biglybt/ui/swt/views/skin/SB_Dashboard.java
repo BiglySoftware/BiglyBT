@@ -31,6 +31,7 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -57,6 +58,7 @@ import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.mdi.MdiEntryVitalityImageSWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
@@ -1391,7 +1393,82 @@ public class SB_Dashboard
 							return( null );
 						}
 					});
+			
+			tf.addMouseMoveListener(e -> {
+				TabFolderRenderer.TabbedEntryVitalityImage vitalityImage = getVitalityImageAtPos(tf, e.x, e.y);
+				String tooltip = null;
+				Cursor cursor = null;
+
+				if (vitalityImage != null && vitalityImage.isVisible()) {
+					if (vitalityImage.hasListeners()) {
+						cursor = e.display.getSystemCursor(SWT.CURSOR_HAND);
+					}
+					tooltip = vitalityImage.getToolTip();
+				}
+
+				if (tf.getCursor() != cursor) {
+					tf.setCursor(cursor);
+				}
+				CTabItem item = tf.getItem(new Point(e.x, e.y));
+				if (item != null && item.getToolTipText() != tooltip) {
+					item.setToolTipText(tooltip);
+				}
+			});
+			
+			Utils.addSafeMouseUpListener(tf,
+					e -> e.widget.setData("downedVI", getVitalityImageAtPos(tf,e.x, e.y)),
+					e -> {
+						MdiEntryVitalityImageSWT vi = (MdiEntryVitalityImageSWT) e.widget.getData(
+								"downedVI");
+						e.widget.setData("downedVI", null);
+						if (e.button != 1) {
+							return;
+						}
+
+						if (vi != null && vi.hasListeners()) {
+							TabFolderRenderer.TabbedEntryVitalityImage viUp = getVitalityImageAtPos(tf,e.x, e.y);
+							if (vi != viUp) {
+								// Case: 
+								// 1) Mouse down on VitalityImage
+								// 2) Move mouse outside bounds
+								// 3) Mouse up within tabFolder (up outside tabfolder already eaten)
+								return;
+							}
+							vi.triggerClickedListeners(e.x, e.y);
+							return;
+						}
+					});
 		}
+		
+		private TabFolderRenderer.TabbedEntryVitalityImage 
+		getVitalityImageAtPos(
+			CTabFolder	tf,
+			int			x, 
+			int			y ) 
+		{
+			CTabItem ti = tf.getItem(new Point(x, y));
+			if (ti == null) {
+				return null;
+			}
+			DashboardItem item = (DashboardItem)ti.getData("sb:dashboarditem");
+			if (item == null) {
+				return null;
+			}
+			List<TabFolderRenderer.TabbedEntryVitalityImage> vitalityImages = item.getTabbedEntryVitalityImages();
+			
+			for (TabFolderRenderer.TabbedEntryVitalityImage vitalityImage : vitalityImages) {
+				if (!vitalityImage.isVisible()) {
+					continue;
+				}
+				Rectangle hitArea = vitalityImage.getHitArea();
+				if (hitArea != null && hitArea.contains(x, y)) {
+					return vitalityImage;
+				}
+			}
+
+			return null;
+		}
+
 		
 		private void
 		setupTabItem(
@@ -3044,13 +3121,15 @@ public class SB_Dashboard
 		
 		public class
 		DashboardItem
-			implements TabFolderRenderer.TabbedEntry
+			implements TabFolderRenderer.TabbedEntry, MultipleDocumentInterface.VTIMdiHelper
 		{
 			private Map<String,Object>		map;
 			
 			private CTabItem		item;
 			private ViewTitleInfo	title_info;
 			private boolean			title_info_ours;
+			
+			private CopyOnWriteList<TabFolderRenderer.TabbedEntryVitalityImage>	vitality_images = new CopyOnWriteList<>();
 			
 			private
 			DashboardItem(
@@ -3167,7 +3246,7 @@ public class SB_Dashboard
 							
 							Object ds = _soc.getData( "imported.data.source" );
 							
-							title_info = mdi.createViewTitleInfo(vti_fid, ds );
+							title_info = mdi.createViewTitleInfo(vti_fid, this, ds );
 							
 							title_info_ours = true;
 						}
@@ -3263,10 +3342,21 @@ public class SB_Dashboard
 				return( title_info );
 			}
 			
+			public MdiEntryVitalityImage 
+			addVitalityImage(
+				String imageID)
+			{
+				MdiEntryVitalityImageSWT vi = new MdiEntryVitalityImageSWT( null, imageID );
+				
+				vitality_images.add( vi );
+				
+				return( vi );
+			}
+			
 			public List<TabFolderRenderer.TabbedEntryVitalityImage> 
 			getTabbedEntryVitalityImages()
 			{
-				return( new ArrayList<>());
+				return( new ArrayList<>( vitality_images.getList()));
 			};
 			
 			@Override
@@ -3291,7 +3381,12 @@ public class SB_Dashboard
 						setDashboardLayout( layout, items.size(), true );
 					}			
 				}
-								
+					
+				for ( TabFolderRenderer.TabbedEntryVitalityImage i: vitality_images ){
+					
+					((MdiEntryVitalityImageSWT)i).dispose();
+				}
+				
 				if ( items.size() == 0 || !already_disposed ){
 				
 					fireChanged();

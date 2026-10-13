@@ -53,7 +53,7 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
  * @created Aug 13, 2008
  *
  */
-public interface MdiEntry extends UIPluginView
+public interface MdiEntry extends UIPluginView, MultipleDocumentInterface.VTIMdiHelper
 {
 
 	/**
@@ -84,6 +84,10 @@ public interface MdiEntry extends UIPluginView
 	 * @deprecated Use {@link #getViewID()}
 	 */
 	public String getId();
+	
+	/**
+	 * Might need to keep this here to make plugins happy during migration (4101)
+	 */
 	
 	public MdiEntryVitalityImage addVitalityImage(String imageID);
 

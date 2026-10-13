@@ -31,8 +31,6 @@ public interface MdiEntryVitalityImage
 
 	public void setImageID(String id );
 
-	public MdiEntry getMdiEntry();
-
 	public void addListener(MdiEntryVitalityImageListener l);
 
 	// Should really be ID

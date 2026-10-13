@@ -580,6 +580,9 @@ public class TabFolderRenderer
 		setHitArea(
 			Rectangle hitArea );
 		
+		public Rectangle
+		getHitArea();
+		
 		public void
 		switchSuffix(
 			String	suffix );
@@ -595,6 +598,12 @@ public class TabFolderRenderer
 		
 		public boolean 
 		getShowOutsideOfEntry();
+		
+		public String
+		getToolTip();
+		
+		public boolean
+		hasListeners();
 	}
 	
 	public interface

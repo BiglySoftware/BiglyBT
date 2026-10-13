@@ -408,6 +408,170 @@ SubscriptionManagerUI
 		icon_rss_some_add_small	= icon_rss_all_add_small;
 		icon_rss_some_add_big	= icon_rss_some_add_small;
 
+		mdi.registerViewTitleInfoFactory(
+			MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
+			(mdientry,ds)->{
+				ViewTitleInfo vti = new ViewTitleInfo()
+					{
+					private final MdiEntryVitalityImage		addSub;
+					private final MdiEntryVitalityImage		warnSub;
+					private final MdiEntryVitalityImage		infoSub;
+						
+						private long	last_avail_calc = -1;
+						private int		last_avail;
+	
+						
+						{
+							if ( mdientry != null ){
+								
+								addSub = mdientry.addVitalityImage("image.sidebar.subs.add");
+	
+								if (addSub != null) {
+									addSub.setToolTip(MessageText.getString("subscriptions.add.tooltip"));
+	
+									addSub.addListener(new MdiEntryVitalityImageListener() {
+										@Override
+										public void mdiEntryVitalityImage_clicked(int x, int y) {
+											new SubscriptionWizard();
+	
+											refreshTitles( mdiEntryOverview );
+										}
+									});
+								}
+	
+								warnSub = mdientry.addVitalityImage(ALERT_IMAGE_ID);
+								if (warnSub != null) {
+									warnSub.setVisible(false);
+								}
+	
+								infoSub = mdientry.addVitalityImage(INFO_IMAGE_ID);
+								if (infoSub != null) {
+									infoSub.setVisible(false);
+								}
+							}else{
+								addSub = warnSub = infoSub = null;
+							}
+						}
+						
+						@Override
+						public Object
+						getTitleInfoProperty(
+							int propertyID)
+						{
+							Object result = null;
+	
+							if ( propertyID == TITLE_FACTORY_ID ){
+								
+								return( MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS );
+								
+							}else if (propertyID == TITLE_INDICATOR_TEXT) {
+	
+								//boolean expanded = headerEntry.isExpanded();
+	
+									// always treat as collapsed - due to various sidebar restructuring this had effectively been
+									// the case for quite a while and people complained when it reverted to the original way of working
+	
+								boolean expanded = false;
+	
+								SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
+	
+								Subscription[] subs = subs_man.getSubscriptions(true);
+	
+								if ( expanded ){
+	
+									if (warnSub != null) {
+										warnSub.setVisible(false);
+									}
+	
+								}else{
+	
+									int total = 0;
+	
+									boolean warn = false;
+	
+									String error_str = "";
+	
+									for (Subscription s : subs) {
+	
+										SubscriptionHistory history = s.getHistory();
+	
+										total += history.getNumUnread();
+	
+										String last_error = history.getLastError();
+	
+										if (last_error != null && last_error.length() > 0) {
+	
+											boolean auth_fail = history.isAuthFail();
+	
+											if (history.getConsecFails() >= 3 || auth_fail) {
+	
+												warn = true;
+	
+												if (error_str.length() > 128) {
+	
+													if (!error_str.endsWith(", ...")) {
+	
+														error_str += ", ...";
+													}
+												} else {
+	
+													error_str += (error_str.length() == 0 ? "" : ", ")
+															+ last_error;
+												}
+											}
+										}
+									}
+	
+									if (warnSub != null) {
+										warnSub.setVisible(warn);
+										warnSub.setToolTip(error_str);
+									}
+	
+									if (total > 0) {
+	
+										result = String.valueOf( total );
+									}
+								}
+	
+								if (infoSub != null) {
+		  						if ( subs.length == 0 && !COConfigurationManager.getBooleanParameter( "subscriptions.wizard.shown", false )){
+	
+		  							long now = SystemTime.getMonotonousTime();
+	
+		  							if ( 	last_avail_calc == -1 ||
+		  									now - last_avail_calc > 60*1000 ){
+	
+		  								last_avail = subs_man.getKnownSubscriptionCount();
+	
+		  								last_avail_calc = now;
+		  							}
+	
+		  							if ( last_avail > 0 ){
+	
+		  								infoSub.setVisible( true );
+	
+		  								infoSub.setToolTip(
+		  									MessageText.getString(
+		  										"subscriptions.info.avail",
+		  										new String[]{
+		  											String.valueOf( last_avail )
+		  										}));
+		  							}
+		  						}else{
+	
+		  							infoSub.setVisible( false );
+		  						}
+								}
+							}
+	
+							return( result );
+						}
+					};
+			
+					return( vti );
+			
+			});
+			
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
 				new MdiEntryCreationListener() {
 					@Override
@@ -1486,151 +1650,15 @@ SubscriptionManagerUI
 			});
 	}
 
-	private void setupHeader(MultipleDocumentInterface mdi,
-			final MdiEntry headerEntry) {
+	private void 
+	setupHeader(
+		MultipleDocumentInterface	mdi,
+		MdiEntry					headerEntry )
+	{
 
-		MdiEntryVitalityImage addSub = headerEntry.addVitalityImage("image.sidebar.subs.add");
+		ViewTitleInfo title_info  = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS, headerEntry, null );
 
-		if (addSub != null) {
-			addSub.setToolTip(MessageText.getString("subscriptions.add.tooltip"));
-
-			addSub.addListener(new MdiEntryVitalityImageListener() {
-				@Override
-				public void mdiEntryVitalityImage_clicked(int x, int y) {
-					new SubscriptionWizard();
-
-					refreshTitles( mdiEntryOverview );
-				}
-			});
-		}
-
-		final MdiEntryVitalityImage warnSub = headerEntry.addVitalityImage(ALERT_IMAGE_ID);
-		if (warnSub != null) {
-			warnSub.setVisible(false);
-		}
-
-		final MdiEntryVitalityImage infoSub = headerEntry.addVitalityImage(INFO_IMAGE_ID);
-		if (infoSub != null) {
-			infoSub.setVisible(false);
-		}
-
-
-		headerEntry.setViewTitleInfo(
-			new ViewTitleInfo()
-			{
-				private long	last_avail_calc = -1;
-				private int		last_avail;
-
-				@Override
-				public Object
-				getTitleInfoProperty(
-					int propertyID)
-				{
-					Object result = null;
-
-					if (propertyID == TITLE_INDICATOR_TEXT) {
-
-						//boolean expanded = headerEntry.isExpanded();
-
-							// always treat as collapsed - due to various sidebar restructuring this had effectively been
-							// the case for quite a while and people complained when it reverted to the original way of working
-
-						boolean expanded = false;
-
-						SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
-
-						Subscription[] subs = subs_man.getSubscriptions(true);
-
-						if ( expanded ){
-
-							if (warnSub != null) {
-								warnSub.setVisible(false);
-							}
-
-						}else{
-
-							int total = 0;
-
-							boolean warn = false;
-
-							String error_str = "";
-
-							for (Subscription s : subs) {
-
-								SubscriptionHistory history = s.getHistory();
-
-								total += history.getNumUnread();
-
-								String last_error = history.getLastError();
-
-								if (last_error != null && last_error.length() > 0) {
-
-									boolean auth_fail = history.isAuthFail();
-
-									if (history.getConsecFails() >= 3 || auth_fail) {
-
-										warn = true;
-
-										if (error_str.length() > 128) {
-
-											if (!error_str.endsWith(", ...")) {
-
-												error_str += ", ...";
-											}
-										} else {
-
-											error_str += (error_str.length() == 0 ? "" : ", ")
-													+ last_error;
-										}
-									}
-								}
-							}
-
-							if (warnSub != null) {
-								warnSub.setVisible(warn);
-								warnSub.setToolTip(error_str);
-							}
-
-							if (total > 0) {
-
-								result = String.valueOf( total );
-							}
-						}
-
-						if (infoSub != null) {
-  						if ( subs.length == 0 && !COConfigurationManager.getBooleanParameter( "subscriptions.wizard.shown", false )){
-
-  							long now = SystemTime.getMonotonousTime();
-
-  							if ( 	last_avail_calc == -1 ||
-  									now - last_avail_calc > 60*1000 ){
-
-  								last_avail = subs_man.getKnownSubscriptionCount();
-
-  								last_avail_calc = now;
-  							}
-
-  							if ( last_avail > 0 ){
-
-  								infoSub.setVisible( true );
-
-  								infoSub.setToolTip(
-  									MessageText.getString(
-  										"subscriptions.info.avail",
-  										new String[]{
-  											String.valueOf( last_avail )
-  										}));
-  							}
-  						}else{
-
-  							infoSub.setVisible( false );
-  						}
-						}
-					}
-
-					return( result );
-				}
-			});
+		headerEntry.setViewTitleInfo( title_info );
 	}
 
 	protected void

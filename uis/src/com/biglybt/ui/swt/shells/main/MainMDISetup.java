@@ -215,7 +215,7 @@ public class MainMDISetup
 
 		mdi.registerViewTitleInfoFactory(
 			SIDEBAR_SECTION_ALLPEERS,
-			(ds)->{
+			(mdientry,ds)->{
 				PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
 
 				ViewTitleInfo title_info =
@@ -255,7 +255,7 @@ public class MainMDISetup
 
 					PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
 							
-					ViewTitleInfo title_info  = mdi.createViewTitleInfo( SIDEBAR_SECTION_ALLPEERS, null );
+					ViewTitleInfo title_info  = mdi.createViewTitleInfo( SIDEBAR_SECTION_ALLPEERS, entry, null );
 
 					entry.setViewTitleInfo( title_info );
 					
@@ -1154,7 +1154,7 @@ public class MainMDISetup
 
 		mdi.registerViewTitleInfoFactory(
 				SIDEBAR_SECTION_MY_SHARES,
-				(ds)->{
+				(mdientry,ds)->{
 					ViewTitleInfo title_info =
 						new ViewTitleInfo()
 						{
@@ -1219,7 +1219,7 @@ public class MainMDISetup
 											SB_Transfers.getSectionPosition(mdi, id));
 					MdiEntry entry = mdi.createEntry(builder, true);
 
-					ViewTitleInfo title_info = mdi.createViewTitleInfo( SIDEBAR_SECTION_MY_SHARES, null );
+					ViewTitleInfo title_info = mdi.createViewTitleInfo( SIDEBAR_SECTION_MY_SHARES, entry, null );
 					
 					entry.setViewTitleInfo( title_info );
 					
@@ -1272,7 +1272,7 @@ public class MainMDISetup
 
 		mdi.registerViewTitleInfoFactory(
 				SIDEBAR_SECTION_MY_TRACKER,
-				(ds)->{
+				(mdientry,ds)->{
 					ViewTitleInfo title_info =
 						new ViewTitleInfo()
 						{
@@ -1308,7 +1308,7 @@ public class MainMDISetup
 
 					entry.setImageLeftID("image.sidebar.mytracker");
 
-					ViewTitleInfo title_info = mdi.createViewTitleInfo( SIDEBAR_SECTION_MY_TRACKER, null );
+					ViewTitleInfo title_info = mdi.createViewTitleInfo( SIDEBAR_SECTION_MY_TRACKER, entry, null );
 					
 					entry.setViewTitleInfo( title_info );
 
