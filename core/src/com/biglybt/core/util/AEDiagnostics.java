@@ -811,36 +811,41 @@ AEDiagnostics
 	{
 		IndentWriter	writer = new IndentWriter( _writer );
 
+		List<AEDiagnosticsEvidenceGenerator> 					gens;
+		List<Map.Entry<AEDiagnosticsEvidenceGenerator,Integer>> wgens;
+		
 		synchronized( evidence_generators ){
 
-			for (AEDiagnosticsEvidenceGenerator gen : evidence_generators) {
+			gens = new ArrayList<>( evidence_generators );
+			
+			wgens = new ArrayList<>( weak_evidence_generators.entrySet());
+		}
+		
+		for (AEDiagnosticsEvidenceGenerator gen : gens) {
 
-				try {
-					gen.generate(writer);
+			try {
+				gen.generate(writer);
 
-				} catch (Throwable e) {
+			} catch (Throwable e) {
 
-					e.printStackTrace(_writer);
-				}
+				e.printStackTrace(_writer);
 			}
+		}
 			
-			List<Map.Entry<AEDiagnosticsEvidenceGenerator,Integer>> wegs = new ArrayList<>( weak_evidence_generators.entrySet());
+		Collections.sort(
+			wgens,
+			(e1,e2)->{
+				return( e1.getValue() - e2.getValue());
+			});
+		
+		for (Map.Entry<AEDiagnosticsEvidenceGenerator,Integer> entry: wgens ) {
 
-			Collections.sort(
-				wegs,
-				(e1,e2)->{
-					return( e1.getValue() - e2.getValue());
-				});
-			
-			for (Map.Entry<AEDiagnosticsEvidenceGenerator,Integer> entry: wegs ) {
+			try {
+				entry.getKey().generate(writer);
 
-				try {
-					entry.getKey().generate(writer);
+			} catch (Throwable e) {
 
-				} catch (Throwable e) {
-
-					e.printStackTrace(_writer);
-				}
+				e.printStackTrace(_writer);
 			}
 		}
 

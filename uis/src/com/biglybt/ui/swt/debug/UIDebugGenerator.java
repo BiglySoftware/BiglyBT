@@ -341,8 +341,23 @@ public class UIDebugGenerator
 									File fEvidence = new File(path, "evidence.log");
 									PrintWriter pw = new PrintWriter(fEvidence, "UTF-8");
 
-									AEDiagnostics.generateEvidence(pw);
-
+									Thread thread = Thread.currentThread();
+									
+									int priority = thread.getPriority();
+									
+									try{
+											// could be trying to generate evidence while something
+											// elsewhere is looping
+										
+										thread.setPriority( Thread.MAX_PRIORITY );
+										
+										AEDiagnostics.generateEvidence(pw);
+										
+									}finally{
+										
+										thread.setPriority(priority);
+									}
+									
 									pw.close();
 
 								} catch (IOException e) {
