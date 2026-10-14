@@ -811,6 +811,8 @@ AEDiagnostics
 	{
 		IndentWriter	writer = new IndentWriter( _writer );
 
+		writer.println( "Current time: " + SystemTime.getCurrentTime() + ", mono time: " + SystemTime.getMonotonousTime() + "\n" );
+		
 		List<AEDiagnosticsEvidenceGenerator> 					gens;
 		List<Map.Entry<AEDiagnosticsEvidenceGenerator,Integer>> wgens;
 		

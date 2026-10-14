@@ -1379,7 +1379,16 @@ FMFileImpl
 
 				Iterator<StringInterner.FileKey>	it = file_map.keySet().iterator();
 
+				int done = 0;
+				
 				while( it.hasNext()){
+					
+					if ( done >= 1024 ){
+						
+						writer.println("... (omitted remaining " + ( file_map.size() - done  ) + ")" );
+						
+						break;
+					}
 
 					StringInterner.FileKey	key = it.next();
 
@@ -1403,6 +1412,8 @@ FMFileImpl
 
 
 					writer.println( Debug.secretFileName(key.toString()) + " -> " + str );
+					
+					done++;
 				}
 			}finally{
 
