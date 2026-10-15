@@ -144,14 +144,14 @@ DiskManagerOperationScheduler
 			}
 		}
 		
-			// if we have a move and a check operation for the same download (common with move-on-complete and
-			// recheck-pieces-on-complete) then ensure the check 
+		final int MAX_ACTIVE_PER_FS = 1;
 	
+			// once we have scheduled an operation it normally runs to completion however
 			// for check operations we make an exception and will re-pause an active one if order has changed
 
 		boolean	conc_read = concurrent_reads;
 		
-		Map<String,Operation>	first_check_per_fs = new HashMap<>();
+		Map<String,Integer>	check_count_per_fs = new HashMap<>();
 				
 		for ( Operation op: operations ){
 		
@@ -159,21 +159,25 @@ DiskManagerOperationScheduler
 				
 				for ( String fs: conc_read?op.unique_fs_for_conc_read:op.unique_fs_normal ){
 					
-					if ( first_check_per_fs.get( fs ) == null ){
+					Integer count = check_count_per_fs.get( fs );
+					
+					if ( count == null || count < MAX_ACTIVE_PER_FS ){
 						
-						first_check_per_fs.put( fs, op );
+						check_count_per_fs.put( fs, count==null?1:(count+1));
 						
 					}else{
 						
 						ProgressCallback cb = op.cb;
 						
-							// not first check for this FS
+							// we've hit the max for this FS
 						
 						if (( cb.getTaskState() & ProgressCallback.ST_PAUSE ) == 0 ){
 							
 								// operation is running, pause it but only if we ran it
 							
 							if ( op.we_resumed_it ){
+								
+								// System.out.println( "Pausing " + op.op.getOperationType() + " / " + op.op.getTask().getName());
 								
 								cb.setTaskState( ProgressCallback.ST_PAUSE  );
 								
@@ -188,6 +192,8 @@ DiskManagerOperationScheduler
 			}
 		}
 				
+			// calculate the current active count for each FS
+		
 		Map<String, int[]>	fs_queue_pos = new HashMap<>();
 		
 		for ( Operation op: operations ){
@@ -203,16 +209,20 @@ DiskManagerOperationScheduler
 					if ( x == null ){
 					
 						fs_queue_pos.put( fs, new int[]{ 1 });
+						
+					}else{
+						
+						x[0]++;
 					}
 				}
 			}
 		}
 		
-			// if we have concurrent reads then we need to explicitly enforce the one-op-active
+			// if we have concurrent activities then we need to explicitly enforce the one-op-active
 			// per download constraint
 		
-		Set<DownloadManager>	active_downloads = conc_read?new IdentityHashSet<>():null;
-		
+		Set<DownloadManager>	active_downloads = ( conc_read || MAX_ACTIVE_PER_FS > 1 )?new IdentityHashSet<>():null;
+				
 		for ( Operation op: operations ){
 
 			ProgressCallback cb = op.cb;
@@ -233,6 +243,10 @@ DiskManagerOperationScheduler
 						}
 					}
 					
+						// see if there is a slot in all affected file systems
+						// even if there isn't we increase the queue counts to maintain then
+						// indicative position of ones that can't be started
+					
 					int	pos = 0;
 					
 					for ( String fs: conc_read?op.unique_fs_for_conc_read:op.unique_fs_normal ){
@@ -251,8 +265,10 @@ DiskManagerOperationScheduler
 						}
 					}
 					
-					if ( pos == 0 ){
-																		
+					if ( pos < MAX_ACTIVE_PER_FS ){
+							
+						// System.out.println( "Resuming " + op.op.getOperationType() + " / " + op.op.getTask().getName());
+						
 						cb.setTaskState( ProgressCallback.ST_RESUME );
 						
 						cb.setAutoPause( false );
@@ -260,12 +276,22 @@ DiskManagerOperationScheduler
 						op.we_resumed_it 	= true;
 						op.we_paused_it		= false;
 						
+						if ( active_downloads != null ){
+							
+							DownloadManager dm = op.op.getTask().getDownload();
+							
+							if ( dm != null ){
+							
+								active_downloads.add( dm );
+							}
+						}
 					}else{
 												
 						cb.setIndicativeOrder( pos );
 					}
 				}
 			}else{
+				
 				if ( active_downloads != null ){
 					
 					DownloadManager dm = op.op.getTask().getDownload();
