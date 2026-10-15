@@ -1218,6 +1218,8 @@ public class SB_Dashboard
 					
 				item.remove( false );
 			}
+			
+			tab_folders.clear();
 		}
 		
 		private boolean

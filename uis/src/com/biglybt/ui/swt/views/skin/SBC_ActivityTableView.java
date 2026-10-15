@@ -420,172 +420,196 @@ public class SBC_ActivityTableView
 		return view;
 	}
 
-	public static void setupSidebarEntry(final MultipleDocumentInterface mdi) {
-		// Put TitleInfo in another class
-		final ViewTitleInfo titleInfoActivityView = new ViewTitleInfo() {
-			boolean	had_unviewed = false;
-			@Override
-			public Object getTitleInfoProperty(int propertyID) {
-				if (propertyID == TITLE_INDICATOR_TEXT) {
-					int num_unread		= 0;
-					int num_unviewed	= 0;
-					List<ActivitiesEntry> allEntries = ActivitiesManager.getAllEntries();
-
-					for (ActivitiesEntry entry: allEntries ){
-
-						if ( !entry.isRead()){
-
-							num_unread++;
-						}
-
-						if ( !entry.getViewed()){
-
-							num_unviewed++;
-						}
-					}
-
-					if ( num_unread == 0 ){
-
-						num_unviewed = 0;
-					}
-
-					boolean has_unviewed = num_unviewed > 0;
-
-					if ( has_unviewed != had_unviewed ){
-
-						if ( has_unviewed ){
-
-							MdiEntry parent = mdi.getEntry( MultipleDocumentInterface.SIDEBAR_HEADER_VUZE );
-
-							if ( parent != null && !parent.isExpanded()){
-
-								parent.setExpanded( true );
+	public static void 
+	setupSidebarEntry(
+		final MultipleDocumentInterface mdi) 
+	{
+		mdi.registerViewTitleInfoFactory(
+			MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES,
+			(mdientry,ds)->{	
+				ViewTitleInfo titleInfoActivityView = new ViewTitleInfo() {
+					boolean	had_unviewed = false;
+					@Override
+					public Object 
+					getTitleInfoProperty(
+							int propertyID) 
+					{
+						if ( propertyID == TITLE_FACTORY_ID ){
+							
+							return( MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES );
+							
+						}else if (propertyID == TITLE_INDICATOR_TEXT) {
+							int num_unread		= 0;
+							int num_unviewed	= 0;
+							List<ActivitiesEntry> allEntries = ActivitiesManager.getAllEntries();
+		
+							for (ActivitiesEntry entry: allEntries ){
+		
+								if ( !entry.isRead()){
+		
+									num_unread++;
+								}
+		
+								if ( !entry.getViewed()){
+		
+									num_unviewed++;
+								}
+							}
+		
+							if ( num_unread == 0 ){
+		
+								num_unviewed = 0;
+							}
+		
+							boolean has_unviewed = num_unviewed > 0;
+		
+							if ( has_unviewed != had_unviewed ){
+		
+								if ( has_unviewed ){
+		
+									MdiEntry parent = mdi.getEntry( MultipleDocumentInterface.SIDEBAR_HEADER_VUZE );
+		
+									if ( parent != null && !parent.isExpanded()){
+		
+										parent.setExpanded( true );
+									}
+								}
+		
+								had_unviewed = has_unviewed;
+							}
+		
+							if ( num_unviewed > 0 ){
+		
+								return( String.valueOf( num_unviewed ) + ( num_unread==0?"":(":"+num_unread)));
+		
+							}else if ( num_unread > 0 ){
+		
+								return( String.valueOf( num_unread ));
+							}
+		
+							return null;
+		
+						}else if ( propertyID == TITLE_IMAGEID ){
+		
+							return "image.sidebar.activity";
+		
+						}else if ( propertyID == TITLE_INDICATOR_COLOR){
+		
+							boolean has_unread		= false;
+							boolean has_unviewed 	= false;
+		
+							List<ActivitiesEntry> allEntries = ActivitiesManager.getAllEntries();
+		
+							for ( ActivitiesEntry entry: allEntries ){
+		
+								if ( !entry.isRead()){
+		
+									has_unread = true;
+								}
+		
+								if ( !entry.getViewed()){
+		
+									has_unviewed = true;
+								}
+							}
+		
+							if ( has_unread && has_unviewed ){
+		
+								return( COLOR_UNVIEWED_ENTRIES );
 							}
 						}
-
-						had_unviewed = has_unviewed;
+		
+						return null;
 					}
-
-					if ( num_unviewed > 0 ){
-
-						return( String.valueOf( num_unviewed ) + ( num_unread==0?"":(":"+num_unread)));
-
-					}else if ( num_unread > 0 ){
-
-						return( String.valueOf( num_unread ));
-					}
-
-					return null;
-
-				}else if ( propertyID == TITLE_IMAGEID ){
-
-					return "image.sidebar.activity";
-
-				}else if ( propertyID == TITLE_INDICATOR_COLOR){
-
-					boolean has_unread		= false;
-					boolean has_unviewed 	= false;
-
-					List<ActivitiesEntry> allEntries = ActivitiesManager.getAllEntries();
-
-					for ( ActivitiesEntry entry: allEntries ){
-
-						if ( !entry.isRead()){
-
-							has_unread = true;
-						}
-
-						if ( !entry.getViewed()){
-
-							has_unviewed = true;
-						}
-					}
-
-					if ( has_unread && has_unviewed ){
-
-						return( COLOR_UNVIEWED_ENTRIES );
-					}
-				}
-
-				return null;
-			}
-		};
-		activitiesListener = new ActivitiesListener() {
-			@Override
-			public void vuzeNewsEntryChanged(ActivitiesEntry entry) {
-				refresh();
-			}
-
-			@Override
-			public void vuzeNewsEntriesRemoved(ActivitiesEntry[] entries) {
-				refresh();
-			}
-
-			@Override
-			public void vuzeNewsEntriesAdded(ActivitiesEntry[] entries) {
-				refresh();
-			}
-			
-			private void
-			refresh()
-			{
-				ViewTitleInfoManager.refreshTitleInfo(titleInfoActivityView);
+				};
 				
-				if ( mdi_entry != null ){
-					
-					mdi_entry.redraw();
-				}
-			}
-		};
-		ActivitiesManager.addListener(activitiesListener);
+				return( titleInfoActivityView );
+			});
+		
 
 		MdiEntryCreationListener creationListener = new MdiEntryCreationListener() {
 			@Override
-			public MdiEntry createMDiEntry(String id) {
+			public MdiEntry 
+			createMDiEntry(String id) 
+			{
+				ViewTitleInfo vti = mdi.createViewTitleInfo( MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, null, null );
+				
 				mdi_entry =  mdi.createEntryFromSkinRef(MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
 						MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, "activity",
 						"{sidebar." + MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES
-								+ "}", titleInfoActivityView, null, false, null);
+								+ "}", vti, null, false, null);
+				
+				activitiesListener = new ActivitiesListener() {
+					@Override
+					public void vuzeNewsEntryChanged(ActivitiesEntry entry) {
+						refresh();
+					}
+
+					@Override
+					public void vuzeNewsEntriesRemoved(ActivitiesEntry[] entries) {
+						refresh();
+					}
+
+					@Override
+					public void vuzeNewsEntriesAdded(ActivitiesEntry[] entries) {
+						refresh();
+					}
+					
+					private void
+					refresh()
+					{
+						ViewTitleInfoManager.refreshTitleInfo( vti );
+						
+						if ( mdi_entry != null ){
+							
+							mdi_entry.redraw();
+						}
+					}
+				};
+				
+				ActivitiesManager.addListener(activitiesListener);
+
+				PluginInterface pi = PluginInitializer.getDefaultInterface();
+				UIManager uim = pi.getUIManager();
+				MenuManager menuManager = uim.getMenuManager();
+
+				final MenuItem menuItem = menuManager.addMenuItem("sidebar."
+						+ MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES,
+						"v3.activity.button.readall");
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+				menuItem.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+						List<ActivitiesEntry> allEntries = ActivitiesManager.getAllEntries();
+						for (ActivitiesEntry entry: allEntries ){
+							entry.setRead(true);
+						}
+					}
+				});
+
+				mdi.addListener(new MdiListener() {
+					@Override
+					public void mdiEntrySelected(MdiEntry newEntry, MdiEntry oldEntry) {
+
+					}
+
+					@Override
+					public void mdiDisposed(MultipleDocumentInterface mdi) {
+						if (activitiesListener != null) {
+							ActivitiesManager.removeListener(activitiesListener);
+							activitiesListener = null;
+						}
+
+						menuItem.remove();
+					}
+				});
 				
 				return( mdi_entry );
 			}
 		};
+		
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, creationListener);
+		
 		mdi.registerEntry("activities", creationListener);
-
-		PluginInterface pi = PluginInitializer.getDefaultInterface();
-		UIManager uim = pi.getUIManager();
-		MenuManager menuManager = uim.getMenuManager();
-
-		final MenuItem menuItem = menuManager.addMenuItem("sidebar."
-				+ MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES,
-				"v3.activity.button.readall");
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-		menuItem.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				List<ActivitiesEntry> allEntries = ActivitiesManager.getAllEntries();
-				for (ActivitiesEntry entry: allEntries ){
-					entry.setRead(true);
-				}
-			}
-		});
-
-		mdi.addListener(new MdiListener() {
-			@Override
-			public void mdiEntrySelected(MdiEntry newEntry, MdiEntry oldEntry) {
-
-			}
-
-			@Override
-			public void mdiDisposed(MultipleDocumentInterface mdi) {
-				if (activitiesListener != null) {
-					ActivitiesManager.removeListener(activitiesListener);
-					activitiesListener = null;
-				}
-
-				menuItem.remove();
-			}
-		});
 	}
 }
