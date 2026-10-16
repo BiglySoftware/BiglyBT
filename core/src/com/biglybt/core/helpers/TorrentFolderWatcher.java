@@ -1209,10 +1209,30 @@ public class TorrentFolderWatcher {
 		}.start();
 	}
 	
+	private String	previous_log = "";
+	private boolean	previous_log_ignoring = false;
+	
 	private void
 	log(
 		String		str )
 	{
+		if ( str.equals( previous_log )){
+			
+			if ( previous_log_ignoring ){
+				
+				return;
+			}
+			
+			previous_log_ignoring = true;
+			
+			str = str + " (subsequent identical lines will be ignored)";
+			
+		}else{
+			
+			previous_log			= str;
+			previous_log_ignoring	= false;
+		}
+		
 		log.log( str );
 	}
 }
