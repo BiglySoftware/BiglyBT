@@ -41,6 +41,7 @@ import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagPeer;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AddressUtils;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HostNameToIPResolver;
 import com.biglybt.core.util.SystemTime;
@@ -67,6 +68,8 @@ public class ProxyLoginHandler {
   private static volatile String		no_proxy_peer_set = "";
   private static volatile TagPeer[]		no_proxy_peer_set_tag;
   
+  static AsyncDispatcher dispatcher = new AsyncDispatcher();
+  
   static{
 	  COConfigurationManager.addListener(
 			 new COConfigurationListener()
@@ -75,10 +78,15 @@ public class ProxyLoginHandler {
 					public void
 					configurationSaved()
 					{
-						readConfig();
+							// readConfig can result in synchronous DNS resolutions that can block
+							// the caller (potentially the SWT thread)
+						
+						dispatcher.dispatch(()->{ readConfig(); });
 					}
 			 });
 
+	  	// run this synchronously as we need the config to be loaded by the time we're done here
+	  
 	  readConfig();
   }
 
