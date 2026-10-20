@@ -124,6 +124,8 @@ public class MainWindowImpl
 
 	private SWTSkin skin;
 
+	private HarnessTitleBar titleBar;
+
 	private IMainMenu menu;
 
 	private UISWTInstanceImpl uiSWTInstanceImpl;
@@ -443,7 +445,9 @@ public class MainWindowImpl
 				+ (SystemTime.getCurrentTime() - startTime) + "ms");
 		startTime = SystemTime.getCurrentTime();
 
-		shell = existing_uif==null?new Shell(Utils.getDisplay(), SWT.SHELL_TRIM):existing_uif.getMainShell();
+		int shellStyle = Constants.isWindows ? ( SWT.NO_TRIM | SWT.RESIZE ) : SWT.SHELL_TRIM;
+
+		shell = existing_uif==null?new Shell(Utils.getDisplay(), shellStyle):existing_uif.getMainShell();
 
 		if (Constants.isWindows) {
 			try {
@@ -513,6 +517,8 @@ public class MainWindowImpl
 			increaseProgress(uiInitializer, "v3.splash.initSkin");
 
 			skin.layout();
+
+			installTitleBar();
 
 			// 0ms
 			//System.out.println("skin layout took " + (SystemTime.getCurrentTime() - startTime) + "ms");
@@ -1877,6 +1883,58 @@ public class MainWindowImpl
 		}
 
 		installHarnessHome( mdi );
+
+		HarnessDialogTheme.install( shell.getDisplay(), shell );
+	}
+
+	private void
+	installTitleBar()
+	{
+		if ( !Constants.isWindows || skin == null ){
+			return;
+		}
+
+		Control area = null;
+
+		SWTSkinObject areaObject = skin.getSkinObject( "main.shell.area" );
+
+		if ( areaObject != null ){
+			area = areaObject.getControl();
+		}
+
+		if ( area == null ){
+			for ( Control c: shell.getChildren()){
+				if ( c instanceof Composite ){
+					area = c;
+					break;
+				}
+			}
+		}
+
+		if ( area == null ){
+			return;
+		}
+
+		titleBar = new HarnessTitleBar( shell );
+
+		FormData barData = new FormData();
+		barData.left = new FormAttachment( 0, 0 );
+		barData.right = new FormAttachment( 100, 0 );
+		barData.top = new FormAttachment( 0, 0 );
+		barData.height = 38;
+		titleBar.setLayoutData( barData );
+
+		if ( area.getLayoutData() instanceof FormData ){
+			FormData areaData = (FormData)area.getLayoutData();
+			areaData.top = new FormAttachment( titleBar, 0 );
+			areaData.bottom = new FormAttachment( 100, 0 );
+		}
+
+		shell.setBackground( shell.getDisplay().getSystemColor( SWT.COLOR_BLACK ));
+
+		titleBar.moveAbove( area );
+		shell.layout( true, true );
+
 	}
 
 	private void
@@ -1900,6 +1958,9 @@ public class MainWindowImpl
 		overlay.setLayoutData( Utils.getFilledFormData());
 
 		new com.biglybt.ui.swt.views.skin.HarnessHomePanel( overlay );
+
+		host.layout( true, true );
+		overlay.layout( true, true );
 
 		overlay.moveAbove( null );
 

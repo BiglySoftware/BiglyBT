@@ -17,8 +17,14 @@ with a focused dark workspace:
 - **A real landing surface.** The old wiki browser tile is replaced by a native
   SWT home panel with live transfer numbers, quick actions, a system readout
   and a terminal-style empty state.
-- **Quiet chrome.** A taller 56px top bar, a text lockup, a rounded search field,
-  a dark primary action, and uppercase sidebar section labels.
+- **Custom dark window chrome.** BiglyBT now runs borderless with a 38px
+  Harness title bar: brand mark, File / View / Community / Tools / Debug / Help
+  menu labels, draggable surface, and custom minimise/maximise/close controls.
+- **Dark dialogs everywhere.** Every secondary `Shell` is swept by a dialog
+  theming pass, including plugin popups and embedded HTML. The M-Lab
+  "Speed Optimization Test" is now fully dark instead of a white web page.
+- **Quiet chrome.** A taller 56px top bar, a rounded search field, a dark
+  primary action, and uppercase sidebar section labels.
 - **Monochrome line iconography.** BiglyBT's colourful legacy sidebar icons are
   replaced with a small, consistent 16px set.
 - **Dark tables.** Row striping, headers, selections, progress colors and detail
@@ -46,6 +52,8 @@ content gutters, 20px card padding, 12px card gaps.
 
 | Area | File(s) |
 | --- | --- |
+| Custom title bar and menu bar | `HarnessTitleBar.java`, `HarnessMenuPopup.java`, `MainWindowImpl.java` |
+| Global dialog theming | `HarnessDialogTheme.java` |
 | Dark-first skin overlay and palette | `uis/src/com/biglybt/ui/skin/skin3_harness.properties`, `skin3.properties` |
 | Native home surface | `uis/src/com/biglybt/ui/swt/views/skin/HarnessHomePanel.java` |
 | Home view + sidebar overlay | `HarnessDashboardView.java`, `MainWindowImpl.java` |
@@ -107,12 +115,18 @@ After, Library:
 
 ![Harness library](docs/harness/library.png)
 
+A plugin dialog (M-Lab speed test), re-skinned by the global dialog pass:
+
+![Harness dialog](docs/harness/dialog.png)
+
 ## Known limits
 
-- SWT 4.9 still draws a light native title bar and menu bar on this Windows
-  host. The app requested Windows' dark app mode and immersive title bar, but
-  the legacy SWT/Win32 frame does not honour it consistently. The content area
-  is fully dark.
+- The window is borderless (`SWT.NO_TRIM`) with a custom title bar. Dragging,
+  double-click maximise, and the three window buttons are custom. Native
+  Windows snap layouts are not available.
+- Legacy Win32 push buttons in some third-party dialogs can still paint with
+  the OS button face even after the surrounding surface is dark. The dialog
+  body, HTML and standard SWT controls use Harness colors.
 - The Harness home surface is installed as a native SWT overlay on the sidebar
   content host so it renders deterministically on first launch. Switching to
   Library hides it and shows the normal MDI view.

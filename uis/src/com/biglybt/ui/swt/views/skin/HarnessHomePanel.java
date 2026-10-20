@@ -17,6 +17,7 @@ package com.biglybt.ui.swt.views.skin;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
@@ -27,6 +28,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -184,13 +186,14 @@ public class HarnessHomePanel
 		shellLayout.marginHeight = 0;
 		parent.setLayout( shellLayout );
 
-		Composite content = new Composite( parent, SWT.NONE );
-		content.setBackground( bg );
+		ScrolledComposite scroller = new ScrolledComposite( parent, SWT.V_SCROLL );
+		scroller.setBackground( bg );
+		scroller.setExpandHorizontal( false );
+		scroller.setExpandVertical( false );
+		scroller.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ));
 
-		GridData contentData = new GridData( SWT.CENTER, SWT.FILL, true, true );
-		contentData.widthHint = CONTENT_MAX_WIDTH;
-		contentData.horizontalIndent = 0;
-		content.setLayoutData( contentData );
+		Composite content = new Composite( scroller, SWT.NONE );
+		content.setBackground( bg );
 
 		GridLayout contentLayout = new GridLayout( 1, false );
 		contentLayout.marginLeft = 52;
@@ -260,7 +263,7 @@ public class HarnessHomePanel
 		splitLayout.marginWidth = 0;
 		splitLayout.marginHeight = 0;
 		splitLayout.horizontalSpacing = 12;
-		splitLayout.makeColumnsEqualWidth = true;
+		splitLayout.makeColumnsEqualWidth = false;
 		split.setLayout( splitLayout );
 		split.setLayoutData( new GridData( SWT.FILL, SWT.TOP, true, false ));
 
@@ -271,7 +274,9 @@ public class HarnessHomePanel
 		actionsLayout.marginHeight = 0;
 		actionsLayout.verticalSpacing = 8;
 		actions.setLayout( actionsLayout );
-		actions.setLayoutData( new GridData( SWT.FILL, SWT.TOP, true, false ));
+		GridData actionsData = new GridData( SWT.FILL, SWT.TOP, true, false );
+		actionsData.widthHint = 650;
+		actions.setLayoutData( actionsData );
 
 		sectionLabel( actions, "START A TRANSFER" );
 
@@ -315,11 +320,15 @@ public class HarnessHomePanel
 		systemLayout.marginHeight = 0;
 		systemLayout.verticalSpacing = 8;
 		system.setLayout( systemLayout );
-		system.setLayoutData( new GridData( SWT.FILL, SWT.TOP, true, false ));
+		GridData systemData = new GridData( SWT.FILL, SWT.TOP, false, false );
+		systemData.widthHint = 360;
+		system.setLayoutData( systemData );
 
 		sectionLabel( system, "SYSTEM" );
 
-		HarnessCard systemCard = new HarnessCard( system, card, border, null );
+		Composite systemCard = new Composite( system, SWT.NONE );
+		systemCard.setBackground( bg );
+		systemCard.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ));
 
 		GridLayout bodyLayout = new GridLayout( 2, false );
 		bodyLayout.marginWidth = 20;
@@ -347,7 +356,9 @@ public class HarnessHomePanel
 
 		sectionLabel( recent, "RECENT ACTIVITY" );
 
-		HarnessCard logCard = new HarnessCard( recent, card, border, null );
+		Composite logCard = new Composite( recent, SWT.NONE );
+		logCard.setBackground( bg );
+		logCard.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ));
 
 		GridLayout logLayout = new GridLayout( 1, false );
 		logLayout.marginWidth = 20;
@@ -375,6 +386,29 @@ public class HarnessHomePanel
 			"BiglyBT Harness Edition  /  GPLv2  /  built for Windows",
 			smallFont, dim );
 		footer.setLayoutData( new GridData( SWT.FILL, SWT.CENTER, true, false ));
+
+		scroller.setContent( content );
+
+		Runnable relayout = new Runnable()
+		{
+			@Override
+			public void
+			run()
+			{
+				int width = scroller.getClientArea().width;
+
+				content.setLocation( 0, 0 );
+				content.setSize( width, 800 );
+				scroller.setMinSize( width, 800 );
+				content.layout( true, true );
+			}
+		};
+
+		scroller.addListener( SWT.Resize, e -> relayout.run());
+
+		relayout.run();
+
+		parent.redraw();
 
 		try{
 			updateStats();
@@ -413,13 +447,14 @@ public class HarnessHomePanel
 		String			value,
 		String			hint )
 	{
-		HarnessCard c = new HarnessCard( parent, card, border, null );
+		Composite c = new Composite( parent, SWT.NONE );
+		c.setBackground( bg );
 		c.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ));
 
 		GridLayout layout = new GridLayout( 1, false );
-		layout.marginWidth = 20;
-		layout.marginTop = 16;
-		layout.marginBottom = 16;
+		layout.marginWidth = 0;
+		layout.marginTop = 0;
+		layout.marginBottom = 8;
 		layout.verticalSpacing = 2;
 		c.setLayout( layout );
 
@@ -439,12 +474,13 @@ public class HarnessHomePanel
 		String		description,
 		final Runnable action )
 	{
-		final HarnessCard c = new HarnessCard( parent, card, border, cardHover );
+		Composite c = new Composite( parent, SWT.NONE );
+		c.setBackground( bg );
 		c.setLayoutData( new GridData( SWT.FILL, SWT.CENTER, true, false ));
 
 		GridLayout layout = new GridLayout( 2, false );
-		layout.marginWidth = 16;
-		layout.marginHeight = 12;
+		layout.marginWidth = 10;
+		layout.marginHeight = 7;
 		layout.horizontalSpacing = 14;
 		layout.verticalSpacing = 0;
 		c.setLayout( layout );
@@ -453,7 +489,8 @@ public class HarnessHomePanel
 		cap.setLayoutData( new GridData( SWT.CENTER, SWT.CENTER, false, false ));
 
 		Composite copy = new Composite( c, SWT.NONE );
-		copy.setBackground( card );
+		copy.setData( "utils:skinned-bg-forced", Boolean.TRUE );
+		copy.setBackground( bg );
 		GridLayout copyLayout = new GridLayout( 1, false );
 		copyLayout.marginWidth = 0;
 		copyLayout.marginHeight = 0;
@@ -479,7 +516,10 @@ public class HarnessHomePanel
 			}
 		};
 
-		addMouse( c, click, c, copy, t, d, cap );
+		for ( Control control: new Control[]{ c, copy, t, d, cap }){
+			control.setCursor( display.getSystemCursor( SWT.CURSOR_HAND ));
+			control.addMouseListener( click );
+		}
 	}
 
 	private Label
@@ -641,7 +681,7 @@ public class HarnessHomePanel
 			Color		stroke,
 			Color		hoverFill )
 		{
-			super( parent, SWT.DOUBLE_BUFFERED );
+			super( parent, SWT.NONE );
 			this.fill		= fill;
 			this.stroke		= stroke;
 			this.hoverFill	= hoverFill;
@@ -686,6 +726,7 @@ public class HarnessHomePanel
 				redraw();
 			}
 		}
+
 	}
 
 	private class
@@ -704,7 +745,7 @@ public class HarnessHomePanel
 			Color		stroke,
 			Color		textColor )
 		{
-			super( parent, SWT.DOUBLE_BUFFERED );
+			super( parent, SWT.NONE );
 			this.key	= key;
 			this.fill	= fill;
 			this.stroke	= stroke;
@@ -760,7 +801,7 @@ public class HarnessHomePanel
 			Color		dot,
 			Color		back )
 		{
-			super( parent, SWT.DOUBLE_BUFFERED );
+			super( parent, SWT.NONE );
 			this.dot	= dot;
 			this.back	= back;
 			setBackground( back );
@@ -792,3 +833,4 @@ public class HarnessHomePanel
 		}
 	}
 }
+
