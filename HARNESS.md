@@ -25,6 +25,8 @@ with a focused dark workspace:
   "Speed Optimization Test" is now fully dark instead of a white web page.
 - **Quiet chrome.** A taller 56px top bar, a rounded search field, a dark
   primary action, and uppercase sidebar section labels.
+- **Sidebar surface.** The sidebar now sits on its own `#1B1B1C` panel with a
+  Harness-colored sash instead of the old light Windows divider line.
 - **Monochrome line iconography.** BiglyBT's colourful legacy sidebar icons are
   replaced with a small, consistent 16px set.
 - **Dark tables.** Row striping, headers, selections, progress colors and detail

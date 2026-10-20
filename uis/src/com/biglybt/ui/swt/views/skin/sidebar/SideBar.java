@@ -675,12 +675,18 @@ public class SideBar
 	setBackground(
 		SWTSkinProperties	sp )
 	{
-		if ( Utils.isDarkAppearanceNativeWindows()){
-			
-			bg = Colors.getWindowsDarkSystemColor( tree.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND ); 
-			
+		Color skinBg = sp.getColor( "color.sidebar.bg" );
+
+		if ( skinBg != null ){
+
+			bg = skinBg;
+
+		}else if ( Utils.isDarkAppearanceNativeWindows()){
+
+			bg = Colors.getWindowsDarkSystemColor( tree.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND );
+
 		}else{
-		
+
 			bg = sp.getColor("color.sidebar.bg");
 		}
 	}
