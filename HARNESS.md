@@ -82,7 +82,23 @@ The build used for the screenshots:
 - Maven 3.9.9
 - SWT 4.9 (`uis/lib/swt-win64.jar`)
 
-## Run
+## Self-contained executable
+
+The easiest Windows build is the bundled-runtime folder:
+
+```text
+dist/BiglyBT-Harness-Exe/
+  BiglyBT.exe      <- double-click, no Java install required
+  app/             <- BiglyBT.jar, SWT, CLI, native DLLs
+  runtime/         <- jlink Java 17 runtime
+```
+
+Packaged as `BiglyBT-Harness-Executable.zip`. It contains its own `javaw.exe`
+under `runtime\bin`, so the "Windows cannot find javaw.exe" error cannot occur.
+Settings are created in `config\` next to the executable, keeping the folder
+portable.
+
+## Run from source
 
 The ready-to-run Windows folder is `dist/BiglyBT-Harness` in the workspace:
 
