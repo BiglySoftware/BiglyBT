@@ -177,7 +177,11 @@ public abstract class StandardButtonsArea
 			if (buttonText == null) {
 				continue;
 			}
-			Button button = buttons[i] = new Button(cButtonArea, SWT.PUSH);
+			Button button = buttons[i] = new Button(cButtonArea, SWT.PUSH | SWT.FLAT);
+			button.setBackground(com.biglybt.ui.swt.utils.ColorCache.getColor(
+				button.getDisplay(), 31, 31, 33));
+			button.setForeground(com.biglybt.ui.swt.utils.ColorCache.getColor(
+				button.getDisplay(), 231, 231, 233));
 			int buttonVal = buttonVals == null || i >= buttonVals.length ? i
 					: buttonVals[i];
 			Boolean b = buttonsEnabled.get(buttonVal);

@@ -204,6 +204,16 @@ public class VuzeMessageBox
 		SWTSkinObjectText soText = (SWTSkinObjectText) skin.getSkinObject("middle-title");
 		if (soText != null) {
 			soText.setText(text);
+
+			if ("image.mlab.header".equals(iconResource)) {
+				soText.setText("Check your connection");
+
+				if (soText.getControl() != null && !soText.getControl().isDisposed()) {
+					soText.getControl().setForeground(
+						com.biglybt.ui.swt.utils.ColorCache.getColor(
+							soText.getControl().getDisplay(), 231, 231, 233));
+				}
+			}
 		}
 
 		if (iconResource != null) {
@@ -287,6 +297,11 @@ public class VuzeMessageBox
   				SWTSkinObjectText title = (SWTSkinObjectText) dlg.getSkin().getSkinObject("top-title");
   				if (title != null) {
   					title.setText("Network check");
+  				}
+
+  				SWTSkinObjectText middle = (SWTSkinObjectText) dlg.getSkin().getSkinObject("middle-title");
+  				if (middle != null) {
+  					middle.setVisible(false);
   				}
   			}
   		}
