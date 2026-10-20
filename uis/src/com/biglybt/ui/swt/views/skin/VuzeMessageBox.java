@@ -258,6 +258,15 @@ public class VuzeMessageBox
 		}
 		dlg.open();
 
+		if ("image.mlab.header".equals(iconResource)) {
+			try{
+				com.biglybt.ui.swt.shells.main.HarnessDialogChrome.install(
+					dlg.getShell(), buttonsArea.getButtons());
+			}catch( Throwable e ){
+				// Native SkinnedDialog remains the fallback.
+			}
+		}
+
 		try{
 			com.biglybt.ui.swt.shells.main.HarnessDialogTheme.reapply( dlg.getShell());
 		}catch( Throwable e ){
@@ -294,9 +303,16 @@ public class VuzeMessageBox
   			setTopLogoImage(soTopLogo, resource);
 
   			if ("image.mlab.header".equals(resource)) {
+  				dlg.getShell().setText("Network check");
+
+  				SWTSkinObject topArea = dlg.getSkin().getSkinObject("top-area");
+  				if (topArea != null) {
+  					topArea.setVisible(false);
+  				}
+
   				SWTSkinObjectText title = (SWTSkinObjectText) dlg.getSkin().getSkinObject("top-title");
   				if (title != null) {
-  					title.setText("Network check");
+  					title.setVisible(false);
   				}
 
   				SWTSkinObjectText middle = (SWTSkinObjectText) dlg.getSkin().getSkinObject("middle-title");
