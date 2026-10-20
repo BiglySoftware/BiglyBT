@@ -208,8 +208,9 @@ public class VuzeMessageBox
 
 		if (iconResource != null) {
   		SWTSkinObjectImage soTopLogo = (SWTSkinObjectImage) dlg.getSkin().getSkinObject("top-logo");
+
   		if (soTopLogo != null) {
-  			soTopLogo.setImageByID(iconResource, null);
+  			setTopLogoImage(soTopLogo, iconResource);
   		}
 		}
 
@@ -246,6 +247,11 @@ public class VuzeMessageBox
 			return;
 		}
 		dlg.open();
+
+		try{
+			com.biglybt.ui.swt.shells.main.HarnessDialogTheme.reapply( dlg.getShell());
+		}catch( Throwable e ){
+		}
 	}
 
 	public Button[] getButtons() {
@@ -275,8 +281,48 @@ public class VuzeMessageBox
 		if (dlg != null) {
   		SWTSkinObjectImage soTopLogo = (SWTSkinObjectImage) dlg.getSkin().getSkinObject("top-logo");
   		if (soTopLogo != null) {
-  			soTopLogo.setImageByID(iconResource, null);
+  			setTopLogoImage(soTopLogo, resource);
+
+  			if ("image.mlab.header".equals(resource)) {
+  				SWTSkinObjectText title = (SWTSkinObjectText) dlg.getSkin().getSkinObject("top-title");
+  				if (title != null) {
+  					title.setText("Network check");
+  				}
+  			}
   		}
+		}
+	}
+
+	private void
+	setTopLogoImage(
+		SWTSkinObjectImage	soTopLogo,
+		String				resource )
+	{
+		if (!"image.mlab.header".equals(resource)) {
+			soTopLogo.setImageByID(resource, null);
+			return;
+		}
+
+		try{
+			java.io.InputStream is = VuzeMessageBox.class.getResourceAsStream(
+				"/com/biglybt/ui/images/harness/mlab-header.png" );
+
+			if (is != null) {
+				final org.eclipse.swt.graphics.Image header =
+					new org.eclipse.swt.graphics.Image(Display.getDefault(), is);
+
+				is.close();
+
+				soTopLogo.setImage(header);
+
+				dlg.getShell().addDisposeListener(
+					e -> {
+						if (!header.isDisposed()) {
+							header.dispose();
+						}
+					});
+			}
+		}catch( Throwable e ){
 		}
 	}
 

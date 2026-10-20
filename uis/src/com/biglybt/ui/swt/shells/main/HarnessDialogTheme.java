@@ -13,6 +13,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
@@ -111,6 +112,16 @@ public class HarnessDialogTheme
 	}
 
 	public static void
+	reapply(
+		Shell	shell )
+	{
+		if ( shell != null && !shell.isDisposed()){
+			shell.setData( THEMED, null );
+			apply( shell );
+		}
+	}
+
+	public static void
 	apply(
 		Shell	shell )
 	{
@@ -192,6 +203,11 @@ public class HarnessDialogTheme
 
 				list.setBackground( bg );
 				list.setForeground( text );
+			}else if ( control instanceof CLabel ){
+				CLabel label = (CLabel)control;
+
+				label.setBackground( bg );
+				label.setForeground( text );
 			}else if ( control instanceof StyledText ){
 				StyledText styled = (StyledText)control;
 
