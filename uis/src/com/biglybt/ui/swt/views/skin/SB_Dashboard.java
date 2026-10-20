@@ -584,6 +584,12 @@ public class SB_Dashboard
 		main_dashboard.addItem( map, true );
 	}
 	
+	public int
+	getMainItemCount()
+	{
+		return( main_dashboard.getItemCount());
+	}
+
 	public void
 	build(
 		Composite		comp )
@@ -736,7 +742,7 @@ public class SB_Dashboard
 				}
 			}});
 		
-		cog.setVisible(true);
+		cog.setVisible(false);
 		
 		mdi.addListener(new MdiListener() {
 
@@ -906,10 +912,13 @@ public class SB_Dashboard
 					
 					for ( Map map: item_list ) {
 
-						// Hack to migrate dashboard wiki URL
-						if ("https://github.com/BiglySoftware/BiglyBT/wiki/Dashboard".equals(
-								MapUtils.getMapString(map, "data_source", ""))) {
-							map.put("data_source", Constants.URL_WIKI + "w/Dashboard");
+						String data_source = MapUtils.getMapString(map, "data_source", "");
+
+						// Harness Edition replaces the old embedded wiki page with
+						// the native landing surface. Drop the migrated item once.
+						if (data_source.contains("/wiki/") || data_source.endsWith("/w/Dashboard")) {
+							configDirty();
+							continue;
 						}
 
 						DashboardItem item = new DashboardItem( map );
@@ -1048,19 +1057,16 @@ public class SB_Dashboard
 		private void
 		addStartupItem()
 		{
-			String	starting_url = Constants.URL_WIKI + "w/Dashboard";
-			
 			Map<String,Object>	map = new HashMap<>();
-			
+
 			map.put( "mdi", "sidebar" );
 			map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
 			map.put( "parent_id", "header.dashboard" );
-			map.put( "skin_ref", "main.generic.browse" );
-			map.put( "id", "Browser: Dashboard" );
-			map.put( "title", "Wiki: Dashboard" );		
-			map.put( "data_source", starting_url );
+			map.put( "skin_ref", "harness.home" );
+			map.put( "id", "HarnessHome" );
+			map.put( "title", "Home" );
 			map.put( "control_type", 0L );
-			
+
 			addItem( map, false );
 		}
 		
@@ -1481,7 +1487,7 @@ public class SB_Dashboard
 			
 			DashboardItem main_item = visible_items.get(0);
 			
-			tab_item.setText( main_item.getTitle() + (visible_items.size()>1?"...":""));
+			tab_item.setText( visible_items.size() <= 1 ? "" : main_item.getTitle() + (visible_items.size()>1?"...":"") );
 
 			String title_id = main_item.getTitleID();
 			
@@ -1499,6 +1505,8 @@ public class SB_Dashboard
 			Utils.execSWTThread(()->{
 				
 				CTabItem tab_item = null;
+				
+				tf.setTabHeight( items.size() <= 1 ? 1 : -1 );
 				
 				int index = getAddNewHorizontal()?-1:0;
 				

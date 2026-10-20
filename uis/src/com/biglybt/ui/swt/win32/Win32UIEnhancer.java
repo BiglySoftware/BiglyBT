@@ -649,7 +649,41 @@ public class Win32UIEnhancer
 		}
 	}
 
+	private static void
+	applyHarnessChrome(
+		Shell		shell )
+	{
+		try{
+			Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
+
+			// Force the dark Win32 visual style for this process. This is the
+			// same switch current Windows 11 apps use for native menus and
+			// scrollbars; unsupported SWT builds simply ignore it.
+			try{
+				OS.getMethod( "SetPreferredAppMode", int.class ).invoke( null, 2 );
+			}catch( Throwable ignore ){
+			}
+
+			long hwnd = ((Number)Shell.class.getField( "handle" ).get( shell )).longValue();
+
+			try{
+				OS.getMethod( "AllowDarkModeForWindow", long.class, boolean.class ).invoke( null, hwnd, true );
+			}catch( Throwable ignore ){
+			}
+
+			try{
+				OS.getMethod( "SetWindowTheme", long.class, char[].class, char[].class ).invoke(
+					null, hwnd, "DarkMode_Explorer".toCharArray(), null );
+			}catch( Throwable ignore ){
+			}
+		}catch( Throwable e ){
+			Debug.outNoStack( "Harness chrome unavailable" );
+		}
+	}
+
 	public static void initMainShell(Shell shell) {
+		applyHarnessChrome( shell );
+
 		//Canvas canvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.NO_TRIM);
 		//canvas.setVisible(false);
 		Shell subshell = new Shell(shell);

@@ -1688,6 +1688,17 @@ public class MainWindowImpl
 					UIFunctionsManagerSWT.getUIFunctionsSWT().openTorrentWindow();
 				}
 			});
+		}else if (skinObject != null && skinObject.getControl() != null) {
+			Control control = skinObject.getControl();
+			control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+			control.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseUp(MouseEvent e) {
+					if (e.button == 1) {
+						UIFunctionsManagerSWT.getUIFunctionsSWT().openTorrentWindow();
+					}
+				}
+			});
 		}
 
 		skinObject = skin.getSkinObject("quick-links");
@@ -1910,8 +1921,8 @@ public class MainWindowImpl
 		}
 		*/
 		
-		final Text text = new Text(cArea, (DARK_MODE && !( Utils.isGTK3 ))?SWT.BORDER:SWT.NONE);
-		text.setMessage(MessageText.getString("v3.MainWindow.search.defaultText"));
+		final Text text = new Text(cArea, SWT.NONE);
+		text.setMessage("Search torrents, peers, settings...");
 		FormData filledFormData = Utils.getFilledFormData();
 		
 			// not great but as of Dec 2021 seems to be the best way to make things actually look ok...

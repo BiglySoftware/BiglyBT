@@ -750,7 +750,16 @@ public class SideBar
 		tree.setBackground(bg);
 		tree.setForeground(fg);
 
-		fontHeader = FontUtils.getFontWithStyle(tree.getFont(), SWT.BOLD, 1.0f);
+		Font treeFont = new Font( tree.getDisplay(), "Segoe UI", 10, SWT.NORMAL );
+		tree.setFont( treeFont );
+		tree.addDisposeListener(
+			ev -> {
+				if ( !treeFont.isDisposed()){
+					treeFont.dispose();
+				}
+			});
+
+		fontHeader = new Font( tree.getDisplay(), "Segoe UI", 9, SWT.BOLD );
 
 		// after a scroll we need to recalculate the hit areas as they will have moved!
 
