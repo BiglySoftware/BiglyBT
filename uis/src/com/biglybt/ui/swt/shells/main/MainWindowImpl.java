@@ -53,6 +53,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.skin.SkinPropertiesImpl;
@@ -1874,6 +1875,65 @@ public class MainWindowImpl
 						topbarMenu);
 			}
 		}
+
+		installHarnessHome( mdi );
+	}
+
+	private void
+	installHarnessHome(
+		BaseMDI		mdi )
+	{
+		SWTSkinObject skinObject = skin.getSkinObject( "sidebar-contents" );
+
+		if ( skinObject == null ){
+			skinObject = skin.getSkinObject( "main.sidebar.content" );
+		}
+
+		if ( skinObject == null || !( skinObject.getControl() instanceof Composite )){
+			return;
+		}
+
+		final Composite host = (Composite)skinObject.getControl();
+
+		final Composite overlay = new Composite( host, SWT.NONE );
+		overlay.setBackground( host.getDisplay().getSystemColor( SWT.COLOR_BLACK ));
+		overlay.setLayoutData( Utils.getFilledFormData());
+
+		new com.biglybt.ui.swt.views.skin.HarnessHomePanel( overlay );
+
+		overlay.moveAbove( null );
+
+		// Harness starts on Home. The MDI selection event may not fire for the
+		// initial entry, so show the surface until another entry is selected.
+		overlay.setVisible( true );
+
+		mdi.addListener(
+			new com.biglybt.ui.mdi.MdiListener()
+			{
+				@Override
+				public void
+				mdiEntrySelected(
+					MdiEntry	newEntry,
+					MdiEntry	oldEntry )
+				{
+					boolean home =
+						newEntry != null &&
+						MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD.equals( newEntry.getId());
+
+					overlay.setVisible( home );
+
+					if ( home ){
+						overlay.moveAbove( null );
+					}
+				}
+
+				@Override
+				public void
+				mdiDisposed(
+					MultipleDocumentInterface mdi )
+				{
+				}
+			});
 	}
 
 	private void addMenuAndNonTextChildren(Composite parent, Menu menu) {

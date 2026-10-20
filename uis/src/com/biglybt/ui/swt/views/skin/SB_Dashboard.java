@@ -590,6 +590,12 @@ public class SB_Dashboard
 		return( main_dashboard.getItemCount());
 	}
 
+	public boolean
+	isHarnessHomeOnly()
+	{
+		return( main_dashboard.isHarnessHomeOnly());
+	}
+
 	public void
 	build(
 		Composite		comp )
@@ -703,22 +709,13 @@ public class SB_Dashboard
 			
 			@Override
 			public Object getTitleInfoProperty(int propertyID) {
-				if (propertyID == TITLE_INDICATOR_TEXT) {
-					return( String.valueOf( main_dashboard.getItemCount()));
-				}
-
-				if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
-					
-					return( null );
-				}
-
 				return null;
 			}
 		};
 		
 		mdi_entry = mdi.createEntryFromSkinRef(
 				"", MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-				"dashboard", "{sidebar.header.dashboard}",
+				"dashboard", "Home",
 				title_info, null, false, null);
 
 
@@ -1074,6 +1071,16 @@ public class SB_Dashboard
 		getItemCount()
 		{
 			return( items.size());
+		}
+
+		private boolean
+		isHarnessHomeOnly()
+		{
+			if ( items.size() != 1 ){
+				return( false );
+			}
+
+			return( "HarnessHome".equals( items.get(0).getState().get( "id" )));
 		}
 
 		private List<DashboardItem>

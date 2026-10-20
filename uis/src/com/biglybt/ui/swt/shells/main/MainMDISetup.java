@@ -141,28 +141,7 @@ public class MainMDISetup
 
 	
 	public static void setupSideBar(final MultipleDocumentInterfaceSWT mdi) {
-		mdi.registerEntry(
-			"HarnessHome",
-			new MdiEntryCreationListener()
-			{
-				@Override
-				public MdiEntry
-				createMDiEntry(
-					String id )
-				{
-					MdiEntry entry = mdi.createEntryFromSkinRef(
-						null, "HarnessHome", "harness.home", "Home",
-						null, null, false, SIDEBAR_POS_FIRST );
-
-					if ( entry != null ){
-						entry.setImageLeftID( "image.sidebar.dashboard" );
-					}
-
-					return( entry );
-				}
-			});
-
-		mdi.setDefaultEntryID("HarnessHome");
+		mdi.setDefaultEntryID(SIDEBAR_HEADER_DASHBOARD);
 
 		if (Utils.isAZ2UI()) {
 			setupSidebarClassic(mdi);

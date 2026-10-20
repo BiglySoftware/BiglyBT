@@ -47,8 +47,9 @@ content gutters, 20px card padding, 12px card gaps.
 | Area | File(s) |
 | --- | --- |
 | Dark-first skin overlay and palette | `uis/src/com/biglybt/ui/skin/skin3_harness.properties`, `skin3.properties` |
-| Native home surface | `uis/src/com/biglybt/ui/swt/views/skin/HarnessHomePanel.java`, `HarnessHomeView.java` |
-| Dashboard replaces wiki tile | `SB_Dashboard.java`, `SBC_DashboardView.java` |
+| Native home surface | `uis/src/com/biglybt/ui/swt/views/skin/HarnessHomePanel.java` |
+| Home view + sidebar overlay | `HarnessDashboardView.java`, `MainWindowImpl.java` |
+| Dashboard replaces wiki tile | `SB_Dashboard.java`, `skin3_dashboard.properties` |
 | Sidebar typography/icons/selection | `SideBar.java`, `SideBarEntrySWT.java` |
 | Header, search, add-torrent action | `MainWindowImpl.java`, `skin3_harness.properties` |
 | Windows dark system colors and zebra rows | `Colors.java`, `Utils.java`, `SkinPropertiesImpl.java` |
@@ -112,8 +113,9 @@ After, Library:
   host. The app requested Windows' dark app mode and immersive title bar, but
   the legacy SWT/Win32 frame does not honour it consistently. The content area
   is fully dark.
-- The first launch can briefly show an empty dashboard while the core starts;
-  the native home panel populates once `GlobalManager` is available.
+- The Harness home surface is installed as a native SWT overlay on the sidebar
+  content host so it renders deterministically on first launch. Switching to
+  Library hides it and shows the normal MDI view.
 - `aereg64.dll` is not bundled in this repository. It is only needed for
   Explorer/firewall integration.
 

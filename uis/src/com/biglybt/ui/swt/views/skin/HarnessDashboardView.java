@@ -14,9 +14,11 @@ import org.eclipse.swt.widgets.Composite;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 
 /**
- * Hosts the native Harness landing panel inside a dashboard tile.
+ * Replaces the legacy dashboard builder (and its embedded wiki tile) with the
+ * native Harness landing surface. Attached to the "dashboard" skin object, so
+ * it is built whenever the sidebar's Dashboard header is selected.
  */
-public class HarnessHomeView
+public class HarnessDashboardView
 	extends SkinView
 {
 	private HarnessHomePanel panel;
@@ -27,7 +29,7 @@ public class HarnessHomeView
 		SWTSkinObject	skinObject,
 		Object			params )
 	{
-		SWTSkinObject area = getSkinObject( "harness-home-area" );
+		SWTSkinObject area = getSkinObject( "dashboard-area" );
 
 		if ( area != null && area.getControl() instanceof Composite ){
 			panel = new HarnessHomePanel((Composite)area.getControl());

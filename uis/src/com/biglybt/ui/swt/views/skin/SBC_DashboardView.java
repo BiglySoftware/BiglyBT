@@ -181,9 +181,13 @@ public class SBC_DashboardView
 			
 			SB_Dashboard sbd = MainMDISetup.getSb_dashboard();
 			
-			if ( sbd != null && sbd.getMainItemCount() == 0 ){
+			if ( sbd != null && ( sbd.getMainItemCount() == 0 || sbd.isHarnessHomeOnly() )){
 				
-				harness_home = new HarnessHomePanel( dashboard_composite );
+				try{
+					harness_home = new HarnessHomePanel( dashboard_composite );
+				}catch( Throwable e ){
+					com.biglybt.core.util.Debug.out( e );
+				}
 				
 			}else{
 				

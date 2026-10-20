@@ -142,7 +142,10 @@ public class HarnessHomePanel
 							run()
 							{
 								if ( !parent.isDisposed()){
-									updateStats();
+									try{
+										updateStats();
+									}catch( Throwable e ){
+									}
 								}
 							}
 						});
@@ -373,7 +376,11 @@ public class HarnessHomePanel
 			smallFont, dim );
 		footer.setLayoutData( new GridData( SWT.FILL, SWT.CENTER, true, false ));
 
-		updateStats();
+		try{
+			updateStats();
+		}catch( Throwable e ){
+			// Core may still be wiring up its global manager on first launch.
+		}
 	}
 
 	private void
