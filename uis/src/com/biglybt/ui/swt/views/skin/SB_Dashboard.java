@@ -1347,6 +1347,8 @@ public class SB_Dashboard
 		{
 			tab_folders.add( tf );
 			
+			tf.addDisposeListener((ev)->{ tab_folders.remove( tf ); });
+			
 			tf.setUnselectedCloseVisible( false );
 			
 			tf.addCTabFolder2Listener(new CTabFolder2Adapter() {
@@ -1418,11 +1420,21 @@ public class SB_Dashboard
 			});
 			
 			Utils.addSafeMouseUpListener(tf,
-					e -> e.widget.setData("downedVI", getVitalityImageAtPos(tf,e.x, e.y)),
 					e -> {
-						MdiEntryVitalityImageSWT vi = (MdiEntryVitalityImageSWT) e.widget.getData(
+						Widget widget = e.widget;
+						if ( widget.isDisposed()){
+							return;
+						}
+						widget.setData("downedVI", getVitalityImageAtPos(tf,e.x, e.y));
+					},
+					e -> {
+						Widget widget = e.widget;
+						if ( widget.isDisposed()){
+							return;
+						}
+						MdiEntryVitalityImageSWT vi = (MdiEntryVitalityImageSWT) widget.getData(
 								"downedVI");
-						e.widget.setData("downedVI", null);
+						widget.setData("downedVI", null);
 						if (e.button != 1) {
 							return;
 						}
