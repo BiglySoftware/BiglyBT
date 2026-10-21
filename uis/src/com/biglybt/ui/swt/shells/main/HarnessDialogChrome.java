@@ -122,6 +122,8 @@ public class HarnessDialogChrome
 
 			shell.layout( true, true );
 
+			shell.setData( HarnessGenericDialogChrome.DATA_KEY, Boolean.TRUE );
+
 			return( true );
 		}catch( Throwable e ){
 			if ( styleChanged ){

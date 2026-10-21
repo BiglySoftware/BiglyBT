@@ -73,6 +73,7 @@ public class HarnessDialogTheme
 
 				if ( shell != mainShell && !shell.isDisposed()){
 					apply( shell );
+					HarnessGenericDialogChrome.install( shell );
 				}
 			}
 		};
@@ -103,6 +104,7 @@ public class HarnessDialogTheme
 					for ( Shell shell: display.getShells()){
 						if ( shell != mainShell && !shell.isDisposed()){
 							apply( shell );
+							HarnessGenericDialogChrome.install( shell );
 						}
 					}
 
@@ -145,6 +147,10 @@ public class HarnessDialogTheme
 		shell.setForeground( text );
 
 		applyControl( shell );
+
+		if ( shell != mainShell ){
+			HarnessGenericDialogChrome.install( shell );
+		}
 	}
 
 	private static void
