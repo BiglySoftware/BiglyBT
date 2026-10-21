@@ -116,6 +116,12 @@ public class SWTSkinObjectSash
 
 		sash = new Sash(createOn, style);
 
+		org.eclipse.swt.graphics.Color sashColor = properties.getColor( sConfigID + ".color" );
+
+		if ( sashColor != null ){
+			sash.setBackground( sashColor );
+		}
+
 		int splitAtPX = COConfigurationManager.getIntParameter("v3." + sID
 				+ ".splitAtPX", -1);
 		if (splitAtPX >= 0) {
@@ -147,7 +153,7 @@ public class SWTSkinObjectSash
 		});
 
 		sBorder = properties.getStringValue(sConfigID + ".border", (String) null);
-		if (sBorder != null) {
+		if (sBorder != null && sBorder.length() > 0) {
 			sash.addPaintListener(new PaintListener() {
 				@Override
 				public void paintControl(PaintEvent e) {

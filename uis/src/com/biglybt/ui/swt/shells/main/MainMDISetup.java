@@ -141,7 +141,7 @@ public class MainMDISetup
 
 	
 	public static void setupSideBar(final MultipleDocumentInterfaceSWT mdi) {
-		mdi.setDefaultEntryID(SideBar.SIDEBAR_SECTION_LIBRARY);
+		mdi.setDefaultEntryID(SIDEBAR_HEADER_DASHBOARD);
 
 		if (Utils.isAZ2UI()) {
 			setupSidebarClassic(mdi);

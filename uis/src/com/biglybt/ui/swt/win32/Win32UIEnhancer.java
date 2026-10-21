@@ -28,6 +28,8 @@ import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.util.AESemaphore;
@@ -80,6 +82,18 @@ public class Win32UIEnhancer
 	private static long messageProcLong;
 
 	private static Object /* Callback */messageCallback;
+
+	private static Object /* Callback */mainMessageCallback;
+
+	private static long mainOldProc;
+
+	private static long mainProcLong;
+
+	private static int mainProcInt;
+
+	private static Shell mainShell;
+
+	private static final int WM_NCHITTEST = 0x0084;
 
 	private static DriveDetectedInfo loc;
 
@@ -649,7 +663,68 @@ public class Win32UIEnhancer
 		}
 	}
 
+	private static void
+	makeResizable(
+		Shell	shell )
+	{
+		try{
+			Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
+			long hwnd = ((Number)Shell.class.getField( "handle" ).get( shell )).longValue();
+
+			int style = ((Number)OS.getMethod( "GetWindowLong", long.class, int.class )
+				.invoke( null, hwnd, -16 )).intValue();
+
+			// WS_THICKFRAME gives Windows the native sizing border and cursor.
+			style |= 0x00040000;
+
+			OS.getMethod( "SetWindowLong", long.class, int.class, int.class )
+				.invoke( null, hwnd, -16, style );
+
+			OS.getMethod( "SetWindowPos", long.class, long.class, int.class, int.class,
+				int.class, int.class, int.class )
+				.invoke( null, hwnd, 0L, 0, 0, 0, 0,
+					0x0001 | 0x0002 | 0x0004 | 0x0020 );
+		}catch( Throwable e ){
+			Debug.outNoStack( "Harness resize style unavailable" );
+		}
+	}
+
+	private static void
+	applyHarnessChrome(
+		Shell		shell )
+	{
+		try{
+			Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
+
+			// Force the dark Win32 visual style for this process. This is the
+			// same switch current Windows 11 apps use for native menus and
+			// scrollbars; unsupported SWT builds simply ignore it.
+			try{
+				OS.getMethod( "SetPreferredAppMode", int.class ).invoke( null, 2 );
+			}catch( Throwable ignore ){
+			}
+
+			long hwnd = ((Number)Shell.class.getField( "handle" ).get( shell )).longValue();
+
+			try{
+				OS.getMethod( "AllowDarkModeForWindow", long.class, boolean.class ).invoke( null, hwnd, true );
+			}catch( Throwable ignore ){
+			}
+
+			try{
+				OS.getMethod( "SetWindowTheme", long.class, char[].class, char[].class ).invoke(
+					null, hwnd, "DarkMode_Explorer".toCharArray(), null );
+			}catch( Throwable ignore ){
+			}
+		}catch( Throwable e ){
+			Debug.outNoStack( "Harness chrome unavailable" );
+		}
+	}
+
 	public static void initMainShell(Shell shell) {
+		applyHarnessChrome( shell );
+		makeResizable( shell );
+
 		//Canvas canvas = new Canvas(shell, SWT.NO_BACKGROUND | SWT.NO_TRIM);
 		//canvas.setVisible(false);
 		Shell subshell = new Shell(shell);
@@ -695,6 +770,8 @@ public class Win32UIEnhancer
 			ex.printStackTrace();
 		}
 
+		installResizeHandler( shell );
+
 		new AEThread2( "Async:USB" )
 		{
 			@Override
@@ -724,6 +801,102 @@ public class Win32UIEnhancer
 		  		}
 			}
 		}.start();
+	}
+
+	private static void
+	installResizeHandler(
+		Shell		shell )
+	{
+		try{
+			mainShell = shell;
+
+			mainMessageCallback = constCallBack.newInstance(new Object[] {
+				Win32UIEnhancer.class, "messageProcMain", 4
+			});
+
+			Object oHandle = Shell.class.getField( "handle" ).get( shell );
+
+			mainOldProc = ((Number)mGetWindowLongPtr.invoke(
+				null, new Object[]{ oHandle, OS_GWLP_WNDPROC })).longValue();
+
+			Number n = (Number)mCallback_getAddress.invoke( mainMessageCallback, new Object[]{});
+
+			if ( useLong ){
+				mainProcLong = n.longValue();
+
+				if ( mainProcLong != 0 ){
+					mSetWindowLongPtr.invoke(
+						null, new Object[]{ oHandle, OS_GWLP_WNDPROC, mainProcLong });
+				}
+			}else{
+				mainProcInt = n.intValue();
+
+				if ( mainProcInt != 0 ){
+					mSetWindowLongPtr.invoke(
+						null, new Object[]{ oHandle, OS_GWLP_WNDPROC, mainProcInt });
+				}
+			}
+		}catch( Throwable e ){
+			Debug.outNoStack( "Harness resize handler unavailable" );
+		}
+	}
+
+	private static int
+	hitTestResize()
+	{
+		if ( mainShell == null || mainShell.isDisposed() || mainShell.getMaximized()){
+			return( 0 );
+		}
+
+		Point cursor = mainShell.getDisplay().getCursorLocation();
+		Rectangle bounds = mainShell.getBounds();
+
+		int border = 6;
+
+		boolean left	= cursor.x >= bounds.x && cursor.x < bounds.x + border;
+		boolean right	= cursor.x < bounds.x + bounds.width && cursor.x >= bounds.x + bounds.width - border;
+		boolean top		= cursor.y >= bounds.y && cursor.y < bounds.y + border;
+		boolean bottom	= cursor.y < bounds.y + bounds.height && cursor.y >= bounds.y + bounds.height - border;
+
+		if ( top && left )		return( 13 );	// HTTOPLEFT
+		if ( top && right )		return( 14 );	// HTTOPRIGHT
+		if ( bottom && left )	return( 16 );	// HTBOTTOMLEFT
+		if ( bottom && right )	return( 17 );	// HTBOTTOMRIGHT
+		if ( left )				return( 10 );	// HTLEFT
+		if ( right )				return( 11 );	// HTRIGHT
+		if ( top )				return( 12 );	// HTTOP
+		if ( bottom )			return( 15 );	// HTBOTTOM
+
+		return( 0 );
+	}
+
+	static int /*long*/messageProcMain(int /*long*/hwnd, int /*long*/msg,
+			int /*long*/wParam, int /*long*/lParam) {
+		long result = messageProcMain((long) hwnd, (long) msg, (long) wParam, (long) lParam);
+		return (int) result;
+	}
+
+	static long /*int*/messageProcMain(long /*int*/hwnd, long /*int*/msg,
+			long /*int*/wParam, long /*int*/lParam) {
+		try{
+			if ( (int)msg == WM_NCHITTEST ){
+				int hit = hitTestResize();
+
+				if ( hit != 0 ){
+					return( hit );
+				}
+			}
+
+			if ( useLong ){
+				return (Long)mCallWindowProc.invoke(
+					null, new Object[]{ mainOldProc, hwnd, (int)msg, wParam, lParam });
+			}else{
+				return (Integer)mCallWindowProc.invoke(
+					null, new Object[]{ (int)mainOldProc, (int)hwnd, (int)msg, (int)wParam, (int)lParam });
+			}
+		}catch( Throwable e ){
+			return( 0 );
+		}
 	}
 
 	static int /*long*/messageProc2(int /*long*/hwnd, int /*long*/msg,

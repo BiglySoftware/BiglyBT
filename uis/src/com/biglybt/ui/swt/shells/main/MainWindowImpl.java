@@ -53,6 +53,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.skin.SkinPropertiesImpl;
@@ -122,6 +123,8 @@ public class MainWindowImpl
 	private final IUIIntializer uiInitializer;
 
 	private SWTSkin skin;
+
+	private HarnessTitleBar titleBar;
 
 	private IMainMenu menu;
 
@@ -442,7 +445,9 @@ public class MainWindowImpl
 				+ (SystemTime.getCurrentTime() - startTime) + "ms");
 		startTime = SystemTime.getCurrentTime();
 
-		shell = existing_uif==null?new Shell(Utils.getDisplay(), SWT.SHELL_TRIM):existing_uif.getMainShell();
+		int shellStyle = Constants.isWindows ? ( SWT.NO_TRIM | SWT.RESIZE ) : SWT.SHELL_TRIM;
+
+		shell = existing_uif==null?new Shell(Utils.getDisplay(), shellStyle):existing_uif.getMainShell();
 
 		if (Constants.isWindows) {
 			try {
@@ -512,6 +517,8 @@ public class MainWindowImpl
 			increaseProgress(uiInitializer, "v3.splash.initSkin");
 
 			skin.layout();
+
+			installTitleBar();
 
 			// 0ms
 			//System.out.println("skin layout took " + (SystemTime.getCurrentTime() - startTime) + "ms");
@@ -1688,6 +1695,17 @@ public class MainWindowImpl
 					UIFunctionsManagerSWT.getUIFunctionsSWT().openTorrentWindow();
 				}
 			});
+		}else if (skinObject != null && skinObject.getControl() != null) {
+			Control control = skinObject.getControl();
+			control.setCursor(control.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+			control.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseUp(MouseEvent e) {
+					if (e.button == 1) {
+						UIFunctionsManagerSWT.getUIFunctionsSWT().openTorrentWindow();
+					}
+				}
+			});
 		}
 
 		skinObject = skin.getSkinObject("quick-links");
@@ -1863,6 +1881,120 @@ public class MainWindowImpl
 						topbarMenu);
 			}
 		}
+
+		installHarnessHome( mdi );
+
+		HarnessDialogTheme.install( shell.getDisplay(), shell );
+	}
+
+	private void
+	installTitleBar()
+	{
+		if ( !Constants.isWindows || skin == null ){
+			return;
+		}
+
+		Control area = null;
+
+		SWTSkinObject areaObject = skin.getSkinObject( "main.shell.area" );
+
+		if ( areaObject != null ){
+			area = areaObject.getControl();
+		}
+
+		if ( area == null ){
+			for ( Control c: shell.getChildren()){
+				if ( c instanceof Composite ){
+					area = c;
+					break;
+				}
+			}
+		}
+
+		if ( area == null ){
+			return;
+		}
+
+		titleBar = new HarnessTitleBar( shell );
+
+		FormData barData = new FormData();
+		barData.left = new FormAttachment( 0, 0 );
+		barData.right = new FormAttachment( 100, 0 );
+		barData.top = new FormAttachment( 0, 0 );
+		barData.height = 38;
+		titleBar.setLayoutData( barData );
+
+		if ( area.getLayoutData() instanceof FormData ){
+			FormData areaData = (FormData)area.getLayoutData();
+			areaData.top = new FormAttachment( titleBar, 0 );
+			areaData.bottom = new FormAttachment( 100, 0 );
+		}
+
+		shell.setBackground( shell.getDisplay().getSystemColor( SWT.COLOR_BLACK ));
+
+		titleBar.moveAbove( area );
+		shell.layout( true, true );
+
+	}
+
+	private void
+	installHarnessHome(
+		BaseMDI		mdi )
+	{
+		SWTSkinObject skinObject = skin.getSkinObject( "sidebar-contents" );
+
+		if ( skinObject == null ){
+			skinObject = skin.getSkinObject( "main.sidebar.content" );
+		}
+
+		if ( skinObject == null || !( skinObject.getControl() instanceof Composite )){
+			return;
+		}
+
+		final Composite host = (Composite)skinObject.getControl();
+
+		final Composite overlay = new Composite( host, SWT.NONE );
+		overlay.setBackground( host.getDisplay().getSystemColor( SWT.COLOR_BLACK ));
+		overlay.setLayoutData( Utils.getFilledFormData());
+
+		new com.biglybt.ui.swt.views.skin.HarnessHomePanel( overlay );
+
+		host.layout( true, true );
+		overlay.layout( true, true );
+
+		overlay.moveAbove( null );
+
+		// Harness starts on Home. The MDI selection event may not fire for the
+		// initial entry, so show the surface until another entry is selected.
+		overlay.setVisible( true );
+
+		mdi.addListener(
+			new com.biglybt.ui.mdi.MdiListener()
+			{
+				@Override
+				public void
+				mdiEntrySelected(
+					MdiEntry	newEntry,
+					MdiEntry	oldEntry )
+				{
+					boolean home =
+						newEntry != null &&
+						MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD.equals( newEntry.getId());
+
+					overlay.setVisible( home );
+
+					if ( home ){
+						overlay.moveAbove( null );
+					}
+				}
+
+				@Override
+				public void
+				mdiDisposed(
+					MultipleDocumentInterface mdi )
+				{
+				}
+			});
 	}
 
 	private void addMenuAndNonTextChildren(Composite parent, Menu menu) {
@@ -1910,8 +2042,8 @@ public class MainWindowImpl
 		}
 		*/
 		
-		final Text text = new Text(cArea, (DARK_MODE && !( Utils.isGTK3 ))?SWT.BORDER:SWT.NONE);
-		text.setMessage(MessageText.getString("v3.MainWindow.search.defaultText"));
+		final Text text = new Text(cArea, SWT.NONE);
+		text.setMessage("Search torrents, peers, settings...");
 		FormData filledFormData = Utils.getFilledFormData();
 		
 			// not great but as of Dec 2021 seems to be the best way to make things actually look ok...
