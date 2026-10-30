@@ -4498,13 +4498,14 @@ public class FileUtil {
 							String[] names = FileUtil.getFileStoreNames( timeout );
 							
 								// on linux at least the format is 
-								//     mount point " " (...)
+								//     mount point " (" ... ")"
+								// and the mount point itself can contain spaces
 							
 							List<File> files = new ArrayList<>();
 							
 							for ( String name: names ){
 								
-								int pos = name.indexOf( " " );
+								int pos = name.lastIndexOf( " (" );
 								
 								if ( pos != -1 ){
 									
