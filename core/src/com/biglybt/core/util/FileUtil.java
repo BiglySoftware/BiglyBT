@@ -4497,18 +4497,15 @@ public class FileUtil {
 							
 							String[] names = FileUtil.getFileStoreNames( timeout );
 							
-								// on linux at least the format is 
-								//     mount point " " (...)
-							
 							List<File> files = new ArrayList<>();
 							
 							for ( String name: names ){
 								
-								int pos = name.indexOf( " " );
+								String mount_point = getMountPoint( name );
 								
-								if ( pos != -1 ){
+								if ( mount_point != null ){
 									
-									File mount = new File( name.substring( 0, pos ));
+									File mount = new File( mount_point );
 									
 									if ( mount.exists()){
 										
@@ -4536,6 +4533,25 @@ public class FileUtil {
 		sem.reserve( timeout );
 		
 		return( last_roots );
+	}
+	
+	/**
+	 * On Linux at least a file store name has the form mount point " (" ... ")", and the
+	 * mount point itself can contain spaces ("/media/user/My Drive (/dev/sdb1)")
+	 * @return the mount point, or null if the name doesn't have that form
+	 */
+	static String
+	getMountPoint(
+		String		file_store_name )
+	{
+		int pos = file_store_name.lastIndexOf( " (" );
+		
+		if ( pos == -1 ){
+			
+			return( null );
+		}
+		
+		return( file_store_name.substring( 0, pos ));
 	}
 	
 	public interface
