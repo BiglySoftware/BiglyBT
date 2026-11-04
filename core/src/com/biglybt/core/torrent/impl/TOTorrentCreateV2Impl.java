@@ -48,6 +48,7 @@ TOTorrentCreateV2Impl
 	private int		file_index	= 0;
 	
 	private int		synthetic_pad_file_count;
+	private long	synthetic_pad_file_done_at = -1;
 	
 	private int		files_ignored;	
 	
@@ -209,7 +210,15 @@ TOTorrentCreateV2Impl
 		
 		if ( total_file_size % piece_size != 0 ){
 			
-			synthetic_pad_file_count++;
+				// prevent zero length files (which don't generate pad files ) from incorrectly
+				// incrementing the pad file count
+			
+			if ( synthetic_pad_file_done_at != total_file_size ){
+			
+				synthetic_pad_file_done_at = total_file_size;
+			
+				synthetic_pad_file_count++;
+			}
 		}
 		
 		FileDetails result = handleFile( file, relative_path );

@@ -844,8 +844,14 @@ DownloadManagerImpl
 								int	index 	= entry.getKey();
 								File target = entry.getValue();
 	
-								dms.setFileLink( index, files[index].getFile( false ), target );
-	
+								if ( index >= 0 && index < files.length ){
+								
+									dms.setFileLink( index, files[index].getFile( false ), target );
+									
+								}else{
+									
+									Debug.out( "Invalid file linkage map, index=" + index + ", target=" + target );
+								}
 							}
 						}finally{
 	
