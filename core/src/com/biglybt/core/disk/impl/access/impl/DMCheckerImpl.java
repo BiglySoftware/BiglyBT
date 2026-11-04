@@ -888,7 +888,7 @@ DMCheckerImpl
 						    			// so ignore them as they don't contribute to the hash.
 						    			// for the last piece there may be some trailing zero length files as well
 						    		
-						    		while ( v2_file_length == 0 && offset < pieceList.size()){
+						    		while ( v2_file_length == 0 && offset < pieceList.size() -1 ){
 						    			
 						    			offset++;
 						    			
