@@ -80,6 +80,8 @@ RSSUtils
 				"EEE MMM dd HH z yyyy",					// Fri Sep 26 00 EDT 2008
 				"yyyy-MM-dd HH:mm:ss",					// 2009-02-08 22:56:45
 				"yyyy-MM-dd",							// 2009-02-08
+				"EEE dd MMM yyyy HH:mm:ss",				// Fri 26 Sep 2008 00:00:00
+
 			};
 
 				// remove commas as these keep popping up in silly places
