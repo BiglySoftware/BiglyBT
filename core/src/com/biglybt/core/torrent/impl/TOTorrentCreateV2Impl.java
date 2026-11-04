@@ -492,7 +492,9 @@ TOTorrentCreateV2Impl
 					
 						TOTorrentFileImpl v1_file = v1_files[i];
 						
-						if ( !v1_file.isPadFile()){
+							// pad files and zero length files have no hash tree
+						
+						if ( !v1_file.isPadFile() && v1_file.getLength() > 0 ){
 						
 							TOTorrentFileImpl v2_file = v2_files.get(i);
 							
