@@ -876,14 +876,33 @@ DMCheckerImpl
 						    	
 						    	if ( hash_version == 2 ){
 						    		
-						    		DMPieceMapEntry piece_entry = pieceList.get(0);
+						    		int offset = 0;
+						    				
+						    		DMPieceMapEntry piece_entry = pieceList.get(offset);
 						    		
 						    		v2_file_length = piece_entry.getFile().getLength();					    		
 						    		
-										// with v2 a piece only contains > 1 file if the second file is a dummy padding file added
+						    		int useful_files = pieceList.size();
+						    		
+						    			// any applicable zero length files will have been lumped into the start of the piece
+						    			// so ignore them as they don't contribute to the hash.
+						    			// for the last piece there may be some trailing zero length files as well
+						    		
+						    		while ( v2_file_length == 0 && offset < pieceList.size()){
+						    			
+						    			offset++;
+						    			
+						    			useful_files--;
+						    				
+						    			piece_entry = pieceList.get( offset );
+						    				
+						    			v2_file_length = piece_entry.getFile().getLength();		
+						    		}
+						    		
+										// with v2 a piece only contains > 1 (non-zero-length) file if the second file is a dummy padding file added
 										// to 'make things work'
 
-						    		if ( pieceList.size() == 2 ){
+						    		if ( useful_files >= 2 ){
 
 							    		int v2_piece_length = piece_entry.getLength();
 							    		

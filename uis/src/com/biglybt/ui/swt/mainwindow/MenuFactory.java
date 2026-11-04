@@ -1779,6 +1779,23 @@ public class MenuFactory
 							.append(NL);
 					}
 
+					byte[][] pieces = torrent.getPieces();
+					
+					content.append( "Pieces: " + pieces.length + ", size=" + torrent.getPieceLength() + NL );
+					
+					for ( int i=0; i<pieces.length;i++){
+						
+						if ( i < 32 ){
+							
+							content.append( "\t" + ByteFormatter.nicePrint( pieces[i] ) + NL );
+							
+						}else{
+							
+							content.append( "\t..." +NL );
+							
+							break;
+						}
+					}
 				}catch( Throwable e ){
 
 					content.append( Debug.getNestedExceptionMessage( e ));
