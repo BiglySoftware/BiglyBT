@@ -41,6 +41,7 @@ public class SBC_DashboardView
 	private static boolean core_running_listener_added;
 	
 	private Composite 			dashboard_composite;
+	private HarnessHomePanel	harness_home;
 	
 	private final boolean	destroy_when_hidden = false;
 	
@@ -172,7 +173,32 @@ public class SBC_DashboardView
 	{
 		if ( !hidden ) {
 		
-			MainMDISetup.getSb_dashboard().build( dashboard_composite );
+			for ( org.eclipse.swt.widgets.Control c: dashboard_composite.getChildren()){
+				c.dispose();
+			}
+			
+			harness_home = null;
+			
+			SB_Dashboard sbd = MainMDISetup.getSb_dashboard();
+			
+			if ( sbd != null && ( sbd.getMainItemCount() == 0 || sbd.isHarnessHomeOnly() )){
+				
+				try{
+					harness_home = new HarnessHomePanel( dashboard_composite );
+				}catch( Throwable e ){
+					com.biglybt.core.util.Debug.out( e );
+				}
+				
+			}else{
+				
+				dashboard_composite.setLayout( new org.eclipse.swt.layout.FormLayout());
+				
+				if ( sbd != null ){
+					sbd.build( dashboard_composite );
+				}
+			}
+		
+			dashboard_composite.layout( true, true );
 		
 			is_built = true;
 		}

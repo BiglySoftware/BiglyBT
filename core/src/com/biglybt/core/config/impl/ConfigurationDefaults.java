@@ -849,7 +849,7 @@ public class ConfigurationDefaults {
     def.put( "search.showRCMView", FALSE );
     def.put( "search.rss.template.timeout", 20 );
     
-    def.put( "Use System Theme", FALSE );
+    def.put( "Use System Theme", TRUE );
     
     def.put( "installer.mode", "" );		// the type of the last installer used (see installer code for values)
 }

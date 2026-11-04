@@ -675,12 +675,18 @@ public class SideBar
 	setBackground(
 		SWTSkinProperties	sp )
 	{
-		if ( Utils.isDarkAppearanceNativeWindows()){
-			
-			bg = Colors.getWindowsDarkSystemColor( tree.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND ); 
-			
+		Color skinBg = sp.getColor( "color.sidebar.bg" );
+
+		if ( skinBg != null ){
+
+			bg = skinBg;
+
+		}else if ( Utils.isDarkAppearanceNativeWindows()){
+
+			bg = Colors.getWindowsDarkSystemColor( tree.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND );
+
 		}else{
-		
+
 			bg = sp.getColor("color.sidebar.bg");
 		}
 	}
@@ -750,7 +756,16 @@ public class SideBar
 		tree.setBackground(bg);
 		tree.setForeground(fg);
 
-		fontHeader = FontUtils.getFontWithStyle(tree.getFont(), SWT.BOLD, 1.0f);
+		Font treeFont = new Font( tree.getDisplay(), "Segoe UI", 10, SWT.NORMAL );
+		tree.setFont( treeFont );
+		tree.addDisposeListener(
+			ev -> {
+				if ( !treeFont.isDisposed()){
+					treeFont.dispose();
+				}
+			});
+
+		fontHeader = new Font( tree.getDisplay(), "Segoe UI", 9, SWT.BOLD );
 
 		// after a scroll we need to recalculate the hit areas as they will have moved!
 

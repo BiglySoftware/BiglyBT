@@ -353,23 +353,28 @@ public class Utils
 	{
 		display	= _display;
 
-		if ( UI.useSystemTheme() && Constants.isWindows ){
+		if ( Constants.isWindows ){
 			
 			try{
-				// OS.setTheme( true );
-				// requires recent SWT which requires Java 11+....
-				// support still flakey...
-
+				// Harness Edition is dark-first. Newer SWT builds can also
+				// ask Windows to render native chrome in dark mode.
 				try{
 					Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
-					
+
+					try{
+						Method setMode = OS.getMethod( "SetPreferredAppMode", int.class );
+
+						setMode.invoke( null, 2 );
+					}catch( Throwable ignore ){
+					}
+
 					Method setTheme = OS.getMethod( "setTheme", boolean.class );
 					
 					setTheme.invoke( null, true );
 					
 				}catch( Throwable e ){
 					
-					Debug.out( e );
+					Debug.outNoStack( "Native dark theme unavailable" );
 				}
 				
 				force_dark_appearance = true;
@@ -456,8 +461,11 @@ public class Utils
 			if ( widget instanceof CTabFolder ){
 				
 				CTabFolder control = (CTabFolder)widget;
-				
-				control.setSelectionForeground( widget_fg );
+
+				control.setBackground( widget_bg );
+				control.setForeground( widget_fg );
+				control.setSelectionBackground( ColorCache.getColor( control.getDisplay(), 38, 38, 42 ));
+				control.setSelectionForeground( ColorCache.getColor( control.getDisplay(), 231, 231, 233 ));
 				control.setHighlightEnabled( false );
 			}
 			

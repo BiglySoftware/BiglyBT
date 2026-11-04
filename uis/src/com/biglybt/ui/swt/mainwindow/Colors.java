@@ -279,7 +279,9 @@ public class Colors implements ParameterListener {
 			sat = 127;
 			hue = 155;
 		} else {
-			lum += 30; // it's usually harder to see difference in darkness
+			// Harness uses a very quiet zebra stripe in dark mode. The old
+			// +30 luminance jump produced bands that read like table borders.
+			lum += 3;
 		}
 		hslColor.setLuminence(lum);
 		hslColor.setHue(hue);
@@ -563,31 +565,31 @@ public class Colors implements ParameterListener {
 		
 			case SWT.COLOR_WIDGET_FOREGROUND:
 			case SWT.COLOR_LIST_FOREGROUND:{
-				return( ColorCache.getColor( d, 204, 204, 204 ));
+				return( ColorCache.getColor( d, 231, 231, 233 ));
 			}
 			case SWT.COLOR_WIDGET_BACKGROUND:{
 				
-				return( ColorCache.getColor( d,  47, 47, 47 ));
+				return( ColorCache.getColor( d,  21, 21, 23 ));
 			}
 			case SWT.COLOR_LIST_BACKGROUND:{
 				
-				return( ColorCache.getColor( d,  38, 38, 38 ));
+				return( ColorCache.getColor( d,  21, 21, 23 ));
 			}
 			case SWT.COLOR_WIDGET_NORMAL_SHADOW:{
 				
-				return( ColorCache.getColor( d,  51, 51, 51 ));
+				return( ColorCache.getColor( d,  42, 42, 45 ));
 			}
 			case SWT.COLOR_WIDGET_LIGHT_SHADOW:{
 				
-				return( ColorCache.getColor( d,  77, 77, 77 ));
+				return( ColorCache.getColor( d,  34, 34, 37 ));
 			}
 			case SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW:{
 				
-				return( ColorCache.getColor( d,  119, 119, 119 ));
+				return( ColorCache.getColor( d,  42, 42, 46 ));
 			}
 			case SWT.COLOR_WIDGET_BORDER:{
 				
-				return( ColorCache.getColor( d,  100, 100, 100 ));
+				return( ColorCache.getColor( d,  42, 42, 45 ));
 			}
 		}
 		
