@@ -29,6 +29,7 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.StringInterner;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 
@@ -500,19 +501,23 @@ TagUtils
     	return( applicable_folders );
 	}
 	
+	private static Map<String,Object[]> amoct_cache = new HashMap<>();
+	
 	public static List<Tag>
 	getActiveMoveOnCompleteTags(
 		DownloadManager			dm,
 		boolean					allow_caching,
 		Consumer<String>		logger )
 	{
+		long now = SystemTime.getMonotonousTime();
+		
 		if ( allow_caching ){
 			
 			Object[] cache = (Object[])dm.getUserData( MOC_CACHE );
 			
 			if ( cache != null ){
 				
-				if ( SystemTime.getMonotonousTime() - (Long)cache[0] < 10*1000 ){
+				if ( now - (Long)cache[0] < 10*1000 ){
 					
 					return((List<Tag>)cache[1]);
 				}
@@ -537,12 +542,43 @@ TagUtils
 	
 		    			if ( move_to != null ){
 	
-		    				if ( !move_to.exists()){
-	
-		    					move_to.mkdirs();
+		    				Boolean move_to_ok = null;
+		    				
+		    				if ( allow_caching ){
+		    					
+		    					synchronized( amoct_cache ){
+		    						
+			    					Object[] cache = amoct_cache.get( move_to.getAbsolutePath());
+			    					
+			    					if ( cache != null ){
+			    						
+			    						if ( now - (Long)cache[0] < 10*1000 ){
+			    							
+			    							move_to_ok = (Boolean)cache[1];					
+			    						}
+			    					}
+		    					}
 		    				}
+		    				
+		    				if ( move_to_ok == null ){
+		    				
+		    					if ( !move_to.exists()){
 	
-		    				if ( move_to.isDirectory() && move_to.canWrite()){
+		    						move_to.mkdirs();
+		    					}
+	
+		    					move_to_ok = move_to.isDirectory() && move_to.canWrite();
+		    					
+		    					if ( allow_caching ){
+		    						
+		    						synchronized( amoct_cache ){
+		    							
+		    							amoct_cache.put( move_to.getAbsolutePath(), new Object[]{ now, move_to_ok });
+		    						}
+		    					}
+		    				}
+		    				
+		    				if ( move_to_ok ){
 	
 		    					applicable_tags.add( tag );
 	
