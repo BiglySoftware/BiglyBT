@@ -141,6 +141,8 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 */
 	public List<DownloadManager> getDownloadManagers();
 
+	public int getDownloadManagersMutationCount();
+	
 	/**
 	 * Retrieve the DownloadManager associated with a TOTorrent object
 	 *

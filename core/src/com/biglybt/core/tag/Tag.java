@@ -206,6 +206,9 @@ Tag
 	hasTaggable(
 		Taggable	t );
 
+	public int
+	getTaggablesMutationCount();
+	
 	public default List<Tag>
 	dependsOnTags()
 	{

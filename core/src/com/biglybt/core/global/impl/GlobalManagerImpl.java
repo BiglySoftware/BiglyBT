@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -304,9 +305,9 @@ public class GlobalManagerImpl
 
 	private Object								managers_lock		= new Object();
 	private volatile DownloadManager[] 			managers_list_cow	= new DownloadManager[0];
-	final Map<HashWrapper,DownloadManager>		manager_hash_map	= new ConcurrentHashMap<>();
-	final Map<DownloadManager, DownloadManager> manager_id_set		= new HashMap<>();
-	
+	private final Map<HashWrapper,DownloadManager>		manager_hash_map	= new ConcurrentHashMap<>();
+	private final Map<DownloadManager, DownloadManager> manager_id_set		= new HashMap<>();
+	private final AtomicInteger					mutation_count		= new AtomicInteger();
 	private final GlobalMangerProgressListener	progress_listener;
 	private long								lastListenerUpdate;
 
@@ -1044,6 +1045,15 @@ public class GlobalManagerImpl
     	});
 
     file_merger = new GlobalManagerFileMerger( this );
+    
+    DownloadManagerFactory.addGlobalDownloadListener(
+    	new DownloadManagerAdapter(){
+    
+    		@Override
+    		public void positionChanged(DownloadManager download, int oldPosition, int newPosition){
+    			mutation_count.incrementAndGet();
+    		}
+    	});
     
     COConfigurationManager.addParameterListener(
     	new String[]{
@@ -1840,6 +1850,8 @@ public class GlobalManagerImpl
 
 			   managers_list_cow	= new_download_managers;
 
+			   mutation_count.incrementAndGet();
+			   
 			   manager_id_set.put( download_manager,  download_manager );
 	
 			   if ( hashwrapper != null ){
@@ -1922,6 +1934,10 @@ public class GlobalManagerImpl
 		  
 		  return( result );
 	  }
+  }
+  @Override
+  public int getDownloadManagersMutationCount(){
+	return( mutation_count.get());
   }
 
   @Override
@@ -2057,6 +2073,8 @@ public class GlobalManagerImpl
 
 				  managers_list_cow = new_download_managers;
 
+				  mutation_count.incrementAndGet();
+				  
 				  break;
 			  }
 		  }
@@ -2220,6 +2238,8 @@ public class GlobalManagerImpl
 
 		  managers_list_cow	= new DownloadManager[0];
 
+		  mutation_count.incrementAndGet();
+		  
 		  manager_id_set.clear();
 		  
 		  manager_hash_map.clear();
@@ -3153,6 +3173,8 @@ public class GlobalManagerImpl
 
 		  managers_list_cow = managers_temp;
 
+		  mutation_count.incrementAndGet();
+		  
 		  if (Logger.isEnabled()){
 			  Logger.log(new LogEvent(LOGID, "Saving Download List ("	+ managers_temp.length + " items)"));
 		  }
@@ -3889,6 +3911,8 @@ public class GlobalManagerImpl
 
 			managers_list_cow = managers_temp;
 
+			mutation_count.incrementAndGet();
+			
 			for ( DownloadManager dm: managers_temp ){
 				
 				if (dm.isDownloadComplete(false)){

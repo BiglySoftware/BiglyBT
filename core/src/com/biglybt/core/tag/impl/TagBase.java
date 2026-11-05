@@ -22,6 +22,7 @@ package com.biglybt.core.tag.impl;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
@@ -113,6 +114,8 @@ TagBase
 	private final int	tag_id;
 	private String		tag_name;
 
+	private AtomicInteger	mutation_count = new AtomicInteger();
+	
 	private static final int TL_ADD 	= 1;
 	private static final int TL_REMOVE 	= 2;
 	private static final int TL_SYNC 	= 3;
@@ -2275,6 +2278,8 @@ TagBase
 	addTaggable(
 		Taggable	t )
 	{
+		mutation_count.incrementAndGet();
+		
 		tag_type.tagsOrMembershipChanged();
 		
 		t_listeners.dispatch( TL_ADD, t );
@@ -2291,7 +2296,9 @@ TagBase
 	public void
 	removeTaggable(
 		Taggable	t )
-	{
+	{	
+		mutation_count.incrementAndGet();
+		
 		tag_type.tagsOrMembershipChanged();
 		
 		t_listeners.dispatch( TL_REMOVE, t );
@@ -2299,6 +2306,13 @@ TagBase
 		tag_type.taggableRemoved( this, t );
 	}
 
+	@Override
+	public int 
+	getTaggablesMutationCount()
+	{
+		return( mutation_count.get());
+	}
+	
 	protected void
 	sync()
 	{
@@ -2464,6 +2478,8 @@ TagBase
 
 			tag_type.taggableRemoved( this, t );
 		}
+		
+		mutation_count.incrementAndGet();
 	}
 
 	@Override
