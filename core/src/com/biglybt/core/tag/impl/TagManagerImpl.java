@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreComponent;
@@ -46,6 +47,7 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.tag.impl.TagTypeBase.TagGroupImpl;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
@@ -753,6 +755,13 @@ TagManagerImpl
 
 	private boolean		js_plugin_install_tried;
 
+	private AtomicInteger	metadata_name_mutation_count = new AtomicInteger();
+	private volatile int	name_to_tags_map_moc;
+	
+	private volatile Map<String,List<Tag>>	name_to_tags_raw_map		= null;
+	private volatile Map<String,List<Tag>>	name_to_tags_localized_map	= null;
+
+	
 	private
 	TagManagerImpl()
 	{
@@ -1614,6 +1623,16 @@ TagManagerImpl
 		TagTypeDownloadInternal ttdi = new TagTypeDownloadInternal( resolver );
 	}
 
+	protected void
+	metaDataChanged(
+		int		subtype )
+	{
+		if ( subtype == TagEvent.EST_METADATA_NAME_CHANGED ){
+					
+			metadata_name_mutation_count.incrementAndGet();
+		}
+	}
+	
 	private void
 	removeTaggable(
 		TaggableResolver	resolver,
@@ -2026,25 +2045,72 @@ TagManagerImpl
 			return( result );
 		}
 	}
-	
+		
 	@Override
 	public List<Tag> 
 	getTagsByName(
-		String name, 
-		boolean is_localized)
+		String		name, 
+		boolean		is_localized )
 	{
-		List<Tag>	result = new ArrayList<Tag>();
-
-		for ( TagType tt: tag_types ){
-
-			Tag t = tt.getTag( name, is_localized );
-			
-			if ( t != null ){
+		Map<String,List<Tag>> map = is_localized?name_to_tags_localized_map:name_to_tags_raw_map;
+		
+		int tag_mut = TagTypeBase.getTagMut();
+		
+		int md_mut = metadata_name_mutation_count.get();
+		
+		int mut = tag_mut + md_mut;
 				
-				result.add( t );
+		if ( map == null || mut != name_to_tags_map_moc ){
+		
+			Map<String,List<Tag>> raw_map		= new HashMap<>();
+			Map<String,List<Tag>> localized_map	= new HashMap<>();
+				
+			map = is_localized?localized_map:raw_map;
+			
+			for ( TagType tt: getTagTypes()){
+				
+				for ( Tag t: tt.getTags()){
+					
+					String name_raw			= t.getTagName( false );
+					String name_localized	= t.getTagName( true );
+					
+					List<Tag> tags_raw = raw_map.get( name_raw );
+					
+					if ( tags_raw == null ){
+						
+						tags_raw = new ArrayList<>(1);
+						
+						raw_map.put( name_raw,  tags_raw );
+					}
+					
+					tags_raw.add( t );
+					
+					List<Tag> tags_localized = localized_map.get( name_localized );
+					
+					if ( tags_localized == null ){
+						
+						tags_localized = new ArrayList<>(1);
+						
+						localized_map.put( name_localized,  tags_localized );
+					}
+					
+					tags_localized.add( t );
+				}
 			}
+			
+			name_to_tags_raw_map		= raw_map;
+			name_to_tags_localized_map	= localized_map;
+			
+			name_to_tags_map_moc		= mut;
 		}
-
+		
+		List<Tag> result = map.get( name );
+		
+		if ( result == null ){
+			
+			result = Collections.emptyList();
+		}
+		
 		return( result );
 	}
 	

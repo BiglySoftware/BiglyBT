@@ -415,9 +415,7 @@ TagPropertyConstraintHandler
 					processing_queue.clear();
 
 					dispatcher.dispatch(()->{
-						
-						updateCache( tag_manager );
-						
+												
 						for ( Object[] entry: to_do ){
 	
 							TagConstraint 	constraint 	= (TagConstraint)entry[0];
@@ -886,8 +884,6 @@ TagPropertyConstraintHandler
 				public void
 				runSupport()
 				{
-					updateCache( tag_manager );
-					
 					synchronized( freq_lim_pending ){
 
 						for ( Map.Entry<DownloadManager,Set<TagConstraint>> entry: freq_lim_pending.entrySet()){
@@ -1173,8 +1169,6 @@ TagPropertyConstraintHandler
 				public void
 				runSupport()
 				{
-					updateCache( tag_manager );
-					
 					List<TagConstraint>	cons;
 
 					synchronized( constrained_tags ){
@@ -1210,8 +1204,6 @@ TagPropertyConstraintHandler
 				public void
 				runSupport()
 				{
-					updateCache( tag_manager );
-					
 					List<TagConstraint>	cons;
 
 					synchronized( constrained_tags ){
@@ -1263,8 +1255,6 @@ TagPropertyConstraintHandler
 				public void
 				runSupport()
 				{
-					updateCache( tag_manager );
-					
 					List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
 
 					constraint.apply( dms );
@@ -1292,8 +1282,6 @@ TagPropertyConstraintHandler
 				public void
 				runSupport()
 				{
-					updateCache( tag_manager );
-					
 					for ( TagConstraint con: cons ){
 
 						con.apply( dms );
@@ -1320,8 +1308,6 @@ TagPropertyConstraintHandler
 				public void
 				runSupport()
 				{
-					updateCache( tag_manager );
-					
 					List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
 
 					List<TagConstraint>	cons;
@@ -1339,68 +1325,6 @@ TagPropertyConstraintHandler
 			});
 		
 		return( true );
-	}
-
-	private static Map<String,List<Tag>> localized_tag_cache = null;
-	
-	private static List<Tag>
-	getLocalizedTags(
-		TagManagerImpl	tag_man,
-		String			name )
-	{
-		if ( localized_tag_cache == null ){
-			
-			updateLocalizedTagCache( tag_man );
-		}
-		
-		return( localized_tag_cache.get( name ));
-	}
-	
-	private static void
-	updateLocalizedTagCache(
-		TagManagerImpl	tag_man )
-	{
-		Map<String,List<Tag>> cache = new HashMap<>();
-		
-		for ( TagType tt: tag_man.getTagTypes()){
-			
-			for ( Tag t: tt.getTags()){
-				
-				String name = t.getTagName( true );
-				
-				List<Tag> tags = cache.get( name );
-				
-				if ( tags == null ){
-					
-					tags = new ArrayList<>(1);
-					
-					cache.put( name,  tags );
-				}
-				
-				tags.add( t );
-			}
-		}
-		
-		localized_tag_cache = cache;
-	}
-	
-	private static long last_cache_update = -1;
-	
-	private static void
-	updateCache(
-		TagManagerImpl	tag_man )
-	{
-		long now = SystemTime.getMonotonousTime();
-		
-		if ( last_cache_update == -1 || now - last_cache_update > 15*1000 ){
-			
-			last_cache_update = now;
-			
-			if ( localized_tag_cache != null ){
-				
-				updateLocalizedTagCache( tag_man );
-			}
-		}
 	}
 	
 	public TagConstraint
@@ -3802,7 +3726,7 @@ TagPropertyConstraintHandler
 
 						String tag_name = getStringParam( params, 0, debug );
 						
-						List<Tag> hits = getLocalizedTags( handler.tag_manager, tag_name );
+						List<Tag> hits = handler.tag_manager.getTagsByName( tag_name, true );
 						
 						for ( Tag t: hits ){
 

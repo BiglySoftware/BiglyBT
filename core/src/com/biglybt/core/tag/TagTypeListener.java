@@ -44,10 +44,18 @@ TagTypeListener
 		public int ET_TAG_ATTENTION_REQUESTED		= 3;
 		public int ET_TAG_METADATA_CHANGED			= 4;
 		
+		public int EST_NONE							= 0;
+		
+		public int EST_METADATA_OTHER_CHANGED		= 0;
+		public int EST_METADATA_NAME_CHANGED		= 1;
+		
 		public Tag
 		getTag();
 
 		public int
 		getEventType();
+		
+		public int
+		getEventSubType();
 	}
 }

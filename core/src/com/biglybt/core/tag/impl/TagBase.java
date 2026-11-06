@@ -32,6 +32,7 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureExecOnAssign.OptionsTemplateHandler;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
@@ -369,7 +370,7 @@ TagBase
 
 		tag_name = name;
 
-		tag_type.fireMetadataChanged( this );
+		tag_type.fireMetadataChanged( this, TagEvent.EST_METADATA_NAME_CHANGED );
 	}
 
 		// public

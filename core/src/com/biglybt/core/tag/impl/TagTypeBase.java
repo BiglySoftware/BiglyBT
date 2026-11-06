@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.util.*;
 import com.biglybt.util.MapUtils;
 
@@ -52,9 +53,17 @@ TagTypeBase
 
 	private static final TagManagerImpl manager = TagManagerImpl.getSingleton();
 
+	private static final AtomicInteger	all_tags_mut = new AtomicInteger();
+	
 	private static final AtomicInteger	all_tags_or_tag_membership_mut = new AtomicInteger();
 	
-	public static int
+	protected static int
+	getTagMut()
+	{
+		return( all_tags_mut.get());
+	}
+	
+	protected static int
 	getTagAndTaggableMut()
 	{
 		return( all_tags_or_tag_membership_mut.get());
@@ -79,10 +88,12 @@ TagTypeBase
 						listener.tagTypeChanged( TagTypeBase.this );
 
 					}else{
-
-						final Tag		tag			= (Tag)value;
+						final Object[]	entry		= (Object[])value;
+						
+						final Tag		tag			= (Tag)entry[0];
 						final int		event_type;
-
+						final int		event_subtype = (Integer)entry[1];
+						
 						if ( type == TTL_ADD ){
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_ADDED;
@@ -120,6 +131,11 @@ TagTypeBase
 								public int getEventType() {
 									return( event_type );
 								}
+								
+								@Override
+								public int getEventSubType(){
+									return( event_subtype );
+								}
 							});
 					}
 				}
@@ -144,6 +160,7 @@ TagTypeBase
 		
 		TTP_TAGS_FOR_TAGGABLE_CACHE = "TagTypeBase::tags_for_taggable_cache::" + tag_type;
 		
+		all_tags_mut.incrementAndGet();
 		all_tags_or_tag_membership_mut.incrementAndGet();
 	}
 
@@ -285,7 +302,9 @@ TagTypeBase
 
 		tagsOrMembershipChanged();
 		
-		tt_listeners.dispatch( TTL_ADD, t );
+		all_tags_mut.incrementAndGet();
+		
+		tt_listeners.dispatch( TTL_ADD, new Object[]{ t, TagEvent.EST_NONE });
 	}
 
 	@Override
@@ -297,7 +316,9 @@ TagTypeBase
 
 		tagsOrMembershipChanged();
 		
-		tt_listeners.dispatch( TTL_REMOVE, t );
+		all_tags_mut.incrementAndGet();
+		
+		tt_listeners.dispatch( TTL_REMOVE, new Object[]{ t, TagEvent.EST_NONE });
 
 		manager.removeConfig( t );
 	}
@@ -306,7 +327,7 @@ TagTypeBase
 	requestAttention(
 		Tag	t )
 	{
-		tt_listeners.dispatch( TTL_ATTENTION_REQUESTED, t );
+		tt_listeners.dispatch( TTL_ATTENTION_REQUESTED, new Object[]{ t, TagEvent.EST_NONE });
 	}
 
 	@Override
@@ -421,15 +442,25 @@ TagTypeBase
 	private void
 	fireMembershipChanged(
 		Tag	t )
-	{
-		tt_listeners.dispatch( TTL_TAG_MEMBERHIP_CHANGE, t );
+	{		
+		tt_listeners.dispatch( TTL_TAG_MEMBERHIP_CHANGE, new Object[]{ t, TagEvent.EST_NONE });
 	}
 	
 	protected void
 	fireMetadataChanged(
 		Tag	t )
 	{
-		tt_listeners.dispatch( TTL_TAG_METADATA_CHANGE, t );
+		fireMetadataChanged( t, TagEvent.EST_METADATA_OTHER_CHANGED );
+	}
+	
+	protected void
+	fireMetadataChanged(
+		Tag	t,
+		int	st )
+	{
+		manager.metaDataChanged( st );
+		
+		tt_listeners.dispatch( TTL_TAG_METADATA_CHANGE, new Object[]{ t, st });
 	}
 
 	@Override
@@ -463,6 +494,11 @@ TagTypeBase
 							@Override
 							public int getEventType() {
 								return( ET_TAG_ADDED );
+							}
+							
+							@Override
+							public int getEventSubType(){
+								return( EST_NONE );
 							}
 						});
 
