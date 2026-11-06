@@ -1094,6 +1094,10 @@ TOTorrentFileHashTreeImpl
 				}
 			}
 			
+			if ( missing_proofs > proof_layers ){
+				
+				missing_proofs = proof_layers;
+			}
 			
 			byte[]	tree_layer = local_tree[layer_index];
 						
