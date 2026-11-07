@@ -495,9 +495,15 @@ TOTorrentCreateV2Impl
 				
 				TOTorrentFileImpl[]	v1_files = torrent.getFiles();
 				
-				if ( v1_files.length == v2_files.size()){
+					// some torrents have an unnecessary trailing pad file in the V1 file list
 				
-					for ( int i=0; i<v1_files.length; i++){
+				int num_v1 = v1_files.length;
+				int	num_v2 = v2_files.size();
+				
+				if ( 	( num_v1 == num_v2 ) || 
+						( num_v1 == num_v2 + 1 && v1_files[num_v1-1].isPadFile())){
+				
+					for ( int i=0; i<num_v2; i++){
 					
 						TOTorrentFileImpl v1_file = v1_files[i];
 						
