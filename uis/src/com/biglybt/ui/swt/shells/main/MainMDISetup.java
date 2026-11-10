@@ -738,6 +738,33 @@ public class MainMDISetup
 
 											return( num2 + " | " + num1 );										
 											
+										}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+											
+											int	pub = 0;
+											int	anon = 0;
+
+											List<ChatInstance> chats = bp.getChats();
+											
+											for ( ChatInstance chat: chats){
+
+												if ( !chat.isInvisible()){
+													
+													if ( chat.isAnonymous()){
+
+														anon++;
+														
+													}else{
+														
+														pub++;
+													}
+												}
+											}
+											
+											return(
+												MessageText.getString( "label.public.medium" ) + ": " + pub + ", " +
+												MessageText.getString( "label.anon.medium" ) + ": " + anon );
+														
+											
 										}else if ( propertyID == TITLE_INDICATOR_COLOR){
 
 											for ( ChatInstance chat: bp.getChats()){
