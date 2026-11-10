@@ -21,6 +21,7 @@ FEATURE: UI    | Add Notifications tab header support [Parg]
 FEATURE: UI    | Support "vitality indicators" in dashboard tabs [Parg]
 FEATURE: UI    | Support tab header numerics for MyTracker and MyShares [Parg]
 FEATURE: UI    | Added a preset reset button [Parg]
+FEATURE: UI    | Show the total number of chats in sidebar and chat overview [Parg]
 
 CHANGE: Core   | Assume UTF-8 keys for bencode<->json conversion tool [Parg]
 CHANGE: Core   | Enable the enabling of the existing multiple UDP listen port feature [Parg]
