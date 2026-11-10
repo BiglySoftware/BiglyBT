@@ -718,24 +718,26 @@ public class MainMDISetup
 											
 										}else if ( propertyID == TITLE_INDICATOR_TEXT ){
 
-											int	num = 0;
+											int	num1 = 0;
+											int	num2 = 0;
 
-											for ( ChatInstance chat: bp.getChats()){
+											List<ChatInstance> chats = bp.getChats();
+											
+											for ( ChatInstance chat: chats){
 
+												if ( !chat.isInvisible()){
+													
+													num1++;
+												}
+												
 												if ( chat.getMessageOutstanding()){
 
-													num++;
+													num2++;
 												}
 											}
 
-											if ( num > 0 ){
-
-												return( String.valueOf( num ));
-
-											}else{
-
-												return( null );
-											}
+											return( num2 + " | " + num1 );										
+											
 										}else if ( propertyID == TITLE_INDICATOR_COLOR){
 
 											for ( ChatInstance chat: bp.getChats()){

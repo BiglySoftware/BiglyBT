@@ -26,6 +26,7 @@ import java.util.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
@@ -60,6 +61,7 @@ import com.biglybt.ui.swt.plugin.net.buddy.swt.columns.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.skin.InfoBarUtil;
 import com.biglybt.ui.swt.views.skin.SkinView;
@@ -401,7 +403,8 @@ public class SBC_ChatOverview
 		}
 	}
 
-
+	private Label	info;
+	
 	TableViewSWT<ChatInstance> 						tv;
 	private TableColumnFilterHelper<ChatInstance>	col_filter_helper;
 
@@ -630,6 +633,29 @@ public class SBC_ChatOverview
 	@Override
 	public Object skinObjectShown(SWTSkinObject skinObject, Object params) {
 		super.skinObjectShown(skinObject, params);
+		
+		SWTSkinObjectContainer info_container = (SWTSkinObjectContainer) getSkinObject("topinfo");
+		
+		if ( info_container != null ){
+			
+			Composite comp = info_container.getComposite();
+			
+			GridLayout layout = new GridLayout();
+			
+			layout.numColumns = 3;
+			
+			comp.setLayout( layout );
+			
+			Label lab = new Label( comp, SWT.NULL );
+			lab.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+			
+			info = new Label( comp, SWT.NULL );
+			info.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+			info.setAlignment( SWT.CENTER );
+			
+			lab = new Label( comp, SWT.NULL );
+			lab.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+		}
 		SWTSkinObject so_list = getSkinObject("chats-list");
 
 		if (so_list != null) {
@@ -781,6 +807,9 @@ public class SBC_ChatOverview
 			tv.initialize(table_parent);
 		}
 
+		
+		updateInfo();
+		
 		control.layout(true);
 	}
 
@@ -930,11 +959,40 @@ public class SBC_ChatOverview
 		}
 	}
 
+	private void
+	updateInfo()
+	{
+		if ( info != null ){
+			
+			Utils.execSWTThread(()->{
+			
+				BuddyPluginBeta bp = BuddyPluginUtils.getBetaPlugin();
+
+				List<ChatInstance> chats = bp.getChats();
+				
+				int num = 0;
+				
+				for ( ChatInstance chat: chats ){
+					
+					if ( !chat.isInvisible()){
+						
+						num++;
+					}
+				}
+				
+				info.setText( 
+					MessageText.getString( 
+						num==1?"library.unopened.header":"library.unopened.header.p", 
+								new String[]{ String.valueOf( num )}));
+			});
+		}
+	}
 	@Override
 	public void chatAdded(ChatInstance chat) {
 		if ( !chat.isInvisible()){
 			tv.addDataSource(chat);
 		}
+		updateInfo();
 	}
 
 	public void chatChanged(ChatInstance chat) {
@@ -954,6 +1012,7 @@ public class SBC_ChatOverview
 	  	if (uiFunctions != null) {
 	  		uiFunctions.refreshIconBar();
 	  	}
+	  	updateInfo();
 	}
 
 	@Override
