@@ -1628,6 +1628,32 @@ redirect_label:
 						nice_key += c;
 					}
 
+					if ( nice_key.equals( "Accept-Encoding" )){
+						
+						String s_value = (String)value;
+						
+						String[] bits = s_value.split( "," );
+						
+						String u_value = "";
+						
+						for ( String bit: bits ){
+							
+							bit = bit.trim();
+							
+							String lbit = bit.toLowerCase(Locale.US);
+							
+							if ( 	lbit.startsWith( "deflate" ) ||
+									lbit.startsWith( "gzip") || 
+									lbit.startsWith( "identity") || 
+									lbit.startsWith( "*")){
+								
+								u_value += (u_value.isEmpty()?"":", ") + bit;
+							}
+						}
+						
+						value = u_value;
+					}
+					
 					con.setRequestProperty(nice_key,(String)value);
 				}
 			}
