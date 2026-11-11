@@ -761,8 +761,8 @@ public class MainMDISetup
 											}
 											
 											return(
-												MessageText.getString( "label.public.medium" ) + ": " + pub + ", " +
-												MessageText.getString( "label.anon.medium" ) + ": " + anon );
+												MessageText.getString( "label.public" ) + ": " + pub + ", " +
+												MessageText.getString( "label.anon" ) + ": " + anon );
 														
 											
 										}else if ( propertyID == TITLE_INDICATOR_COLOR){

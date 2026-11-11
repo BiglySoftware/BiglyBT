@@ -646,6 +646,8 @@ public class SBC_ChatOverview
 			
 			comp.setLayout( layout );
 			
+			Utils.disposeComposite(comp, false);
+			
 			Label lab = new Label( comp, SWT.NULL );
 			lab.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 			
@@ -655,6 +657,8 @@ public class SBC_ChatOverview
 			
 			lab = new Label( comp, SWT.NULL );
 			lab.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+			
+			updateInfo();
 		}
 		SWTSkinObject so_list = getSkinObject("chats-list");
 
@@ -806,9 +810,6 @@ public class SBC_ChatOverview
 			
 			tv.initialize(table_parent);
 		}
-
-		
-		updateInfo();
 		
 		control.layout(true);
 	}
@@ -966,24 +967,50 @@ public class SBC_ChatOverview
 			
 			Utils.execSWTThread(()->{
 			
+				if ( info.isDisposed()){
+					
+					return;
+				}
+				
 				BuddyPluginBeta bp = BuddyPluginUtils.getBetaPlugin();
 
 				List<ChatInstance> chats = bp.getChats();
 				
-				int num = 0;
+				int num		= 0;
+				int	pub		= 0;
+				int anon	= 0;
 				
 				for ( ChatInstance chat: chats ){
 					
 					if ( !chat.isInvisible()){
 						
 						num++;
+						
+						if ( chat.isAnonymous()){
+							
+							anon++;
+							
+						}else{
+							
+							pub++;
+						}
 					}
 				}
 				
-				info.setText( 
-					MessageText.getString( 
+				String old = info.getText();
+				
+				String str = MessageText.getString( 
 						num==1?"library.unopened.header":"library.unopened.header.p", 
-								new String[]{ String.valueOf( num )}));
+								new String[]{ String.valueOf( num )}) + ": " +
+					MessageText.getString( "label.public" ) + "=" + pub + ", "+
+					MessageText.getString( "label.anon" ) + "=" + anon;
+				
+				if ( !str.equals( old )){
+				
+					info.setText( str ); 
+					
+					info.getParent().layout();
+				}
 			});
 		}
 	}
