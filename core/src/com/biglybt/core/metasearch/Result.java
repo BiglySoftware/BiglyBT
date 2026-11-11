@@ -268,7 +268,7 @@ Result
 			seed_total = 10*super_seeds + new Random().nextInt(10);
 		}
 
-		if ( seeds > 0 ){
+		if ( seeds >= 0 ){
 
 			if ( seed_total == -1 ){
 
