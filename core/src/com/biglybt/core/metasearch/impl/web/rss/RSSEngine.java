@@ -134,7 +134,7 @@ RSSEngine
 
 		throws IOException
 	{
-		super( meta_search, Engine.ENGINE_TYPE_REGEX, id, last_updated, rank_bias, name, map );
+		super( meta_search, Engine.ENGINE_TYPE_RSS, id, last_updated, rank_bias, name, map );
 	}
 
 
