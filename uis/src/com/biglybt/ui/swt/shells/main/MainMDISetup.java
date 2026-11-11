@@ -740,14 +740,20 @@ public class MainMDISetup
 											
 										}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
 											
-											int	pub = 0;
-											int	anon = 0;
+											int waiting	= 0;
+											int	pub		= 0;
+											int	anon	= 0;
 
 											List<ChatInstance> chats = bp.getChats();
 											
 											for ( ChatInstance chat: chats){
 
 												if ( !chat.isInvisible()){
+													
+													if ( chat.getMessageOutstanding()){
+														
+														waiting++;
+													}
 													
 													if ( chat.isAnonymous()){
 
@@ -761,8 +767,10 @@ public class MainMDISetup
 											}
 											
 											return(
+												MessageText.getString( "TableColumn.header.chat.msg.out") + ": " + waiting + ", " +
+												MessageText.getString( "SpeedView.stats.total" ) + ": " + (pub+anon) + " (" +
 												MessageText.getString( "label.public" ) + ": " + pub + ", " +
-												MessageText.getString( "label.anon" ) + ": " + anon );
+												MessageText.getString( "label.anon" ) + ": " + anon + ")");
 														
 											
 										}else if ( propertyID == TITLE_INDICATOR_COLOR){
