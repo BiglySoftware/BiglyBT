@@ -88,7 +88,8 @@ TagBase
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_DL				= "rl.maxadl";
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_CD				= "rl.maxacd";
 	protected static final String	AT_RATELIMIT_ACTIVE_LIMITS_STRICT		= "rl.als";
-	
+	protected static final String	AT_RATELIMIT_MIN_ACTIVE_DL_BPS			= "rl.minadlbps";
+
 	protected static final String	AT_PROPERTY_PREFIX				= "pp.";
 	//protected static final String	AT_EOA_PREFIX					= "eoa.";	// meh, should be used but copy/paste error resulted in AT_PROPERTY_PREFIX being used instead 
 	protected static final String	AT_BYTES_UP						= "b.up";
@@ -890,6 +891,32 @@ TagBase
 			if ( getMaxActiveDownloads() != max ){
 			
 				writeLongAttribute( AT_RATELIMIT_MAX_ACTIVE_DL, max );
+		
+				tag_type.fireMetadataChanged( this );
+			}
+		}
+	}
+	
+	public int
+	getMinActiveDownloadingSpeed()
+	{
+		if ( tag_rl != null ){
+			
+			return( readLongAttribute( AT_RATELIMIT_MIN_ACTIVE_DL_BPS, -1L ).intValue());
+		}
+		
+		return( -1 );
+	}
+
+	public void
+	setMinActiveDownloadingSpeed(
+		int			min )
+	{
+		if ( tag_rl != null ){
+			
+			if ( getMinActiveDownloadingSpeed() != min ){
+			
+				writeLongAttribute( AT_RATELIMIT_MIN_ACTIVE_DL_BPS, min );
 		
 				tag_type.fireMetadataChanged( this );
 			}

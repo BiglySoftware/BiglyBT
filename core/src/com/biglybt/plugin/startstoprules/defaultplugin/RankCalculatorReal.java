@@ -757,8 +757,34 @@ RankCalculatorReal
 	 *
 	 * @return true: actively downloading
 	 */
+	
+	@Override
 	public boolean 
-	getActivelyDownloading() 
+	getActivelyDownloading()
+	{
+		TagFeatureRateLimit dl_limits[] = tagsWithDLLimits;
+		
+		int minSpeed = minSpeedForActiveDL;
+		
+		if ( dl_limits != NO_TAG_LIMITS ){
+			
+			for ( TagFeatureRateLimit l: dl_limits ){
+				
+				int min = l.getMinActiveDownloadingSpeed();
+				
+				if ( min >= 0 ){
+					
+					minSpeed = Math.min( minSpeed, min );
+				}
+			}
+		}
+		
+		return( getActivelyDownloading( minSpeed ));
+	}
+	
+	private boolean 
+	getActivelyDownloading(
+		int		minSpeed )
 	{
 		boolean bIsActive = false;
 		DownloadStats stats = dl.getStats();
@@ -776,7 +802,7 @@ RankCalculatorReal
 			
 			long nowMono = SystemTime.getMonotonousTime();
 
-			bIsActive = (stats.getDownloadAverage() >= minSpeedForActiveDL);
+			bIsActive = (stats.getDownloadAverage() >= minSpeed );
 
 			if ( !bIsActive ){
 				
@@ -1028,7 +1054,8 @@ RankCalculatorReal
 								lims.add( t );
 							}
 						}else{
-							if ( t.getMaxActiveDownloads() > 0 ){
+							if (	t.getMaxActiveDownloads() > 0 ||
+									t.getMinActiveDownloadingSpeed() >= 0 ){
 							
 								lims.add( t );
 							}
@@ -1038,10 +1065,10 @@ RankCalculatorReal
 				
 				if ( comp ){
 					tagsWithDLLimits = NO_TAG_LIMITS;
-					tagsWithCDLimits = lims.toArray( new TagFeatureRateLimit[lims.size()] );
+					tagsWithCDLimits = lims.isEmpty()?NO_TAG_LIMITS:lims.toArray( new TagFeatureRateLimit[lims.size()] );
 	
 				}else{
-					tagsWithDLLimits = lims.toArray( new TagFeatureRateLimit[lims.size()] );
+					tagsWithDLLimits = lims.isEmpty()?NO_TAG_LIMITS:lims.toArray( new TagFeatureRateLimit[lims.size()] );
 					tagsWithCDLimits = NO_TAG_LIMITS;
 				}
 			}

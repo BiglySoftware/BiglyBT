@@ -105,6 +105,7 @@ public class TagSettingsView
 		public BooleanSwtParameter boost;
 
 		public IntSwtParameter maxActiveDownloads;
+		public IntSwtParameter minActiveDownloadSpeed;
 		public IntSwtParameter maxActiveSeeders;
 		public BooleanSwtParameter activeLimitsStrict;
 
@@ -1126,6 +1127,38 @@ public class TagSettingsView
 										}
 										for (TagFeatureRateLimit rl : rls) {
 											rl.setMaxActiveDownloads(value);
+										}
+										return true;
+									}
+								});
+	
+						cols_used += 2;
+						
+						params.minActiveDownloadSpeed = new IntSwtParameter(gTransfer,
+								"tag.minActiveDownloadSpeed", "ConfigView.label.tag.min.active.speed", null, -1, Integer.MAX_VALUE,
+								new IntSwtParameter.ValueProcessor() {
+									@Override
+									public Integer getValue(IntSwtParameter p) {
+										int speed = rls[0].getMinActiveDownloadingSpeed();
+										if (numTags > 1) {
+											for (int i = 1; i < rls.length; i++) {
+												int nextLimit = rls[i].getMinActiveDownloadingSpeed();
+												if (nextLimit != speed) {
+													return -1;
+												}
+											}
+										}
+										return( speed<0?-1:speed);
+									}
+	
+									@Override
+									public boolean setValue(IntSwtParameter p, Integer value) {
+										if (value == null) {
+											return false;
+										}
+										int speed = value<0?-1:value;
+										for (TagFeatureRateLimit rl : rls) {
+											rl.setMinActiveDownloadingSpeed( speed );
 										}
 										return true;
 									}

@@ -195,4 +195,11 @@ TagFeatureRateLimit
 	public void
 	setStrictActivityLimits(
 		boolean		b );
+	
+	public int
+	getMinActiveDownloadingSpeed();
+	
+	public void
+	setMinActiveDownloadingSpeed(
+		int		bps );
 }
