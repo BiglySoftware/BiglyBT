@@ -2610,7 +2610,7 @@ public class UrlUtils
 				
 				if ( now - time < URL_ADDRESS_CACHE_TIMEOUT ){
 										
-					addresses = (List<InetAddress>)entry[1];
+					//addresses = (List<InetAddress>)entry[1];
 				}
 			}
 		}
@@ -2625,7 +2625,10 @@ public class UrlUtils
 					addresses = DNSUtils.getSingleton().getAllByName( host );
 						
 				}catch( Throwable e ){
-						
+				}
+				
+				if ( addresses == null || addresses.isEmpty()){
+					
 					try{
 						addresses = Arrays.asList( InetAddress.getAllByName( host ));
 							
