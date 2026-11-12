@@ -735,9 +735,21 @@ public class MainMDISetup
 													num2++;
 												}
 											}
-
-											return( num2 + " | " + num1 );										
 											
+											if ( COConfigurationManager.getBooleanParameter( "chat.overview.mdi.show.total" )){
+												
+												return( num2 + " | " + num1 );
+												
+											}else{
+												if ( num2 > 0 ){
+													
+													return( String.valueOf( num2 ));
+													
+												}else{
+													
+													return( null );
+												}
+											}
 										}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
 											
 											int waiting	= 0;
@@ -803,7 +815,25 @@ public class MainMDISetup
 
 						MenuManager menu_manager = pi.getUIManager().getMenuManager();
 						
-						MenuItem mi = menu_manager.addMenuItem( parentID, "MainWindow.menu.view.configuration" );
+						List<MenuItem> mis = new ArrayList<>();
+						
+						
+						MenuItem mi = menu_manager.addMenuItem( parentID, "menu.show.total" );
+						mis.add( mi );
+						mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+						mi.setStyle( MenuItem.STYLE_CHECK );
+						mi.setData( COConfigurationManager.getBooleanParameter( "chat.overview.mdi.show.total" ));
+						mi.addListener((menu,target)->{
+							COConfigurationManager.setParameter( "chat.overview.mdi.show.total", ((Boolean)menu.getData()).booleanValue());
+						});
+								
+						mi = menu_manager.addMenuItem( parentID, "chat.overview.mdi.sep" );
+						mis.add( mi );
+						mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+						mi.setStyle( MenuItem.STYLE_SEPARATOR );
+						
+						mi = menu_manager.addMenuItem( parentID, "MainWindow.menu.view.configuration" );
+						mis.add( mi );
 						mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 						mi.addListener(
@@ -913,7 +943,10 @@ public class MainMDISetup
 								{
 									timer.cancel();
 									
-									mi.remove();
+									for ( MenuItem mi: mis ){
+										
+										mi.remove();
+									}
 								}
 							});
 
