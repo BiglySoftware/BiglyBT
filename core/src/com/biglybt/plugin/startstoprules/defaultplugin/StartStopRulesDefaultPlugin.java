@@ -490,6 +490,38 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				public void UIAttached(UIInstance instance) {
 					TableManager tm = pi.getUIManager().getTableManager();
 
+					tm.registerColumn( 
+							DownloadTypeComplete.class, 
+							"SeedingRank",
+							(column)->{
+								
+								column.setAlignment( TableColumn.ALIGN_TRAIL );
+								column.setPosition( TableColumn.POSITION_LAST );
+								column.setWidth( 80 );
+								column.setRefreshInterval( TableColumn.INTERVAL_LIVE );
+								
+								TableCellRefreshListener columnListener = new SeedingRankColumnListener();
+								
+								column.addCellRefreshListener(columnListener);
+							});
+
+					tm.registerColumn( 
+						DownloadTypeIncomplete.class, 
+						"DownloadingRank",
+						(column)->{
+							
+							column.setMinimumRequiredUserMode( 1 );
+							column.setAlignment( TableColumn.ALIGN_TRAIL );
+							column.setPosition( TableColumn.POSITION_INVISIBLE );
+							column.setWidth( 80 );
+							column.setRefreshInterval( TableColumn.INTERVAL_LIVE );
+							
+							TableCellRefreshListener columnListener = new DownloadingRankColumnListener( StartStopRulesDefaultPlugin.this );
+							
+							column.addCellRefreshListener(columnListener);
+						});
+					
+					/*
 					String[] tables1 = { TableManager.TABLE_MYTORRENTS_COMPLETE, TableManager.TABLE_MYTORRENTS_ALL_SMALL };
 					
 					for ( String table: tables1 ){
@@ -521,7 +553,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	
 						tm.addColumn( downloadingRankColumn );
 					}
-
+					*/
+					
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
 						try{
