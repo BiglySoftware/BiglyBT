@@ -2615,6 +2615,17 @@ public class UrlUtils
 					if ( addresses == null ){
 						
 						throw( new UnknownHostException( host ));
+						
+					}else{
+						
+						List<InetSocketAddress> result = new ArrayList<>( addresses.size());
+						
+						for ( InetAddress ia: addresses ){
+							
+							result.add( new InetSocketAddress( ia, port ));
+						}
+						
+						return( result );
 					}
 				}
 			}
