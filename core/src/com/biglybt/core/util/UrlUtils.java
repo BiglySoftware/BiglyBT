@@ -2587,6 +2587,8 @@ public class UrlUtils
 	public static List<InetSocketAddress>
 	getAllByName(
 		URL		url )
+	
+		throws UnknownHostException
 	{
 		String	host	= url.getHost();
 		int		port	= url.getPort()==-1?url.getDefaultPort():url.getPort();
@@ -2595,9 +2597,7 @@ public class UrlUtils
 			
 			port = 80;
 		}
-		
-		List<InetAddress> addresses = null;
-		
+				
 		long now = SystemTime.getMonotonousTime();
 		
 		synchronized( url_address_cache ){
@@ -2609,62 +2609,61 @@ public class UrlUtils
 				long time = (Long)entry[0];
 				
 				if ( now - time < URL_ADDRESS_CACHE_TIMEOUT ){
-										
-					//addresses = (List<InetAddress>)entry[1];
+						
+					List<InetAddress> addresses = (List<InetAddress>)entry[1];
+					
+					if ( addresses == null ){
+						
+						throw( new UnknownHostException( host ));
+					}
 				}
 			}
 		}
 		
-		List<InetSocketAddress> result = new ArrayList<>();
-
-		if ( addresses == null ){
+		List<InetAddress> addresses = null;
 			
-			if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+		if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+			
+			try{
+				addresses = DNSUtils.getSingleton().getAllByName( host );
+					
+			}catch( Throwable e ){
 				
 				try{
-					addresses = DNSUtils.getSingleton().getAllByName( host );
+					addresses = Arrays.asList( InetAddress.getAllByName( host ));
 						
-				}catch( Throwable e ){
+				}catch( Throwable f ){
 				}
-				
-				if ( addresses == null || addresses.isEmpty()){
-					
-					try{
-						addresses = Arrays.asList( InetAddress.getAllByName( host ));
-							
-					}catch( Throwable f ){
-						
-						addresses = Collections.emptyList();
-					}
-				}
-			}else{
-				
-				addresses = new ArrayList<>(1);
-				
-				result.add( InetSocketAddress.createUnresolved(host, port));
-				
-				return( result );
 			}
+		}else{
 			
-			synchronized( url_address_cache ){
-				
-				url_address_cache.put( host, new Object[]{ now + RandomUtils.nextInt( 20*1000 ), addresses });
-			}
+			List<InetSocketAddress> result = new ArrayList<>(1);
+			
+			result.add( InetSocketAddress.createUnresolved(host, port));
+			
+			return( result );
+		}
+		
+		synchronized( url_address_cache ){
+			
+			url_address_cache.put( host, new Object[]{ now + RandomUtils.nextInt( 20*1000 ), addresses });
 		}
 				
 		if ( addresses == null ){
 			
-			result.add( new InetSocketAddress( host, port ));
+			throw( new UnknownHostException( host ));
 			
 		}else{
+			
+			List<InetSocketAddress> result = new ArrayList<>( addresses.size());
 			
 			for ( InetAddress ia: addresses ){
 				
 				result.add( new InetSocketAddress( ia, port ));
 			}
-		}
 		
-		return( result );
+			return( result );
+		}
 	}
 	
 	public static List<InetAddress>
@@ -2672,9 +2671,7 @@ public class UrlUtils
 		String		host )
 	
 		throws UnknownHostException
-	{	
-		List<InetAddress> addresses = null;
-		
+	{			
 		long now = SystemTime.getMonotonousTime();
 		
 		synchronized( url_address_cache ){
@@ -2686,36 +2683,50 @@ public class UrlUtils
 				long time = (Long)entry[0];
 				
 				if ( now - time < URL_ADDRESS_CACHE_TIMEOUT ){
-										
-					addresses = (List<InetAddress>)entry[1];
+				
+					List<InetAddress> addresses = (List<InetAddress>)entry[1];
+					
+					if ( addresses == null ){
+						
+						throw( new UnknownHostException( host ));
+						
+					}else{
+						
+						return( addresses );
+					}
 				}
 			}
 		}
 		
-		if ( addresses == null ){
+		List<InetAddress> addresses = null;
 			
-			if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
-				
+		if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+			
+			try{
+				addresses = DNSUtils.getSingleton().getAllByName( host );
+					
+			}catch( Throwable e ){
+					
 				try{
-					addresses = DNSUtils.getSingleton().getAllByName( host );
-						
-				}catch( Throwable e ){
-						
 					addresses = Arrays.asList( InetAddress.getAllByName( host ));
+					
+				}catch( Throwable f ){
 				}
+			}
+		
+			synchronized( url_address_cache ){
 			
-				synchronized( url_address_cache ){
-				
-					url_address_cache.put( host, new Object[]{ now + RandomUtils.nextInt( 20*1000 ), addresses });
-				}
+				url_address_cache.put( host, new Object[]{ now + RandomUtils.nextInt( 20*1000 ), addresses });
 			}
 		}
 				
 		if ( addresses == null ){
 			
-			throw( new UnknownHostException( host ));	
-		}
+			throw( new UnknownHostException( host ));
+			
+		}else{
 		
-		return( addresses );
+			return( addresses );
+		}
 	}
 }
