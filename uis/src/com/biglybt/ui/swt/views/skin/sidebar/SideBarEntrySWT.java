@@ -996,7 +996,7 @@ public class SideBarEntrySWT
 					if (headerFont != null && !headerFont.isDisposed()) {
 						gc.setFont(headerFont);
 					}
-					
+					text = text.toUpperCase();
 				} else {
 					if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
 						Font headerFont = sidebar.getHeaderFont();
@@ -1005,8 +1005,18 @@ public class SideBarEntrySWT
 						}
 					}
 				}
-				
-				gc.setForeground( Colors.white );
+
+				Color harnessFg;
+
+				if ( selected ){
+					harnessFg = Colors.white;
+				}else if ( isSelectable()){
+					harnessFg = skin.getSkinProperties().getColor( "color.sidebar.text" );
+				}else{
+					harnessFg = skin.getSkinProperties().getColor( "color.sidebar.header" );
+				}
+
+				gc.setForeground( harnessFg != null ? harnessFg : Colors.white );
 				GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
 						style);
 				sp.printString();

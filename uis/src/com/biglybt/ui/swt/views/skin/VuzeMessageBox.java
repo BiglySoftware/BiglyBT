@@ -204,12 +204,23 @@ public class VuzeMessageBox
 		SWTSkinObjectText soText = (SWTSkinObjectText) skin.getSkinObject("middle-title");
 		if (soText != null) {
 			soText.setText(text);
+
+			if ("image.mlab.header".equals(iconResource)) {
+				soText.setText("Check your connection");
+
+				if (soText.getControl() != null && !soText.getControl().isDisposed()) {
+					soText.getControl().setForeground(
+						com.biglybt.ui.swt.utils.ColorCache.getColor(
+							soText.getControl().getDisplay(), 231, 231, 233));
+				}
+			}
 		}
 
 		if (iconResource != null) {
   		SWTSkinObjectImage soTopLogo = (SWTSkinObjectImage) dlg.getSkin().getSkinObject("top-logo");
+
   		if (soTopLogo != null) {
-  			soTopLogo.setImageByID(iconResource, null);
+  			setTopLogoImage(soTopLogo, iconResource);
   		}
 		}
 
@@ -246,6 +257,20 @@ public class VuzeMessageBox
 			return;
 		}
 		dlg.open();
+
+		if ("image.mlab.header".equals(iconResource)) {
+			try{
+				com.biglybt.ui.swt.shells.main.HarnessDialogChrome.install(
+					dlg.getShell(), buttonsArea.getButtons());
+			}catch( Throwable e ){
+				// Native SkinnedDialog remains the fallback.
+			}
+		}
+
+		try{
+			com.biglybt.ui.swt.shells.main.HarnessDialogTheme.reapply( dlg.getShell());
+		}catch( Throwable e ){
+		}
 	}
 
 	public Button[] getButtons() {
@@ -275,8 +300,60 @@ public class VuzeMessageBox
 		if (dlg != null) {
   		SWTSkinObjectImage soTopLogo = (SWTSkinObjectImage) dlg.getSkin().getSkinObject("top-logo");
   		if (soTopLogo != null) {
-  			soTopLogo.setImageByID(iconResource, null);
+  			setTopLogoImage(soTopLogo, resource);
+
+  			if ("image.mlab.header".equals(resource)) {
+  				dlg.getShell().setText("Network check");
+
+  				SWTSkinObject topArea = dlg.getSkin().getSkinObject("top-area");
+  				if (topArea != null) {
+  					topArea.setVisible(false);
+  				}
+
+  				SWTSkinObjectText title = (SWTSkinObjectText) dlg.getSkin().getSkinObject("top-title");
+  				if (title != null) {
+  					title.setVisible(false);
+  				}
+
+  				SWTSkinObjectText middle = (SWTSkinObjectText) dlg.getSkin().getSkinObject("middle-title");
+  				if (middle != null) {
+  					middle.setVisible(false);
+  				}
+  			}
   		}
+		}
+	}
+
+	private void
+	setTopLogoImage(
+		SWTSkinObjectImage	soTopLogo,
+		String				resource )
+	{
+		if (!"image.mlab.header".equals(resource)) {
+			soTopLogo.setImageByID(resource, null);
+			return;
+		}
+
+		try{
+			java.io.InputStream is = VuzeMessageBox.class.getResourceAsStream(
+				"/com/biglybt/ui/images/harness/mlab-header.png" );
+
+			if (is != null) {
+				final org.eclipse.swt.graphics.Image header =
+					new org.eclipse.swt.graphics.Image(Display.getDefault(), is);
+
+				is.close();
+
+				soTopLogo.setImage(header);
+
+				dlg.getShell().addDisposeListener(
+					e -> {
+						if (!header.isDisposed()) {
+							header.dispose();
+						}
+					});
+			}
+		}catch( Throwable e ){
 		}
 	}
 
