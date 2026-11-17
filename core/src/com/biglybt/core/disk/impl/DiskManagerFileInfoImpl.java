@@ -56,7 +56,7 @@ DiskManagerFileInfoImpl
   final int			file_index;
   CacheFile		cache_file;
 
-  private String 		extension;
+  private String 		extension = "";
   private long 			downloaded;
 
   final DiskManagerHelper 	diskManager;

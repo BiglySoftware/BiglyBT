@@ -486,7 +486,56 @@ LWSDiskManager
 	public DiskManagerFileInfoSet
 	getFileSet()
 	{
-		throw( new RuntimeException( "getFileSet not implemented" ));
+		return( 
+			new DiskManagerFileInfoSet()
+			{
+				public void
+				load(
+					int[]		priorities,
+					boolean[]	skipped )
+				{
+				}
+				
+				public boolean[] 
+				setStorageTypes(
+					boolean[]	toChange, 
+					int			newStroageType, 
+					boolean		force )
+				{
+					return( new boolean[toChange.length]);
+				}
+	
+				public void 
+				setPriority(
+					int[] newPriorities )
+				{
+				}
+	
+				public void 
+				setSkipped(
+					boolean[]	toChange, 
+					boolean		setSkipped )
+				{
+				}
+				
+				public int[]
+				getStorageTypes()
+				{
+					return( new int[]{ DiskManagerFileInfo.ST_LINEAR });
+				}
+				
+				public DiskManagerFileInfo[] 
+				getFiles()
+				{
+					return( files );
+				}
+				
+				public int 
+				nbFiles()
+				{
+					return( files.length );
+				}
+			});
 	}
 
 	@Override
