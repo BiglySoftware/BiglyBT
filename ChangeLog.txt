@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2026.11.yy | BiglyBT 4.2.0.0
+2026.11.18 | BiglyBT 4.2.0.0
 
 FEATURE: Core  | Added configurable startup delay before checking if backup required [Parg]
 FEATURE: Core  | Option to use original torrent names rather than download names [Parg]
