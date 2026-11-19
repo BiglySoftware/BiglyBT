@@ -47,7 +47,8 @@ import com.biglybt.ui.swt.Utils;
 public class SkinPropertiesImpl
 	implements SkinProperties
 {
-	private static final boolean DARK_MODE = Utils.isDarkAppearanceNative();
+	// BiglyBT Harness Edition ships with a dark-first visual identity.
+	private static final boolean DARK_MODE = true;
 
 	public static final String PATH_SKIN_DEFS = "com/biglybt/ui/skin/";
 
