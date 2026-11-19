@@ -1,7 +1,9 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2026.11.yy | BiglyBT 4.2.0.0
+2027.xx.yy | BiglyBT 4.2.0.1
+
+2026.11.18 | BiglyBT 4.2.0.0
 
 FEATURE: Core  | Added configurable startup delay before checking if backup required [Parg]
 FEATURE: Core  | Option to use original torrent names rather than download names [Parg]
@@ -1870,7 +1872,7 @@ CHANGE: Core   | Drop support for GCJ in the startup script [TuxPaper]
 CHANGE: Core   | Persists download error state across restarts [Parg]
 CHANGE: Core   | Remember force-start state for auto-restart error downloads [Parg]
 CHANGE: Core   | Report errors encountered during explicit "check for updates' [Parg]
-CHANGE: Core   | Make ‘update anonymously' advanced and warn of potential issues [Parg]
+CHANGE: Core   | Make "update anonymously" advanced and warn of potential issues [Parg]
 CHANGE: Core   | Auto-enable IPv6 support when liveness detected [Parg]
 CHANGE: Core   | Handle some more redirect HTTP codes [Parg]
 CHANGE: Core   | Remove JSONJava due to "good" licensing issues and some *nix policies [TuxPaper]
@@ -1884,7 +1886,7 @@ CHANGE: UI     | Disable search box tooltip when it has content [Parg]
 CHANGE: UI     | Debug->Run GC for classic UI [Parg]
 CHANGE: UI     | Rework swarm view to use buffer image [Parg]
 CHANGE: UI     | Don't round MB memory values to GB once >= 1 GB   [Parg]
-CHANGE: UI     | enable ‘search for data files' if download in error state [Parg]
+CHANGE: UI     | enable "search for data files" if download in error state [Parg]
 CHANGE: UI     | Limit piece map to 32k pieces for performance [Parg]
 CHANGE: UI     | Don't force share-ratio column width to be 80 in simple views [Parg]
 CHANGE: UI     | Select existing row when selected row removed [Parg]
@@ -1955,7 +1957,7 @@ FEATURE: Tag   | Add count indicator. Shows "Inclusive | Exclusive" count when >
 FEATURE: Tag   | Option to disable tracker auto-tagging [Parg]
 FEATURE: Tag   | Explicit option to select which tags are library view filter buttons [Parg]
 FEATURE: Core  | Support regular-expression matching for bind interface selection [Parg]
-FEATURE: Core  | Option to rename magnet downloads based on their ‘dn' [Parg]
+FEATURE: Core  | Option to rename magnet downloads based on their "dn" [Parg]
 FEATURE: Core  | option to only rename single file magnets if they have an extension [Parg]
 FEATURE: Core  | IPv6 multiple global address firewall checks [Parg]
 FEATURE: Core  | Support auto-skip and auto-tag for torrent folder auto-imports [Parg]
