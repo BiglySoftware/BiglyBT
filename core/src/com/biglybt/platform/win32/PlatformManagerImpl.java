@@ -508,10 +508,50 @@ PlatformManagerImpl
 	    }
 	}
 
+	private boolean
+	optionsContainsRedirect(
+		String		options,
+		String		redirect )
+	{
+		if ( options.contains( redirect )){
+			
+			return( true );
+		}
+		
+		try{
+			String app_data = access.getUserAppData();
+			
+			options = options.replace( "${APPDATA}", app_data );
+			
+			redirect = redirect.replace( "${APPDATA}", app_data );
+			
+			return( options.toLowerCase( Locale.US ).contains( redirect.toLowerCase( Locale.US )));
+			
+		}catch( Throwable e ){
+			
+		}
+		
+		return( false );
+	}
+	
 	private String
 	getJVMOptionRedirect()
 	{
-		return( "-include-options ${APPDATA}\\" + SystemProperties.getApplicationName() + "\\java.vmoptions" );
+		String override = System.getProperty(SystemProperties.SYSPROP_CONFIG_PATH, "");
+		
+		if ( !override.isEmpty() && FileUtil.exists( new File( override ))){
+			
+			if ( !override.endsWith( "\\" )){
+				
+				override += "\\";
+			}
+			
+			return( "-include-options " + override + "java.vmoptions" );
+
+		}else{
+		
+			return( "-include-options ${APPDATA}\\" + SystemProperties.getApplicationName() + "\\java.vmoptions" );
+		}
 	}
 
 	private File[]
@@ -553,7 +593,7 @@ PlatformManagerImpl
 			try{
 				String s_options = FileUtil.readFileAsString( shared_options, -1 );
 
-				if ( s_options.contains( getJVMOptionRedirect() )){
+				if ( optionsContainsRedirect( s_options, getJVMOptionRedirect())){
 
 					File local_options = option_files[1];
 
@@ -1011,7 +1051,7 @@ PlatformManagerImpl
 
 								String options = FileUtil.readFileAsString( shared_options, -1 );
 
-								if ( !options.contains( redirect )){
+								if ( !optionsContainsRedirect( options, redirect )){
 
 										// if they're already linking somewhere then abandon
 
