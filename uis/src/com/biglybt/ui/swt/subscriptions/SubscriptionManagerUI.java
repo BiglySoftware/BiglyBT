@@ -1878,6 +1878,8 @@ SubscriptionManagerUI
 							parent_name,
 							parent, null, false, parent_prev_id );
 					
+					parent.setMDIEntry( parent_entry );
+					
 					parent_views.put( parent_name, parent_entry );
 				}
 			}
@@ -3620,6 +3622,9 @@ SubscriptionManagerUI
 		private List<Subscription>	children			= new ArrayList<>();
 		private long				childen_last_calc = -1;
 		
+		private MdiEntry					mdi_entry;
+		private MdiEntryVitalityImage		warnSub;
+
 		private
 		SubsParentView(
 			String		_title )
@@ -3627,6 +3632,20 @@ SubscriptionManagerUI
 			title = _title;
 		}
 
+		void
+		setMDIEntry(
+			MdiEntry		entry )
+		{
+			mdi_entry = entry;
+			
+			warnSub = entry.addVitalityImage(ALERT_IMAGE_ID);
+			
+			if ( warnSub != null ){
+				
+				warnSub.setVisible(false);
+			}
+		}
+		
 		@Override
 		public boolean 
 		builderNotRequired()
@@ -3655,9 +3674,56 @@ SubscriptionManagerUI
 				
 				int total = 0;
 				
+				boolean warn = false;
+				
+				String error_str = "";
+
 				for ( Subscription k: kids ){
 					
-					total +=  k.getHistory().getNumUnread();
+					SubscriptionHistory history = k.getHistory();
+					
+					total +=  history.getNumUnread();
+					
+					String last_error = history.getLastError();
+					
+					if (last_error != null && last_error.length() > 0) {
+
+						boolean auth_fail = history.isAuthFail();
+
+						if (history.getConsecFails() >= 3 || auth_fail) {
+
+							warn = true;
+
+							if (error_str.length() > 128) {
+
+								if (!error_str.endsWith(", ...")) {
+
+									error_str += ", ...";
+								}
+							} else {
+
+								error_str += (error_str.length() == 0 ? "" : ", ")
+										+ last_error;
+							}
+						}
+					}
+				}
+				
+				if ( mdi_entry != null ){
+					
+					if ( warnSub != null ){
+					
+						if ( mdi_entry.isExpanded()){
+							
+							warnSub.setVisible( false );
+							
+						}else{
+							
+							warnSub.setVisible (warn );
+							
+							warnSub.setToolTip( error_str );
+						}
+					}
 				}
 				
 				if ( total > 0 ){
