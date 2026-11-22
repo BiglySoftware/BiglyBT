@@ -1688,6 +1688,22 @@ SubscriptionManagerUI
 
 				String parent = subs.getParent();
 
+				if ( parent != null ){
+					
+					MdiEntry parent_entry;
+					
+					synchronized( parent_views ){
+
+						parent_entry = parent_views.get( parent );
+					}
+
+					if ( parent_entry != null ){
+						
+						parent_entry.redraw();
+						
+						ViewTitleInfoManager.refreshTitleInfo( parent_entry.getViewTitleInfo() );
+					}
+				}
 				if ( 	cp == parent ||
 						( cp != null && parent != null && cp.equals( parent ))){
 
@@ -1971,6 +1987,7 @@ SubscriptionManagerUI
 		while( entry != null ){
 
 			entry.redraw();
+			
 			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 
 			String key = entry.getParentID();
@@ -3600,6 +3617,9 @@ SubscriptionManagerUI
 		private Composite	parent_composite;
 		private Composite	composite;
 
+		private List<Subscription>	children			= new ArrayList<>();
+		private long				childen_last_calc = -1;
+		
 		private
 		SubsParentView(
 			String		_title )
@@ -3628,11 +3648,64 @@ SubscriptionManagerUI
 			if ( propertyID == TITLE_TEXT ){
 
 				return( getTitle());
+				
+			}else if ( propertyID == TITLE_INDICATOR_TEXT ){
+				
+				List<Subscription> kids = getChildren();
+				
+				int total = 0;
+				
+				for ( Subscription k: kids ){
+					
+					total +=  k.getHistory().getNumUnread();
+				}
+				
+				if ( total > 0 ){
+					
+					return( String.valueOf(total));
+					
+				}else{
+					
+					return( null );
+				}
 			}
 
 			return( null );
 		}
 
+		private List<Subscription>
+		getChildren()
+		{
+			SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
+
+			if ( subs_man != null ){
+				
+				synchronized( this ){
+					
+					long now = SystemTime.getMonotonousTime();
+					
+					if ( childen_last_calc == -1 || now - childen_last_calc > 30*1000 ){
+						
+						childen_last_calc = now;
+						
+						List<Subscription> temp = new ArrayList<>();
+						
+						for ( Subscription s: subs_man.getSubscriptions()){
+					
+							if ( title.equals( s.getParent())){
+								
+								temp.add( s );
+							}
+						}
+						
+						children = temp;
+					}
+				}
+			}
+			
+			return( children );
+		}
+		
 		public void
 		initialize(
 			Composite _parent_composite )
