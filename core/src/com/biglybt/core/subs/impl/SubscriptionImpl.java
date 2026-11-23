@@ -2600,6 +2600,8 @@ SubscriptionImpl
 
 			l.remove();
 		}
+		
+		updateGroup( null );
 	}
 
 	@Override
