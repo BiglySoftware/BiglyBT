@@ -1381,18 +1381,18 @@ SBC_SubscriptionResultsView
 
 			for ( SubscriptionResultFilterable result: existing_results ){
 
-				existing_map.put( result.getID(), result );
+				existing_map.put( result.getSubscription().getID() + ":" + result.getID(), result );
 			}
 
 			List<SubscriptionResultFilterable> new_results	= new ArrayList<>(1024);
-
+			
 			for ( Subscription subs: ds_subs ){
 						
 				SubscriptionResult[] current_results = subs.getResults( false );
 
 				for ( SubscriptionResult result: current_results ){
 
-					SubscriptionResultFilterable existing = existing_map.remove( result.getID());
+					SubscriptionResultFilterable existing = existing_map.remove( subs.getID() + ":" + result.getID());
 
 					if ( existing == null ){
 
