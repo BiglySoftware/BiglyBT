@@ -237,6 +237,9 @@ Subscription
 	setParent(
 		String		parent );
 
+	public SubscriptionGroup
+	getGroup();
+	
 	public Engine
 	getEngine()
 

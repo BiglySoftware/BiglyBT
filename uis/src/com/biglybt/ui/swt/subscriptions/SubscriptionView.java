@@ -59,59 +59,65 @@ SubscriptionView
 				UISWTViewCore viewCore = (UISWTViewCore)view;
 				
 				switch (event.getType()) {
+				
 					case UISWTViewEvent.TYPE_PRE_CREATE:{
 		
-						Subscription subs = (Subscription)view.getDataSource();
+						Object ds = view.getDataSource();
 						
-						int[] last_unread = { -1 };
-						
-						ViewTitleInfo titleInfo = 
-							new ViewTitleInfo(){
-								
-								@Override
-								public Object 
-								getTitleInfoProperty(
-									int propertyID )
-								{
-									if ( propertyID == ViewTitleInfo.TITLE_INDICATOR_TEXT ){
+						if ( ds instanceof Subscription ){
+							
+							Subscription subs = (Subscription)ds;
+							
+							int[] last_unread = { -1 };
+							
+							ViewTitleInfo titleInfo = 
+								new ViewTitleInfo(){
+									
+									@Override
+									public Object 
+									getTitleInfoProperty(
+										int propertyID )
+									{
+										if ( propertyID == ViewTitleInfo.TITLE_INDICATOR_TEXT ){
+											
+											int unread = last_unread[0] = subs.getHistory().getNumUnread();
+											
+											return( String.valueOf( unread ));
+										}
 										
-										int unread = last_unread[0] = subs.getHistory().getNumUnread();
-										
-										return( String.valueOf( unread ));
+										return( null );
+									}
+								};
+							
+							SubscriptionListener listener = 
+								new SubscriptionListener(){
+									
+									@Override
+									public void 
+									subscriptionDownloaded(
+										Subscription subs)
+									{
 									}
 									
-									return( null );
-								}
-							};
-						
-						SubscriptionListener listener = 
-							new SubscriptionListener(){
-								
-								@Override
-								public void 
-								subscriptionDownloaded(
-									Subscription subs)
-								{
-								}
-								
-								@Override
-								public void 
-								subscriptionChanged(
-									Subscription	subs, 
-									int				reason)
-								{
-									if ( subs.getHistory().getNumUnread() != last_unread[0] ){
-										
-										ViewTitleInfoManager.refreshTitleInfo(titleInfo);
+									@Override
+									public void 
+									subscriptionChanged(
+										Subscription	subs, 
+										int				reason)
+									{
+										if ( subs.getHistory().getNumUnread() != last_unread[0] ){
+											
+											ViewTitleInfoManager.refreshTitleInfo(titleInfo);
+										}
 									}
-								}
-							};
+								};
+								
+							subs.addListener( listener );
 							
-						subs.addListener( listener );
-						
-						viewCore.setViewTitleInfo( titleInfo );
-
-						viewCore.setUserData( SUBS_KEY, new Object[]{ subs, listener });
+							viewCore.setViewTitleInfo( titleInfo );
+	
+							viewCore.setUserData( SUBS_KEY, new Object[]{ subs, listener });
+						}
 						
 						break;
 					}

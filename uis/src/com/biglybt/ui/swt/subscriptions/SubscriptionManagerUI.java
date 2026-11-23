@@ -22,7 +22,6 @@ package com.biglybt.ui.swt.subscriptions;
 
 import java.io.File;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
@@ -610,6 +609,22 @@ SubscriptionManagerUI
 			}
 		});
 
+		mdi.registerEntry("SubscriptionParent_.*", new MdiEntryCreationListener2() {
+			// @see MdiEntryCreationListener2#createMDiEntry(MultipleDocumentInterface, java.lang.String, java.lang.Object, java.util.Map)
+			@Override
+			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
+			                               Object datasource, Map<?, ?> params) {
+				SubscriptionGroup group = null;
+				if (datasource instanceof SubscriptionGroup) {
+					group = (SubscriptionGroup) datasource;
+				}else{
+					group = getGroupFromParentKey( id );
+				}
+
+				return group == null ? null : createSubscriptionGroupMdiEntry(group);
+			}
+		});
+		
 		SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
 
 		subman_listener_quick = new SubscriptionManagerListener() {
@@ -1722,6 +1737,115 @@ SubscriptionManagerUI
 
 
 	private MdiEntry
+	createSubscriptionGroupMdiEntry(
+		SubscriptionGroup		group )
+	{
+		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
+
+		if ( mdi == null || group == null ){
+			
+			return( null );
+		}
+		
+		String parent_name = group.getName();
+		
+		String key = getParentKey( parent_name );
+		
+		synchronized( parent_views ){
+
+			MdiEntry parent_entry = parent_views.get( parent_name );
+
+			if ( parent_entry == null ){
+
+				SubsParentView parent = new SubsParentView( group );
+
+				String parent_key = getParentKey( parent_name );
+
+				String parent_prev_id = null;
+
+				parent_views.put( parent_name, parent_entry );
+
+				String	parent_prev = null;
+
+				for ( String pn: parent_views.keySet()){
+
+					if ( pn == parent_name ){
+
+						break;
+					}
+
+					parent_prev = pn;
+				}
+
+				boolean	is_before;
+
+				if ( parent_prev == null && parent_views.size() > 1 ){
+
+					Iterator<String>	it = parent_views.keySet().iterator();
+
+					it.next();
+
+					parent_prev = it.next();
+
+					is_before = true;
+
+				}else{
+
+					is_before = false;
+				}
+
+				if ( parent_prev != null ){
+
+					parent_prev_id = getParentKey( parent_prev );
+
+					if ( is_before ){
+
+						parent_prev_id = "~" + parent_prev_id;
+					}
+				}
+
+				/*
+				parent_entry =
+					mdi.createEntryFromSkinRef(
+						MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
+						parent_key,
+						null,
+						parent_name,
+						parent, null, false, parent_prev_id );
+				*/
+				
+				parent_entry =
+						mdi.createEntry(
+								new UISWTViewBuilderCore(key, null,SubscriptionView.class).
+									setParentEntryID(MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS).
+									setInitialTitle( parent_name ).
+									setInitialDatasource( group ).
+									setPreferredAfterID( parent_prev_id ),
+							false );
+
+				parent_entry.setViewTitleInfo(parent);
+				
+				parent.setMDIEntry( parent_entry );
+				
+				parent_views.put( parent_name, parent_entry );
+				
+				parent_entry.addAcceleratorListener((character,mask)->{
+					if (( character == 'c' || character == 'C' ) && mask== MdiAcceleratorListener.SHIFT ){
+						for ( Subscription subs: group.getSubscriptions()){
+							subs.getHistory().markAllResultsRead();
+						}
+						return( true );
+					}else{
+						return( false );
+					}
+				});
+			}
+			
+			return( parent_entry );
+		}
+	}
+	
+	private MdiEntry
 	createSubscriptionMdiEntry(
 			final Subscription subs)
 	{
@@ -1739,7 +1863,9 @@ SubscriptionManagerUI
 			return( null );
 		}
 
-		String parent_name = subs.getParent();
+		SubscriptionGroup group = subs.getGroup();
+		
+		String parent_name = group==null?null:group.getName();
 
 		if ( parent_name != null && parent_name.length() == 0 ){
 
@@ -1815,74 +1941,7 @@ SubscriptionManagerUI
 
 		}else{
 
-			MdiEntry parent_entry;
-
-			synchronized( parent_views ){
-
-				parent_entry = parent_views.get( parent_name );
-
-				if ( parent_entry == null ){
-
-					SubsParentView parent = new SubsParentView( parent_name );
-
-					String parent_key = getParentKey( parent_name );
-
-					String parent_prev_id = null;
-
-					parent_views.put( parent_name, parent_entry );
-
-					String	parent_prev = null;
-
-					for ( String pn: parent_views.keySet()){
-
-						if ( pn == parent_name ){
-
-							break;
-						}
-
-						parent_prev = pn;
-					}
-
-					boolean	is_before;
-
-					if ( parent_prev == null && parent_views.size() > 1 ){
-
-						Iterator<String>	it = parent_views.keySet().iterator();
-
-						it.next();
-
-						parent_prev = it.next();
-
-						is_before = true;
-
-					}else{
-
-						is_before = false;
-					}
-
-					if ( parent_prev != null ){
-
-						parent_prev_id = getParentKey( parent_prev );
-
-						if ( is_before ){
-
-							parent_prev_id = "~" + parent_prev_id;
-						}
-					}
-
-					parent_entry =
-						mdi.createEntryFromSkinRef(
-							MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
-							parent_key,
-							null,
-							parent_name,
-							parent, null, false, parent_prev_id );
-					
-					parent.setMDIEntry( parent_entry );
-					
-					parent_views.put( parent_name, parent_entry );
-				}
-			}
+			MdiEntry parent_entry = createSubscriptionGroupMdiEntry( group );
 
 			entry = mdi.createEntry(new UISWTViewBuilderCore(key, null,
 					SubscriptionView.class).setParentEntryID(
@@ -1958,14 +2017,14 @@ SubscriptionManagerUI
 		}
 	}
 
-	private String
+	private static String
 	getParentKey(
 		String		parent_name )
 	{
 		byte[] bytes;
 
 		try{
-			bytes =  parent_name.getBytes("UTF-8" );
+			bytes =  parent_name.getBytes( Constants.UTF_8 );
 
 		}catch( Throwable e ){
 
@@ -1975,6 +2034,27 @@ SubscriptionManagerUI
 		return(	"SubscriptionParent_" + ByteFormatter.encodeString( bytes ));
 	}
 
+	private static SubscriptionGroup
+	getGroupFromParentKey(
+		String		key )
+	{
+		String prefix = "SubscriptionParent_";
+				
+		if ( key.startsWith(prefix)){
+			
+			String parent_name = new String( ByteFormatter.decodeString( key.substring( prefix.length())), Constants.UTF_8 );
+			
+			SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
+
+			if ( subs_man != null ){
+				
+				return( subs_man.getSubscriptionGroup( parent_name ));
+			}
+		}
+			
+		return( null );
+	}
+	
 	protected void
 	refreshTitles(
 		MdiEntry		entry )
@@ -3611,25 +3691,21 @@ SubscriptionManagerUI
 
 	protected static class
 	SubsParentView
-		implements 	ViewTitleInfo, UISWTViewEventListener
+		implements 	ViewTitleInfo
 	{
-		private UISWTView 	swtView;
+		private final SubscriptionGroup		group;
+		
 		private String 		title;
-
-		private Composite	parent_composite;
-		private Composite	composite;
-
-		private List<Subscription>	children			= new ArrayList<>();
-		private long				childen_last_calc = -1;
 		
 		private MdiEntry					mdi_entry;
 		private MdiEntryVitalityImage		warnSub;
 
 		private
 		SubsParentView(
-			String		_title )
+			SubscriptionGroup		_group )
 		{
-			title = _title;
+			group	= _group;
+			title = group.getName();
 		}
 
 		void
@@ -3644,13 +3720,6 @@ SubscriptionManagerUI
 				
 				warnSub.setVisible(false);
 			}
-		}
-		
-		@Override
-		public boolean 
-		builderNotRequired()
-		{
-			return( true );	// suppress warning about builder possibly being lost
 		}
 		
 		public String
@@ -3670,7 +3739,7 @@ SubscriptionManagerUI
 				
 			}else if ( propertyID == TITLE_INDICATOR_TEXT ){
 				
-				List<Subscription> kids = getChildren();
+				List<Subscription> kids = group.getSubscriptions();
 				
 				int total = 0;
 				
@@ -3738,92 +3807,5 @@ SubscriptionManagerUI
 
 			return( null );
 		}
-
-		private List<Subscription>
-		getChildren()
-		{
-			SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
-
-			if ( subs_man != null ){
-				
-				synchronized( this ){
-					
-					long now = SystemTime.getMonotonousTime();
-					
-					if ( childen_last_calc == -1 || now - childen_last_calc > 30*1000 ){
-						
-						childen_last_calc = now;
-						
-						List<Subscription> temp = new ArrayList<>();
-						
-						for ( Subscription s: subs_man.getSubscriptions()){
-					
-							if ( title.equals( s.getParent())){
-								
-								temp.add( s );
-							}
-						}
-						
-						children = temp;
-					}
-				}
-			}
-			
-			return( children );
-		}
-		
-		public void
-		initialize(
-			Composite _parent_composite )
-		{
-			parent_composite	= _parent_composite;
-
-			composite = new Composite( parent_composite, SWT.NULL );
-		}
-
-		public Composite
-		getComposite()
-		{
-			return( composite );
-		}
-
-		private void
-		delete()
-		{
-		}
-
-		@Override
-		public boolean eventOccurred(UISWTViewEvent event) {
-		    switch (event.getType()) {
-		      case UISWTViewEvent.TYPE_CREATE:
-		      	swtView = (UISWTView)event.getData();
-		      	swtView.setTitle(getTitle());
-		        break;
-
-		      case UISWTViewEvent.TYPE_DESTROY:
-		        delete();
-		        break;
-
-		      case UISWTViewEvent.TYPE_INITIALIZE:
-		        initialize((Composite)event.getData());
-		        break;
-
-		      case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-		      	Messages.updateLanguageForControl(getComposite());
-		      	swtView.setTitle(getTitle());
-		        break;
-
-		      case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
-		        break;
-
-		      case UISWTViewEvent.TYPE_SHOWN:
-		      	break;
-
-		      case UISWTViewEvent.TYPE_REFRESH:
-		        break;
-		    }
-
-		    return true;
-		  }
 	}
 }

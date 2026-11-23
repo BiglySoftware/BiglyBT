@@ -100,6 +100,10 @@ SubscriptionManager
 	getSubscriptionByID(
 		String			id );
 
+	public SubscriptionGroup
+	getSubscriptionGroup(
+		String		name );
+	
 		/**
 		 * Full lookup
 		 * @param hash

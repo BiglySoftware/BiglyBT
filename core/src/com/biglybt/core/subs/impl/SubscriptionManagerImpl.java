@@ -2979,12 +2979,27 @@ SubscriptionManagerImpl
 		return( subscription_map.get( id ));
 	}
 
+	@Override
+	public SubscriptionGroup 
+	getSubscriptionGroup(
+		String name)
+	{
+		return( SubscriptionImpl.getGroup(name));
+	}
+	
 	private Map<String,AtomicInteger>	imported_sids = new HashMap<>();
 	
 	public Object
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		String group_name = (String)map.get( "group_name" );
+		
+		if ( group_name != null ){
+			
+			return( SubscriptionImpl.getGroup(group_name));
+		}
+		
 		String	sid = (String)map.get( "id" );
 		
 		Subscription subs = getSubscriptionByID( sid );

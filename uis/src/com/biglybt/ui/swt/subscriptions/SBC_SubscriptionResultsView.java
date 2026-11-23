@@ -19,9 +19,9 @@
 package com.biglybt.ui.swt.subscriptions;
 
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
@@ -38,6 +38,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionDownloadListener;
 import com.biglybt.core.subs.SubscriptionException;
+import com.biglybt.core.subs.SubscriptionGroup;
 import com.biglybt.core.subs.SubscriptionHistory;
 import com.biglybt.core.subs.SubscriptionListener;
 import com.biglybt.core.subs.SubscriptionResult;
@@ -64,6 +65,7 @@ import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.searchsubs.*;
 import com.biglybt.ui.swt.columns.subscriptions.ColumnSubResultNew;
+import com.biglybt.ui.swt.columns.subscriptions.ColumnSubResultSubscription;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -86,7 +88,8 @@ import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 public class
 SBC_SubscriptionResultsView
 	extends SkinView
-	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<SubscriptionResultFilterable>, SubscriptionListener
+	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<SubscriptionResultFilterable>, 
+	SubscriptionListener, SubscriptionGroup.Listener
 {
 	public static final String TABLE_SR = "SubscriptionResults";
 
@@ -119,7 +122,8 @@ SBC_SubscriptionResultsView
 					}
 				}, 250 );
 
-	private Subscription	 			ds;
+	private Object			 			dss;
+	private List<Subscription>			ds_subs = new ArrayList<>();
 	private SubscriptionResultFilter	ds_filter = SubscriptionResultFilter.getTransientFilter();
 	private Runnable 					pFilterUpdater;
 	private long						ds_filter_version = -1;
@@ -150,9 +154,9 @@ SBC_SubscriptionResultsView
 
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 
-		if ( mdi != null && ds != null ){
+		if ( mdi != null && dss instanceof Subscription ){
 
-			String mdi_key = "Subscription_" + ByteFormatter.encodeString(ds.getPublicKey());
+			String mdi_key = "Subscription_" + ByteFormatter.encodeString(((Subscription)dss).getPublicKey());
 
 			mdi_entry = mdi.getEntry( mdi_key );
 
@@ -192,9 +196,11 @@ SBC_SubscriptionResultsView
 			
 		SWTSkinObjectText info;
 		
-		if ( ds != null ){
+		Subscription ds_sub = dss instanceof Subscription?(Subscription)dss:null;
+		
+		if ( dss != null ){
 
-			if (( ds.getViewOptions() & Subscription.VO_HIDE_HEADER) != 0 ){
+			if ( ds_sub != null && ( ds_sub.getViewOptions() & Subscription.VO_HIDE_HEADER) != 0 ){
 				
 				SWTSkinObject top_area = getSkinObject( "toparea" );
 
@@ -205,35 +211,47 @@ SBC_SubscriptionResultsView
 
 			if ( title != null ){
 
-				title.setText( MessageText.getString( "subs.results.view.title", new String[]{ ds.getName() }));
+				if ( ds_sub!=null ){
+										
+					title.setText( MessageText.getString( "subs.results.view.title", new String[]{ ds_sub.getName() }));
 
-				Control control = title.getControl();
-
-				final Menu menu = new Menu( control );
-
-				control.setMenu( menu );
-
-				menu.addMenuListener(
-					new MenuListener() {
-
-						@Override
-						public void menuShown(MenuEvent e) {
-							for ( MenuItem mi: menu.getItems()){
-								mi.dispose();
+				}else{
+					
+					String name = ((SubscriptionGroup)dss).getName();
+					
+					title.setText( MessageText.getString( "TableColumn.header.tag.group" ) + ": " + name );
+				}
+			
+				if ( ds_sub != null ){
+					
+					Control control = title.getControl();
+	
+					final Menu menu = new Menu( control );
+	
+					control.setMenu( menu );
+	
+					menu.addMenuListener(
+						new MenuListener() {
+	
+							@Override
+							public void menuShown(MenuEvent e) {
+								for ( MenuItem mi: menu.getItems()){
+									mi.dispose();
+								}
+	
+								String menu_key = SubscriptionMDIEntry.setupMenus( ds_sub, null );
+	
+								com.biglybt.pif.ui.menus.MenuItem[] menu_items = MenuItemManager.getInstance().getAllAsArray( menu_key );
+	
+								MenuBuildUtils.addPluginMenuItems(menu_items, menu, true, true,
+										new MenuBuildUtils.MenuItemPluginMenuControllerImpl(new Object[]{ ds_sub }));
 							}
-
-							String menu_key = SubscriptionMDIEntry.setupMenus( ds, null );
-
-							com.biglybt.pif.ui.menus.MenuItem[] menu_items = MenuItemManager.getInstance().getAllAsArray( menu_key );
-
-							MenuBuildUtils.addPluginMenuItems(menu_items, menu, true, true,
-									new MenuBuildUtils.MenuItemPluginMenuControllerImpl(new Object[]{ ds }));
-						}
-
-						@Override
-						public void menuHidden(MenuEvent e) {
-						}
-					});
+	
+							@Override
+							public void menuHidden(MenuEvent e) {
+							}
+						});
+				}
 			}
 			
 			info = (SWTSkinObjectText) getSkinObject("topinfo");
@@ -286,7 +304,7 @@ SBC_SubscriptionResultsView
 
 			pFilterUpdater = null;
 
-			if ( ds != null ){
+			if ( dss != null ){
 
 				try{
 					Composite pFilters = new Composite(cFilters, SWT.NONE);
@@ -320,9 +338,9 @@ SBC_SubscriptionResultsView
 								return;
 							}
 							
-							if ( info != null ){
+							if ( info != null && ds_sub != null){
 																
-								SubscriptionHistory history = ds.getHistory();
+								SubscriptionHistory history = ds_sub.getHistory();
 								
 								String error = history.getLastError();
 
@@ -332,7 +350,7 @@ SBC_SubscriptionResultsView
 								
 								if ( isError ){
 									
-									lastUpdate = MessageText.getString( "ManagerItem.error" ) + " (" + DisplayFormatters.formatDateYMDHM( ds.getHistory().getLastErrorTime()) + ")";
+									lastUpdate = MessageText.getString( "ManagerItem.error" ) + " (" + DisplayFormatters.formatDateYMDHM( ds_sub.getHistory().getLastErrorTime()) + ")";
 								}else{
 									
 									lastUpdate = DisplayFormatters.formatDateYMDHM( history.getLastScanTime());
@@ -392,7 +410,7 @@ SBC_SubscriptionResultsView
 								}
 							}
 							
-							if ( ds.isUpdateable()){
+							if ( ds_sub != null && ds_sub.isUpdateable()){
 								long kInB = DisplayFormatters.getKinB();
 								long mInB = kInB*kInB;
 	
@@ -727,9 +745,9 @@ SBC_SubscriptionResultsView
 				combMaxAge.addListener(SWT.Selection, maxAgeListener );
 			}
 			
-			if ( ds != null ){
+			if ( dss != null ){
 
-				if ( ds.isUpdateable() ){
+				if ( ds_sub != null && ds_sub.isUpdateable() ){
 					
 					sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
 					
@@ -775,45 +793,55 @@ SBC_SubscriptionResultsView
 						try{
 							more.setEnabled( false );
 							
-							ds.getManager().getScheduler().download( 
-								ds, 
-								true,
-								new SubscriptionDownloadListener(){
-									
-									public void
-									complete(
-										Subscription		subs )
-									{
-										done();
-									}
-
-									public void
-									failed(
-										Subscription			subs,
-										SubscriptionException	error )
-									{
-										done();
-									}
-									
-									private void
-									done()
-									{
-										Utils.execSWTThread(
-											new Runnable(){
+							AtomicInteger to_go = new AtomicInteger( ds_subs.size());
+							
+							for ( Subscription sub: ds_subs ){
+								
+								sub.getManager().getScheduler().download( 
+									sub, 
+									true,
+									new SubscriptionDownloadListener(){
+										
+										public void
+										complete(
+											Subscription		subs )
+										{
+											done();
+										}
+	
+										public void
+										failed(
+											Subscription			subs,
+											SubscriptionException	error )
+										{
+											done();
+										}
+										
+										private void
+										done()
+										{
+											if ( to_go.decrementAndGet() == 0 ){
 												
-												@Override
-												public void run(){
-													if ( !more.isDisposed()){
+												Utils.execSWTThread(
+													new Runnable(){
 														
-														more.setEnabled( true );
-													}
-												}
-											});
-									}
-								});
+														@Override
+														public void run(){
+															if ( !more.isDisposed()){
+																
+																more.setEnabled( true );
+															}
+														}
+													});
+											}
+										}
+									});
+							}
 
 						}catch( Throwable e ){
 
+							more.setEnabled( true );
+							
 							Debug.out( e );
 						}
 					}
@@ -1163,6 +1191,17 @@ SBC_SubscriptionResultsView
 						new ColumnSearchSubResultDLHistoryRemoved(column);
 					}
 				});
+		
+		tableManager.registerColumn(
+				SubscriptionResultFilterable.class,
+				ColumnSubResultSubscription.COLUMN_ID,
+				new TableColumnCreationListener() {
+
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnSubResultSubscription(column);
+					}
+				});
 	}
 
 	@Override
@@ -1170,13 +1209,23 @@ SBC_SubscriptionResultsView
 	dataSourceChanged(
 		SWTSkinObject skinObject, Object params)
 	{
+		dataSourceChanged( params );
+		
+		return( super.dataSourceChanged(skinObject, params));
+	}
+	
+	private void
+	dataSourceChanged(
+		Object	params )
+	{
 		synchronized( this ){
 
-			Subscription new_ds = null;
-
+			Subscription		new_ds_sub		= null;
+			SubscriptionGroup	new_ds_group	= null;
+			
 			if ( params instanceof Subscription ){
 
-				new_ds = (Subscription)params;
+				new_ds_sub = (Subscription)params;
 
 			}else if ( params instanceof Object[] ){
 
@@ -1184,29 +1233,59 @@ SBC_SubscriptionResultsView
 
 				if ( objs.length == 1 && objs[0] instanceof Subscription ){
 
-					new_ds = (Subscription)objs[0];
+					new_ds_sub = (Subscription)objs[0];
 				}
+			}else if ( params instanceof SubscriptionGroup ){
+				
+				new_ds_group = (SubscriptionGroup)params;
 			}
 
-			if ( ds != null ){
+			for ( Subscription sub: ds_subs ){
 
-				ds.removeListener( this );
+				sub.removeListener( this );
+			}
+			
+			if ( dss instanceof SubscriptionGroup ){
+			
+				((SubscriptionGroup)dss).removeListener( this );
 			}
 
-			ds = new_ds;
+			ds_subs.clear();
+			
+			if ( new_ds_sub != null ){
+				
+				dss = new_ds_sub;
+				
+				ds_subs.add( new_ds_sub );
+				
+			}else if ( new_ds_group != null ){
+				
+				dss = new_ds_group;
+				
+				new_ds_group.addListener( this );
+				
+				ds_subs.addAll( new_ds_group.getSubscriptions());
+				
+			}else{
+				
+				dss = null;
+			}
 
-			if ( new_ds != null ){
+			for ( Subscription sub: ds_subs ){
 
-				ds.addListener( this );
+				sub.addListener( this );
+			}
+			
+			if ( new_ds_sub != null ){
 				
 				try{
-					ds_filter = (SubscriptionResultFilter)ds.getUserData( FILTER_KEY );
+					ds_filter = (SubscriptionResultFilter)new_ds_sub.getUserData( FILTER_KEY );
 					
 					if ( ds_filter == null ){
 						
-						ds_filter = ds.getFilters();
+						ds_filter = new_ds_sub.getFilters();
 						
-						ds.setUserData( FILTER_KEY, ds_filter );
+						new_ds_sub.setUserData( FILTER_KEY, ds_filter );
 					}
 					
 				}catch( Throwable e ){
@@ -1218,8 +1297,6 @@ SBC_SubscriptionResultsView
 				ds_filter = SubscriptionResultFilter.getTransientFilter();
 			}
 		}
-
-		return( super.dataSourceChanged(skinObject, params));
 	}
 
 	@Override
@@ -1259,14 +1336,40 @@ SBC_SubscriptionResultsView
 		}
 	}
 
+	@Override
+	public void 
+	subscriptionGroupChanged(
+		SubscriptionGroup group )
+	{
+		if ( group == dss ){
+		
+			dataSourceChanged( group );
+			
+			reconcileResults( null );
+					
+			if ( pFilterUpdater != null ){
+					
+				Utils.execSWTThread(()->{
+						
+					pFilterUpdater.run();
+				});
+			}
+		}
+	}
+	
 	private void
 	reconcileResults(
-		Subscription		subs )
+		Subscription		specific_subs )
 	{
 		synchronized( this ){
 
-			if ( subs != ds || ds == null || subs == null || tv_subs_results == null ){
+			if ( dss == null || tv_subs_results == null ){
 
+				return;
+			}
+			
+			if ( specific_subs != null && !ds_subs.contains(specific_subs)){
+				
 				return;
 			}
 
@@ -1281,21 +1384,24 @@ SBC_SubscriptionResultsView
 				existing_map.put( result.getID(), result );
 			}
 
-			SubscriptionResult[] current_results = ds.getResults( false );
+			List<SubscriptionResultFilterable> new_results	= new ArrayList<>(1024);
 
-			List<SubscriptionResultFilterable> new_results	= new ArrayList<>(current_results.length);
+			for ( Subscription subs: ds_subs ){
+						
+				SubscriptionResult[] current_results = subs.getResults( false );
 
-			for ( SubscriptionResult result: current_results ){
+				for ( SubscriptionResult result: current_results ){
 
-				SubscriptionResultFilterable existing = existing_map.remove( result.getID());
+					SubscriptionResultFilterable existing = existing_map.remove( result.getID());
 
-				if ( existing == null ){
+					if ( existing == null ){
 
-					new_results.add( new SubscriptionResultFilterable( ds, result));
+						new_results.add( new SubscriptionResultFilterable( subs, result));
 
-				}else{
+					}else{
 
-					existing.updateFrom( result );
+						existing.updateFrom( result );
+					}
 				}
 			}
 
@@ -1354,9 +1460,14 @@ SBC_SubscriptionResultsView
 				tv_subs_results = null;
 			}
 
-			if ( ds != null ){
+			for ( Subscription sub: ds_subs ){
 
-				ds.removeListener( this );
+				sub.removeListener( this );
+			}
+			
+			if ( dss instanceof SubscriptionGroup ){
+				
+				((SubscriptionGroup)dss).removeListener( this );
 			}
 		}
 
@@ -1379,13 +1490,22 @@ SBC_SubscriptionResultsView
 
 		synchronized( this ){
 
-			if ( ds != null ){
+			for ( Subscription sub: ds_subs ){
 
 					// remove in case already added
 				
-				ds.removeListener( this );
+				sub.removeListener( this );
 				
-				ds.addListener( this );
+				sub.addListener( this );
+			}
+			
+			if ( dss instanceof SubscriptionGroup ){
+					
+				SubscriptionGroup group = (SubscriptionGroup)dss;
+					
+				group.removeListener( this );
+			
+				group.addListener( this );
 			}
 		}
 
@@ -1606,7 +1726,7 @@ SBC_SubscriptionResultsView
 			public void tableLifeCycleEventOccurred(TableView tv, int eventType,
 					Map<String, Object> data) {
 				if (eventType == TableLifeCycleListener.EVENT_TABLELIFECYCLE_INITIALIZED) {
-					reconcileResults(ds);
+					reconcileResults( null );
 				}
 			}
 		});
@@ -1646,8 +1766,11 @@ SBC_SubscriptionResultsView
 
 					item.setEnabled( results.length > 0 );
 
-					SearchSubsUtils.addMenu( ds, results, menu );
-
+					if ( dss instanceof Subscription ){
+					
+						SearchSubsUtils.addMenu( (Subscription)dss, results, menu );
+					}
+					
 					new MenuItem(menu, SWT.SEPARATOR );
 
 					if ( results.length == 1 ){
@@ -1938,7 +2061,7 @@ SBC_SubscriptionResultsView
 			return( torrent_url );
 		}
 
-		String uri = UrlUtils.getMagnetURI( result.getHash(), result.getName(), ds.getHistory().getDownloadNetworks());
+		String uri = UrlUtils.getMagnetURI( result.getHash(), result.getName(), result.getSubscription().getHistory().getDownloadNetworks());
 
 		return( uri );
 	}

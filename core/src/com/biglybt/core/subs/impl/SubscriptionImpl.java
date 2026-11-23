@@ -163,6 +163,8 @@ SubscriptionImpl
 	private List<String>	depends_on;
 	private String			exec_on_new_result;
 	
+	private SubscriptionGroupImpl		group;
+	
 	private volatile long	latest_unread_result_time = -1;
 	
 	private AtomicLong		md_mutator = new AtomicLong( RandomUtils.nextAbsoluteLong());
@@ -664,8 +666,8 @@ SubscriptionImpl
 		byte[] b_parent = (byte[])map.get( "par" );
 
 		if ( b_parent != null ){
-
-			parent = new String( b_parent, Constants.UTF_8 );
+			
+			updateGroup( new String( b_parent, Constants.UTF_8 ) );
 		}
 		
 		List<byte[]> b_depends_on = (List<byte[]>)map.get( "dep" );
@@ -1458,7 +1460,8 @@ SubscriptionImpl
 			subs.category	 	= category;
 			subs.tag_id			= tag_id;
 			subs.view_options	= view_options;
-			subs.parent			= parent;
+			
+			subs.updateGroup( parent );
 			
 			if ( depends_on != null ){
 				subs.depends_on	= new ArrayList<>( depends_on );
@@ -2387,6 +2390,73 @@ SubscriptionImpl
 		fireChanged(SubscriptionListener.CR_METADATA);
 	}
 	
+	private static Map<String,SubscriptionGroupImpl>	groups = new HashMap<>();
+	
+	protected static SubscriptionGroup
+	getGroup(
+		String		name )
+	{
+		synchronized( groups ){
+			
+			return( groups.get( name ));
+		}
+	}
+	
+	private void
+	updateGroup(
+		String		new_parent )
+	{
+		if ( parent == null && new_parent == null ){
+
+			return;
+		}
+
+		if ( parent != null && new_parent != null && parent.equals( new_parent )){
+
+			return;
+		}
+		
+		synchronized( groups ){
+			
+			if ( new_parent == null ){
+								
+				if ( group != null ){
+					
+					group.remove( this );
+					
+					group = null;
+				}
+								
+			}else{
+				
+				if ( group != null ){
+					
+					group.remove( this );
+				}
+				
+				group = groups.get( new_parent );
+				
+				if ( group == null ){
+					
+					group = new SubscriptionGroupImpl( new_parent );
+					
+					groups.put( new_parent, group );
+				}
+				
+				group.add( this );
+			}
+			
+			parent = new_parent;
+		}
+	}
+	
+	@Override
+	public SubscriptionGroup 
+	getGroup()
+	{
+		return( group );
+	}
+	
 	@Override
 	public String
 	getParent()
@@ -2399,18 +2469,8 @@ SubscriptionImpl
 	setParent(
 		String		_parent )
 	{
-		if ( _parent == null && parent == null ){
-
-			return;
-		}
-
-		if ( _parent != null && parent != null && _parent.equals( parent )){
-
-			return;
-		}
-
-		parent = _parent;
-
+		updateGroup( _parent );
+		
 		fireChanged(SubscriptionListener.CR_METADATA);
 	}
 
@@ -2774,6 +2834,108 @@ SubscriptionImpl
 			IndentWriter		writer )
 		{
 			writer.println( getString());
+		}
+	}
+	
+	private static class
+	SubscriptionGroupImpl
+		implements SubscriptionGroup, ExportableDataSource
+	{
+		private final String name;
+		
+		private final CopyOnWriteList<Subscription>	children = new CopyOnWriteList<>();
+		
+		private CopyOnWriteList<Listener>		listeners = new CopyOnWriteList<>();
+		
+		SubscriptionGroupImpl(
+			String	_name )
+		{
+			name 	= _name;
+		}
+		
+		public String
+		getName()
+		{
+			return( name );
+		}
+		
+		public List<Subscription>
+		getSubscriptions()
+		{
+			return( children.getList());
+		}
+		
+		protected void
+		add(
+			Subscription	s )
+		{
+			children.add( s );
+			
+			fireChanged();
+		}
+		
+		protected void
+		remove(
+			Subscription	s )
+		{
+			children.remove( s );
+			
+			fireChanged();
+		}
+		
+		@Override
+		public void 
+		addListener(
+			Listener l)
+		{
+			listeners.add( l );
+		}
+		
+		@Override
+		public void 
+		removeListener(
+			Listener l)
+		{
+			listeners.remove( l );
+		}
+		
+		private void
+		fireChanged()
+		{
+			for ( Listener l: listeners ){
+				
+				try{
+					l.subscriptionGroupChanged( this );
+					
+				}catch( Throwable e ){
+				
+					Debug.out( e );
+				}
+			}
+		}
+		
+		public ExportedDataSource
+		exportDataSource()
+		{
+			return(
+				new ExportedDataSource()
+				{
+					public Class<? extends DataSourceImporter>
+					getExporter()
+					{
+						return( SubscriptionManagerImpl.class );
+					}
+					
+					public Map<String,Object>
+					getExport()
+					{
+						Map<String,Object> map = new HashMap<>();
+						
+						map.put( "group_name", name );
+						
+						return( map );
+					}
+				});
 		}
 	}
 }
