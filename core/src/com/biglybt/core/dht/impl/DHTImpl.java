@@ -89,6 +89,7 @@ DHTImpl
 		int		s_conc 	= getProp( PR_SEARCH_CONCURRENCY, 			DHTControl.SEARCH_CONCURRENCY_DEFAULT );
 		int		l_conc 	= getProp( PR_LOOKUP_CONCURRENCY, 			DHTControl.LOOKUP_CONCURRENCY_DEFAULT );
 		int		o_rep 	= getProp( PR_ORIGINAL_REPUBLISH_INTERVAL, 	DHTControl.ORIGINAL_REPUBLISH_INTERVAL_DEFAULT );
+		int		o_off 	= getProp( PR_ORIGINAL_REPUBLISH_OFFSET, 	DHTControl.ORIGINAL_REPUBLISH_OFFSET_DEFAULT );
 		int		c_rep 	= getProp( PR_CACHE_REPUBLISH_INTERVAL, 	DHTControl.CACHE_REPUBLISH_INTERVAL_DEFAULT );
 		int		c_n 	= getProp( PR_CACHE_AT_CLOSEST_N, 			DHTControl.CACHE_AT_CLOSEST_N_DEFAULT );
 		boolean	e_c 	= getProp( PR_ENCODE_KEYS, 					DHTControl.ENCODE_KEYS_DEFAULT ) == 1;
@@ -173,7 +174,8 @@ DHTImpl
 				_transport,
 				K, B, max_r,
 				s_conc, l_conc,
-				o_rep, c_rep, c_n, e_c, r_p,
+				o_rep, o_off,
+				c_rep, c_n, e_c, r_p,
 				logger );
 
 		if ( nat_adapter != null ){
@@ -207,6 +209,7 @@ DHTImpl
 		int		s_conc 	= getProp( PR_SEARCH_CONCURRENCY, 			DHTControl.SEARCH_CONCURRENCY_DEFAULT );
 		int		l_conc 	= getProp( PR_LOOKUP_CONCURRENCY, 			DHTControl.LOOKUP_CONCURRENCY_DEFAULT );
 		int		o_rep 	= getProp( PR_ORIGINAL_REPUBLISH_INTERVAL, 	DHTControl.ORIGINAL_REPUBLISH_INTERVAL_DEFAULT );
+		int		o_off 	= getProp( PR_ORIGINAL_REPUBLISH_OFFSET, 	DHTControl.ORIGINAL_REPUBLISH_OFFSET_DEFAULT );
 		int		c_rep 	= getProp( PR_CACHE_REPUBLISH_INTERVAL, 	DHTControl.CACHE_REPUBLISH_INTERVAL_DEFAULT );
 		int		c_n 	= getProp( PR_CACHE_AT_CLOSEST_N, 			DHTControl.CACHE_AT_CLOSEST_N_DEFAULT );
 		boolean	e_c 	= getProp( PR_ENCODE_KEYS, 					DHTControl.ENCODE_KEYS_DEFAULT ) == 1;
@@ -293,7 +296,8 @@ DHTImpl
 				_database,
 				K, B, max_r,
 				s_conc, l_conc,
-				o_rep, c_rep, c_n, e_c, r_p,
+				o_rep, o_off,
+				c_rep, c_n, e_c, r_p,
 				logger );
 	}
 

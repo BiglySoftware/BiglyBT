@@ -46,6 +46,7 @@ DHTControl
 	public static final int		LOOKUP_CONCURRENCY_DEFAULT				= 10;
 	public static final int		CACHE_AT_CLOSEST_N_DEFAULT				= 1;
 	public static final int		ORIGINAL_REPUBLISH_INTERVAL_DEFAULT		= 8*60*60*1000;
+	public static final int		ORIGINAL_REPUBLISH_OFFSET_DEFAULT		= 0;
 	public static final int		CACHE_REPUBLISH_INTERVAL_DEFAULT		=   30*60*1000;
 	public static final int		ENCODE_KEYS_DEFAULT						= 1;
 	public static final int		ENABLE_RANDOM_DEFAULT					= 1;
@@ -174,6 +175,15 @@ DHTControl
 		DHTTransportValue	value,
 		long				timeout,
 		boolean				original_mappings );
+	
+	public void
+	putEncodedKey(
+		byte[]					key,
+		String					description,
+		DHTTransportValue		value,
+		long					timeout,
+		boolean					original_mappings,
+		DHTOperationListener	listener );
 
 	public void
 	putDirectEncodedKeys(

@@ -151,6 +151,7 @@ DHTDBImpl
 	DHTDBImpl(
 		DHTStorageAdapter	_adapter,
 		int					_original_republish_interval,
+		int					_original_republish_offset,
 		int					_cache_republish_interval,
 		byte				_protocol_version,
 		DHTLogger			_logger )
@@ -185,39 +186,56 @@ DHTDBImpl
 
 		if ( original_republish_interval > 0 ){
 
-			original_republish_timer = SimpleTimer.addPeriodicEvent(
-				"DHTDB:op",
-				original_republish_interval,
-				true, // absolute, we don't want effective time changes (computer suspend/resume) to shift these
-				new TimerEventPerformer()
-				{
-					@Override
-					public void
-					perform(
-						TimerEvent	event )
-					{
-						AEThread2.createAndStartDaemon( 
+			Runnable refresh = ()->{
+				if ( !destroyed ){
+					AEThread2.createAndStartDaemon( 
 							"DHTDB:op",
-							()->{
-								logger.log( "Republish of original mappings starts" );
-		
-								long	start 	= SystemTime.getCurrentTime();
-		
-								int	stats = republishOriginalMappings();
-		
-								long	end 	= SystemTime.getCurrentTime();
-		
-								logger.log( "Republish of original mappings completed in " + (end-start) + ": " +
-											"values = " + stats );
+							()->{			
+								republishOriginalMappings( "Republish of original mappings" );
 							});
-					}
+				}
+			};
+			
+			Runnable setup = ()->{
+				if ( !destroyed ){
+					original_republish_timer = SimpleTimer.addPeriodicEvent(
+						"DHTDB:op",
+						original_republish_interval - RandomUtils.nextInt(original_republish_interval*5/100),	// offset other dhts somewhat
+						true, // absolute, we don't want effective time changes (computer suspend/resume) to shift these
+						new TimerEventPerformer()
+						{
+							@Override
+							public void
+							perform(
+								TimerEvent	event )
+							{
+								refresh.run();
+							}
+						});
+				}
+			};
+			
+			if ( _original_republish_offset <= 0 ){
+				
+				setup.run();
+				
+			}else{
+				
+				long delay =  original_republish_interval - _original_republish_offset;
+				
+				new DelayedEvent( "DB repub offset", delay, ()->{
+					
+					refresh.run();
+					
+					setup.run();
 				});
+			}
 		}
 
 		if ( cache_republish_interval > 0 ){
 
 					// random skew here so that cache refresh isn't very synchronised, as the optimisations
-					// regarding non-republising benefit from this
+					// regarding non-republishing benefit from this
 
 			cache_republish_timer = SimpleTimer.addPeriodicEvent(
 					"DHTDB:cp",
@@ -233,7 +251,7 @@ DHTDBImpl
 							AEThread2.createAndStartDaemon(
 								"DHTDB:cp",
 								()->{
-									logger.log( "Republish of cached mappings starts" );
+									log( "Republish of cached mappings starts" );
 		
 									long	start 	= SystemTime.getCurrentTime();
 		
@@ -241,23 +259,14 @@ DHTDBImpl
 		
 									long	end 	= SystemTime.getCurrentTime();
 		
-									logger.log( "Republish of cached mappings completed in " + (end-start) + ": " +
+									log( "Republish of cached mappings completed in " + (end-start) + ": " +
 												"values = " + stats[0] + ", keys = " + stats[1] + ", ops = " + stats[2]);
 		
 									if ( force_original_republish ){
 		
 										force_original_republish	= false;
-		
-										logger.log( "Force republish of original mappings due to router change starts" );
-		
-										start 	= SystemTime.getCurrentTime();
-		
-										int stats2 = republishOriginalMappings();
-		
-										end 	= SystemTime.getCurrentTime();
-		
-										logger.log( "Force republish of original mappings due to router change completed in " + (end-start) + ": " +
-													"values = " + stats2 );
+						
+										republishOriginalMappings( "Force republish of original mappings due to router change" );
 									}
 								});
 						}
@@ -917,17 +926,16 @@ DHTDBImpl
 		}
 	}
 
-	protected int
-	republishOriginalMappings()
+	protected void
+	republishOriginalMappings(
+		String reason )
 	{
 		if ( suspended ){
 
-			logger.log( "Original republish skipped as suspended" );
+			log( "Original republish skipped as suspended" );
 
-			return( 0 );
+			return;
 		}
-
-		int	values_published	= 0;
 
 		Map<HashWrapper,List<DHTDBValueImpl>>	republish = new HashMap<>();
 
@@ -950,7 +958,7 @@ DHTDBImpl
 
 					if ( value != null && value.isLocal()){
 
-						// we're republising the data, reset the creation time
+						// we're republishing the data, reset the creation time
 
 						value.setCreationTime();
 
@@ -971,12 +979,9 @@ DHTDBImpl
 
 		Iterator<Map.Entry<HashWrapper,List<DHTDBValueImpl>>>	it = republish.entrySet().iterator();
 
-		int key_tot	= republish.size();
-		int	key_num = 0;
-
+		List<RepublishEntry>	republish_entries = new ArrayList<>( republish.size()*2);
+		
 		while( it.hasNext()){
-
-			key_num++;
 
 			Map.Entry<HashWrapper,List<DHTDBValueImpl>>	entry = it.next();
 
@@ -988,27 +993,156 @@ DHTDBImpl
 				// > 1 value will locally stored, or > 1 value will go to the same contact
 
 			for (int i=0;i<values.size();i++){
-
-				values_published++;
-
-				if ( Logger.isClosingTakingTooLong()){
-					
-					break;
-				}
 				
-				control.putEncodedKey( key.getHash(), "Republish orig: " + key_num + " of " + key_tot, values.get(i), 0, true );
+				republish_entries.add( new RepublishEntry( key.getHash(), values.get(i)));
 			}
 		}
 
-		return( values_published );
+		republish( reason, republish_entries );
 	}
 
+	static class
+	RepublishEntry
+	{
+		final byte[]			hash;
+		final DHTDBValueImpl	value;
+		
+		RepublishEntry(
+			byte[]			h,
+			DHTDBValueImpl	v )
+		{
+			hash	= h;
+			value	= v;
+		}
+	}
+	
+	private Object						republish_lock = new Object();
+	
+	private String						current_reason;
+	private long						current_start;
+	private LinkedList<RepublishEntry>	current_republishes;
+	
+	private int	current_republish_total;
+	private int	current_republish_index;
+	
+	private final int	current_republish_max = 8;
+	
+	private int	current_republish_active;
+	
+	private void
+	republish(
+		String					reason,
+		List<RepublishEntry>	republish_entries )
+	{
+			// shuffle in case things get terminated early, gives things a chance to get done
+		
+		Collections.shuffle( republish_entries );
+	
+		synchronized( republish_lock ){
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( current_republishes != null && !current_republishes.isEmpty()){
+				
+				log( current_reason + ": aborted due to new republish (elapsed=" + (now - current_start + ")"));
+			}
+			
+			current_reason	= reason;
+			current_start	= now;
+
+			log( current_reason + ": start" );
+						
+			current_republishes		= new LinkedList<>( republish_entries );
+			current_republish_total	= republish_entries.size();
+			current_republish_index	= 0;
+			
+			republishEntries();
+		}
+	}
+	
+	private void
+	republishEntries()
+	{
+			// republish lock held on entry
+		
+		while( current_republish_active < current_republish_max ){
+			
+			if ( Logger.isClosingTakingTooLong()){
+				
+				return;
+			}
+			
+			if ( current_republishes.isEmpty()){
+				
+				return;
+			}
+
+			current_republish_active++;
+			current_republish_index++;
+			
+			RepublishEntry entry = current_republishes.removeFirst();
+		
+			boolean last_one = current_republishes.isEmpty();
+			
+			boolean[] done = { false };
+			
+			try{
+				String str = "Republish original: " + current_republish_index + " of " + current_republish_total;
+				
+				//System.out.println( str );
+				
+				control.putEncodedKey( 
+						entry.hash, 
+						str, 
+						entry.value, 
+						0, 
+						true,
+						new DHTOperationAdapter(){
+							public void
+							complete(
+								boolean				timeout )
+							{
+								synchronized( republish_lock ){
+									
+									if ( !done[0] ){
+									
+										done[0] = true;
+										
+										if ( last_one ){
+											
+											log( current_reason + ": end (elapsed=" + (SystemTime.getMonotonousTime() - current_start + ")"));
+										}
+										
+										current_republish_active--;
+									
+										republishEntries();
+									}
+								}
+							}
+						});
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+				
+				synchronized( republish_lock ){
+					
+					if ( !done[0] ){
+						
+						done[0] = true;
+					
+						current_republish_active--;
+					}
+				}
+			}
+		}
+	}
+	
 	protected int[]
 	republishCachedMappings()
 	{
 		if ( suspended ){
 
-			logger.log( "Cache republish skipped as suspended" );
+			log( "Cache republish skipped as suspended" );
 
 			return( new int[]{ 0, 0, 0 } );
 		}
@@ -1841,7 +1975,7 @@ DHTDBImpl
 				survey_mapping_times.remove( hw );
 			}
 
-			logger.log( "Survey starts: state size=" + survey_state.size() + ", all keys=" + stored_values.size() + ", applicable keys=" + applicable_keys.size());
+			log( "Survey starts: state size=" + survey_state.size() + ", all keys=" + stored_values.size() + ", applicable keys=" + applicable_keys.size());
 
 		}finally{
 
@@ -1854,7 +1988,7 @@ DHTDBImpl
 
 		if ( max_key == my_id ){
 
-			logger.log( "Survey complete - no applicable values" );
+			log( "Survey complete - no applicable values" );
 
 			return;
 		}
@@ -2009,7 +2143,7 @@ DHTDBImpl
 
 			if ( !processing[0] ){
 
-				logger.log( "Survey complete - no applicable nodes" );
+				log( "Survey complete - no applicable nodes" );
 
 				survey_in_progress = false;
 			}
@@ -2278,7 +2412,7 @@ DHTDBImpl
 
 			if ( !went_async ){
 
-				logger.log( "Survey complete - no applicable queries" );
+				log( "Survey complete - no applicable queries" );
 
 				survey_in_progress = false;
 			}
@@ -2560,7 +2694,7 @@ DHTDBImpl
 
 			if ( !Arrays.equals( survey_my_id, router.getID())){
 
-				logger.log( "Survey abandoned - router changed" );
+				log( "Survey abandoned - router changed" );
 
 				return;
 			}
@@ -2884,7 +3018,7 @@ DHTDBImpl
 			survey_in_progress = false;
 		}
 
-		logger.log( "Survey complete - " + store_ops.size() + " store ops" );
+		log( "Survey complete - " + store_ops.size() + " store ops" );
 
 		if ( DEBUG_SURVEY ){
 			System.out.println( "Store ops: " + store_ops.size());
@@ -3116,16 +3250,7 @@ DHTDBImpl
 					}catch( Throwable e ){
 					}
 
-					logger.log( "Force republish of original mappings due to resume from suspend" );
-
-					long start 	= SystemTime.getMonotonousTime();
-
-					int stats = republishOriginalMappings();
-
-					long end 	= SystemTime.getMonotonousTime();
-
-					logger.log( "Force republish of original mappings due to resume from suspend completed in " + (end-start) + ": " +
-								"values = " + stats );
+					republishOriginalMappings( "Force republish of original mappings due to resume from suspend" );
 				}
 			}.start();
 		}
@@ -3224,7 +3349,7 @@ DHTDBImpl
 		try{
 			this_mon.enter();
 
-			logger.log( "Stored keys = " + stored_values.size() + ", values = " + getValueDetails()[DHTDBStats.VD_VALUE_COUNT]);
+			log( "Stored keys = " + stored_values.size() + ", values = " + getValueDetails()[DHTDBStats.VD_VALUE_COUNT]);
 
 			if ( !full ){
 
@@ -3320,7 +3445,7 @@ DHTDBImpl
 
 				Object[]	data = count.get(k);
 
-				logger.log( "    " + k + " -> " + data[0] + " entries" ); // ": " + data[1]);
+				log( "    " + k + " -> " + data[0] + " entries" ); // ": " + data[1]);
 			}
 
 			Iterator<Map.Entry<HashWrapper,DHTDBMapping>> it3 = stored_values.entrySet().iterator();
@@ -3339,7 +3464,7 @@ DHTDBImpl
 
 				if ( str_entries == 16 ){
 
-					logger.log( sb.toString());
+					log( sb.toString());
 
 					sb = new StringBuilder( 1024 );
 
@@ -3369,7 +3494,7 @@ DHTDBImpl
 
 			if ( str_entries > 0 ){
 
-				logger.log( sb.toString());
+				log( sb.toString());
 			}
 		}finally{
 
@@ -3450,7 +3575,7 @@ DHTDBImpl
 
 		if ( ban_ip ){
 
-			logger.log( "Banning " + contact.getString() + " due to store flooding (" + reason + ")" );
+			log( "Banning " + contact.getString() + " due to store flooding (" + reason + ")" );
 
 			ip_filter.ban(
 					AddressUtils.getHostAddress( contact.getAddress()),
@@ -3548,7 +3673,7 @@ DHTDBImpl
 
 					if ( !val.isLocal()){
 
-						// logger.log( "    adding " + val.getOriginator().getAddress());
+						// log( "    adding " + val.getOriginator().getAddress());
 
 						byte[] bloom_key = val.getOriginator().getBloomKey();
 
@@ -3611,7 +3736,7 @@ DHTDBImpl
 				*/
 			}
 
-			logger.log( "Rebuilt global IP bloom filter, size=" + new_filter.getSize() + ", entries=" + new_filter.getEntryCount()+", max hits=" + max_hits );
+			log( "Rebuilt global IP bloom filter, size=" + new_filter.getSize() + ", entries=" + new_filter.getEntryCount()+", max hits=" + max_hits );
 
 			/*
 			senders = control.sortContactsByDistance( senders );

@@ -50,6 +50,7 @@ DHT
 	public static final String	PR_MAX_REPLACEMENTS_PER_NODE			= "ReplacementsPerNode";
 	public static final String	PR_CACHE_AT_CLOSEST_N					= "CacheClosestN";
 	public static final String	PR_ORIGINAL_REPUBLISH_INTERVAL			= "OriginalRepublishInterval";
+	public static final String  PR_ORIGINAL_REPUBLISH_OFFSET			= "OriginalRepublishOffset";
 	public static final String	PR_CACHE_REPUBLISH_INTERVAL				= "CacheRepublishInterval";
 	public static final String	PR_ENCODE_KEYS							= "EncodeKeys";
 	public static final String	PR_ENABLE_RANDOM_LOOKUP					= "EnableRandomLookup";

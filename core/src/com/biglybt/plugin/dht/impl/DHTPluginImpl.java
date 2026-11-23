@@ -203,12 +203,35 @@ DHTPluginImpl
 
 			Properties	props = new Properties();
 
+
+			int	original_republish_offset = 0;
+			
+			switch( _network ){
+				case DHT.NW_AZ_MAIN:{
+					
+					original_republish_offset = 2*60*60*1000;
+					
+					break;
+				}
+				case DHT.NW_AZ_MAIN_V6:{
+					
+					original_republish_offset = 1*60*60*1000;
+					
+					break;
+				}
+			}
+			
+			if ( original_republish_offset != 0 ){
+				
+				props.put( DHT.PR_ORIGINAL_REPUBLISH_OFFSET, original_republish_offset );
+			}
+			
 			/*
-			System.out.println( "FRIGGED REFRESH PERIOD" );
+				System.out.println( "FRIGGED REFRESH PERIOD" );
 
-			props.put( DHT.PR_CACHE_REPUBLISH_INTERVAL, new Integer( 5*60*1000 ));
+				props.put( DHT.PR_CACHE_REPUBLISH_INTERVAL, new Integer( 5*60*1000 ));
 			*/
-
+			
 			if ( DHTFactory.isSmallNetwork(_network)){
 
 					// reduce network usage

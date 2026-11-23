@@ -205,6 +205,7 @@ DHTControlImpl
 		int					_search_concurrency,
 		int					_lookup_concurrency,
 		int					_original_republish_interval,
+		int					_original_republish_offset,
 		int					_cache_republish_interval,
 		int					_cache_at_closest_n,
 		boolean				_encode_keys,
@@ -231,6 +232,7 @@ DHTControlImpl
 		database = DHTDBFactory.create(
 						adapter.getStorageAdapter(),
 						_original_republish_interval,
+						_original_republish_offset,
 						_cache_republish_interval,
 						transport.getProtocolVersion(),
 						logger );
@@ -391,6 +393,7 @@ DHTControlImpl
 		int					_search_concurrency,
 		int					_lookup_concurrency,
 		int					_original_republish_interval,
+		int					_original_republish_offset,
 		int					_cache_republish_interval,
 		int					_cache_at_closest_n,
 		boolean				_encode_keys,
@@ -1046,7 +1049,7 @@ DHTControlImpl
 						(DHTOperationListenerDemuxer)_listener:
 						new DHTOperationListenerDemuxer(_listener));
 	}
-
+	
 	@Override
 	public void
 	putEncodedKey(
@@ -1055,6 +1058,19 @@ DHTControlImpl
 		DHTTransportValue	value,
 		long				timeout,
 		boolean				original_mappings )
+	{
+		putEncodedKey(encoded_key,description,value, timeout, original_mappings, new DHTOperationAdapter());
+	}
+
+	@Override
+	public void
+	putEncodedKey(
+		byte[]					encoded_key,
+		String					description,
+		DHTTransportValue		value,
+		long					timeout,
+		boolean					original_mappings,
+		DHTOperationListener	listener )
 	{
 		put( 	internal_put_pool,
 				false,
@@ -1066,9 +1082,8 @@ DHTControlImpl
 				original_mappings,
 				new HashSet(),
 				1,
-				new DHTOperationListenerDemuxer( new DHTOperationAdapter()));
+				new DHTOperationListenerDemuxer( listener ));
 	}
-
 
 	protected void
 	put(

@@ -42,6 +42,25 @@ DHTDBFactory
 		return( new DHTDBImpl(
 					adapter,
 					original_republish_interval,
+					0,
+					cache_republish_interval,
+					protocol_version,
+					logger ));
+	}
+	
+	public static DHTDB
+	create(
+		DHTStorageAdapter	adapter,
+		int					original_republish_interval,
+		int					original_republish_offset,
+		int					cache_republish_interval,
+		byte				protocol_version,
+		DHTLogger			logger )
+	{
+		return( new DHTDBImpl(
+					adapter,
+					original_republish_interval,
+					original_republish_offset,
 					cache_republish_interval,
 					protocol_version,
 					logger ));
