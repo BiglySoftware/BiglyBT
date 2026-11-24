@@ -2101,7 +2101,7 @@ TagBase
 			tag_uids[i] = String.valueOf( tags.get(i).getTagUID());
 		}
 		
-		writeStringListAttribute( AT_EOS_ASSIGN_TAGS, tag_uids);
+		writeStringListAttribute( AT_EOS_ASSIGN_TAGS, tag_uids, false );
 
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS, !tags.isEmpty());
 		
@@ -2156,7 +2156,7 @@ TagBase
 			tag_uids[i] = String.valueOf( tags.get(i).getTagUID());
 		}
 		
-		writeStringListAttribute( AT_EOS_REMOVE_TAGS, tag_uids);
+		writeStringListAttribute( AT_EOS_REMOVE_TAGS, tag_uids, false );
 	
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_REMOVE_TAGS, !tags.isEmpty());
 		
@@ -2683,9 +2683,10 @@ TagBase
 	protected boolean
 	writeStringListAttribute(
 		String		attr,
-		String[]	value )
+		String[]	value,
+		boolean		low_priority )
 	{
-		return( tag_type.writeStringListAttribute( this, attr, value ));
+		return( tag_type.writeStringListAttribute( this, attr, value, low_priority ));
 	}
 
 	protected long[]
@@ -2816,7 +2817,7 @@ TagBase
 					ups[i] = String.valueOf( l );
 				}
 
-				writeStringListAttribute( AT_BYTES_UP, ups );
+				writeStringListAttribute( AT_BYTES_UP, ups, true );
 			}
 
 			long[] session_down = getTagSessionDownloadTotalRaw();
@@ -2837,7 +2838,7 @@ TagBase
 					downs[i] = String.valueOf( l );
 				}
 
-				writeStringListAttribute( AT_BYTES_DOWN, downs );
+				writeStringListAttribute( AT_BYTES_DOWN, downs, true );
 			}
 		}
 	}
@@ -3248,7 +3249,7 @@ TagBase
 				}
 			}
 			
-			if ( writeStringListAttribute( AT_PROPERTY_PREFIX + name, value )){
+			if ( writeStringListAttribute( AT_PROPERTY_PREFIX + name, value, false )){
 
 				for ( TagPropertyListener l: listeners ){
 

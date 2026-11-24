@@ -777,9 +777,10 @@ TagTypeBase
 	writeStringListAttribute(
 		TagBase		tag,
 		String		attr,
-		String[]	value )
+		String[]	value,
+		boolean		low_priority )
 	{
-		return( manager.writeStringListAttribute( this, tag, attr, value ));
+		return( manager.writeStringListAttribute( this, tag, attr, value, low_priority ));
 	}
 
 	protected long[]

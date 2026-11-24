@@ -89,10 +89,13 @@ TagManagerImpl
 
 		// order is important as 'increases' in effects (see applyConfigUpdates)
 
-	private static final int CU_TAG_CREATE		= 1;
-	private static final int CU_TAG_CHANGE		= 2;
-	private static final int CU_TAG_CONTENTS	= 3;
-	private static final int CU_TAG_REMOVE		= 4;
+	private static final int CU_TAG_CREATE			= 1;
+	private static final int CU_TAG_CHANGE			= 2;
+	private static final int CU_TAG_CONTENTS		= 3;
+	private static final int CU_TAG_REMOVE			= 4;
+	private static final int CU_TAG_GROUP			= 5;
+	private static final int CU_OTHER				= 6;
+	private static final int CU_OTHER_LOW_PRIORITY	= 7;
 
 	private static final boolean	enabled = COConfigurationManager.getBooleanParameter( "tagmanager.enable", true );
 
@@ -720,7 +723,7 @@ TagManagerImpl
 							try{
 									// just in case there's a bunch of changes coming in together
 
-								Thread.sleep( 1000 );
+								Thread.sleep( 2500 );
 
 							}catch( Throwable e ){
 
@@ -731,14 +734,15 @@ TagManagerImpl
 					}.start();
 				}
 			},
-			30*1000 );
+			60*1000 );
 
 
 	private Map<String,Object>					config;
 	private WeakReference<Map<String,Object>>	config_ref;
 
 	private boolean				config_dirty;
-
+	private long				config_dirty_light	= -1;
+	
 	private final List<Object[]>		config_change_queue = new ArrayList<>();
 
 
@@ -2439,7 +2443,7 @@ TagManagerImpl
 			conf.put( id,  state );
 		}
 		
-		setDirty();
+		setDirty( CU_TAG_GROUP );
 	}
 	
 	protected void
@@ -2453,7 +2457,7 @@ TagManagerImpl
 					
 		if ( conf.remove( id ) != null ){
 		
-			setDirty();
+			setDirty( CU_TAG_GROUP );
 		}
 	}
 	
@@ -2702,7 +2706,7 @@ TagManagerImpl
 			config_change_queue.add( new Object[]{ type, tag });
 		}
 
-		setDirty();
+		setDirty( type );
 	}
 
 	private void
@@ -2797,15 +2801,37 @@ TagManagerImpl
 	}
 
 	private void
-	setDirty()
+	setDirty(
+		int		type )
 	{
 		synchronized( this ){
 
+			boolean light = type == CU_TAG_CONTENTS || type == CU_OTHER_LOW_PRIORITY;
+				
 			if ( !config_dirty ){
 
 				config_dirty = true;
 
-				dirty_dispatcher.dispatch();
+				if ( light ){
+									
+					config_dirty_light = SystemTime.getMonotonousTime();
+					
+				}else{
+									
+					dirty_dispatcher.dispatch();
+				}
+			}else{
+				
+				if ( !light ){
+										
+					dirty_dispatcher.dispatch();
+					
+				}else if ( config_dirty_light != -1 && SystemTime.getMonotonousTime() - config_dirty_light > 3*60*1000 ){
+					
+					config_dirty_light = -1;
+				
+					dirty_dispatcher.dispatch();
+				}
 			}
 		}
 	}
@@ -2875,8 +2901,9 @@ TagManagerImpl
 				return;
 			}
 
-			config_dirty = false;
-
+			config_dirty		= false;
+			config_dirty_light	= -1;
+			
 			if ( config_change_queue.size() > 0 ){
 
 				applyConfigUpdates( getConfig());
@@ -3013,7 +3040,7 @@ TagManagerImpl
 
 		t.put( "c", conf );
 		
-		setDirty();
+		setDirty( CU_OTHER );
 	}
 	
 	protected Boolean
@@ -3095,7 +3122,7 @@ TagManagerImpl
 
 						conf.remove( attr );
 
-						setDirty();
+						setDirty( CU_OTHER );
 
 						return( true );
 
@@ -3114,7 +3141,7 @@ TagManagerImpl
 
 					conf.put( attr, value );
 
-					setDirty();
+					setDirty( CU_OTHER );
 
 					return( true );
 				}
@@ -3182,7 +3209,7 @@ TagManagerImpl
 
 				MapUtils.setMapString( conf, attr, value );
 
-				setDirty();
+				setDirty( CU_OTHER );
 			}
 		}catch( Throwable e ){
 
@@ -3250,7 +3277,7 @@ TagManagerImpl
 
 				conf.put( attr, value );
 
-				setDirty();
+				setDirty( CU_OTHER );
 			}
 		}catch( Throwable e ){
 
@@ -3297,7 +3324,8 @@ TagManagerImpl
 		TagTypeBase		tag_type,
 		TagBase			tag,
 		String			attr,
-		String[]		value )
+		String[]		value,
+		boolean			low_priority )
 	{
 		try{
 			synchronized( this ){
@@ -3343,7 +3371,7 @@ TagManagerImpl
 					conf.put( attr, Arrays.asList( value ));
 				}
 
-				setDirty();
+				setDirty( low_priority?CU_OTHER_LOW_PRIORITY:CU_OTHER );
 
 				return( true );
 			}
@@ -3454,7 +3482,7 @@ TagManagerImpl
 					conf.put( attr, l);
 				}
 
-				setDirty();
+				setDirty( CU_OTHER );
 
 				return( true );
 			}
@@ -3480,7 +3508,7 @@ TagManagerImpl
 
 			if ( tt != null ){
 
-				setDirty();
+				setDirty( CU_OTHER );
 			}
 		}
 	}
@@ -3510,7 +3538,7 @@ TagManagerImpl
 
 			if ( t != null ){
 
-				setDirty();
+				setDirty( CU_OTHER );
 			}
 		}
 	}
