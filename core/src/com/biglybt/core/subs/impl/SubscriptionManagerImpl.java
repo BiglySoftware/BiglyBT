@@ -8241,7 +8241,7 @@ SubscriptionManagerImpl
 		if ( config_dirty.compareAndSet( false, true )){
 		
 			new DelayedEvent(
-				"Subscriptions:save", 5000,
+				"Subscriptions:save", 60*1000,
 				new AERunnable()
 				{
 					@Override
