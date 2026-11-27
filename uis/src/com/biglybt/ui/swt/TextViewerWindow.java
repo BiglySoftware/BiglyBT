@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -218,7 +219,14 @@ public class TextViewerWindow {
 	
 	if ( sTitleID != null ){
 		
-		if ( Utils.linkShellMetricsToConfig( shell, "TextViewerWindow:" + sTitleID )){
+		String key = sTitleID;
+		
+		if ( !key.matches("\\A\\p{ASCII}*\\z")){
+			
+			key = Base32.encode( key.getBytes( Constants.UTF_8 ));
+		}
+		
+		if ( Utils.linkShellMetricsToConfig( shell, "TextViewerWindow:" + key )){
 	
 			pack = false;
 		}
