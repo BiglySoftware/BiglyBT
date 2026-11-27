@@ -45,8 +45,6 @@ BEncoder
 
 	private static final byte[] MINUS_1_BYTES = "-1".getBytes();
 
-	private static volatile int non_ascii_logs;
-
     public static byte[]
     encode(
     	Map object )
@@ -81,13 +79,21 @@ BEncoder
 
     private final byte[]		int_buffer			= new byte[12];
     
-    private boolean force_utf8_keys = false;
+    private boolean force_utf8_keys;
+    private boolean detect_utf8_keys	= true;
     
 	public void
 	setForceUTF8Keys(
 		boolean 	b )
 	{
 		force_utf8_keys = b;
+	}
+	
+	public void
+	setDetectUTF8Keys(
+		boolean 	b )
+	{
+		detect_utf8_keys = b;
 	}
 	
 	public byte[]
@@ -245,21 +251,24 @@ BEncoder
 								}
 							}
 							
-							if ( Constants.IS_CVS_VERSION && !utf_key_expected ){
-								char[]	chars = key.toCharArray();
-
-								for ( char c: chars ){
-
-									if (c >= '\u0080'){
-
-										if ( non_ascii_logs < 50 ){
-
-											non_ascii_logs++;
-
-											Debug.out( "Non-ASCII key: " + key );
+							if ( !utf_key_expected ){
+								
+									// oh well, seems that torrents out there have non-ascii keys
+									// so going to change from logging errors to testing for non-ascii
+									// and assuming UTF-8 if not
+								
+								if ( detect_utf8_keys ){
+									
+									char[]	chars = key.toCharArray();
+	
+									for ( char c: chars ){
+	
+										if ( c >= '\u0080' ){
+												
+											utf_key_expected = true;	
+											
+											break;
 										}
-
-										break;
 									}
 								}
 							}

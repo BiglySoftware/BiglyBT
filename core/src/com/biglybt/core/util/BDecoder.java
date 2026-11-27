@@ -46,7 +46,7 @@ public class BDecoder
 	private static final boolean TRACE	= false;
 
 	private static final byte[]	PORTABLE_ROOT;
-
+	
 	private boolean recovery_mode;
 
 	private boolean	verify_map_order;
@@ -72,7 +72,8 @@ public class BDecoder
 
 	private MapDecodeListener mapDecodeListener;
 
-	public boolean force_utf8_keys;
+	private boolean force_utf8_keys;
+	private boolean	detect_utf8_keys	= true;
 	
 	public void
 	setForceUTF8Keys(
@@ -85,6 +86,14 @@ public class BDecoder
 			keyDecoderUTF8 = Constants.DEFAULT_ENCODING_CHARSET.newDecoder();
 		}
 	}
+	
+	public void
+	setDetectUTF8Keys(
+		boolean 	b )
+	{
+		detect_utf8_keys = b;
+	}
+	
 	static{
 		byte[]	portable = null;
 
@@ -527,7 +536,38 @@ public class BDecoder
 						
 						String key;
 	
-						if ( force_utf8_keys ){
+						boolean utf_key = force_utf8_keys;
+						
+						if ( !utf_key ){
+							
+								// oh well, seems that torrents out there have non-ascii keys
+								// so going to change from logging errors to testing for non-ascii
+								// and assuming UTF-8 if not
+
+							if ( detect_utf8_keys ){
+								
+								boolean non_ascii = false;
+	
+								byte[] bytes = keyBytesBuffer.array();
+								for ( int i=0;i<keyLength;i++ ){
+									if ( (bytes[i] &0xff) > 0x7F){
+										non_ascii = true;
+										break;
+									}
+								}
+								
+								if ( non_ascii ){
+																			
+									utf_key = true;
+									
+									if ( keyDecoderUTF8 == null ){
+										keyDecoderUTF8 = Constants.DEFAULT_ENCODING_CHARSET.newDecoder();
+									}
+								}
+							}
+						}
+						
+						if ( utf_key ){
 							
 							keyDecoderUTF8.reset();
 							keyDecoderUTF8.decode(keyBytesBuffer,keyCharsBuffer,true);
@@ -555,9 +595,11 @@ public class BDecoder
 						
 						// keys often repeat a lot - intern to save space. utf8 keys imply non-fixed keys (e.g. file names...)
 						
-						if (internKeys && !force_utf8_keys )
+						if (internKeys && !utf_key ){
+							
 							key = StringInterner.intern( key );
-	
+						}
+						
 							//decode value
 
 						Object value;
@@ -610,10 +652,10 @@ public class BDecoder
 	
 						} else {
 	
-	  					if ( tempMap.put( key, value) != null ){
-	
-	  						Debug.out( "BDecoder: key '" + key + "' already exists!" );
-	  					}
+		  					if ( tempMap.put( key, value) != null ){
+		
+		  						Debug.out( "BDecoder: key '" + key + "' already exists!" );
+		  					}
 						}
 					}
 	
@@ -953,8 +995,33 @@ public class BDecoder
 						}
 
 						String key;
+						boolean utf_key = force_utf8_keys;
 						
-						if ( force_utf8_keys ){
+						if ( !utf_key ){
+							
+								// oh well, seems that torrents out there have non-ascii keys
+								// so going to change from logging errors to testing for non-ascii
+								// and assuming UTF-8 if not
+	
+							if ( detect_utf8_keys ){
+								
+								boolean non_ascii = false;
+		
+								for ( int i=0;i<keyLength;i++ ){
+									if ( (keyBytes[i] &0xff) > 0x7F){
+										non_ascii = true;
+										break;
+									}
+								}
+								
+								if ( non_ascii ){
+																		
+									utf_key = true;	
+								}
+							}
+						}
+						
+						if ( utf_key ){
 							
 							key = new String(keyBytes, 0, keyLength, keyCharsetUTF8 );
 							
@@ -963,10 +1030,13 @@ public class BDecoder
 							key = new String(keyBytes, 0, keyLength, keyCharset);
 						}
 						
-						// keys often repeat a lot - intern to save space
-						if (internKeys && !force_utf8_keys )
+							// keys often repeat a lot - intern to save space
+						
+						if (internKeys && !utf_key ){
+							
 							key = StringInterner.intern( key );
-
+						}
+						
 						if ( verify_map_order ){
 							if (prev_key != null) {
 								if (prev_key.compareTo(key) > 0) {

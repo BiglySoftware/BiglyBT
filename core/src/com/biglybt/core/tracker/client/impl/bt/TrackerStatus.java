@@ -684,7 +684,14 @@ public class TrackerStatus {
 
 				scrape_reply = message.toByteArray();
 
-				Map map = BDecoder.decode( scrape_reply );
+				BDecoder decoder = new BDecoder();
+				
+					// byte[]s come back as keys so we don't want them being
+					// interpreted as UTF-8
+				
+				decoder.setDetectUTF8Keys( false );
+				
+				Map map = decoder.decodeByteArray( scrape_reply );
 
 				boolean	this_is_az_tracker = map.get( "aztracker" ) != null;
 
