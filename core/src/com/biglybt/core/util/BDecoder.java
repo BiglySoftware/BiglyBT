@@ -306,6 +306,15 @@ public class BDecoder
 			throw new IOException("InputStream must support the mark() method");
 		}
 
+		if ( nesting > 128 ){
+			
+			String str = "Nesting too deep";
+			
+			Debug.out( str );
+			
+			throw( new IOException( str ));
+		}
+		
 			//set a mark
 
 		dbis.mark(1);
@@ -776,6 +785,15 @@ public class BDecoder
 			throw new IOException("InputStream must support the mark() method");
 		}
 
+		if ( nesting > 128 ){
+			
+			String str = "Nesting too deep";
+			
+			Debug.out( str );
+			
+			throw( new IOException( str ));
+		}
+		
 		//set a mark
 
 		dbis.mark(1);
