@@ -267,6 +267,11 @@ BEncoder
 												
 											utf_key_expected = true;	
 											
+											if ( Constants.IS_CVS_VERSION ){
+												
+												BDecoder.logNonAsciiKey( key );
+											}
+											
 											break;
 										}
 									}

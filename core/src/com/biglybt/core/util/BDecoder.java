@@ -75,6 +75,40 @@ public class BDecoder
 	private boolean force_utf8_keys;
 	private boolean	detect_utf8_keys	= true;
 	
+	private static Map<String,Object>	non_ascii_map = 
+			new LinkedHashMap<String,Object>(32,0.75f,true)
+			{
+				protected boolean 
+				removeEldestEntry(
+			   		Map.Entry<String,Object> eldest ) 
+				{
+					return size() > 32;
+				}
+			};
+			
+	protected static void
+	logNonAsciiKey(
+		String		key )
+	{
+		synchronized( non_ascii_map ){
+			
+			if ( !non_ascii_map.containsKey(key)){
+		
+				non_ascii_map.put( key, "" );
+				
+				Debug.out( "Non-ASCII key permitted: " + key );
+			}
+		}
+	}
+	
+	protected static void
+	logNonAsciiKey(
+		byte[]		bytes,
+		int			len )
+	{
+		logNonAsciiKey( new String( bytes, 0, len, Constants.UTF_8 ));
+	}
+	
 	public void
 	setForceUTF8Keys(
 		boolean 	b )
@@ -557,7 +591,12 @@ public class BDecoder
 								}
 								
 								if ( non_ascii ){
-																			
+										
+									if ( Constants.IS_CVS_VERSION ){
+										
+										logNonAsciiKey( bytes, keyLength );
+									}
+									
 									utf_key = true;
 									
 									if ( keyDecoderUTF8 == null ){
@@ -1017,6 +1056,11 @@ public class BDecoder
 								if ( non_ascii ){
 																		
 									utf_key = true;	
+									
+									if ( Constants.IS_CVS_VERSION ){
+										
+										logNonAsciiKey( keyBytes, keyLength );
+									}
 								}
 							}
 						}
